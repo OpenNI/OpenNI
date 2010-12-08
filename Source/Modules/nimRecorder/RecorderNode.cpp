@@ -1,0 +1,579 @@
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.0 Alpha                                                          *
+*  Copyright (C) 2010 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  OpenNI is free software: you can redistribute it and/or modify            *
+*  it under the terms of the GNU Lesser General Public License as published  *
+*  by the Free Software Foundation, either version 3 of the License, or      *
+*  (at your option) any later version.                                       *
+*                                                                            *
+*  OpenNI is distributed in the hope that it will be useful,                 *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
+*  GNU Lesser General Public License for more details.                       *
+*                                                                            *
+*  You should have received a copy of the GNU Lesser General Public License  *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
+*                                                                            *
+*****************************************************************************/
+
+
+#include "RecorderNode.h"
+#include "DataRecords.h"
+#include "XnPropNames.h"
+#include <XnLog.h>
+#include <XnCppWrapper.h>
+#include <XnCodecIDs.h>
+
+const XnUInt32 RecorderNode::RECORD_MAX_SIZE = 20 * 1024;
+/*COMPRESSED_DATA_SIZE is set to support a resolution of 1600x1200 with 24 bits per pixel with the worst case
+  of compression.
+*/
+const XnUInt32 RecorderNode::COMPRESSED_DATA_SIZE = 1600 * 1200 * 3;
+
+RecorderNode::RecorderNode(xn::Context &context) : 
+	m_pStreamCookie(NULL),
+	m_pOutputStream(NULL),
+	m_bOpen(FALSE),
+	m_pRecordBuffer(NULL),
+	m_context(context),
+	m_pCompressedData(NULL),
+	m_nGlobalMaxTimeStamp(0),
+	m_nNumNodes(0)
+{
+}
+
+RecorderNode::~RecorderNode()
+{
+	Destroy();
+}
+
+XnStatus RecorderNode::Init()
+{
+	m_pRecordBuffer = XN_NEW_ARR(XnUInt8, RECORD_MAX_SIZE);
+	XN_VALIDATE_ALLOC_PTR(m_pRecordBuffer);
+	m_pCompressedData = XN_NEW_ARR(XnUInt8, COMPRESSED_DATA_SIZE);
+	XN_VALIDATE_ALLOC_PTR(m_pCompressedData);
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::Destroy()
+{
+	CloseStream();
+	//Don't verify return value - proceed anyway
+	XN_DELETE_ARR(m_pRecordBuffer);
+	m_pRecordBuffer = NULL;
+	XN_DELETE_ARR(m_pCompressedData);
+	m_pCompressedData = NULL;
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::SetOutputStream(void* pStreamCookie, XnRecorderOutputStreamInterface* pStream)
+{
+	m_pStreamCookie = pStreamCookie;
+	m_pOutputStream = pStream;
+	XnStatus nRetVal = OpenStream();
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OnNodeAdded(const XnChar* strNodeName, XnProductionNodeType type, XnCodecID compression)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	XnUInt32 nNodeID = ++m_nNumNodes;
+
+	NodeAddedRecord nodeAddedRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
+	nodeAddedRecord.SetNodeName(strNodeName);
+	nodeAddedRecord.SetNodeType(type);
+	nodeAddedRecord.SetCompression(compression);
+	nodeAddedRecord.SetNodeID(nNodeID);
+	nRetVal = nodeAddedRecord.Encode();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to encode Node Added nodeAddedRecord: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	XnUInt32 nNodeAddedPos = TellStream();
+	nRetVal = WriteRecordToStream(strNodeName, nodeAddedRecord);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to write Node Added nodeAddedRecord to file: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+	RecordedNodeInfo recordedNodeInfo;
+	xn::ProductionNode node;
+	recordedNodeInfo.nNodeID = nNodeID;
+	recordedNodeInfo.type = type;
+	recordedNodeInfo.compression = compression;
+	recordedNodeInfo.nNodeAddedPos = nNodeAddedPos;
+
+	if (xnIsTypeGenerator(type))
+	{
+		/* Create Codec for node */
+		nRetVal = m_context.GetProductionNodeByName(strNodeName, node);
+		XN_IS_STATUS_OK(nRetVal);
+		nRetVal = m_context.CreateCodec(compression, node, recordedNodeInfo.codec);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	/* Index recorded node info by name in hash */
+	nRetVal = m_recordedNodesInfo.Set(strNodeName, recordedNodeInfo);
+	XN_IS_STATUS_OK(nRetVal);
+
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OnNodeRemoved(const XnChar* strNodeName)
+{
+	XnStatus nRetVal = RemoveNode(strNodeName);
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OnNodeIntPropChanged(const XnChar* strNodeName, const XnChar* strPropName, XnUInt64 nValue)
+{
+	XnUInt32 nUndoRecordPos = 0;
+	RecordedNodeInfo* pRecordedNodeInfo = NULL;
+	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
+	XN_IS_STATUS_OK(nRetVal);
+
+	IntPropRecord intPropRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
+	intPropRecord.SetNodeID(pRecordedNodeInfo->nNodeID);
+	intPropRecord.SetPropName(strPropName);
+	intPropRecord.SetValue(nValue);
+	intPropRecord.SetUndoRecordPos(nUndoRecordPos);
+
+	nRetVal = intPropRecord.Encode();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to encode Int Property '%s': %s", strPropName, xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	nRetVal = WriteRecordToStream(strNodeName, intPropRecord);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to write Int Property '%s' to file: %s", strPropName, xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OnNodeRealPropChanged(const XnChar* strNodeName, const XnChar* strPropName, XnDouble dValue)
+{
+	XnUInt32 nUndoRecordPos = 0;
+	RecordedNodeInfo* pRecordedNodeInfo = NULL;
+	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
+	XN_IS_STATUS_OK(nRetVal);
+
+	RealPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	record.SetNodeID(pRecordedNodeInfo->nNodeID);
+	record.SetPropName(strPropName);
+	record.SetValue(dValue);
+	record.SetUndoRecordPos(nUndoRecordPos);
+	nRetVal = record.Encode();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to encode Real Property record: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	nRetVal = WriteRecordToStream(strNodeName, record);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to write Real Property record to file: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OnNodeStringPropChanged(const XnChar* strNodeName, const XnChar* strPropName, const XnChar* strValue)
+{
+	XnUInt32 nUndoRecordPos = 0;
+	RecordedNodeInfo* pRecordedNodeInfo = NULL;
+	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
+	XN_IS_STATUS_OK(nRetVal);
+	StringPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	record.SetNodeID(pRecordedNodeInfo->nNodeID);
+	record.SetPropName(strPropName);
+	record.SetValue(strValue);
+	record.SetUndoRecordPos(nUndoRecordPos);
+	nRetVal = record.Encode();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to encode String Property record: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	nRetVal = WriteRecordToStream(strNodeName, record);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to write String Property record to file: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OnNodeGeneralPropChanged(const XnChar* strNodeName, const XnChar* strPropName, XnUInt32 nBufferSize, const void* pBuffer)
+{
+	RecordedNodeInfo* pRecordedNodeInfo = NULL;
+	XnUInt32 nUndoRecordPos = 0;
+	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
+	XN_IS_STATUS_OK(nRetVal);
+	GeneralPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	record.SetNodeID(pRecordedNodeInfo->nNodeID);
+	record.SetPropName(strPropName);
+	record.SetPropData(pBuffer);
+	record.SetPropDataSize(nBufferSize);
+	record.SetUndoRecordPos(nUndoRecordPos);
+	nRetVal = record.Encode();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to encode General Property record: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	nRetVal = WriteRecordToStream(strNodeName, record);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to write General Property to file: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OnNodeStateReady(const XnChar* strNodeName)
+{
+	RecordedNodeInfo* pRecordedNodeInfo = GetRecordedNodeInfo(strNodeName);
+	XN_VALIDATE_PTR(pRecordedNodeInfo, XN_STATUS_BAD_NODE_NAME);
+	NodeStateReadyRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	record.SetNodeID(pRecordedNodeInfo->nNodeID);
+	XnStatus nRetVal = record.Encode();
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = WriteRecordToStream(strNodeName, record);
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void* pData, XnUInt32 nSize)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	if (nFrame == 0)
+	{
+		//Ignore 0 frame
+		return XN_STATUS_OK;
+	}
+
+	//Find node info
+	RecordedNodeInfo* pRecordedNodeInfo = GetRecordedNodeInfo(strNodeName);
+	XN_VALIDATE_PTR(pRecordedNodeInfo, XN_STATUS_BAD_NODE_NAME);
+
+	const void* pCompressedData = pData;
+	XnUInt32 nCompressedSize = nSize;
+	XnCodecID compression = pRecordedNodeInfo->compression;
+	if (compression != XN_CODEC_UNCOMPRESSED)
+	{
+		if (!pRecordedNodeInfo->codec.IsValid())
+		{
+			xnLogWarning(XN_MASK_OPEN_NI, "Codec is not valid for node '%s'", strNodeName);
+			XN_ASSERT(FALSE);
+			return XN_STATUS_INVALID_OPERATION;
+		}
+
+		//Compress data
+		nRetVal = pRecordedNodeInfo->codec.EncodeData(pData, nSize, m_pCompressedData, COMPRESSED_DATA_SIZE, &nCompressedSize);
+		XN_IS_STATUS_OK(nRetVal);
+		pCompressedData = m_pCompressedData;
+	}
+
+	if (!pRecordedNodeInfo->bGotData)
+	{
+		//This is the first data we get for this node, save its timestamp and frame number as the minimum
+		pRecordedNodeInfo->nMinTimeStamp = nTimeStamp;
+		pRecordedNodeInfo->nMinFrameNum = nFrame - 1; //Corrected frame numbers start from 1
+
+		// write down the DataBegin record
+		nRetVal = WriteNodeDataBegin(strNodeName);
+		XN_IS_STATUS_OK(nRetVal);
+
+		pRecordedNodeInfo->bGotData = TRUE;
+	}
+
+	XN_ASSERT(nTimeStamp >= pRecordedNodeInfo->nMinTimeStamp);
+	XN_ASSERT(nFrame >= pRecordedNodeInfo->nMinFrameNum);
+	//Corrected time stamps start from 0
+	XnUInt64 nCorrectedTimeStamp = nTimeStamp - pRecordedNodeInfo->nMinTimeStamp;
+	//Corrected frame numbers start from 1
+	XnUInt64 nCorrectedFrame = nFrame - pRecordedNodeInfo->nMinFrameNum;
+	pRecordedNodeInfo->nMaxTimeStamp = nCorrectedTimeStamp;
+
+	XnUInt32 nUndoRecordPos = 0;
+	nRetVal = UpdateNodePropInfo(strNodeName, XN_PROP_NEWDATA, pRecordedNodeInfo, nUndoRecordPos);
+	XN_IS_STATUS_OK(nRetVal);
+
+	//Prepare data header
+	NewDataRecordHeader recordHeader(m_pRecordBuffer, RECORD_MAX_SIZE);
+	recordHeader.SetNodeID(pRecordedNodeInfo->nNodeID);
+	recordHeader.SetTimeStamp(nCorrectedTimeStamp);
+	recordHeader.SetFrameNumber(++pRecordedNodeInfo->nMaxFrameNum);
+	recordHeader.SetPayloadSize(nCompressedSize);
+	recordHeader.SetUndoRecordPos(nUndoRecordPos);
+	nRetVal = recordHeader.Encode();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to encode New Data Header: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	//First we write just the header
+	nRetVal = WriteRecordToStream(strNodeName, recordHeader);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to write New Data Header to file: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	//Now write actual data
+	nRetVal = WriteToStream(strNodeName, pCompressedData, nCompressedSize);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to write New Data to file: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	if (nCorrectedTimeStamp > m_nGlobalMaxTimeStamp)
+	{
+		m_nGlobalMaxTimeStamp = nCorrectedTimeStamp;
+	}
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::OpenStream()
+{
+	XN_VALIDATE_INPUT_PTR(m_pOutputStream);
+	XnStatus nRetVal = m_pOutputStream->Open(m_pStreamCookie);
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = WriteHeader(INVALID_TIMESTAMP, INVALID_NODE_ID); //Write invalid values to mark the file is not finalized
+	XN_IS_STATUS_OK(nRetVal);
+	m_bOpen = TRUE;
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::WriteHeader(XnUInt64 nGlobalMaxTimeStamp, XnUInt32 nMaxNodeID)
+{
+	RecordingHeader recordingHeader = DEFAULT_RECORDING_HEADER;
+	recordingHeader.nGlobalMaxTimeStamp = nGlobalMaxTimeStamp;
+	recordingHeader.nMaxNodeID = nMaxNodeID;
+	XnStatus nRetVal = WriteToStream(NULL, &recordingHeader, sizeof(recordingHeader));
+	XN_IS_STATUS_OK(nRetVal);
+	return nRetVal;
+}
+
+XnStatus RecorderNode::WriteToStream(const XnChar* strNodeName, const void* pData, XnUInt32 nSize)
+{
+	XN_VALIDATE_INPUT_PTR(m_pOutputStream);
+	return m_pOutputStream->Write(m_pStreamCookie, strNodeName, pData, nSize);
+}
+
+XnStatus RecorderNode::WriteRecordToStream(const XnChar* strNodeName, Record &record)
+{
+	return WriteToStream(strNodeName, record.GetData(), record.GetSize());
+}
+
+XnStatus RecorderNode::SeekStream(XnOSSeekType seekType, XnUInt32 nOffset)
+{
+	XN_VALIDATE_INPUT_PTR(m_pOutputStream);
+	return m_pOutputStream->Seek(m_pStreamCookie, seekType, nOffset);
+}
+
+XnUInt32 RecorderNode::TellStream()
+{
+	XN_VALIDATE_INPUT_PTR(m_pOutputStream);
+	return m_pOutputStream->Tell(m_pStreamCookie);
+}
+
+XnStatus RecorderNode::FinalizeStream()
+{
+	XN_VALIDATE_INPUT_PTR(m_pOutputStream);
+	EndRecord endRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
+	XnStatus nRetVal = endRecord.Encode();
+	XN_IS_STATUS_OK(nRetVal);
+	/* Write End Record */
+	nRetVal = WriteRecordToStream(NULL, endRecord);
+	XN_IS_STATUS_OK(nRetVal);
+
+	/* Remove all nodes in the map. When each node is removed, we write its number of frames and max time stamp */
+	RecordedNodesInfo::ConstIterator it = m_recordedNodesInfo.begin();
+	while (it != m_recordedNodesInfo.end())
+	{
+		RecordedNodesInfo::ConstIterator curr = it;
+		++it;
+		nRetVal = RemoveNode(curr.Key());
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	/* Re-write header with correct max timestamp*/
+	nRetVal = SeekStream(XN_OS_SEEK_SET, 0);
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = WriteHeader(m_nGlobalMaxTimeStamp, m_nNumNodes);
+	XN_IS_STATUS_OK(nRetVal);
+
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::CloseStream()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	if (m_bOpen)
+	{
+		XN_VALIDATE_INPUT_PTR(m_pOutputStream);
+		nRetVal = FinalizeStream();
+		XN_IS_STATUS_OK(nRetVal);
+		m_pOutputStream->Close(m_pStreamCookie);
+		m_bOpen = FALSE;
+	}
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::WriteNodeDataBegin(const XnChar* strNodeName)
+{
+	RecordedNodeInfo* pRecordedNodeInfo = GetRecordedNodeInfo(strNodeName);
+	XN_VALIDATE_PTR(pRecordedNodeInfo, XN_STATUS_BAD_NODE_NAME);
+	NodeDataBeginRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	record.SetNodeID(pRecordedNodeInfo->nNodeID);
+	XnStatus nRetVal = record.Encode();
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = WriteRecordToStream(strNodeName, record);
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderNode::UpdateNodeSeekInfo(const XnChar* strNodeName, const RecordedNodeInfo& recordedNodeInfo)
+{
+	if (recordedNodeInfo.bGotData)
+	{
+		XnUInt32 nStartPos = TellStream();
+		//Seek to position of node added record
+		XnStatus nRetVal = SeekStream(XN_OS_SEEK_SET, recordedNodeInfo.nNodeAddedPos);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// re-write this record, this time with seek data
+		NodeAddedRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+		record.SetNodeID(recordedNodeInfo.nNodeID);
+		record.SetNodeName(strNodeName);
+		record.SetCompression(recordedNodeInfo.compression);
+		record.SetNodeType(recordedNodeInfo.type);
+		record.SetNumberOfFrames(recordedNodeInfo.nMaxFrameNum);
+		record.SetMinTimestamp(recordedNodeInfo.nMinTimeStamp);
+		record.SetMaxTimestamp(recordedNodeInfo.nMaxTimeStamp);
+
+		nRetVal = record.Encode();
+		XN_IS_STATUS_OK(nRetVal);
+
+		nRetVal = WriteRecordToStream(strNodeName, record);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// and seek back
+		nRetVal = SeekStream(XN_OS_SEEK_SET, nStartPos);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	return XN_STATUS_OK;
+}
+
+
+XnStatus RecorderNode::RemoveNode(const XnChar* strNodeName)
+{
+	RecordedNodeInfo recordedNodeInfo;
+	XnChar strNodeNameCopy[XN_MAX_NAME_LENGTH];
+	//We copy the node name cuz when we'll remove it from the hash it will be freed, but we need it later.
+	XnStatus nRetVal = xnOSStrCopy(strNodeNameCopy, strNodeName, sizeof(strNodeNameCopy));
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = m_recordedNodesInfo.Remove(strNodeName, recordedNodeInfo);
+	XN_IS_STATUS_OK(nRetVal);
+
+	NodeRemovedRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	record.SetNodeID(recordedNodeInfo.nNodeID);
+	record.SetUndoRecordPos(recordedNodeInfo.nNodeAddedPos);
+
+	nRetVal = record.Encode();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to encode Node Removed record: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	nRetVal = WriteRecordToStream(strNodeNameCopy, record);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to write Node Removed record to file: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+		return nRetVal;
+	}
+
+	nRetVal = UpdateNodeSeekInfo(strNodeNameCopy, recordedNodeInfo);
+	XN_IS_STATUS_OK(nRetVal);
+
+	recordedNodeInfo.codec.Unref();
+	return XN_STATUS_OK;
+}
+
+
+XnStatus RecorderNode::UpdateNodePropInfo(const XnChar* strNodeName, const XnChar* strPropName, 
+										  RecordedNodeInfo*& pRecordedNodeInfo, XnUInt32& nUndoPos)
+{
+	XnStatus nRetVal = m_recordedNodesInfo.Get(strNodeName, pRecordedNodeInfo);
+	XN_IS_STATUS_OK(nRetVal);
+	RecordedNodePropInfoMap& propInfoMap = pRecordedNodeInfo->propInfoMap;
+	RecordedNodePropInfo propInfo;
+	propInfoMap.Get(strPropName, propInfo);
+	nUndoPos = propInfo.nPos;
+	propInfo.nPos = TellStream();
+	nRetVal = propInfoMap.Set(strPropName, propInfo);
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;
+}
+
+RecorderNode::RecordedNodeInfo* RecorderNode::GetRecordedNodeInfo(const XnChar* strNodeName)
+{
+	RecordedNodeInfo* pRecordedNodeInfo = NULL;
+	return (m_recordedNodesInfo.Get(strNodeName, pRecordedNodeInfo) == XN_STATUS_OK) ? pRecordedNodeInfo : NULL;
+}
+
+RecorderNode::RecordedNodeInfo::RecordedNodeInfo()
+{
+	Reset();
+}
+
+void RecorderNode::RecordedNodeInfo::Reset()
+{
+	nNodeID = 0;
+	type = (XnProductionNodeType)-1;
+	nMinFrameNum = 0;
+	nMaxFrameNum = 0;
+	nCurFrameNum = 0;
+	nMinTimeStamp = 0;
+	nMaxTimeStamp = 0; 
+	nNodeAddedPos = 0;
+	bGotData = FALSE;
+	compression = XN_CODEC_NULL;
+	propInfoMap.Clear();
+}

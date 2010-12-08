@@ -1,0 +1,8 @@
+<root>
+  <PROJECT>OpenNI</PROJECT>
+  <PLATFORM>WIN32</PLATFORM>
+  <VERSION_NUMBER>1.0.0</VERSION_NUMBER>
+  <WORK_DIR>..\..\..</WORK_DIR>
+  <PROJECT_SLN>\Platform\Win32\Build\OpenNI.sln</PROJECT_SLN>
+  <SAMPLES_SLN>Platform\Win32\Redist\Samples\Build\All_2008.sln</SAMPLES_SLN>
+</root>

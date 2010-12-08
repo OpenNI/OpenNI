@@ -1,0 +1,15 @@
+Recorder memory consumption:
+the recorder stores frames in memory in a cyclic buffer that is dependent on the streams, their resolutions and the amount of time requested.
+
+Memory consumption
+------------------
+1 second, depth VGA: 30*2*640*480 = 18432000 bytes = 17.6MB
+1 second, depth QVGA: 30*2*320*240 = 4608000 bytes = 4.4MB
+1 second, image VGA: 30*3*640*480 = 27648000 bytes = 26.4MB
+1 second, image QVGA: 30*3*320*240 = 6912000 bytes = 6.6MB
+
+This means:
+2 minutes, depth QVGA, image QVGA: (4.4MB+6.6MB)*120 = 1.3GB
+2 minutes, depth VGA, image VGA: (17.6MB+26.4MB)*120 = 5.2GB
+
+So be warned, the memory consumption can get quite high when recording high resolutions and/or long periods.

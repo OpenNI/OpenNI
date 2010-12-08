@@ -1,0 +1,12 @@
+<!DOCTYPE Workspace SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpw.dtd">
+<Workspace Version="10.0" VendorName="SlickEdit">
+	<Projects>
+		<Project File="Modules/nimCodecs/nimCodecs.vpj" />
+		<Project File="Modules/nimMockNodes/nimMockNodes.vpj" />
+		<Project File="Modules/nimRecorder/nimRecorder.vpj" />
+		<Project File="Utils/niReg/niReg.vpj" />
+		<Project File="Samples/NiSimpleRead/NiSimpleRead.vpj" />
+		<Project File="Samples/NiViewer/NiViewer.vpj" />
+		<Project File="OpenNI/OpenNI.vpj" />
+	</Projects>
+</Workspace>

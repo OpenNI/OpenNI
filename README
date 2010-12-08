@@ -1,0 +1,62 @@
+OpenNI
+------
+Website: www.openni.org
+
+Release Notes:
+--------------
+* At the moment, the default is to compile the code with SSE3 support (this is also true for the supplied binaries). 
+  If you have a CPU without such support, please remove the sse compiler flags from the make files.
+  (A good hint for this error is that you encounter an "illegal instructions" messages)
+
+Build Notes:
+------------
+Windows:
+	Requirements:
+		1) Microsoft Visual Studio 2008/2010
+		2) Python 2.x/3.x (must be at least 2.6 and above)
+		3) PyWin32 
+		4) NSIS 2.46
+		5) NSIS-2.46-strlen_8192.zip patch (An important patch to fix problems with adding strings to the path. you can find it in the Platform\Win32\Build\Prerequisites\ directory)
+		6) Doxygen & GraphViz (to create docs...)
+		7) Microsoft WDK - Optional! Only needed to build the usb driver. The package already includes a precompiled and digitally signed 32/64 bit driver.
+	
+	Building the USB driver (Optional):
+	Simply go into the directory "OpenNI\Platform\Win32\Driver\Build" and run the "BuildAll.bat" script.
+	For your development convenience, you can also use the solution: "Platform\Win32\Driver\Build\psdrv3.sln" but official driver builds should only be made with the batch file above, that uses the proper DDK environment.
+	Note: The driver build tool requires a system environment variable called "DDKPATH" that points to the WDK installation dir (for example: "c:\WinDDK\7100.0.0"). To add an environment variable please follow these steps: Control Panel -> System -> Advanced -> Environment Variables -> New (at the "System Variables" tab).
+		
+	Building OpenNI:
+		1) Go to the directory: "Platform\Win32\CreateRedist". Run the script: "RedistMaker.bat" This will compile and prepare the redist exe files that includes everything.
+		2) Install the exe you've just made which is located in Platform\Win32\CreateRedist\Final\OPENNI-Win32-1.0.0.exe 
+		   The installer will also create the necessary environment variables (OPEN_NI_xxx), add the DLLs to the system path and register the internal modules with NiReg.
+		   
+		The visual studio solution is located in: Platform\Win32\Build\OpenNI.sln.
+		
+		When doing development it is recommended that you change the environment variables to point to your development directory instead of the default C:\Program Files\OpenNI.
+		(This can save you lots back and forth file copying...)
+
+	Important: Please note that even though the directory is called Win32, you can also use it to compile it for 64-bit targets (AMD64/x64).
+	   
+Linux:
+	Requirements:
+		1) GCC 4.x
+		2) Python 2.6/2.7/3.0/3.1
+		3) libusb 1.0.8 (libusb-1.0-0-dev)
+		4) freeglut3 (freeglut3-dev)
+		5) Doxygen & GraphViz (to create docs...)
+
+	Building OpenNI:
+		1) Go into the directory: "Platform/Linux-x86/CreateRedist". Run the script: "RedistMaker". This will compile everything and create a redist package in the "Platform/Linux-x86/Redist" directory.
+		2) Go into the directory: "Platform/Linux-x86/Redist". Run the script: "sudo ./install.sh" (needs to run as root)
+		
+		The install script copies key files to the following location:
+			Libs into: /usr/lib
+			Bins into: /usr/bin
+			Includes into: /usr/include/ni
+			Config files: /var/lib/ni
+			
+		To build the package manually, you can run make in the "Platform\Linux-x86\Build" directory.
+		(You can also find a SlickEdit project there...)
+		
+	Important: Please note that even though the directory is called Linux-x86, you can also use it to compile it for 64-bit targets and pretty much any other linux based environment.
+	

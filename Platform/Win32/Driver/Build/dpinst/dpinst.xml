@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<dpInst>
+    <enableNotListedLanguages/>
+    <language code="0x0409">
+        <dpinstTitle>PrimeSensor Device Driver Installer</dpinstTitle>
+    
+        <welcomeTitle>Welcome to the PrimeSensor Device Driver Installer!</welcomeTitle>
+        <welcomeIntro>This wizard will walk you through updating the drivers for your PrimeSensor device.</welcomeIntro>
+    
+        <installHeaderTitle>Installing the software for your PrimeSensor device...</installHeaderTitle>
+
+        <finishTitle>Congratulations! You have finished installing your PrimeSensor device drivers!</finishTitle>
+    </language>
+    <icon>psdrv3.ico</icon>
+</dpInst>

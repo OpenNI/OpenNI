@@ -1,0 +1,140 @@
+;/****************************************************************************
+;*                                                                           *
+;*   PrimeSensor Device Driver v3.x INF                                      *
+;*                                                                           *
+;*   Author:     Ziv Hendel                                                  *
+;*                                                                           *
+;*   Copyright (C) 2006 PrimeSense Ltd. All Rights Reserved.                 *
+;*                                                                           *
+;*   This file has been provided pursuant to a License Agreement containing  *
+;*   restrictions on its use. This data contains valuable trade secrets      *
+;*   and proprietary information of PrimeSense Inc. and is protected by law. *
+;*                                                                           *
+;****************************************************************************/
+
+; ================= Version section ===================
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=PrimeSensor
+ClassGuid={dce97d75-aef7-1980-1909-531357633001}
+Provider=%PS%
+DriverVer=07/13/2010,3.1.0.4
+CatalogFile=psdrv3.cat
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=PrimeSensorClassReg     
+
+[PrimeSensorClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,"-20"
+
+; ================= Device section =====================
+
+[DestinationDirs]
+DefaultDestDir = 12 ; Driver Dir
+
+[Manufacturer]
+%MfgName%=PrimeSense,NTx86,NTamd64
+
+[PrimeSense.NTx86]
+%USB\VID_1D27&PID_0200.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0200&MI_00
+%USB\VID_1D27&PID_0200.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0200
+%USB\VID_1D27&PID_0300.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0300&MI_00
+%USB\VID_1D27&PID_0300.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0300
+%USB\VID_1D27&PID_0400.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0400&MI_00
+%USB\VID_1D27&PID_0400.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0400
+%USB\VID_1D27&PID_0500.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0500&MI_00
+%USB\VID_1D27&PID_0500.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0500
+%USB\VID_1D27&PID_0600.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0600&MI_00
+%USB\VID_1D27&PID_0600.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0600
+
+[PrimeSense.NTamd64]
+%USB\VID_1D27&PID_0200.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0200&MI_00
+%USB\VID_1D27&PID_0200.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0200
+%USB\VID_1D27&PID_0300.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0300&MI_00
+%USB\VID_1D27&PID_0300.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0300
+%USB\VID_1D27&PID_0400.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0400&MI_00
+%USB\VID_1D27&PID_0400.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0400
+%USB\VID_1D27&PID_0500.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0500&MI_00
+%USB\VID_1D27&PID_0500.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0500
+%USB\VID_1D27&PID_0600.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0600&MI_00
+%USB\VID_1D27&PID_0600.DeviceDesc%=psdrv3.Dev, USB\VID_1D27&PID_0600
+
+[psdrv3.Dev.NT]
+CopyFiles=psdrv3.Files.Ext
+
+[psdrv3.Dev.NT.Services]
+Addservice = psdrv3, 0x00000002, psdrv3.AddService
+
+[psdrv3.AddService]
+DisplayName    = %psdrv3.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %10%\System32\Drivers\psdrv3.sys
+AddReg         = psdrv3.AddReg
+LoadOrderGroup = Base
+
+[psdrv3.AddReg]
+HKR,"Parameters","MaximumTransferSize",0x10001,65536
+HKR,"Parameters","DebugLevel",0x10001,2
+HKR,"Parameters","RemovableIcon",0x10001,0
+
+[psdrv3.Files.Ext]
+psdrv3.sys
+
+[SourceDisksNames.x86]
+1=%Disk_Description%,,,\x86
+
+[SourceDisksNames.amd64]
+2=%Disk_Description%,,,\amd64
+
+[SourceDisksFiles.x86]
+psdrv3.sys = 1
+
+[SourceDisksFiles.amd64]
+psdrv3.sys = 2
+
+; ================= WDF section =====================
+
+[DestinationDirs]
+CoInstaller_CopyFiles = 11 ; System Dir
+
+[psdrv3.Dev.NT.CoInstallers]
+AddReg=CoInstaller_AddReg
+CopyFiles=CoInstaller_CopyFiles
+
+[CoInstaller_CopyFiles]
+WdfCoInstaller01009.dll
+
+[SourceDisksFiles.x86]
+WdfCoInstaller01009.dll=1
+
+[SourceDisksFiles.amd64]
+WdfCoInstaller01009.dll=2
+
+[CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller01009.dll,WdfCoInstaller"
+
+[psdrv3.Dev.NT.Wdf]
+KmdfService = psdrv3, psdrv3_wdfsect
+
+[psdrv3_wdfsect]
+KmdfLibraryVersion = 1.9
+
+; ================= Strings section =====================
+
+[Strings]
+PS              = "PrimeSense"
+MfgName         = "PrimeSense Ltd."
+Disk_Description= "PrimeSensor Device Driver Installation Disk v3.x"
+psdrv3.SvcDesc =  "PrimeSensor Device Driver Service v3.x"
+ClassName       = "PrimeSensor"
+USB\VID_1D27&PID_0200.DeviceDesc="PrimeSensor Development Kit 2.x"
+USB\VID_1D27&PID_0300.DeviceDesc="PrimeSensor Development Kit 3.x"
+USB\VID_1D27&PID_0400.DeviceDesc="PrimeSensor Development Kit 4.x"
+USB\VID_1D27&PID_0500.DeviceDesc="PrimeSensor Development Kit 5.x"
+USB\VID_1D27&PID_0600.DeviceDesc="PrimeSensor Reference Design 1.08x"

@@ -1,0 +1,23 @@
+TARGETNAME=psdrv3
+TARGETTYPE=DRIVER
+
+KMDF_VERSION_MAJOR=1
+
+MSC_WARNING_LEVEL=/W4 /WX
+
+C_DEFINES= $(C_DEFINES) 
+
+TARGETLIBS=$(TARGETLIBS) $(DDK_LIB_PATH)\usbd.lib
+
+INCLUDES=\
+      .\
+
+SOURCES= \
+     .\PSDrvDriver.c \
+     .\PSDrvDevice.c \
+     .\PSDrvIOCtls.c \
+     .\PSDrvBulk.c \
+     .\PSDrvIso.c \
+     .\PSDrv.rc \
+
+TARGET_DESTINATION=wdf
