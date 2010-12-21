@@ -52,6 +52,9 @@
 /** The name of the OpenNI recording format. **/
 #define XN_FORMAT_NAME_ONI	"oni"
 
+/** represents playback speed which does not consider file timestamps. **/
+#define XN_PLAYBACK_SPEED_FASTEST	0.0
+
 //---------------------------------------------------------------------------
 // Forward Declarations
 //---------------------------------------------------------------------------

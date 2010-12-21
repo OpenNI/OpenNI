@@ -1,0 +1,56 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
+namespace xn
+{
+	public class Recorder : ProductionNode
+	{
+		internal Recorder(IntPtr nodeHandle) :
+			base(nodeHandle)
+		{
+		}
+
+		public Recorder(Context context, string formatName) :
+			this(Create(context, formatName))
+		{
+		}
+
+		public void SetDestination(RecordMedium medium, string dest)
+		{
+			UInt32 status = OpenNIImporter.xnSetRecorderDestination(this.InternalObject, medium, dest);
+			WrapperUtils.CheckStatus(status);
+		}
+
+		public void AddNodeToRecording(ProductionNode node, CodecID codec)
+		{
+			UInt32 status = OpenNIImporter.xnAddNodeToRecording(this.InternalObject, node.InternalObject, codec.InternalValue);
+			WrapperUtils.CheckStatus(status);
+		}
+
+		public void AddNodeToRecording(ProductionNode node)
+		{
+			AddNodeToRecording(node, CodecID.Null);
+		}
+
+		public void RemoveNodeFromRecording(ProductionNode node)
+		{
+			UInt32 status = OpenNIImporter.xnRemoveNodeFromRecording(this.InternalObject, node.InternalObject);
+			WrapperUtils.CheckStatus(status);
+		}
+
+		public void Record()
+		{
+			UInt32 status = OpenNIImporter.xnRecord(this.InternalObject);
+			WrapperUtils.CheckStatus(status);
+		}
+
+		private static IntPtr Create(Context context, string formatName)
+		{
+			IntPtr nodeHandle;
+			UInt32 status = OpenNIImporter.xnCreateRecorder(context.InternalObject, formatName, out nodeHandle);
+			WrapperUtils.CheckStatus(status);
+			return nodeHandle;
+		}
+	}
+}

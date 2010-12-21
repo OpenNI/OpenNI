@@ -315,7 +315,9 @@ namespace xn
 		virtual XnStatus AddGesture(const XnChar* strGesture, XnBoundingBox3D* pArea) = 0;
 		virtual XnStatus RemoveGesture(const XnChar* strGesture) = 0;
 		virtual XnStatus GetActiveGestures(XnChar** pstrGestures, XnUInt16& nGestures) = 0;
+		virtual XnStatus GetAllActiveGestures(XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16& nGestures) = 0;
 		virtual XnStatus EnumerateGestures(XnChar** pstrGestures, XnUInt16& nGestures) = 0;
+		virtual XnStatus EnumerateAllGestures(XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16& nGestures) = 0;
 		virtual XnBool IsGestureAvailable(const XnChar* strGesture) = 0;
 		virtual XnBool IsGestureProgressSupported(const XnChar* strGesture) = 0;
 		virtual XnStatus RegisterGestureCallbacks(XnModuleGestureRecognized RecognizedCB, XnModuleGestureProgress ProgressCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
@@ -385,6 +387,7 @@ namespace xn
 
 		virtual XnUInt32 GetNumberOfPoses() = 0;
 		virtual XnStatus GetAvailablePoses(XnChar** pstrPoses, XnUInt32& nPoses) = 0;
+		virtual XnStatus GetAllAvailablePoses(XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32& nPoses) = 0;
 
 		virtual XnStatus StartPoseDetection(const XnChar* strPose, XnUserID user) = 0;
 		virtual XnStatus StopPoseDetection(XnUserID user) = 0;

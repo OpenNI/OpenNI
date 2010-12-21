@@ -308,7 +308,7 @@ void captureCloseWriteDevice()
 {
 	if (g_Capture.pRecorder != NULL)
 	{
-		g_Capture.pRecorder->Unref();
+		g_Capture.pRecorder->Release();
 		delete g_Capture.pRecorder;
 		g_Capture.pRecorder = NULL;
 	}

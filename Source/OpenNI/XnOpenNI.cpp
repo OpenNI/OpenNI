@@ -300,7 +300,7 @@ XN_C_API XnStatus xnContextOpenFileRecording(XnContext* pContext, const XnChar* 
 	nRetVal = xnSetPlayerSource(hPlayer, XN_RECORD_MEDIUM_FILE, strFileName);
 	if (nRetVal != XN_STATUS_OK)
 	{
-		xnUnrefProductionNode(hPlayer);
+		xnProductionNodeRelease(hPlayer);
 		return (nRetVal);
 	}
 
@@ -661,7 +661,7 @@ XN_C_API void xnNodeInfoFree(XnNodeInfo* pNodeInfo)
 		{
 			if (pNodeInfo->hNode != NULL)
 			{
-				xnUnrefProductionNode(pNodeInfo->hNode);
+				xnProductionNodeRelease(pNodeInfo->hNode);
 			}
 
 			// free all needed nodes
@@ -1384,7 +1384,7 @@ static XnStatus xnCreateProductionTreeImpl(XnContext* pContext, XnNodeInfo* pTre
 	if (pTree->hNode != NULL)
 	{
 		// tree already exists. only increase ref count
-		xnRefProductionNode(pTree->hNode);
+		xnProductionNodeAddRef(pTree->hNode);
 		return (XN_STATUS_OK);
 	}
 
@@ -1491,7 +1491,7 @@ void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 		it = xnNodeInfoListGetNext(it))
 	{
 		XnNodeInfo* pNeededInfo = xnNodeInfoListGetCurrent(it);
-		xnUnrefProductionNode(pNeededInfo->hNode);
+		xnProductionNodeRelease(pNeededInfo->hNode);
 	}
 
 	// NULL handle in info object
@@ -1504,14 +1504,19 @@ void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 	xnFreeProductionNodeImpl(hNode);
 }
 
-XN_C_API XnStatus xnRefProductionNode(XnNodeHandle hNode)
+XN_C_API XnStatus xnProductionNodeAddRef(XnNodeHandle hNode)
 {
 	XN_VALIDATE_INPUT_PTR(hNode);
 	++hNode->nRefCount;
 	return (XN_STATUS_OK);
 }
 
-XN_C_API void xnUnrefProductionNode(XnNodeHandle hNode)
+XN_C_API XnStatus xnRefProductionNode(XnNodeHandle hNode)
+{
+	return xnProductionNodeAddRef(hNode);
+}
+
+XN_C_API void xnProductionNodeRelease(XnNodeHandle hNode)
 {
 	if ((hNode != NULL) && (hNode->nRefCount > 0) && (--hNode->nRefCount == 0))
 	{
@@ -1525,6 +1530,11 @@ XN_C_API void xnUnrefProductionNode(XnNodeHandle hNode)
 			pInfo->hNode = NULL;
 		}
 	}
+}
+
+XN_C_API void xnUnrefProductionNode(XnNodeHandle hNode)
+{
+	xnProductionNodeRelease(hNode);
 }
 
 XN_C_API XnStatus xnCreateProductionTree(XnContext* pContext, XnNodeInfo* pTree, XnNodeHandle* phNode)
@@ -1658,7 +1668,7 @@ XN_C_API XnStatus xnCreateMockNodeBasedOn(XnContext* pContext,
 	nRetVal = CreateNodeWatcher(originalNode, type, hMockNode, xn::MockNotifier::GetInstance(), pNodeWatcher);
 	if (nRetVal != XN_STATUS_OK)
 	{
-		xnUnrefProductionNode(hMockNode);
+		xnProductionNodeRelease(hMockNode);
 		return nRetVal;
 	}
 
@@ -1666,7 +1676,7 @@ XN_C_API XnStatus xnCreateMockNodeBasedOn(XnContext* pContext,
 	XN_DELETE(pNodeWatcher);
 	if (nRetVal != XN_STATUS_OK)
 	{
-		xnUnrefProductionNode(hMockNode);
+		xnProductionNodeRelease(hMockNode);
 		return nRetVal;
 	}
 	
@@ -1894,11 +1904,6 @@ static XnStatus xnUpdateTreeImpl(XnProductionNodesSet* pUpdatedSet, const XnNode
 			{
 				nRetVal = xnUpdateDataImpl(pNode->hNode);
 				XN_IS_STATUS_OK(nRetVal);
-
-				pNode->hNode->bWasDataRead = TRUE;
-				pNode->hNode->bIsNewData = TRUE;
-				xnMarkFPSFrame(pNode->hNode->pContext, &pNode->hNode->readFPS);
-				xnUpdateMetaData(pNode->hNode);
 			}
 		}
 		// If it's a recorder, record
@@ -2725,14 +2730,14 @@ XN_C_API XnStatus xnAddNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNo
 	}
 
 	// increase ref of needed node
-	nRetVal = xnRefProductionNode(hNeededNode);
+	nRetVal = xnProductionNodeAddRef(hNeededNode);
 	XN_IS_STATUS_OK(nRetVal);
 
 	XnNodeInfoList* pNeededNodesList = hInstance->pNodeInfo->pNeededTrees;
 	nRetVal = xnNodeInfoListAddNode(pNeededNodesList, hNeededNode->pNodeInfo);
 	if (nRetVal != XN_STATUS_OK)
 	{
-		xnUnrefProductionNode(hNeededNode);
+		xnProductionNodeRelease(hNeededNode);
 		return (nRetVal);
 	}
 	
@@ -2761,7 +2766,7 @@ XN_C_API XnStatus xnRemoveNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeede
 			XN_IS_STATUS_OK(nRetVal);
 
 			// and dec ref it
-			xnUnrefProductionNode(hNeededNode);
+			xnProductionNodeRelease(hNeededNode);
 
 			return (XN_STATUS_OK);
 		}
@@ -2863,10 +2868,20 @@ XN_C_API XnBool xnIsNewDataAvailable(XnNodeHandle hInstance, XnUInt64* pnTimesta
 
 static XnStatus xnUpdateDataImpl(XnNodeHandle hInstance)
 {
+	XnStatus nRetVal = XN_STATUS_OK;
+
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	return pInterface->Generator.UpdateData(hModuleNode);
+	nRetVal = pInterface->Generator.UpdateData(hModuleNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	hInstance->bWasDataRead = TRUE;
+	hInstance->bIsNewData = TRUE;
+	xnMarkFPSFrame(hInstance->pContext, &hInstance->readFPS);
+	xnUpdateMetaData(hInstance);
+
+	return XN_STATUS_OK;
 }
 
 XN_C_API XnBool xnIsDataNew(XnNodeHandle hInstance)
@@ -2947,7 +2962,7 @@ XN_C_API XnStatus xnCreateRecorder(XnContext* pContext, const XnChar* strFormatN
 			}
 
 			// type doesn't match, free it
-			xnUnrefProductionNode(hRecorder);
+			xnProductionNodeRelease(hRecorder);
 			hRecorder = NULL;
 		}
 	}
@@ -3097,7 +3112,7 @@ XN_C_API XnStatus xnCreatePlayer(XnContext* pContext, const XnChar* strFormatNam
 			}
 
 			// type doesn't match, free it
-			xnUnrefProductionNode(hPlayer);
+			xnProductionNodeRelease(hPlayer);
 			hPlayer = NULL;
 		}
 	}
@@ -3169,6 +3184,10 @@ XN_C_API XnStatus xnSeekPlayerToTimeStamp(XnNodeHandle hPlayer,
 	XN_VALIDATE_INPUT_PTR(hPlayer);
 	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
 	XN_VALIDATE_CHANGES_ALLOWED(hPlayer);
+	//Get player impl object
+	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
+	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
+	pPlayerImpl->ResetTimeReference();
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.SeekToTimeStamp(hModuleNode, nTimeOffset, origin);
@@ -3182,6 +3201,10 @@ XN_C_API XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer,
 	XN_VALIDATE_INPUT_PTR(hPlayer);
 	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
 	XN_VALIDATE_CHANGES_ALLOWED(hPlayer);
+	//Get player impl object
+	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
+	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
+	pPlayerImpl->ResetTimeReference();
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.SeekToFrame(hModuleNode, strNodeName, nFrameOffset, origin);
@@ -3265,6 +3288,25 @@ XN_C_API void xnUnregisterFromEndOfFileReached(XnNodeHandle hInstance, XnCallbac
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	xnUnregisterFromModuleStateChange(pInterface->Player.UnregisterFromEndOfFileReached, hModuleNode, hCallback);
+}
+
+XN_C_API XnStatus xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed)
+{
+	XN_VALIDATE_INPUT_PTR(hInstance);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_PLAYER);
+	//Get player impl object
+	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hInstance->pPrivateData);
+	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
+	return pPlayerImpl->SetPlaybackSpeed(dSpeed);
+}
+
+XN_C_API XnDouble xnGetPlaybackSpeed(XnNodeHandle hInstance)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_PLAYER, -1.0);
+	//Get player impl object
+	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hInstance->pPrivateData);
+	XN_VALIDATE_PTR(pPlayerImpl, -1.0);
+	return pPlayerImpl->GetPlaybackSpeed();
 }
 
 //---------------------------------------------------------------------------
@@ -3960,6 +4002,17 @@ XN_C_API XnStatus xnGetActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestu
 	return pInterface->Gesture.GetActiveGestures(hModuleNode, pstrGestures, pnGestures);
 }
 
+XN_C_API XnStatus xnGetAllActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_OUTPUT_PTR(pstrGestures);
+	XN_VALIDATE_OUTPUT_PTR(pnGestures);
+	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->Gesture.GetAllActiveGestures);
+	return pInterface->Gesture.GetAllActiveGestures(hModuleNode, pstrGestures, nNameLength, pnGestures);
+}
+
 XN_C_API XnStatus xnEnumerateGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* pnGestures)
 {
 	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
@@ -3968,6 +4021,16 @@ XN_C_API XnStatus xnEnumerateGestures(XnNodeHandle hInstance, XnChar** pstrGestu
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Gesture.EnumerateGestures(hModuleNode, pstrGestures, pnGestures);
+}
+XN_C_API XnStatus xnEnumerateAllGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_OUTPUT_PTR(pstrGestures);
+	XN_VALIDATE_OUTPUT_PTR(pnGestures);
+	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->Gesture.EnumerateAllGestures);
+	return pInterface->Gesture.EnumerateAllGestures(hModuleNode, pstrGestures, nNameLength, pnGestures);
 }
 XN_C_API XnBool xnIsGestureAvailable(XnNodeHandle hInstance, const XnChar* strGesture)
 {
@@ -3998,13 +4061,19 @@ typedef struct GestureCookie
 static void XN_CALLBACK_TYPE xnGestureRecognizedCallback(const XnChar* strGesture, const XnPoint3D* pIDPosition, const XnPoint3D* pEndPosition, void* pCookie)
 {
 	GestureCookie* pGestureCookie = (GestureCookie*)pCookie;
-	pGestureCookie->recognizedHandler(pGestureCookie->hNode, strGesture, pIDPosition, pEndPosition, pGestureCookie->pUserCookie);
+	if (pGestureCookie->recognizedHandler != NULL)
+	{
+		pGestureCookie->recognizedHandler(pGestureCookie->hNode, strGesture, pIDPosition, pEndPosition, pGestureCookie->pUserCookie);
+	}
 }
 
 static void XN_CALLBACK_TYPE xnGestureProgressCallback(const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie)
 {
 	GestureCookie* pGestureCookie = (GestureCookie*)pCookie;
-	pGestureCookie->progressHandler(pGestureCookie->hNode, strGesture, pPosition, fProgress, pGestureCookie->pUserCookie);
+	if (pGestureCookie->progressHandler != NULL)
+	{
+		pGestureCookie->progressHandler(pGestureCookie->hNode, strGesture, pPosition, fProgress, pGestureCookie->pUserCookie);
+	}
 }
 
 XN_C_API XnStatus xnRegisterGestureCallbacks(XnNodeHandle hInstance, XnGestureRecognized RecognizedCB, XnGestureProgress ProgressCB, void* pCookie, XnCallbackHandle* phCallback)
@@ -4387,7 +4456,7 @@ XN_C_API XnStatus xnEnumerateActiveJoints(XnNodeHandle hInstance, XnSkeletonJoin
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.EnumerateActiveJoints, 0);
-	return pInterface->Skeleton.EnumerateActiveJoints(hModuleNode, pJoints, *pnJoints);
+	return pInterface->Skeleton.EnumerateActiveJoints(hModuleNode, pJoints, pnJoints);
 }
 
 XN_C_API XnStatus xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointTransformation* pJoint)
@@ -4626,8 +4695,18 @@ XN_C_API XnStatus xnGetAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses
 	XN_VALIDATE_OUTPUT_PTR(pnPoses);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->PoseDetection.GetNumberOfPoses, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.GetAvailablePoses);
 	return pInterface->PoseDetection.GetAvailablePoses(hModuleNode, pstrPoses, pnPoses);
+}
+XN_C_API XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_OUTPUT_PTR(pstrPoses);
+	XN_VALIDATE_OUTPUT_PTR(pnPoses);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.GetAllAvailablePoses);
+	return pInterface->PoseDetection.GetAllAvailablePoses(hModuleNode, pstrPoses, nNameLength, pnPoses);
 }
 XN_C_API XnStatus xnStartPoseDetection(XnNodeHandle hInstance, const XnChar* strPose, XnUserID user)
 {
@@ -4635,7 +4714,7 @@ XN_C_API XnStatus xnStartPoseDetection(XnNodeHandle hInstance, const XnChar* str
 	XN_VALIDATE_INPUT_PTR(strPose);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->PoseDetection.StartPoseDetection, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.StartPoseDetection);
 	return pInterface->PoseDetection.StartPoseDetection(hModuleNode, strPose, user);
 }
 XN_C_API XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user)
@@ -4643,7 +4722,7 @@ XN_C_API XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user)
 	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->PoseDetection.StopPoseDetection, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.StopPoseDetection);
 	return pInterface->PoseDetection.StopPoseDetection(hModuleNode, user);
 }
 
@@ -4831,7 +4910,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 			}
 
 			// type doesn't match, free it
-			xnUnrefProductionNode(hCodec);
+			xnProductionNodeRelease(hCodec);
 			hCodec = NULL;
 		}
 	}
@@ -4927,7 +5006,7 @@ XnStatus xnMockSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTime
 	XN_IS_STATUS_OK(nRetVal);
 
 	// Update mock node, so that data will be replaced
-	nRetVal = xnWaitAndUpdateData(hInstance);
+	nRetVal = xnUpdateDataImpl(hInstance);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);

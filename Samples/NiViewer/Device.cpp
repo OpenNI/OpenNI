@@ -27,6 +27,7 @@
 // --------------------------------
 #include "Device.h"
 #include "Draw.h"
+#include <math.h>
 
 // --------------------------------
 // Defines
@@ -527,6 +528,35 @@ void setStreamCropping(MapGenerator* pGenerator, XnCropping* pCropping)
 	{
 		displayMessage("Failed to set cropping: %s", xnGetStatusString(nRetVal));
 		return;
+	}
+}
+
+void setPlaybackSpeed(int ratioDiff)
+{
+	if (g_Player.IsValid())
+	{
+		XnDouble dNewSpeed = g_Player.GetPlaybackSpeed() * pow(2.0, (XnDouble)ratioDiff);
+		XnStatus nRetVal = g_Player.SetPlaybackSpeed(dNewSpeed);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			displayMessage("Failed to set playback speed: %s", xnGetStatusString(nRetVal));
+		}
+	}
+	else
+	{
+		displayMessage("Can't set playback speed - input is not a recording!");
+	}
+}
+
+XnDouble getPlaybackSpeed()
+{
+	if (g_Player.IsValid())
+	{
+		return g_Player.GetPlaybackSpeed();
+	}
+	else
+	{
+		return 1.0;
 	}
 }
 

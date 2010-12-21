@@ -89,6 +89,7 @@ private:
 		xn::Codec codec;
 		RecordUndoInfoMap recordUndoInfoMap;
 		RecordUndoInfo newDataUndoInfo;
+		DataIndexEntry* pDataIndex;
 	};
 
 	XnStatus ProcessRecord(XnBool bProcessPayload);
@@ -119,6 +120,7 @@ private:
 	XnStatus HandleNodeStateReadyRecord(NodeStateReadyRecord record);
 	XnStatus HandleNodeDataBeginRecord(NodeDataBeginRecord record);
 	XnStatus HandleNewDataRecord(NewDataRecordHeader record, XnBool bHandleRecord);
+	XnStatus HandleDataIndexRecord(DataIndexRecordHeader record, XnBool bReadPayload);
 	XnStatus HandleEndRecord(EndRecord record);
 	XnStatus Rewind();
 	XnStatus ProcessUntilFirstData();
@@ -130,8 +132,11 @@ private:
 	XnStatus GetRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const XnChar* strPropName, XnUInt32& nRecordPos, XnUInt32& nUndoRecordPos);
 	XnStatus SkipRecordPayload(Record record);
 	XnStatus SeekToRecordByType(XnUInt32 nNodeID, RecordType type);
+	DataIndexEntry* FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 nTimestamp);
+	DataIndexEntry** GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnUInt32 nDestFrame);
 
 	// BC functions
+	XnStatus HandleNodeAdded_1_0_0_5_Record(NodeAdded_1_0_0_5_Record record);
 	XnStatus HandleNodeAdded_1_0_0_4_Record(NodeAdded_1_0_0_4_Record record);
 
 	static const XnUInt64 DATA_MAX_SIZE;
@@ -159,6 +164,8 @@ private:
 	PlayerNodeInfo* m_pNodeInfoMap;
 	XnUInt32 m_nMaxNodes;
 	xn::Context m_context;
+
+	DataIndexEntry** m_aSeekTempArray;
 };
 
 

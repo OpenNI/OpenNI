@@ -98,9 +98,10 @@ def fix_file(arg,dirname,fname):
             for s in input:
                 olds = s
                 s = re.sub(r"../../../Bin",r"../Bin",s)
-                s = re.sub(r"../../../../../Include",r"/usr/include/ni ../../Include",s)
+                s = re.sub(r"../../../../../Include",r"../../Include /usr/include/ni",s)
                 s = re.sub(r"../../../../../Samples/.*/",r"",s)
                 s = re.sub(r"../../../../Data/SamplesConfig.xml",r"../../Config/SamplesConfig.xml",s)
+                s = re.sub(r"../../Res/",r"../Res/",s)
                 s = re.sub(r"include ../../CommonMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonMakefile",s)
 
                 output.write(s)
@@ -217,6 +218,7 @@ os.makedirs("Redist/Samples/Bin/Debug")
 os.makedirs("Redist/Samples/Bin/Release")
 os.makedirs("Redist/Samples/Build")
 os.makedirs("Redist/Samples/Config")
+os.makedirs("Redist/Samples/Res")
 
 #-------------Copy files to redist---------------------------------------------#
 print "* Copying files to redist dir..."
@@ -251,6 +253,9 @@ shutil.copy("Build/CommonMakefile", "Redist/Include")
 samples_list = os.listdir("../../Samples")
 if '.svn' in samples_list:
     samples_list.remove('.svn')
+samples_list.remove("SimpleRead.net")
+samples_list.remove("SimpleViewer.net")
+samples_list.remove("UserTracker.net")
 print "Samples:", samples_list
 
 for sample in samples_list:
@@ -259,6 +264,13 @@ for sample in samples_list:
 
 #data
 shutil.copy("../../Data/SamplesConfig.xml", "Redist/Samples/Config/SamplesConfig.xml")
+
+#res
+res_files = os.listdir("Build/Res")
+if '.svn' in res_files:
+    res_files.remove('.svn')
+for res_file in res_files:
+    shutil.copy("Build/Res/" + res_file, "Redist/Samples/Res")
 
 # remove all .svn files
 os.system("find Redist/. | grep .svn | xargs rm -rf")

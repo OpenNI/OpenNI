@@ -995,6 +995,9 @@ typedef struct XnModuleGestureGeneratorInterface
 	void (XN_CALLBACK_TYPE* UnregisterGestureCallbacks)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
 	XnStatus (XN_CALLBACK_TYPE* RegisterToGestureChange)(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
 	void (XN_CALLBACK_TYPE* UnregisterFromGestureChange)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+
+	XnStatus (XN_CALLBACK_TYPE* GetAllActiveGestures)(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
+	XnStatus (XN_CALLBACK_TYPE* EnumerateAllGestures)(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
 } XnModuleGestureGeneratorInterface;
 
 /** Scene Analyzer Interface. */
@@ -1033,7 +1036,7 @@ typedef struct XnModuleSkeletonCapabilityInterface
 	XnBool (XN_CALLBACK_TYPE* IsJointActive)(XnModuleNodeHandle hGenerator, XnSkeletonJoint eJoint);
 	XnStatus (XN_CALLBACK_TYPE* RegisterToJointConfigurationChange)(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
 	void (XN_CALLBACK_TYPE* UnregisterFromJointConfigurationChange)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
-	XnStatus (XN_CALLBACK_TYPE* EnumerateActiveJoints)(XnModuleNodeHandle hGenerator, XnSkeletonJoint* pJoints, XnUInt16& nJoints);
+	XnStatus (XN_CALLBACK_TYPE* EnumerateActiveJoints)(XnModuleNodeHandle hGenerator, XnSkeletonJoint* pJoints, XnUInt16* pnJoints);
 	XnStatus (XN_CALLBACK_TYPE* GetSkeletonJoint)(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointTransformation* pJoint);
 	XnStatus (XN_CALLBACK_TYPE* GetSkeletonJointPosition)(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointPosition* pJoint);
 	XnStatus (XN_CALLBACK_TYPE* GetSkeletonJointOrientation)(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointOrientation* pJoint);
@@ -1065,6 +1068,8 @@ typedef struct XnModulePoseDetectionCapabilityInterface
 	XnStatus (XN_CALLBACK_TYPE* StopPoseDetection)(XnModuleNodeHandle hGenerator, XnUserID user);
 	XnStatus (XN_CALLBACK_TYPE* RegisterToPoseCallbacks)(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback StartPoseCB, XnModulePoseDetectionCallback EndCB, void* pCookie, XnCallbackHandle* phCallback);
 	void (XN_CALLBACK_TYPE* UnregisterFromPoseCallbacks)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+
+	XnStatus (XN_CALLBACK_TYPE* GetAllAvailablePoses)(XnModuleNodeHandle hGenerator, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses);
 } XnModulePoseDetectionCapabilityInterface;
 
 /** User generator Interface. */

@@ -335,6 +335,8 @@ void createKeyboardMap()
 			registerKey('k', "Jump 1 frame backwards", seek, -1);
 			registerKey('K', "Jump 10 frames backwards", seek, -10);
 			registerKey(';', "Read one frame", step, 0);
+			registerKey('[', "Decrease playback speed", setPlaybackSpeed, -1);
+			registerKey(']', "Increase playback speed", setPlaybackSpeed, 1);
 		}
 		endKeyboardGroup();
 	}

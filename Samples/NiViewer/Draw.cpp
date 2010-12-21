@@ -815,14 +815,24 @@ void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
 		{
 			for (XnUInt16 nX = 0; nX < pImageMD->XRes(); nX++, pTexture+=4)
 			{
-				XnUInt32 nDepthIndex = 0;
+				XnInt32 nDepthIndex = 0;
 
 				if (pDepthMetaData != NULL)
 				{
-					XnUInt32 nDepthX = nX / (XnDouble)pImageMD->XRes() * pDepthMetaData->XRes();
-					XnUInt32 nDepthY = nY / (XnDouble)pImageMD->YRes() * pDepthMetaData->YRes();
+					XnDouble dRealX = (nX + pImageMD->XOffset()) / (XnDouble)pImageMD->FullXRes();
+					XnDouble dRealY = nY / (XnDouble)pImageMD->FullYRes();
 
-					nDepthIndex = nDepthY*pDepthMetaData->XRes() + nDepthX;
+					XnUInt32 nDepthX = dRealX * pDepthMetaData->FullXRes() - pDepthMetaData->XOffset();
+					XnUInt32 nDepthY = dRealY * pDepthMetaData->FullYRes() - pDepthMetaData->YOffset();
+
+					if (nDepthX >= pDepthMetaData->XRes() || nDepthY >= pDepthMetaData->YRes())
+					{
+						nDepthIndex = -1;
+					}
+					else
+					{
+						nDepthIndex = nDepthY*pDepthMetaData->XRes() + nDepthX;
+					}
 				}
 
 				switch (pImageMD->PixelFormat())
@@ -846,7 +856,7 @@ void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
 
 				// decide if pixel should be lit or not
 				if (g_DrawConfig.Streams.Image.Coloring == DEPTH_MASKED_IMAGE &&
-					(pDepthMetaData == NULL || pDepthMetaData->Data()[nDepthIndex] == 0))
+					(pDepthMetaData == NULL || nDepthIndex == -1 || pDepthMetaData->Data()[nDepthIndex] == 0))
 				{
 					pTexture[3] = 0;
 				}
@@ -1158,8 +1168,50 @@ void drawPointerMode(UIntPair* pPointer)
 
 void drawCenteredMessage(void* font, int y, const char* message, float fRed, float fGreen, float fBlue)
 {
-	int nWidth = glutBitmapLength(font, (const unsigned char*)message);
-	int nXLocation = XN_MAX(0, (WIN_SIZE_X - nWidth) / 2);
+	const XnUInt32 nMaxLines = 5;
+	XnChar buf[512];
+	XnChar* aLines[nMaxLines];
+	XnUInt32 nLine = 0;
+	XnUInt32 nLineLengthChars = 0;
+	XnUInt32 nLineLengthPixels = 0;
+	XnUInt32 nMaxLineLength = 0;
+	
+	aLines[0] = buf;
+	
+	// parse message to lines
+	const char* pChar = message;
+	while (TRUE)
+	{
+		if (*pChar == '\n' || *pChar == '\0')
+		{
+			if (nLineLengthChars > 0)
+			{
+				aLines[nLine][nLineLengthChars++] = '\0';
+				aLines[nLine+1] = &aLines[nLine][nLineLengthChars];
+				nLine++;
+				if (nLineLengthPixels > nMaxLineLength)
+				{
+					nMaxLineLength = nLineLengthPixels;
+				}
+				nLineLengthPixels = 0;
+				nLineLengthChars = 0;
+			}
+
+			if (nLine >= nMaxLines || *pChar == '\0')
+			{
+				break;
+			}
+		}
+		else
+		{
+			aLines[nLine][nLineLengthChars++] = *pChar;
+			nLineLengthPixels += glutBitmapWidth(font, *pChar);
+		}
+		pChar++;
+	}
+	
+	XnUInt32 nHeight = 26;
+	int nXLocation = XN_MAX(0, (WIN_SIZE_X - nMaxLineLength) / 2);
 	int nYLocation = y;
 
 	// Draw black background
@@ -1168,18 +1220,21 @@ void drawCenteredMessage(void* font, int y, const char* message, float fRed, flo
 
 	glBegin(GL_QUADS);
 	glColor4f(0, 0, 0, 0.6);
-	glVertex2i(nXLocation - 5, nYLocation - 27);
-	glVertex2i(nXLocation + nWidth + 5, nYLocation - 27);
-	glVertex2i(nXLocation + nWidth + 5, nYLocation + 5);
-	glVertex2i(nXLocation - 5, nYLocation + 5);
+	glVertex2i(nXLocation - 5, nYLocation - nHeight - 5);
+	glVertex2i(nXLocation + nMaxLineLength + 5, nYLocation - nHeight - 5);
+	glVertex2i(nXLocation + nMaxLineLength + 5, nYLocation + nHeight * nLine + 5);
+	glVertex2i(nXLocation - 5, nYLocation + nHeight * nLine + 5);
 	glEnd();
 
 	glDisable(GL_BLEND);
 
 	// show message
 	glColor3f(fRed, fGreen, fBlue);
-	glRasterPos2i(nXLocation, nYLocation);
-	glPrintString(font, message);
+	for (XnUInt32 i = 0; i < nLine; ++i)
+	{
+		glRasterPos2i(nXLocation, nYLocation + i * nHeight);
+		glPrintString(font, aLines[i]);
+	}
 }
 
 void drawUserMessage()
@@ -1320,14 +1375,14 @@ void drawHelpScreen()
 	int nXLocation = nXStartLocation;
 	int nYLocation = nYStartLocation;
 	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_PRESETS);
-	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_CAPTURE);
+	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_DISPLAY);
+	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_DEVICE);
 
 	// print right pane
 	nXLocation = WIN_SIZE_X/2;
 	nYLocation = nYStartLocation;
-	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_DISPLAY);
-	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_DEVICE);
 	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_PLAYER);
+	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_CAPTURE);
 	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_GENERAL);
 }
 
@@ -1407,6 +1462,19 @@ bool isPointInRect(UIntPair point, UIntRect* pRect)
 {
 	return (point.X >= pRect->uLeft && point.X <= pRect->uRight &&
 		point.Y >= pRect->uBottom && point.Y <= pRect->uTop);
+}
+
+void drawPlaybackSpeed()
+{
+	XnDouble dSpeed = getPlaybackSpeed();
+	if (dSpeed != 1.0)
+	{
+		XnChar strSpeed[20];
+		sprintf(strSpeed, "x%.3f", dSpeed);
+		glColor3f(0, 1, 0);
+		glRasterPos2i(WIN_SIZE_X - 80, 30);
+		glPrintString(GLUT_BITMAP_TIMES_ROMAN_24, strSpeed);
+	}
 }
 
 void drawFrame()
@@ -1499,6 +1567,7 @@ void drawFrame()
 	drawUserInput(!bOverDepth && !bOverImage);
 
 	drawUserMessage();
+	drawPlaybackSpeed();
 
 	if (g_DrawConfig.strErrorState != NULL)
 		drawErrorState();

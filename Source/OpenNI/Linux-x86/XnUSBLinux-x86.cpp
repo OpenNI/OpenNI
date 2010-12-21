@@ -432,7 +432,25 @@ XN_C_API XnStatus xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndP
 	}
 	
 	libusb_transfer_type transfer_type = (libusb_transfer_type)(pEndpointDesc->bmAttributes & 0x3); // lower 2-bits
+
+    // calculate max packet size
+	// NOTE: we do not use libusb functions (libusb_get_max_packet_size/libusb_get_max_iso_packet_size) because
+	// they hace a bug and does not consider alternative interface
+    XnUInt32 nMaxPacketSize = 0;
 	
+	if (transfer_type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS)
+	{
+		XnUInt32 wMaxPacketSize = pEndpointDesc->wMaxPacketSize;
+		// bits 11 and 12 mark the number of additional transactions, bits 0-10 mark the size
+		XnUInt32 nAdditionalTransactions = wMaxPacketSize >> 11;
+		XnUInt32 nPacketSize = wMaxPacketSize & 0x7FF;
+		nMaxPacketSize = (nAdditionalTransactions + 1) * (nPacketSize);
+	}
+	else
+	{
+		nMaxPacketSize = pEndpointDesc->wMaxPacketSize;
+	}
+
 	// free the configuration descriptor. no need of it anymore
 	libusb_free_config_descriptor(pConfig);
 	pConfig = NULL;
@@ -492,15 +510,7 @@ XN_C_API XnStatus xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndP
 	pHandle->nAddress = nEndPointID;
 	pHandle->nType = nEPType;
 	pHandle->nDirection = nDirType;
-
-	if (transfer_type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS)
-	{
-		pHandle->nMaxPacketSize = libusb_get_max_iso_packet_size(pDevice, nEndPointID);
-	}
-	else
-	{
-		pHandle->nMaxPacketSize = libusb_get_max_packet_size(pDevice, nEndPointID);
-	}
+	pHandle->nMaxPacketSize = nMaxPacketSize;
 
 	return XN_STATUS_OK;
 }
@@ -1002,13 +1012,8 @@ XN_C_API XnStatus xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBuff
 	
 	if (pEPHandle->nType == XN_USB_EP_ISOCHRONOUS)
 	{
-		XnUInt32 wMaxPacketSize = libusb_get_max_packet_size(libusb_get_device(pEPHandle->hDevice), pEPHandle->nAddress);
-		// bits 11 and 12 mark the number of additional transactions, bits 0-10 mark the size
-		XnUInt32 nAdditionalTransactions = wMaxPacketSize >> 11;
-		XnUInt32 nPacketSize = wMaxPacketSize & 0x7FF;
-		nMaxPacketSize = (nAdditionalTransactions + 1) * (nPacketSize);
-		
 		// calculate how many packets can be set in this buffer
+		nMaxPacketSize = pEPHandle->nMaxPacketSize;
 		nNumIsoPackets = nBufferSize / nMaxPacketSize;
 	}
 

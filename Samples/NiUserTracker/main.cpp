@@ -241,8 +241,20 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH);
-		CHECK_RC(nRetVal, "InitFromXml");
+		xn::EnumerationErrors errors;
+		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, &errors);
+		if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
+		{
+			XnChar strError[1024];
+			errors.ToString(strError, 1024);
+			printf("%s\n", strError);
+			return (nRetVal);
+		}
+		else if (nRetVal != XN_STATUS_OK)
+		{
+			printf("Open failed: %s\n", xnGetStatusString(nRetVal));
+			return (nRetVal);
+		}
 	}
 
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator);

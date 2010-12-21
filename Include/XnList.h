@@ -633,10 +633,26 @@ protected:
 			inline Iterator(const XnList::Iterator& other) : ConstIterator(other) {}			\
 		};																						\
 	public:																						\
+		ClassName()																				\
+		{																						\
+		}																						\
+		ClassName(const ClassName& other)														\
+		{																						\
+			*this = other;																		\
+		}																						\
 		~ClassName()																			\
 		{																						\
 			while (!IsEmpty())																	\
 				Remove(begin());																\
+		}																						\
+		ClassName& operator=(const ClassName& other)											\
+		{																						\
+			Clear();																			\
+			for (ConstIterator it = other.begin(); it != other.end(); ++it)						\
+			{																					\
+				AddLast(*it);																	\
+			}																					\
+			return *this;																		\
 		}																						\
 		inline XnStatus AddFirst(Type const& value)												\
 		{																						\

@@ -246,7 +246,15 @@ XN_C_API XnStatus xnCreateMockNodeBasedOn(
  *
  * @param	hNode	[in]	A handle to the node.
  */
-XN_C_API XnStatus xnRefProductionNode(XnNodeHandle hNode);
+XN_C_API XnStatus xnProductionNodeAddRef(XnNodeHandle hNode);
+
+/**
+ * References a production node, increasing its reference count by 1.
+ * Note: this function is deprecated. Please use @ref xnProductionNodeAddRef() instead.
+ *
+ * @param	hNode	[in]	A handle to the node.
+ */
+XN_C_API XnStatus XN_API_DEPRECATED("Please use xnProductionNodeAddRef() instead.") xnRefProductionNode(XnNodeHandle hNode);
 
 /**
  * @brief Unreference a production node, decreasing its reference count by 1. If the reference count reaches zero,
@@ -254,7 +262,16 @@ XN_C_API XnStatus xnRefProductionNode(XnNodeHandle hNode);
  *
  * @param	hNode	[in]	A handle to the node.
  */
-XN_C_API void xnUnrefProductionNode(XnNodeHandle hNode);
+XN_C_API void xnProductionNodeRelease(XnNodeHandle hNode);
+
+/**
+ * Unreference a production node, decreasing its reference count by 1. If the reference count reaches zero,
+ * the node will be destroyed.
+ * Note: this function is deprecated. Please use @ref xnProductionNodeAddRef() instead.
+ *
+ * @param	hNode	[in]	A handle to the node.
+ */
+XN_C_API void XN_API_DEPRECATED("Please use xnProductionNodeRelease() instead.") xnUnrefProductionNode(XnNodeHandle hNode);
 
 /**
  * @brief Gets a list of all existing node in the context. Each node that was returned increases its ref count.

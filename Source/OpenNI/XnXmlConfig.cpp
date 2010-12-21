@@ -686,6 +686,17 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 
 		nRetVal = xnContextOpenFileRecording(pContext, strFileName);
 		XN_IS_STATUS_OK(nRetVal);
+
+		XnDouble dSpeed = 1.0;
+		if (NULL != pRecording->Attribute("playbackSpeed", &dSpeed))
+		{
+			XnNodeHandle hPlayer;
+			nRetVal = xnFindExistingNodeByType(pContext, XN_NODE_TYPE_PLAYER, &hPlayer);
+			XN_IS_STATUS_OK(nRetVal);
+
+			nRetVal = xnSetPlaybackSpeed(hPlayer, dSpeed);
+			XN_IS_STATUS_OK(nRetVal);
+		}
 	}
 
 	const XnChar* strNodeTagName = "Node";
@@ -805,15 +816,11 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnChar* strFileName, XnEnumerationErrors* pErrors)
+XnStatus RunXmlScriptImpl(XnContext* pContext, TiXmlDocument* pDoc, XnEnumerationErrors* pErrors)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-
-	TiXmlDocument doc;
-	nRetVal = xnXmlLoadDocument(doc, strFileName);
-	XN_IS_STATUS_OK(nRetVal);
-
-	TiXmlElement* pRootElem = doc.RootElement();
+	
+	TiXmlElement* pRootElem = pDoc->RootElement();
 	if (pRootElem != NULL)
 	{
 		nRetVal = xnLoadLicensesFromXml(pContext, pRootElem);
@@ -822,7 +829,32 @@ XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnCha
 		nRetVal = xnConfigureCreateNodes(pContext, pRootElem, pErrors);
 		XN_IS_STATUS_OK(nRetVal);
 	}
-
+	
 	return (XN_STATUS_OK);
 }
 
+XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnChar* strFileName, XnEnumerationErrors* pErrors)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	TiXmlDocument doc;
+	nRetVal = xnXmlLoadDocument(doc, strFileName);
+	XN_IS_STATUS_OK(nRetVal);
+
+	return RunXmlScriptImpl(pContext, &doc, pErrors);
+}
+
+XN_C_API XnStatus xnContextRunXmlScript(XnContext* pContext, const XnChar* xmlScript, XnEnumerationErrors* pErrors)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	TiXmlDocument doc;
+	if (!doc.Parse(xmlScript))
+	{
+		XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI,
+			"Failed loading xml: %s [row %d, column %d]",
+			doc.ErrorDesc(), doc.ErrorRow(), doc.ErrorCol());
+	}
+
+	return RunXmlScriptImpl(pContext, &doc, pErrors);
+}

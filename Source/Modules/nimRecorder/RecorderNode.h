@@ -26,6 +26,7 @@
 
 #include <XnModuleCppInterface.h>
 #include <XnStringsHash.h>
+#include <DataRecords.h>
 
 class Record;
 
@@ -63,6 +64,7 @@ private:
 	};
 
 	XN_DECLARE_STRINGS_HASH(RecordedNodePropInfo, RecordedNodePropInfoMap);
+	XN_DECLARE_LIST(DataIndexEntry, DataIndexEntryList)
 
 	struct RecordedNodeInfo
 	{
@@ -81,6 +83,7 @@ private:
 		XnCodecID compression;
 		xn::Codec codec;
 		RecordedNodePropInfoMap propInfoMap;
+		DataIndexEntryList dataIndex;
 	};
 
 	XN_DECLARE_STRINGS_HASH(RecordedNodeInfo, RecordedNodesInfo);
@@ -103,10 +106,10 @@ private:
 	RecordedNodeInfo* GetRecordedNodeInfo(const XnChar* strNodeName);
 
 	static const XnUInt32 RECORD_MAX_SIZE;
-	static const XnUInt32 COMPRESSED_DATA_SIZE;
+	static const XnUInt32 PAYLOAD_DATA_SIZE;
 	XnBool m_bOpen;
 	XnUInt8* m_pRecordBuffer;
-	XnUInt8* m_pCompressedData;
+	XnUInt8* m_pPayloadData;
 	void* m_pStreamCookie;
 	XnRecorderOutputStreamInterface* m_pOutputStream;
 
@@ -114,6 +117,7 @@ private:
 	xn::Context m_context;
 	XnUInt64 m_nGlobalMaxTimeStamp;
 	XnUInt32 m_nNumNodes;
+	XnUInt32 m_nConfigurationID;
 };
 
 #endif //__RECORDER_NODE_H__

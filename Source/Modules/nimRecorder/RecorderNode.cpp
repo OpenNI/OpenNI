@@ -29,10 +29,11 @@
 #include <XnCodecIDs.h>
 
 const XnUInt32 RecorderNode::RECORD_MAX_SIZE = 20 * 1024;
-/*COMPRESSED_DATA_SIZE is set to support a resolution of 1600x1200 with 24 bits per pixel with the worst case
+
+/*PAYLOAD_DATA_SIZE is set to support a resolution of 1600x1200 with 24 bits per pixel with the worst case
   of compression.
 */
-const XnUInt32 RecorderNode::COMPRESSED_DATA_SIZE = 1600 * 1200 * 3;
+const XnUInt32 RecorderNode::PAYLOAD_DATA_SIZE = 1600 * 1200 * 3;
 
 RecorderNode::RecorderNode(xn::Context &context) : 
 	m_pStreamCookie(NULL),
@@ -40,9 +41,10 @@ RecorderNode::RecorderNode(xn::Context &context) :
 	m_bOpen(FALSE),
 	m_pRecordBuffer(NULL),
 	m_context(context),
-	m_pCompressedData(NULL),
+	m_pPayloadData(NULL),
 	m_nGlobalMaxTimeStamp(0),
-	m_nNumNodes(0)
+	m_nNumNodes(0),
+	m_nConfigurationID(0)
 {
 }
 
@@ -55,8 +57,8 @@ XnStatus RecorderNode::Init()
 {
 	m_pRecordBuffer = XN_NEW_ARR(XnUInt8, RECORD_MAX_SIZE);
 	XN_VALIDATE_ALLOC_PTR(m_pRecordBuffer);
-	m_pCompressedData = XN_NEW_ARR(XnUInt8, COMPRESSED_DATA_SIZE);
-	XN_VALIDATE_ALLOC_PTR(m_pCompressedData);
+	m_pPayloadData = XN_NEW_ARR(XnUInt8, PAYLOAD_DATA_SIZE);
+	XN_VALIDATE_ALLOC_PTR(m_pPayloadData);
 	return XN_STATUS_OK;
 }
 
@@ -66,8 +68,8 @@ XnStatus RecorderNode::Destroy()
 	//Don't verify return value - proceed anyway
 	XN_DELETE_ARR(m_pRecordBuffer);
 	m_pRecordBuffer = NULL;
-	XN_DELETE_ARR(m_pCompressedData);
-	m_pCompressedData = NULL;
+	XN_DELETE_ARR(m_pPayloadData);
+	m_pPayloadData = NULL;
 	return XN_STATUS_OK;
 }
 
@@ -84,6 +86,8 @@ XnStatus RecorderNode::OnNodeAdded(const XnChar* strNodeName, XnProductionNodeTy
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	XnUInt32 nNodeID = ++m_nNumNodes;
+
+	m_nConfigurationID++;
 
 	NodeAddedRecord nodeAddedRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
 	nodeAddedRecord.SetNodeName(strNodeName);
@@ -131,6 +135,8 @@ XnStatus RecorderNode::OnNodeAdded(const XnChar* strNodeName, XnProductionNodeTy
 
 XnStatus RecorderNode::OnNodeRemoved(const XnChar* strNodeName)
 {
+	m_nConfigurationID++;
+
 	XnStatus nRetVal = RemoveNode(strNodeName);
 	XN_IS_STATUS_OK(nRetVal);
 	return XN_STATUS_OK;
@@ -138,6 +144,8 @@ XnStatus RecorderNode::OnNodeRemoved(const XnChar* strNodeName)
 
 XnStatus RecorderNode::OnNodeIntPropChanged(const XnChar* strNodeName, const XnChar* strPropName, XnUInt64 nValue)
 {
+	m_nConfigurationID++;
+
 	XnUInt32 nUndoRecordPos = 0;
 	RecordedNodeInfo* pRecordedNodeInfo = NULL;
 	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
@@ -169,6 +177,8 @@ XnStatus RecorderNode::OnNodeIntPropChanged(const XnChar* strNodeName, const XnC
 
 XnStatus RecorderNode::OnNodeRealPropChanged(const XnChar* strNodeName, const XnChar* strPropName, XnDouble dValue)
 {
+	m_nConfigurationID++;
+
 	XnUInt32 nUndoRecordPos = 0;
 	RecordedNodeInfo* pRecordedNodeInfo = NULL;
 	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
@@ -199,6 +209,8 @@ XnStatus RecorderNode::OnNodeRealPropChanged(const XnChar* strNodeName, const Xn
 
 XnStatus RecorderNode::OnNodeStringPropChanged(const XnChar* strNodeName, const XnChar* strPropName, const XnChar* strValue)
 {
+	m_nConfigurationID++;
+
 	XnUInt32 nUndoRecordPos = 0;
 	RecordedNodeInfo* pRecordedNodeInfo = NULL;
 	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
@@ -228,6 +240,8 @@ XnStatus RecorderNode::OnNodeStringPropChanged(const XnChar* strNodeName, const 
 
 XnStatus RecorderNode::OnNodeGeneralPropChanged(const XnChar* strNodeName, const XnChar* strPropName, XnUInt32 nBufferSize, const void* pBuffer)
 {
+	m_nConfigurationID++;
+
 	RecordedNodeInfo* pRecordedNodeInfo = NULL;
 	XnUInt32 nUndoRecordPos = 0;
 	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
@@ -258,6 +272,8 @@ XnStatus RecorderNode::OnNodeGeneralPropChanged(const XnChar* strNodeName, const
 
 XnStatus RecorderNode::OnNodeStateReady(const XnChar* strNodeName)
 {
+	m_nConfigurationID++;
+
 	RecordedNodeInfo* pRecordedNodeInfo = GetRecordedNodeInfo(strNodeName);
 	XN_VALIDATE_PTR(pRecordedNodeInfo, XN_STATUS_BAD_NODE_NAME);
 	NodeStateReadyRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
@@ -295,16 +311,15 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 		}
 
 		//Compress data
-		nRetVal = pRecordedNodeInfo->codec.EncodeData(pData, nSize, m_pCompressedData, COMPRESSED_DATA_SIZE, &nCompressedSize);
+		nRetVal = pRecordedNodeInfo->codec.EncodeData(pData, nSize, m_pPayloadData, PAYLOAD_DATA_SIZE, &nCompressedSize);
 		XN_IS_STATUS_OK(nRetVal);
-		pCompressedData = m_pCompressedData;
+		pCompressedData = m_pPayloadData;
 	}
 
 	if (!pRecordedNodeInfo->bGotData)
 	{
 		//This is the first data we get for this node, save its timestamp and frame number as the minimum
 		pRecordedNodeInfo->nMinTimeStamp = nTimeStamp;
-		pRecordedNodeInfo->nMinFrameNum = nFrame - 1; //Corrected frame numbers start from 1
 
 		// write down the DataBegin record
 		nRetVal = WriteNodeDataBegin(strNodeName);
@@ -314,11 +329,8 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 	}
 
 	XN_ASSERT(nTimeStamp >= pRecordedNodeInfo->nMinTimeStamp);
-	XN_ASSERT(nFrame >= pRecordedNodeInfo->nMinFrameNum);
 	//Corrected time stamps start from 0
 	XnUInt64 nCorrectedTimeStamp = nTimeStamp - pRecordedNodeInfo->nMinTimeStamp;
-	//Corrected frame numbers start from 1
-	XnUInt64 nCorrectedFrame = nFrame - pRecordedNodeInfo->nMinFrameNum;
 	pRecordedNodeInfo->nMaxTimeStamp = nCorrectedTimeStamp;
 
 	XnUInt32 nUndoRecordPos = 0;
@@ -339,6 +351,11 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 		XN_ASSERT(FALSE);
 		return nRetVal;
 	}
+
+	DataIndexEntry dataIndexEntry;
+	dataIndexEntry.nTimestamp = recordHeader.GetTimeStamp();
+	dataIndexEntry.nConfigurationID = m_nConfigurationID;
+	dataIndexEntry.nSeekPos = TellStream();
 
 	//First we write just the header
 	nRetVal = WriteRecordToStream(strNodeName, recordHeader);
@@ -362,6 +379,11 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 	{
 		m_nGlobalMaxTimeStamp = nCorrectedTimeStamp;
 	}
+
+	// write to seek table
+	nRetVal = pRecordedNodeInfo->dataIndex.AddLast(dataIndexEntry);
+	XN_IS_STATUS_OK(nRetVal);
+
 	return XN_STATUS_OK;
 }
 
@@ -467,11 +489,48 @@ XnStatus RecorderNode::WriteNodeDataBegin(const XnChar* strNodeName)
 
 XnStatus RecorderNode::UpdateNodeSeekInfo(const XnChar* strNodeName, const RecordedNodeInfo& recordedNodeInfo)
 {
+	XnStatus nRetVal = XN_STATUS_OK;
+
 	if (recordedNodeInfo.bGotData)
 	{
+		XnUInt32 nSeekTablePos = 0;
+
+		nSeekTablePos = TellStream();
+
+		// write seek table
+		DataIndexRecordHeader seekTableHeader(m_pRecordBuffer, RECORD_MAX_SIZE);
+		seekTableHeader.SetNodeID(recordedNodeInfo.nNodeID);
+		seekTableHeader.SetPayloadSize((recordedNodeInfo.nMaxFrameNum+1) * sizeof(DataIndexEntry));
+		nRetVal = seekTableHeader.Encode();
+		XN_IS_STATUS_OK(nRetVal);
+
+		nRetVal = WriteRecordToStream(strNodeName, seekTableHeader);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// write an empty entry for frame 0 (frames start with 1)
+		DataIndexEntry* pPayload = (DataIndexEntry*)m_pPayloadData;
+		xnOSMemSet(pPayload, 0, sizeof(DataIndexEntry));
+		pPayload++;
+
+		// now write the table itself
+		for (DataIndexEntryList::ConstIterator it = recordedNodeInfo.dataIndex.begin(); it != recordedNodeInfo.dataIndex.end(); ++it, ++pPayload)
+		{
+			*pPayload = *it;
+		}
+		XN_ASSERT((recordedNodeInfo.nMaxFrameNum+1) == (pPayload - (DataIndexEntry*)m_pPayloadData));
+
+		nRetVal = WriteToStream(strNodeName, m_pPayloadData, (XnUInt8*)pPayload - m_pPayloadData);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnLogWarning(XN_MASK_OPEN_NI, "Failed to write Seek Table to file: %s", xnGetStatusString(nRetVal));
+			XN_ASSERT(FALSE);
+			return nRetVal;
+		}
+
 		XnUInt32 nStartPos = TellStream();
+
 		//Seek to position of node added record
-		XnStatus nRetVal = SeekStream(XN_OS_SEEK_SET, recordedNodeInfo.nNodeAddedPos);
+		nRetVal = SeekStream(XN_OS_SEEK_SET, recordedNodeInfo.nNodeAddedPos);
 		XN_IS_STATUS_OK(nRetVal);
 
 		// re-write this record, this time with seek data
@@ -483,6 +542,7 @@ XnStatus RecorderNode::UpdateNodeSeekInfo(const XnChar* strNodeName, const Recor
 		record.SetNumberOfFrames(recordedNodeInfo.nMaxFrameNum);
 		record.SetMinTimestamp(recordedNodeInfo.nMinTimeStamp);
 		record.SetMaxTimestamp(recordedNodeInfo.nMaxTimeStamp);
+		record.SetSeekTablePosition(nSeekTablePos);
 
 		nRetVal = record.Encode();
 		XN_IS_STATUS_OK(nRetVal);
@@ -532,7 +592,7 @@ XnStatus RecorderNode::RemoveNode(const XnChar* strNodeName)
 	nRetVal = UpdateNodeSeekInfo(strNodeNameCopy, recordedNodeInfo);
 	XN_IS_STATUS_OK(nRetVal);
 
-	recordedNodeInfo.codec.Unref();
+	recordedNodeInfo.codec.Release();
 	return XN_STATUS_OK;
 }
 
@@ -567,7 +627,6 @@ void RecorderNode::RecordedNodeInfo::Reset()
 {
 	nNodeID = 0;
 	type = (XnProductionNodeType)-1;
-	nMinFrameNum = 0;
 	nMaxFrameNum = 0;
 	nCurFrameNum = 0;
 	nMinTimeStamp = 0;
@@ -576,4 +635,5 @@ void RecorderNode::RecordedNodeInfo::Reset()
 	bGotData = FALSE;
 	compression = XN_CODEC_NULL;
 	propInfoMap.Clear();
+	dataIndex.Clear();
 }

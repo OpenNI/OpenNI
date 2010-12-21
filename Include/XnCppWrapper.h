@@ -959,9 +959,13 @@ namespace xn
 		 *
 		 * @param	hNode		[in]	A node handle.
 		 */
-		inline NodeWrapper(XnNodeHandle hNode)
+		inline NodeWrapper(XnNodeHandle hNode) : m_hNode(NULL)
 		{
 			NodeWrapper::SetHandle(hNode);
+		}
+
+		inline ~NodeWrapper()
+		{
 		}
 
 		/// Gets the underlying C handle.
@@ -995,8 +999,25 @@ namespace xn
 		 */
 		const XnChar* GetName() const {return xnGetNodeName(m_hNode); }
 
+		/** @copybrief xnProductionNodeAddRef
+		 * For full details and usage, see @ref xnProductionNodeAddRef
+		 */
+		inline XnStatus AddRef() { return xnProductionNodeAddRef(m_hNode); }
+
+		/** @copybrief xnProductionNodeRelease
+		 * For full details and usage, see @ref xnProductionNodeRelease
+		 */
+		inline void Release() 
+		{
+			xnProductionNodeRelease(m_hNode);
+			m_hNode = NULL;
+		}
+
+		inline XnStatus XN_API_DEPRECATED("Please use AddRef() instead.") Ref() { return AddRef(); }
+		inline void XN_API_DEPRECATED("Please use Release() instead.") Unref() { Release(); }
+
 		/// Replaces the object being pointed.
-		virtual void SetHandle(XnNodeHandle hNode) { m_hNode = hNode; }
+		inline void SetHandle(XnNodeHandle hNode) { m_hNode = hNode; }
 
 	protected:
 		XnNodeHandle m_hNode;
@@ -1559,20 +1580,6 @@ namespace xn
 		 * For full details and usage, see @ref xnGetNodeInfo
 		 */
 		inline NodeInfo GetInfo() const { return NodeInfo(xnGetNodeInfo(m_hNode)); }
-
-		/** @copybrief xnRefProductionNode
-		 * For full details and usage, see @ref xnRefProductionNode
-		 */
-		inline XnStatus Ref() { return xnRefProductionNode(m_hNode); }
-
-		/** @copybrief xnUnrefProductionNode
-		 * For full details and usage, see @ref xnUnrefProductionNode
-		 */
-		inline void Unref() 
-		{ 
-			xnUnrefProductionNode(m_hNode); 
-			SetHandle(NULL);
-		}
 
 		/** @copybrief xnAddNeededNode
 		 * For full details and usage, see @ref xnAddNeededNode
@@ -2223,6 +2230,22 @@ namespace xn
 		{
 			_UnregisterFromStateChange(xnUnregisterFromEndOfFileReached, m_hNode, hCallback);
 		}
+
+		/** @copybrief xnSetPlaybackSpeed
+		 * For full details and usage, see @ref xnSetPlaybackSpeed
+		 */
+		inline XnStatus SetPlaybackSpeed(XnDouble dSpeed)
+		{
+			return xnSetPlaybackSpeed(m_hNode, dSpeed);
+		}
+
+		/** @copybrief xnGetPlaybackSpeed
+		 * For full details and usage, see @ref xnGetPlaybackSpeed
+		 */
+		inline XnDouble GetPlaybackSpeed()
+		{
+			return xnGetPlaybackSpeed(m_hNode);
+		}
 	};
 
 	/**
@@ -2863,12 +2886,27 @@ namespace xn
 			return xnGetActiveGestures(m_hNode, &astrGestures, &nGestures);
 		}
 
+		/** @copybrief xnGetActiveGestures
+		 * For full details and usage, see @ref xnGetActiveGestures
+		 */
+		inline XnStatus GetAllActiveGestures(XnChar** astrGestures, XnUInt32 nNameLength, XnUInt16& nGestures) const
+		{
+			return xnGetAllActiveGestures(m_hNode, astrGestures, nNameLength, &nGestures);
+		}
+
 		/** @copybrief xnEnumerateGestures
 		 * For full details and usage, see @ref xnEnumerateGestures
 		 */
 		inline XnStatus EnumerateGestures(XnChar*& astrGestures, XnUInt16& nGestures)
 		{
 			return xnEnumerateGestures(m_hNode, &astrGestures, &nGestures);
+		}
+		/** @copybrief xnEnumerateGestures
+		 * For full details and usage, see @ref xnEnumerateGestures
+		 */
+		inline XnStatus EnumerateAllGestures(XnChar** astrGestures, XnUInt32 nNameLength, XnUInt16& nGestures)
+		{
+			return xnEnumerateAllGestures(m_hNode, astrGestures, nNameLength, &nGestures);
 		}
 
 		/** @copybrief xnIsGestureAvailable
@@ -2972,14 +3010,20 @@ namespace xn
 		{
 			GestureCookie* pGestureCookie = (GestureCookie*)pCookie;
 			GestureGenerator gen(hNode);
-			pGestureCookie->recognizedHandler(gen, strGesture, pIDPosition, pEndPosition, pGestureCookie->pUserCookie);
+			if (pGestureCookie->recognizedHandler != NULL)
+			{
+				pGestureCookie->recognizedHandler(gen, strGesture, pIDPosition, pEndPosition, pGestureCookie->pUserCookie);
+			}
 		}
 
 		static void XN_CALLBACK_TYPE GestureProgressCallback(XnNodeHandle hNode, const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie)
 		{
 			GestureCookie* pGestureCookie = (GestureCookie*)pCookie;
 			GestureGenerator gen(hNode);
-			pGestureCookie->progressHandler(gen, strGesture, pPosition, fProgress, pGestureCookie->pUserCookie);
+			if (pGestureCookie->progressHandler != NULL)
+			{
+				pGestureCookie->progressHandler(gen, strGesture, pPosition, fProgress, pGestureCookie->pUserCookie);
+			}
 		}
 	};
 
@@ -3158,19 +3202,28 @@ namespace xn
 		{
 			HandCookie* pHandCookie = (HandCookie*)pCookie;
 			HandsGenerator gen(hNode);
-			pHandCookie->createHandler(gen, user, pPosition, fTime, pHandCookie->pUserCookie);
+			if (pHandCookie->createHandler != NULL)
+			{
+				pHandCookie->createHandler(gen, user, pPosition, fTime, pHandCookie->pUserCookie);
+			}
 		}
 		static void XN_CALLBACK_TYPE HandUpdateCB(XnNodeHandle hNode, XnUserID user, const XnPoint3D* pPosition, XnFloat fTime, void* pCookie)
 		{
 			HandCookie* pHandCookie = (HandCookie*)pCookie;
 			HandsGenerator gen(hNode);
-			pHandCookie->updateHandler(gen, user, pPosition, fTime, pHandCookie->pUserCookie);
+			if (pHandCookie->updateHandler != NULL)
+			{
+				pHandCookie->updateHandler(gen, user, pPosition, fTime, pHandCookie->pUserCookie);
+			}
 		}
 		static void XN_CALLBACK_TYPE HandDestroyCB(XnNodeHandle hNode, XnUserID user, XnFloat fTime, void* pCookie)
 		{
 			HandCookie* pHandCookie = (HandCookie*)pCookie;
 			HandsGenerator gen(hNode);
-			pHandCookie->destroyHandler(gen, user, fTime, pHandCookie->pUserCookie);
+			if (pHandCookie->destroyHandler != NULL)
+			{
+				pHandCookie->destroyHandler(gen, user, fTime, pHandCookie->pUserCookie);
+			}
 		}
 	};
 
@@ -3460,16 +3513,22 @@ namespace xn
 
 		static void XN_CALLBACK_TYPE CalibrationStartCallback(XnNodeHandle hNode, XnUserID user, void* pCookie)
 		{
-			SkeletonCookie* pGestureCookie = (SkeletonCookie*)pCookie;
+			SkeletonCookie* pSkeletonCookie = (SkeletonCookie*)pCookie;
 			SkeletonCapability cap(hNode);
-			pGestureCookie->startHandler(cap, user, pGestureCookie->pUserCookie);
+			if (pSkeletonCookie->startHandler != NULL)
+			{
+				pSkeletonCookie->startHandler(cap, user, pSkeletonCookie->pUserCookie);
+			}
 		}
 
 		static void XN_CALLBACK_TYPE CalibrationEndCallback(XnNodeHandle hNode, XnUserID user, XnBool bSuccess, void* pCookie)
 		{
-			SkeletonCookie* pGestureCookie = (SkeletonCookie*)pCookie;
+			SkeletonCookie* pSkeletonCookie = (SkeletonCookie*)pCookie;
 			SkeletonCapability cap(hNode);
-			pGestureCookie->endHandler(cap, user, bSuccess, pGestureCookie->pUserCookie);
+			if (pSkeletonCookie->endHandler != NULL)
+			{
+				pSkeletonCookie->endHandler(cap, user, bSuccess, pSkeletonCookie->pUserCookie);
+			}
 		}
 	};
 
@@ -3511,6 +3570,13 @@ namespace xn
 		inline XnStatus GetAvailablePoses(XnChar** pstrPoses, XnUInt32& nPoses)
 		{
 			return xnGetAvailablePoses(m_hNode, pstrPoses, &nPoses);
+		}
+		/** @copybrief xnGetAvailablePoses
+		* For full details and usage, see @ref xnGetAvailablePoses
+		*/
+		inline XnStatus GetAllAvailablePoses(XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32& nPoses)
+		{
+			return xnGetAllAvailablePoses(m_hNode, pstrPoses, nNameLength, &nPoses);
 		}
 
 		/** @copybrief xnStartPoseDetection
@@ -3576,14 +3642,20 @@ namespace xn
 		{
 			PoseCookie* pPoseCookie = (PoseCookie*)pCookie;
 			PoseDetectionCapability cap(hNode);
-			pPoseCookie->startHandler(cap, strPose, user, pPoseCookie->pPoseCookie);
+			if (pPoseCookie->startHandler != NULL)
+			{
+				pPoseCookie->startHandler(cap, strPose, user, pPoseCookie->pPoseCookie);
+			}
 		}
 
 		static void XN_CALLBACK_TYPE PoseDetectionStartEndCallback(XnNodeHandle hNode, const XnChar* strPose, XnUserID user, void* pCookie)
 		{
 			PoseCookie* pPoseCookie = (PoseCookie*)pCookie;
 			PoseDetectionCapability cap(hNode);
-			pPoseCookie->endHandler(cap, strPose, user, pPoseCookie->pPoseCookie);
+			if (pPoseCookie->endHandler != NULL)
+			{
+				pPoseCookie->endHandler(cap, strPose, user, pPoseCookie->pPoseCookie);
+			}
 		}
 	};
 
@@ -3708,14 +3780,20 @@ namespace xn
 		{
 			UserCookie* pUserCookie = (UserCookie*)pCookie;
 			UserGenerator gen(hNode);
-			pUserCookie->newHandler(gen, user, pUserCookie->pUserCookie);
+			if (pUserCookie->newHandler != NULL)
+			{
+				pUserCookie->newHandler(gen, user, pUserCookie->pUserCookie);
+			}
 		}
 
 		static void XN_CALLBACK_TYPE LostUserCallback(XnNodeHandle hNode, XnUserID user, void* pCookie)
 		{
 			UserCookie* pUserCookie = (UserCookie*)pCookie;
 			UserGenerator gen(hNode);
-			pUserCookie->lostHandler(gen, user, pUserCookie->pUserCookie);
+			if (pUserCookie->lostHandler != NULL)
+			{
+				pUserCookie->lostHandler(gen, user, pUserCookie->pUserCookie);
+			}
 		}
 	};
 

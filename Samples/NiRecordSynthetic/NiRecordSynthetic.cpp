@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
 
 	printf("\n");
 
-	recorder.Unref();
+	recorder.Release();
 	context.Shutdown();
 
 	return 0;

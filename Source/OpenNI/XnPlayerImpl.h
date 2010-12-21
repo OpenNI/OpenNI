@@ -45,6 +45,9 @@ public:
 	XnStatus GetSource(XnRecordMedium &sourceType, XnChar* strSource, XnUInt32 nBufSize);
 	void Destroy();
 	XnStatus EnumerateNodes(XnNodeInfoList** ppList);
+	XnStatus SetPlaybackSpeed(XnDouble dSpeed);
+	XnDouble GetPlaybackSpeed();
+	void ResetTimeReference();
 
 private:
 	XnModulePlayerInterface& ModulePlayer();
@@ -87,6 +90,9 @@ private:
 	XnStatus SetNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void* pData, XnUInt32 nSize);
 	XnStatus SetNodeStateReady(const XnChar* strNodeName);
 
+	void OnEndOfFileReached();
+	static void XN_CALLBACK_TYPE EndOfFileReachedCallback(void* pCookie);
+
 	typedef struct PlayedNodeInfo
 	{
 		XnNodeHandle hNode;
@@ -102,6 +108,10 @@ private:
 	XnChar m_strSource[XN_FILE_MAX_PATH];
 	XnRecordMedium m_sourceType;
 	PlayedNodesHash m_playedNodes;
+	XnDouble m_dPlaybackSpeed;
+	XnUInt64 m_nStartTimestamp;
+	XnUInt64 m_nStartTime;
+	XnBool m_bHasTimeReference;
 };
 
 }

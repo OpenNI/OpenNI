@@ -99,6 +99,8 @@ void setImageFPS(int fps);
 void setIRResolution(int res);
 void setIRFPS(int fps);
 void setStreamCropping(MapGenerator* pGenerator, XnCropping* pCropping);
+void setPlaybackSpeed(int ratioDiff);
+XnDouble getPlaybackSpeed();
 Device* getDevice();
 DepthGenerator* getDepthGenerator();
 ImageGenerator* getImageGenerator();

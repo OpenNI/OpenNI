@@ -59,7 +59,9 @@ XnNodeNotifications PlayerImpl::s_nodeNotifications =
 
 PlayerImpl::PlayerImpl() : 
 	m_hPlayer(NULL), 
-	m_pInFile(NULL)
+	m_pInFile(NULL),
+	m_bHasTimeReference(FALSE),
+	m_dPlaybackSpeed(1.0)
 {
 	xnOSMemSet(m_strSource, 0, sizeof(m_strSource));
 }
@@ -81,6 +83,10 @@ XnStatus PlayerImpl::Init(XnNodeHandle hPlayer)
 	
 	m_hPlayer = hPlayer;
 	XnStatus nRetVal = ModulePlayer().SetNodeNotifications(ModuleHandle(), this, &s_nodeNotifications);
+	XN_IS_STATUS_OK(nRetVal);
+
+	XnCallbackHandle hDummy; // node will be destroyed anyway
+	nRetVal = ModulePlayer().RegisterToEndOfFileReached(ModuleHandle(), EndOfFileReachedCallback, this, &hDummy);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return XN_STATUS_OK;
@@ -148,6 +154,28 @@ XnStatus PlayerImpl::EnumerateNodes(XnNodeInfoList** ppList)
 	}
 
 	return (XN_STATUS_OK);
+}
+
+XnStatus PlayerImpl::SetPlaybackSpeed(XnDouble dSpeed)
+{
+	if (dSpeed < 0)
+	{
+		return XN_STATUS_BAD_PARAM;
+	}
+
+	m_dPlaybackSpeed = dSpeed;
+
+	return XN_STATUS_OK;
+}
+
+XnDouble PlayerImpl::GetPlaybackSpeed()
+{
+	return m_dPlaybackSpeed;
+}
+
+void PlayerImpl::ResetTimeReference()
+{
+	m_bHasTimeReference = FALSE;
 }
 
 XnModulePlayerInterface& PlayerImpl::ModulePlayer()
@@ -477,6 +505,36 @@ XnStatus PlayerImpl::SetNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSta
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+
+	if (!m_bHasTimeReference)
+	{
+		m_nStartTimestamp = nTimeStamp;
+		m_nStartTime = nNow;
+
+		m_bHasTimeReference = TRUE;
+	}
+
+	if (m_dPlaybackSpeed != XN_PLAYBACK_SPEED_FASTEST)
+	{
+		// check this data timestamp compared to when we started
+		XnInt64 nTimestampDiff = nTimeStamp - m_nStartTimestamp;
+		XnInt64 nTimeDiff = nNow - m_nStartTime;
+
+		// check if we need to wait some time
+		XnInt64 nRequestedTimeDiff = (XnInt64)(nTimestampDiff / m_dPlaybackSpeed);
+		if (nTimeDiff < nRequestedTimeDiff)
+		{
+			xnOSSleep(XnUInt32((nRequestedTimeDiff - nTimeDiff)/1000));
+		}
+
+		// update reference to current frame (this will handle cases in which application
+		// stopped reading frames and continued after a while)
+		m_nStartTimestamp = nTimeStamp;
+		xnOSGetHighResTimeStamp(&m_nStartTime);
+	}
+
 	PlayedNodeInfo playedNode;
 	nRetVal = m_playedNodes.Get(strNodeName, playedNode);
 	XN_IS_STATUS_OK(nRetVal);
@@ -530,6 +588,17 @@ XnStatus PlayerImpl::SetNodeStateReady(const XnChar* strNodeName)
 	//TODO: When we move the codec handling to PlayerImpl this notification will be more useful for PlayerImpl.
 	
 	return (XN_STATUS_OK);
+}
+
+void PlayerImpl::OnEndOfFileReached()
+{
+	ResetTimeReference();
+}
+
+void PlayerImpl::EndOfFileReachedCallback(void* pCookie)
+{
+	PlayerImpl* pThis = (PlayerImpl*)pCookie;
+	pThis->OnEndOfFileReached();
 }
 
 }

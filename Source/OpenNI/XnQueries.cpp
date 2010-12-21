@@ -309,7 +309,7 @@ static XnBool xnIsNodeMatch(XnContext* pContext, const XnNodeQuery* pQuery, XnNo
 	if (bInstanceCreated)
 	{
 		// destroy it
-		xnUnrefProductionNode(hNode);
+		xnProductionNodeRelease(hNode);
 	}
 
 	return (bResult);

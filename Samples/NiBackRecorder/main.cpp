@@ -30,7 +30,6 @@
 #include <XnLog.h>
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
-#include <XnPropNames.h>
 
 //---------------------------------------------------------------------------
 // Macros
@@ -338,8 +337,8 @@ public:
 	// Save the current state of the buffer to a file
 	XnStatus Dump()
 	{
-		xn::DepthGenerator mockDepth;
-		xn::ImageGenerator mockImage;
+		xn::MockDepthGenerator mockDepth;
+		xn::MockImageGenerator mockImage;
 
 		xn::EnumerationErrors errors;
 		XnStatus rc;
@@ -387,11 +386,11 @@ public:
 			{
 				if (m_bDepth)
 				{
-					SetDepthFrame(mockDepth, m_pFrames[i].depthFrame);
+					mockDepth.SetData(m_pFrames[i].depthFrame);
 				}
 				if (m_bImage)
 				{
-					SetImageFrame(mockImage, m_pFrames[i].imageFrame);
+					mockImage.SetData(m_pFrames[i].imageFrame);
 				}
 
 				m_recorder.Record();
@@ -402,20 +401,20 @@ public:
 		{
 			if (m_bDepth)
 			{
-				SetDepthFrame(mockDepth, m_pFrames[i].depthFrame);
+				mockDepth.SetData(m_pFrames[i].depthFrame);
 			}
 			if (m_bImage)
 			{
-				SetImageFrame(mockImage, m_pFrames[i].imageFrame);
+				mockImage.SetData(m_pFrames[i].imageFrame);
 			}
 
 			m_recorder.Record();
 		}
 
 		// Close recorder
-		m_recorder.Unref();
-		mockImage.Unref();
-		mockDepth.Unref();
+		m_recorder.Release();
+		mockImage.Release();
+		mockDepth.Release();
 
 		return XN_STATUS_OK;
 	}
@@ -425,51 +424,6 @@ protected:
 		xn::DepthMetaData depthFrame;
 		xn::ImageMetaData imageFrame;
 	};
-
-	XnStatus SetDepthFrame(xn::DepthGenerator& depth, const xn::DepthMetaData& dmd)
-	{
-		XnStatus nRetVal = XN_STATUS_OK;
-		// Pass the transformed data to the mock depth generator
-		nRetVal = depth.SetGeneralProperty(XN_PROP_NEWDATA, dmd.DataSize(), dmd.Data());
-		CHECK_RC(nRetVal, "Set mock node new data");
-
-		// Set mock depth frame id
-		nRetVal = depth.SetIntProperty(XN_PROP_FRAME_ID, dmd.FrameID());
-		CHECK_RC(nRetVal, "Set mock node frame id");
-
-		// Set mock depth timestamp
-		nRetVal = depth.SetIntProperty(XN_PROP_TIMESTAMP, dmd.Timestamp());
-		CHECK_RC(nRetVal, "Set mock node frame id");
-
-		/* We need to update the mock depth separately because we just gave it new data (there is no implicit 
-		call to updateData())*/
-		nRetVal = depth.WaitAndUpdateData();
-		CHECK_RC(nRetVal, "Mock node update data");
-
-		return XN_STATUS_OK;
-	}
-	XnStatus SetImageFrame(xn::ImageGenerator& image, const xn::ImageMetaData& imd)
-	{
-		XnStatus nRetVal = XN_STATUS_OK;
-		// Pass the transformed data to the mock depth generator
-		nRetVal = image.SetGeneralProperty(XN_PROP_NEWDATA, imd.DataSize(), imd.Data());
-		CHECK_RC(nRetVal, "Set mock node new data");
-
-		// Set mock depth frame id
-		nRetVal = image.SetIntProperty(XN_PROP_FRAME_ID, imd.FrameID());
-		CHECK_RC(nRetVal, "Set mock node frame id");
-
-		// Set mock depth timestamp
-		nRetVal = image.SetIntProperty(XN_PROP_TIMESTAMP, imd.Timestamp());
-		CHECK_RC(nRetVal, "Set mock node frame id");
-
-		/* We need to update the mock depth separately because we just gave it new data (there is no implicit 
-		call to updateData())*/
-		nRetVal = image.WaitAndUpdateData();
-		CHECK_RC(nRetVal, "Mock node update data");
-
-		return XN_STATUS_OK;
-	}
 
 	XnBool m_bDepth, m_bImage;
 	SingleFrame* m_pFrames;

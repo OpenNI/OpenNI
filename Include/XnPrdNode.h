@@ -1157,6 +1157,14 @@ XN_C_API XnStatus xnRemoveGesture(XnNodeHandle hInstance, const XnChar* strGestu
  */
 XN_C_API XnStatus xnGetActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
 /**
+ * @brief Get the names of the gestures that are currently active
+ * 
+ * @param	hInstance		[in]		A handle to the instance
+ * @param	pstrGestures	[out]		Preallocated memory, for the gesture names
+ * @param	nGestures		[in,out]	The size of the preallocated memory. Changed to number of gestures
+ */
+XN_C_API XnStatus xnGetAllActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
+/**
  * @brief Get the names of all gestures available
  * 
  * @param	hInstance		[in]		A handle to the instance
@@ -1164,6 +1172,14 @@ XN_C_API XnStatus xnGetActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestu
  * @param	nGestures		[in,out]	The size of the preallocated memory. Changed to number of gestures
  */
 XN_C_API XnStatus xnEnumerateGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
+/**
+ * @brief Get the names of all gestures available
+ * 
+ * @param	hInstance		[in]		A handle to the instance
+ * @param	pstrGestures	[out]		Preallocated memory, for the gesture names
+ * @param	nGestures		[in,out]	The size of the preallocated memory. Changed to number of gestures
+ */
+XN_C_API XnStatus xnEnumerateAllGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
 /**
  * @brief Check if a specific gesture is available in this generator
  * 
@@ -1599,6 +1615,14 @@ XN_C_API XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance);
 * @param	pnPoses		[in,out]	In input - size of the preallocated memory, in output - the number of pose names
 */
 XN_C_API XnStatus xnGetAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32* pnPoses);
+/**
+* @brief Get the names of the supported poses
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	pstrPoses	[out]		Pre-allocated memory for the names of the supported poses
+* @param	pnPoses		[in,out]	In input - size of the preallocated memory, in output - the number of pose names
+*/
+XN_C_API XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses);
 /**
 * @brief Start detection of a specific pose for a specific user
 *
@@ -2043,6 +2067,27 @@ XN_C_API XnStatus xnRegisterToEndOfFileReached
  */
 XN_C_API void xnUnregisterFromEndOfFileReached
 	(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+
+/**
+ * @brief Sets the playback speed, as a ratio of the time passed in the recording.
+ * A value of 1.0 means the player will try to output frames in the rate they were recorded (according to
+ * their timestamps).
+ * A value bigger than 1.0 means fast-forward, and a value between 0.0 and 1.0 means slow-motion.
+ * The special value of XN_PLAYBACK_SPEED_FASTEST (0.0) means there will be no delay, and that frames will
+ * be returned as soon as asked for.
+ *
+ * @param	hInstance	[in]	A handle to the player.
+ * @param	dSpeed		[in]	The speed ratio (see function description).
+ */
+XN_C_API XnStatus xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed);
+
+/**
+ * @brief Gets the playback speed. see @ref xnSetPlaybackSpeed() for more details.
+ *
+ * @param	hInstance	[in]	A handle to the player.
+ * @returns speed ratio, or -1.0 if this node is not a player.
+ */
+XN_C_API XnDouble xnGetPlaybackSpeed(XnNodeHandle hInstance);
 
 /** @} */
 
