@@ -6,13 +6,18 @@ namespace xn
 {
 	public class Recorder : ProductionNode
 	{
-		internal Recorder(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal Recorder(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 		}
 
 		public Recorder(Context context, string formatName) :
-			this(Create(context, formatName))
+			this(Create(context, formatName), false)
+		{
+		}
+
+		public Recorder(Context context) :
+			this(context, null)
 		{
 		}
 

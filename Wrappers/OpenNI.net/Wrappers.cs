@@ -8,7 +8,7 @@ namespace xn
 	{
 		public static string GetErrorMessage(UInt32 status)
 		{
-			return OpenNIImporter.xnGetStatusString(status);
+            return Marshal.PtrToStringAnsi(OpenNIImporter.xnGetStatusString(status));
 		}
 
 		public static void CheckStatus(UInt32 status)
@@ -190,10 +190,13 @@ namespace xn
 
 	public class NodeWrapper : ObjectWrapper
 	{
-		internal NodeWrapper(IntPtr hNode)
+		internal NodeWrapper(IntPtr hNode, bool addRef)
 			: base(hNode)
 		{
-			OpenNIImporter.xnProductionNodeAddRef(hNode);
+			if (addRef)
+			{
+				OpenNIImporter.xnProductionNodeAddRef(hNode);
+			}
 		}
 
 		public override bool Equals(object obj)
@@ -234,7 +237,7 @@ namespace xn
 	public class Capability : NodeWrapper
 	{
 		public Capability(ProductionNode node) :
-			base(node.InternalObject)
+			base(node.InternalObject, true)
 		{
 			this.node = node;
 		}

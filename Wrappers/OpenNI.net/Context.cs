@@ -302,29 +302,29 @@ namespace xn
 			switch (type)
 			{
 				case NodeType.Audio:
-					return new AudioGenerator(nodeHandle);
+					return new AudioGenerator(nodeHandle, true);
 				case NodeType.Codec:
-					return new Codec(nodeHandle);
+					return new Codec(nodeHandle, true);
 				case NodeType.Depth:
-					return new DepthGenerator(nodeHandle);
+					return new DepthGenerator(nodeHandle, true);
 				case NodeType.Device:
-					return new Device(nodeHandle);
+					return new Device(nodeHandle, true);
 				case NodeType.Gesture:
-					return new GestureGenerator(nodeHandle);
+					return new GestureGenerator(nodeHandle, true);
 				case NodeType.Hands:
-					return new HandsGenerator(nodeHandle);
+					return new HandsGenerator(nodeHandle, true);
 				case NodeType.Image:
-					return new ImageGenerator(nodeHandle);
+					return new ImageGenerator(nodeHandle, true);
 				case NodeType.IR:
-					return new IRGenerator(nodeHandle);
+					return new IRGenerator(nodeHandle, true);
 				case NodeType.Player:
-					return new Player(nodeHandle);
+					return new Player(nodeHandle, true);
 				case NodeType.Recorder:
-					return new Recorder(nodeHandle);
+					return new Recorder(nodeHandle, true);
 				case NodeType.Scene:
-					return new SceneAnalyzer(nodeHandle);
+					return new SceneAnalyzer(nodeHandle, true);
 				case NodeType.User:
-					return new UserGenerator(nodeHandle);
+					return new UserGenerator(nodeHandle, true);
 				default:
 					throw new NotImplementedException("C# wrapper: Unknown generator type!");
 			}
@@ -333,25 +333,6 @@ namespace xn
 		private static ProductionNode CreateProductionNodeObject(IntPtr nodeHandle)
 		{
 			return CreateProductionNodeObject(nodeHandle, null);
-		}
-
-		private ProductionNode CreateMockNodeObject(IntPtr nodeHandle)
-		{
-			IntPtr pNodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
-			NodeType type = OpenNIImporter.xnNodeInfoGetDescription(pNodeInfo).Type;
-			switch (type)
-			{
-				case NodeType.Audio:
-					return new MockAudioGenerator(nodeHandle);
-				case NodeType.Depth:
-					return new MockDepthGenerator(nodeHandle);
-				case NodeType.Image:
-					return new MockImageGenerator(nodeHandle);
-				case NodeType.IR:
-					return new MockIRGenerator(nodeHandle);
-				default:
-					throw new NotImplementedException("C# wrapper: Unknown mock type!");
-			}
 		}
 
 		private void ErrorStateChangedCallback(UInt32 status, IntPtr cookie)

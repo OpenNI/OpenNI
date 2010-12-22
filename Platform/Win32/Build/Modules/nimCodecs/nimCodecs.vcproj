@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="..\..\..\Bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -63,13 +63,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="openNI.lib"
-				OutputFile="../../../Bin/$(ConfigurationName)/$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../Lib/$(ConfigurationName)"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="../../../Bin/$(ConfigurationName)/$(TargetName).pdb"
 				SubSystem="1"
-				ImportLibrary="../../../Lib/$(ConfigurationName)/$(ProjectName).lib"
+				ImportLibrary="..\..\..\Lib\$(ConfigurationName)\$(ProjectName).lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -96,7 +94,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="..\..\..\Bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -147,15 +145,13 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="openNI.lib"
-				OutputFile="../../../Bin/$(ConfigurationName)/$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../Lib/$(ConfigurationName)"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="../../../Bin/$(ConfigurationName)/$(TargetName).pdb"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary="../../../Lib/$(ConfigurationName)/$(ProjectName).lib"
+				ImportLibrary="..\..\..\Lib\$(ConfigurationName)\$(ProjectName).lib"
 				TargetMachine="1"
 			/>
 			<Tool

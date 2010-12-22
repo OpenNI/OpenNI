@@ -7,8 +7,8 @@ namespace xn
 {
 	public class ProductionNode : NodeWrapper
 	{
-		internal ProductionNode(IntPtr nodeHandle)
-			: base(nodeHandle)
+		internal ProductionNode(IntPtr nodeHandle, bool addRef)
+			: base(nodeHandle, addRef)
 		{
 		}
 

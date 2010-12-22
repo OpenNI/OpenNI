@@ -6,13 +6,13 @@ namespace xn
 {
 	public class MockAudioGenerator : AudioGenerator
 	{
-		internal MockAudioGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal MockAudioGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 		}
 
 		public MockAudioGenerator(Context context, string name) :
-			this(Create(context, name))
+			this(Create(context, name), false)
 		{
 		}
 
@@ -22,7 +22,7 @@ namespace xn
 		}
 
 		public MockAudioGenerator(AudioGenerator basedOn, string name) :
-			this(CreateBasedOn(basedOn, name))
+			this(CreateBasedOn(basedOn, name), false)
 		{
 		}
 

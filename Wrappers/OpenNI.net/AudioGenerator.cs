@@ -6,8 +6,8 @@ namespace xn
 {
 	public class AudioGenerator : Generator
 	{
-		internal AudioGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal AudioGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 			this.outputModeChanged = new StateChangedEvent(this,
 				OpenNIImporter.xnRegisterToWaveOutputModeChanges,
@@ -15,7 +15,7 @@ namespace xn
 		}
 
 		public AudioGenerator(Context context, Query query, EnumerationErrors errors) :
-			this(Create(context, query, errors))
+			this(Create(context, query, errors), false)
 		{
 		}
 

@@ -6,13 +6,13 @@ namespace xn
 {
 	public class MockImageGenerator : ImageGenerator
 	{
-		internal MockImageGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal MockImageGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 		}
 
 		public MockImageGenerator(Context context, string name) :
-			this(Create(context, name))
+			this(Create(context, name), false)
 		{
 		}
 
@@ -22,7 +22,7 @@ namespace xn
 		}
 
 		public MockImageGenerator(ImageGenerator basedOn, string name) :
-			this(CreateBasedOn(basedOn, name))
+			this(CreateBasedOn(basedOn, name), false)
 		{
 		}
 

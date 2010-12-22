@@ -1081,9 +1081,9 @@ namespace xn
 		public static extern XnStatus xnSchedulerRescheduleTask(XnScheduler pScheduler, XnScheduledTask pTask, XnUInt64 nInterval);
 */
 		[DllImport("OpenNI")]
-		public static extern string xnGetStatusString(XnStatus Status);
+		public static extern IntPtr xnGetStatusString(XnStatus Status);
 		[DllImport("OpenNI")]
-		public static extern string xnGetStatusName(XnStatus Status);
+        public static extern IntPtr xnGetStatusName(XnStatus Status);
 		[DllImport("OpenNI")]
 		public static extern void xnPrintError(XnStatus Status, string csUserMessage);
 //		[DllImport("OpenNI")]
@@ -1091,15 +1091,15 @@ namespace xn
 		[DllImport("OpenNI")]
 		public static extern XnStatus xnGetVersion(ref Version pVersion);
 		[DllImport("OpenNI")]
-		public static extern string NodeTypeToString(NodeType Type);
+        public static extern string xnProductionNodeTypeToString(NodeType Type);
 		[DllImport("OpenNI")]
-		public static extern XnStatus NodeTypeFromString(string strType, NodeType pType);
+        public static extern XnStatus xnProductionNodeTypeFromString(string strType, NodeType pType);
 		[DllImport("OpenNI")]
 		public static extern XnBool xnIsTypeGenerator(NodeType type);
 		[DllImport("OpenNI")]
-		public static extern string PixelFormatToString(PixelFormat format);
+		public static extern string xnPixelFormatToString(PixelFormat format);
 		[DllImport("OpenNI")]
-		public static extern XnStatus PixelFormatFromString(string strName, PixelFormat pFormat);
+		public static extern XnStatus xnPixelFormatFromString(string strName, PixelFormat pFormat);
 		[DllImport("OpenNI")]
 		public static extern XnUInt32 xnResolutionGetXRes(Resolution resolution);
 		[DllImport("OpenNI")]

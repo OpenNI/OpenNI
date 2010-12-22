@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="..\..\..\Bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="openNI.lib"
-				OutputFile="../../../Bin/$(ConfigurationName)/$(ProjectName).exe"
+				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../Lib/$(ConfigurationName);../../../../../Samples/NiViewer/Libs"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
@@ -96,7 +96,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="..\..\..\Bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
@@ -149,7 +149,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="openNI.lib"
-				OutputFile="../../../Bin/$(ConfigurationName)/$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../Lib/$(ConfigurationName);../../../../../Samples/NiViewer/Libs"
 				GenerateManifest="true"

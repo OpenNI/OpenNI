@@ -6,8 +6,8 @@ namespace xn
 {
 	public class MapGenerator : Generator
 	{
-		internal MapGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal MapGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 			this.mapOutputModeChanged = new StateChangedEvent(this,
 				OpenNIImporter.xnRegisterToMapOutputModeChange,

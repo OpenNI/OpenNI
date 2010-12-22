@@ -6,8 +6,8 @@ namespace xn
 {
 	public class DepthGenerator : MapGenerator
 	{
-		internal DepthGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal DepthGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 			this.fovChanged = new StateChangedEvent(this,
 				OpenNIImporter.xnRegisterToDepthFieldOfViewChange,
@@ -15,7 +15,7 @@ namespace xn
 		}
 
 		public DepthGenerator(Context context, Query query, EnumerationErrors errors) :
-			this(Create(context, query, errors))
+			this(Create(context, query, errors), false)
 		{
 		}
 

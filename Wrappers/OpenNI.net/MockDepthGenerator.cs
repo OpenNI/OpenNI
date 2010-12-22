@@ -6,13 +6,13 @@ namespace xn
 {
 	public class MockDepthGenerator : DepthGenerator
 	{
-		internal MockDepthGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal MockDepthGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 		}
 
 		public MockDepthGenerator(Context context, string name) :
-			this(Create(context, name))
+			this(Create(context, name), false)
 		{
 		}
 
@@ -22,7 +22,7 @@ namespace xn
 		}
 
 		public MockDepthGenerator(DepthGenerator basedOn, string name) :
-			this(CreateBasedOn(basedOn, name))
+			this(CreateBasedOn(basedOn, name), false)
 		{
 		}
 

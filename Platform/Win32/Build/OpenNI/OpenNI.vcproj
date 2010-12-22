@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="..\..\Bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
@@ -64,8 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="Ws2_32.lib setupapi.lib"
-				OutputFile="../../Bin/$(ConfigurationName)/openNI.dll"
-				LinkIncremental="0"
+				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../Lib/$(ConfigurationName)"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="../../Bin/$(ConfigurationName)/$(TargetName).pdb"
@@ -97,7 +96,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="..\..\Bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
@@ -149,7 +148,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="Ws2_32.lib setupapi.lib"
-				OutputFile="../../Bin/$(ConfigurationName)/openNI.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../Lib/$(ConfigurationName)"
 				GenerateDebugInformation="true"

@@ -6,13 +6,13 @@ namespace xn
 {
 	public class Codec : ProductionNode
 	{
-		internal Codec(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal Codec(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 		}
 
 		public Codec(Context context, CodecID codecID, ProductionNode initializer) :
-			this(Create(context, codecID, initializer))
+			this(Create(context, codecID, initializer), false)
 		{
 		}
 

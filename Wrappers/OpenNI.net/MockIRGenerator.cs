@@ -6,13 +6,13 @@ namespace xn
 {
 	public class MockIRGenerator : IRGenerator
 	{
-		internal MockIRGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal MockIRGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 		}
 
 		public MockIRGenerator(Context context, string name) :
-			this(Create(context, name))
+			this(Create(context, name), false)
 		{
 		}
 
@@ -22,7 +22,7 @@ namespace xn
 		}
 
 		public MockIRGenerator(IRGenerator basedOn, string name) :
-			this(CreateBasedOn(basedOn, name))
+			this(CreateBasedOn(basedOn, name), false)
 		{
 		}
 

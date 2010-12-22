@@ -6,8 +6,8 @@ namespace xn
 {
 	public class ImageGenerator : MapGenerator
 	{
-		internal ImageGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal ImageGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 			this.pixelFormatChanged = new StateChangedEvent(this,
 				OpenNIImporter.xnRegisterToPixelFormatChange,
@@ -15,7 +15,7 @@ namespace xn
 		}
 
 		public ImageGenerator(Context context, Query query, EnumerationErrors errors) :
-			this(Create(context, query, errors))
+			this(Create(context, query, errors), false)
 		{
 		}
 

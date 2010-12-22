@@ -6,13 +6,13 @@ namespace xn
 {
 	public class Device : ProductionNode
 	{
-		internal Device(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal Device(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 		}
 
 		public Device(Context context, Query query) :
-			this(Create(context, query))
+			this(Create(context, query), false)
 		{
 		}
 

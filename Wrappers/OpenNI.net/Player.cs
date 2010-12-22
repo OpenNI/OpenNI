@@ -7,8 +7,8 @@ namespace xn
 {
 	public class Player : ProductionNode
 	{
-		internal Player(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal Player(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 			this.endOfFileReachedEvent = new StateChangedEvent(this,
 				OpenNIImporter.xnRegisterToEndOfFileReached,
@@ -16,7 +16,7 @@ namespace xn
 		}
 
 		public Player(Context context, string formatName) :
-			this(Create(context, formatName))
+			this(Create(context, formatName), false)
 		{
 		}
 

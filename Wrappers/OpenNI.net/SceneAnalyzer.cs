@@ -7,14 +7,14 @@ namespace xn
 {
     public class SceneAnalyzer : MapGenerator
     {
-		internal SceneAnalyzer(IntPtr nodeHandle)
-			: base(nodeHandle)
+		internal SceneAnalyzer(IntPtr nodeHandle, bool addRef)
+			: base(nodeHandle, addRef)
         {
 
         }
 
         public SceneAnalyzer(Context context, Query query, EnumerationErrors errors) :
-            this(Create(context, query, errors))
+            this(Create(context, query, errors), false)
         {
         }
         public SceneAnalyzer(Context context, Query query)

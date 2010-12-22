@@ -101,7 +101,6 @@ def fix_file(arg,dirname,fname):
                 olds = s
                 s = re.sub(r"..\\..\\..\\..\\..\\",r"..\\..\\",s)
                 s = re.sub(r"../../../../../",r"../../",s)
-                #s = re.sub(r"../../../Lib/",r"../../Lib/",s)
                 s = re.sub(r"../../../Bin/",r"../Bin/",s)
                 s = re.sub(r"..\\..\\..\\Bin\\",r"../Bin/",s)				
                 s = re.sub(r"..\\\\..\\\\..\\\\..\\\\Data\\",r"..\\\\..\\\\..\\\\Data\\",s)
@@ -109,6 +108,7 @@ def fix_file(arg,dirname,fname):
                 s = re.sub("../../../../Data/",r"../../../Data/",s)
                 s = re.sub(r"..\\..\\Res\\",r"..\\Res\\",s)
                 s = re.sub(r"../../../Lib/\$\(ConfigurationName\)",r"../../Lib/$(ConfigurationName);../../Lib/",s)
+                s = re.sub(r"..\\..\\..\\Lib\\\$\(ConfigurationName\)",r"../../Lib/$(ConfigurationName);../../Lib/",s)
 
                 if (re.search("SccProjectName=\"",s)!=None) | (re.search("SSccAuxPath=\"",s)!=None) | \
                                              (re.search("SccLocalPath=\"",s)!=None):

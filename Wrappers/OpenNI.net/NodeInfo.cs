@@ -53,7 +53,7 @@ namespace xn
 			if (handle == IntPtr.Zero)
 				return null;
 			else
-				return new ProductionNode(handle);
+				return ProductionNode.FromNative(handle);
 		}
 
 		protected override void FreeObject(IntPtr ptr)

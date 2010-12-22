@@ -6,13 +6,13 @@ namespace xn
 {
 	public class IRGenerator : MapGenerator
 	{
-		internal IRGenerator(IntPtr nodeHandle) :
-			base(nodeHandle)
+		internal IRGenerator(IntPtr nodeHandle, bool addRef) :
+			base(nodeHandle, addRef)
 		{
 		}
 
 		public IRGenerator(Context context, Query query, EnumerationErrors errors) :
-			this(Create(context, query, errors))
+			this(Create(context, query, errors), false)
 		{
 		}
 

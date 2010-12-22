@@ -7,8 +7,8 @@ namespace xn
 {
     public class HandsGenerator : Generator
     {
-		internal HandsGenerator(IntPtr nodeHandle)
-			: base(nodeHandle)
+		internal HandsGenerator(IntPtr nodeHandle, bool addRef)
+			: base(nodeHandle, addRef)
         {
             this.internalHandCreate = new OpenNIImporter.XnHandCreate(this.InternalHandCreate);
             this.internalHandUpdate = new OpenNIImporter.XnHandUpdate(this.InternalHandUpdate);
@@ -16,7 +16,7 @@ namespace xn
         }
 
         public HandsGenerator(Context context, Query query, EnumerationErrors errors) :
-            this(Create(context, query, errors))
+            this(Create(context, query, errors), false)
         {
         }
         public HandsGenerator(Context context, Query query)

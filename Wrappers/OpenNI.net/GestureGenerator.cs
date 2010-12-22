@@ -6,8 +6,8 @@ namespace xn
 {
     public class GestureGenerator : Generator
     {
-		internal GestureGenerator(IntPtr nodeHandle)
-            : base(nodeHandle)
+		internal GestureGenerator(IntPtr nodeHandle, bool addRef)
+            : base(nodeHandle, addRef)
         {
             this.gestureChanged = new StateChangedEvent(this,
                 OpenNIImporter.xnRegisterToGestureChange,
@@ -17,7 +17,7 @@ namespace xn
             this.internalGestureProgress = new OpenNIImporter.XnGestureProgress(this.InternalGestureProgress);
         }
         public GestureGenerator(Context context, Query query, EnumerationErrors errors) :
-            this(Create(context, query, errors))
+            this(Create(context, query, errors), false)
         {
         }
         public GestureGenerator(Context context, Query query)

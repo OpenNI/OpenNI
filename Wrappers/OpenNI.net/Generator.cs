@@ -6,8 +6,8 @@ namespace xn
 {
 	public class Generator : ProductionNode
 	{
-		internal Generator(IntPtr pNode)
-			: base(pNode)
+		internal Generator(IntPtr pNode, bool addRef)
+			: base(pNode, addRef)
 		{
 			this.generationRunningChanged = new StateChangedEvent(this,
 				OpenNIImporter.xnRegisterToGenerationRunningChange,

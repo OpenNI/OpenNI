@@ -7,14 +7,15 @@ namespace xn
 {
 	public class UserGenerator : Generator
     {
-        public UserGenerator(IntPtr nodeHandle) : base(nodeHandle)
+        public UserGenerator(IntPtr nodeHandle, bool addRef) : 
+			base(nodeHandle, addRef)
         {
             this.internalNewUser = new OpenNIImporter.XnUserHandler(this.InternalNewUser);
             this.internalLostUser = new OpenNIImporter.XnUserHandler(this.InternalLostUser);
         }
 
         public UserGenerator(Context context, Query query, EnumerationErrors errors) :
-            this(Create(context, query, errors))
+            this(Create(context, query, errors), false)
         {
         }
         public UserGenerator(Context context, Query query)
