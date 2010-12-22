@@ -8,6 +8,9 @@ Release Notes:
   If you have a CPU without such support, please remove the sse compiler flags from the make files.
   (A good hint for this error is that you encounter an "illegal instructions" messages)
 
+For the latest unstable build please check out:
+https://github.com/OpenNI/OpenNI/tree/unstable
+  
 Build Notes:
 ------------
 Windows:
