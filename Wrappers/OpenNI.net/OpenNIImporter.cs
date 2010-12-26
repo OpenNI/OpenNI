@@ -1,33 +1,33 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using XnStatus = System.UInt32;
-using XnContext = System.IntPtr;
-using XnEnumerationErrors = System.IntPtr;
-using XnNodeQuery = System.IntPtr;
-using XnNodeInfoList = System.IntPtr;
-using XnNodeInfo = System.IntPtr;
-using XnNodeHandle = System.IntPtr;
+using System.Security;
+using System.Text;
+using XnBool = System.Boolean;
 using XnCallbackHandle = System.IntPtr;
-using XnEnumerationErrorsIterator = System.IntPtr;
-using XnLockHandle = System.UInt32;
-using XnUserID = System.UInt32;
 using XnCodecID = System.UInt32;
 using XnConfidence = System.Single;
+using XnContext = System.IntPtr;
+using XnDepthPixel = System.UInt16;
+using XnDouble = System.Double;
+using XnEnumerationErrors = System.IntPtr;
+using XnEnumerationErrorsIterator = System.IntPtr;
+using XnFloat = System.Single;
+using XnInt32 = System.Int32;
+using XnInt64 = System.Int64;
+using XnLockHandle = System.UInt32;
+using XnNodeHandle = System.IntPtr;
+using XnNodeInfo = System.IntPtr;
+using XnNodeInfoList = System.IntPtr;
 using XnNodeInfoListIterator = System.IntPtr;
-
-using XnBool = System.Boolean;
-using XnUInt8 = System.Byte;
+using XnNodeQuery = System.IntPtr;
+using XnStatus = System.UInt32;
+using XnUInt = System.IntPtr;
 using XnUInt16 = System.UInt16;
 using XnUInt32 = System.UInt32;
-using XnInt32 = System.Int32;
 using XnUInt64 = System.UInt64;
-using XnInt64 = System.Int64;
-using XnDouble = System.Double;
-using XnFloat = System.Single;
-using XnDepthPixel = System.UInt16;
-using XnUInt = System.IntPtr;
+using XnUInt8 = System.Byte;
+using XnUserID = System.UInt32;
 
 namespace xn
 {
@@ -348,6 +348,7 @@ namespace xn
 		public string strKey;
 	};
 
+    [SuppressUnmanagedCodeSecurity]
 	internal class OpenNIImporter
 	{
 		/** Holds information about a general frame of data. **/
