@@ -1,99 +1,47 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{9C7E8CE5-5D4F-49C2-A3A1-DD47896ACE6D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{07AFDAB7-B24B-464F-9937-4F552B4676F0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utils", "Utils", "{81B25B95-A44F-444B-9DA5-5CBFE0FF76D9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenNI", "OpenNI\OpenNI.vcproj", "{8566604D-505A-45CE-A9FF-D94F2F6C4965}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nimCodecs", "Modules\nimCodecs\nimCodecs.vcproj", "{BC719394-83EF-43A5-8466-6948FE480F9B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nimMockNodes", "Modules\nimMockNodes\nimMockNodes.vcproj", "{97C32C97-C847-4AF2-A8BF-D4FC984F1694}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nimRecorder", "Modules\nimRecorder\nimRecorder.vcproj", "{683A3BC9-AADC-402E-B38F-1D98B508242C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-		{BC719394-83EF-43A5-8466-6948FE480F9B} = {BC719394-83EF-43A5-8466-6948FE480F9B}
-		{97C32C97-C847-4AF2-A8BF-D4FC984F1694} = {97C32C97-C847-4AF2-A8BF-D4FC984F1694}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiSimpleRead", "Samples\NiSimpleRead\NiSimpleRead.vcproj", "{8E1A6EA7-3E08-4F6D-A915-648139270231}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiViewer", "Samples\NiViewer\NiViewer.vcproj", "{98122DD2-BFE1-4CA8-0147-E4168A7368C8}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-		{683A3BC9-AADC-402E-B38F-1D98B508242C} = {683A3BC9-AADC-402E-B38F-1D98B508242C}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "niReg", "Utils\niReg\niReg.vcproj", "{60638E49-3597-4389-A043-8A6E9A42AF5D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiConvertXToONI", "Samples\NiConvertXToONI\NiConvertXToONI.vcproj", "{DBB1C4EB-9843-44D4-8BFA-C3DA5ED84E9F}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-		{683A3BC9-AADC-402E-B38F-1D98B508242C} = {683A3BC9-AADC-402E-B38F-1D98B508242C}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "niLicense", "Utils\niLicense\niLicense.vcproj", "{4D7A7078-D442-42DB-B340-6243FE427919}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiRecordSynthetic", "Samples\NiRecordSynthetic\NiRecordSynthetic.vcproj", "{791B09EA-5CF3-4D39-9213-909CC3B7FF92}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiSimpleViewer", "Samples\NiSimpleViewer\NiSimpleViewer.vcproj", "{D199709A-523E-4A12-B928-8DF654879839}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiCRead", "Samples\NiCRead\NiCRead.vcproj", "{F1D8A36D-3A6D-4F5B-851B-13662D1C8A1A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiBackRecorder", "Samples\NiBackRecorder\NiBackRecorder.vcproj", "{67B7CE6E-218A-4622-A6D1-B5DFD1A4F552}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiSampleModule", "Samples\NiSampleModule\NiSampleModule.vcproj", "{E24EE270-DB07-4290-958D-AAC4EC8702FE}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiSimpleCreate", "Samples\NiSimpleCreate\NiSimpleCreate.vcproj", "{D18E6544-A329-4044-949A-0B4111731BCC}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiAudioSample", "Samples\NiAudioSample\NiAudioSample.vcproj", "{9090EACB-98B0-44D8-866C-6F5A55AA1BC0}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiUserTracker", "Samples\NiUserTracker\NiUserTracker.vcproj", "{D199709A-523E-4A12-B928-8DF65487980F}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8566604D-505A-45CE-A9FF-D94F2F6C4965} = {8566604D-505A-45CE-A9FF-D94F2F6C4965}
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Wrappers", "Wrappers", "{9396B0B5-82D5-4916-B6AA-21DFBC9597AE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenNI", "OpenNI\OpenNI.vcxproj", "{8566604D-505A-45CE-A9FF-D94F2F6C4965}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nimCodecs", "Modules\nimCodecs\nimCodecs.vcxproj", "{BC719394-83EF-43A5-8466-6948FE480F9B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nimMockNodes", "Modules\nimMockNodes\nimMockNodes.vcxproj", "{97C32C97-C847-4AF2-A8BF-D4FC984F1694}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nimRecorder", "Modules\nimRecorder\nimRecorder.vcxproj", "{683A3BC9-AADC-402E-B38F-1D98B508242C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiSimpleRead", "Samples\NiSimpleRead\NiSimpleRead.vcxproj", "{8E1A6EA7-3E08-4F6D-A915-648139270231}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiViewer", "Samples\NiViewer\NiViewer.vcxproj", "{98122DD2-BFE1-4CA8-0147-E4168A7368C8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "niReg", "Utils\niReg\niReg.vcxproj", "{60638E49-3597-4389-A043-8A6E9A42AF5D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiConvertXToONI", "Samples\NiConvertXToONI\NiConvertXToONI.vcxproj", "{DBB1C4EB-9843-44D4-8BFA-C3DA5ED84E9F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "niLicense", "Utils\niLicense\niLicense.vcxproj", "{4D7A7078-D442-42DB-B340-6243FE427919}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiRecordSynthetic", "Samples\NiRecordSynthetic\NiRecordSynthetic.vcxproj", "{791B09EA-5CF3-4D39-9213-909CC3B7FF92}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiSimpleViewer", "Samples\NiSimpleViewer\NiSimpleViewer.vcxproj", "{D199709A-523E-4A12-B928-8DF654879839}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiCRead", "Samples\NiCRead\NiCRead.vcxproj", "{F1D8A36D-3A6D-4F5B-851B-13662D1C8A1A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiBackRecorder", "Samples\NiBackRecorder\NiBackRecorder.vcxproj", "{67B7CE6E-218A-4622-A6D1-B5DFD1A4F552}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiSampleModule", "Samples\NiSampleModule\NiSampleModule.vcxproj", "{E24EE270-DB07-4290-958D-AAC4EC8702FE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiSimpleCreate", "Samples\NiSimpleCreate\NiSimpleCreate.vcxproj", "{D18E6544-A329-4044-949A-0B4111731BCC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiAudioSample", "Samples\NiAudioSample\NiAudioSample.vcxproj", "{9090EACB-98B0-44D8-866C-6F5A55AA1BC0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NiUserTracker", "Samples\NiUserTracker\NiUserTracker.vcxproj", "{D199709A-523E-4A12-B928-8DF65487980F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenNI.net", "Wrappers\OpenNI.net\OpenNI.net.csproj", "{2FE4F6DE-12C8-41EE-9588-EB91CB6112FE}"
 	ProjectSection(ProjectDependencies) = postProject
