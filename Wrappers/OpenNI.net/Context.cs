@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
 namespace xn
@@ -11,6 +12,8 @@ namespace xn
 		internal Context(IntPtr pContext) : 
 			base(pContext)
 		{
+            Contract.Requires(pContext != IntPtr.Zero);
+
 		}
 
 		public Context() :
@@ -18,28 +21,35 @@ namespace xn
 		{
 		}
 
-		public Context(string xmlFile) :
+        public Context(string xmlFile) :
 			this(InitFromXml(xmlFile))
 		{
-		}
+            Contract.Requires(!string.IsNullOrWhiteSpace(xmlFile));
+        }
 
 		/// <summary>
 		/// Creates a managed Context object to wrap a native one.
 		/// </summary>
 		/// <param name="pContext">A pointer to the native object</param>
 		/// <returns>A managed Context object</returns>
-		static public Context FromNative(IntPtr pContext)
+		internal Context FromNative(IntPtr pContext)
 		{
-			return new Context(pContext);
+            Contract.Requires(pContext != IntPtr.Zero);
+            
+            return new Context(pContext);
 		}
 
 		static public ProductionNode CreateProductionNodeFromNative(IntPtr hNodeHandle)
 		{
-			return CreateProductionNodeObject(hNodeHandle);
+            Contract.Requires(hNodeHandle != IntPtr.Zero);
+
+            return CreateProductionNodeObject(hNodeHandle);
 		}
 
 		public void RunXmlScript(string xml)
 		{
+            Contract.Requires(!string.IsNullOrWhiteSpace(xml));
+
 			EnumerationErrors errors = new EnumerationErrors();
 			UInt32 status = OpenNIImporter.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
@@ -47,24 +57,30 @@ namespace xn
 
 		public void RunXmlScriptFromFile(string xmlFile)
 		{
-			EnumerationErrors errors = new EnumerationErrors();
+            Contract.Requires(!string.IsNullOrWhiteSpace(xmlFile));
+            
+            EnumerationErrors errors = new EnumerationErrors();
 			UInt32 status = OpenNIImporter.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
 		}
 
 		public void OpenFileRecording(string fileName)
 		{
+            Contract.Requires(!string.IsNullOrWhiteSpace(fileName));
+
 			UInt32 status = OpenNIImporter.xnContextOpenFileRecording(this.InternalObject, fileName);
 			WrapperUtils.CheckStatus(status);
 		}
 
-		public void Shutdown()
-		{
-			Dispose();
-		}
+        //public void Shutdown()
+        //{
+        //    Dispose();
+        //}
 
 		public void AddLicense(License license)
 		{
+            Contract.Requires(license != null);
+
 			UInt32 status = OpenNIImporter.xnAddLicense(this.InternalObject, license);
 			WrapperUtils.CheckStatus(status);
 		}
@@ -99,6 +115,9 @@ namespace xn
 
 		public NodeInfoList EnumerateProductionTrees(NodeType type, Query query)
 		{
+            Contract.Requires(query != null);
+            Contract.Ensures(Contract.Result<NodeInfoList>() != null);
+
 			IntPtr resultList;
 
 			using (EnumerationErrors errors = new EnumerationErrors())
@@ -115,13 +134,19 @@ namespace xn
 
 		public ProductionNode CreateAnyProductionTree(NodeType type, Query query)
 		{
-			IntPtr nodeHandle = CreateAnyProductionTreeImpl(type, query);
+            Contract.Requires(query != null);
+            Contract.Ensures(Contract.Result<ProductionNode>() != null);
+            
+            IntPtr nodeHandle = CreateAnyProductionTreeImpl(type, query);
 			return CreateProductionNodeObject(nodeHandle, type);
 		}
 
 		public ProductionNode CreateProductionTree(NodeInfo nodeInfo)
 		{
-			IntPtr nodeHandle;
+            Contract.Requires(nodeInfo != null);
+            Contract.Ensures(Contract.Result<ProductionNode>() != null);
+
+            IntPtr nodeHandle;
 			UInt32 status = OpenNIImporter.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
 			return CreateProductionNodeObject(nodeHandle, nodeInfo.GetDescription().Type);
@@ -129,6 +154,8 @@ namespace xn
 
 		public NodeInfoList EnumerateExistingNodes()
 		{
+            Contract.Ensures(Contract.Result<NodeInfoList>() != null);
+
 			IntPtr pList;
 			UInt32 status = OpenNIImporter.xnEnumerateExistingNodes(this.InternalObject, out pList);
 			WrapperUtils.CheckStatus(status);
@@ -137,6 +164,8 @@ namespace xn
 
 		public NodeInfoList EnumerateExistingNodes(NodeType type)
 		{
+            Contract.Ensures(Contract.Result<NodeInfoList>() != null);
+
 			IntPtr pList;
 			UInt32 status = OpenNIImporter.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList);
 			WrapperUtils.CheckStatus(status);
@@ -145,6 +174,8 @@ namespace xn
 
 		public ProductionNode FindExistingNode(NodeType type)
 		{
+            Contract.Ensures(Contract.Result<ProductionNode>() != null);
+
 			IntPtr nodeHandle;
 			UInt32 status = OpenNIImporter.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
@@ -153,7 +184,9 @@ namespace xn
 
 		public ProductionNode GetProductionNodeByName(string name)
 		{
-			IntPtr nodeHandle;
+            Contract.Ensures(Contract.Result<ProductionNode>() != null);
+
+            IntPtr nodeHandle;
 			UInt32 status = OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
 			return CreateProductionNodeObject(nodeHandle);
@@ -161,6 +194,9 @@ namespace xn
 
 		public NodeInfo GetProductionNodeInfoByName(string name)
 		{
+            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(name));
+            Contract.Ensures(Contract.Result<NodeInfo>() != null);
+
 			IntPtr nodeHandle;
 			UInt32 status = OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
