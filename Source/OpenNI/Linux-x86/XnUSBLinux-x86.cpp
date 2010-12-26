@@ -238,25 +238,91 @@ XN_C_API XnStatus xnUSBIsDevicePresent(XnUInt16 nVendorID, XnUInt16 nProductID, 
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr)
+XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID, const XnUSBConnectionString** pastrDevicePaths, XnUInt32* pnCount)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-		
-	// make sure library was initialized
-	XN_VALIDATE_USB_INIT();
 	
-	// Validate parameters
-	XN_VALIDATE_OUTPUT_PTR(pDevHandlePtr);
-
-	libusb_device* pDevice;
-	nRetVal = FindDevice(nVendorID, nProductID, pExtraParam, &pDevice);
-	XN_IS_STATUS_OK(nRetVal);
+	// get device list
+	libusb_device** ppDevices;
+	ssize_t nDeviceCount = libusb_get_device_list(g_InitData.pContext, &ppDevices);
+	
+	// first enumeration - count
+	XnUInt32 nCount = 0;
+	
+	for (ssize_t i = 0; i < nDeviceCount; ++i)
+	{
+		libusb_device* pDevice = ppDevices[i];
 		
+		// get device descriptor
+		libusb_device_descriptor desc;
+		int rc = libusb_get_device_descriptor(pDevice, &desc);
+		if (rc != 0)
+		{
+			libusb_free_device_list(ppDevices, 1);
+			return (XN_STATUS_USB_ENUMERATE_FAILED);
+		}
+		
+		// check if this is the requested device
+		if (desc.idVendor == nVendorID && desc.idProduct == nProductID)
+		{
+			++nCount;
+		}
+	}
+	
+	// allocate array
+	XnUSBConnectionString* aResult = (XnUSBConnectionString*)xnOSCalloc(nCount, sizeof(XnUSBConnectionString));
+	if (aResult == NULL)
+	{
+		libusb_free_device_list(ppDevices, 1);
+		return XN_STATUS_ALLOC_FAILED;
+	}
+	
+	// second enumeration - fill
+	XnUInt32 nCurrent = 0;
+	for (ssize_t i = 0; i < nDeviceCount; ++i)
+	{
+		libusb_device* pDevice = ppDevices[i];
+		
+		// get device descriptor
+		libusb_device_descriptor desc;
+		int rc = libusb_get_device_descriptor(pDevice, &desc);
+		if (rc != 0)
+		{
+			libusb_free_device_list(ppDevices, 1);
+			return (XN_STATUS_USB_ENUMERATE_FAILED);
+		}
+		
+		// check if this is the requested device
+		if (desc.idVendor == nVendorID && desc.idProduct == nProductID)
+		{
+			sprintf(aResult[nCurrent], "%04hx/%04hx@%hhu/%hhu", nVendorID, nProductID, libusb_get_bus_number(pDevice), libusb_get_device_address(pDevice));
+			nCurrent++;
+		}
+	}
+	
+	*pastrDevicePaths = aResult;
+	*pnCount = nCount;
+		
+	// free the list (also dereference each device)
+	libusb_free_device_list(ppDevices, 1);
+	
+	return XN_STATUS_OK;
+}
+
+XN_C_API void xnUSBFreeDevicesList(const XnUSBConnectionString* astrDevicePaths)
+{
+	xnOSFree(astrDevicePaths);
+}
+
+XN_C_API XnStatus xnUSBOpenDeviceImpl(libusb_device* pDevice, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
 	if (pDevice == NULL)
 	{
 		return (XN_STATUS_USB_DEVICE_NOT_FOUND);
 	}
-	
+
 	// allocate device handle
 	libusb_device_handle* handle;
 	
@@ -307,6 +373,79 @@ XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void*
 	
 	// mark the device is of high-speed
 	pDevHandle->nDevSpeed = XN_USB_DEVICE_HIGH_SPEED;
+	
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+		
+	// make sure library was initialized
+	XN_VALIDATE_USB_INIT();
+	
+	// Validate parameters
+	XN_VALIDATE_OUTPUT_PTR(pDevHandlePtr);
+
+	libusb_device* pDevice;
+	nRetVal = FindDevice(nVendorID, nProductID, pExtraParam, &pDevice);
+	XN_IS_STATUS_OK(nRetVal);
+		
+	nRetVal = xnUSBOpenDeviceImpl(pDevice, pDevHandlePtr);
+	XN_IS_STATUS_OK(nRetVal);
+	
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnUSBOpenDeviceByPath(const XnUSBConnectionString strDevicePath, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	// parse connection string
+	XnUInt16 nVendorID = 0;
+	XnUInt16 nProductID = 0;
+	XnUInt8 nBus = 0;
+	XnUInt8 nAddress = 0;
+	sscanf(strDevicePath, "%hx/%hx@%hhu/%hhu", &nVendorID, &nProductID, &nBus, &nAddress);
+	
+	if (nVendorID == 0 || nProductID == 0 || nBus == 0 || nAddress == 0)
+	{
+		XN_LOG_WARNING_RETURN(XN_STATUS_USB_DEVICE_OPEN_FAILED, "Invalid connection string: %s", strDevicePath);
+	}
+
+	// find device	
+	libusb_device** ppDevices;
+	ssize_t nDeviceCount = libusb_get_device_list(g_InitData.pContext, &ppDevices);
+	
+	libusb_device* pRequestedDevice = NULL;
+	
+	for (ssize_t i = 0; i < nDeviceCount; ++i)
+	{
+		libusb_device* pDevice = ppDevices[i];
+		
+		// get device descriptor
+		libusb_device_descriptor desc;
+		int rc = libusb_get_device_descriptor(pDevice, &desc);
+		if (rc != 0)
+		{
+			libusb_free_device_list(ppDevices, 1);
+			return (XN_STATUS_USB_ENUMERATE_FAILED);
+		}
+		
+		// check if this is the requested device
+		if (desc.idVendor == nVendorID && desc.idProduct == nProductID && libusb_get_bus_number(pDevice) == nBus && libusb_get_device_address(pDevice) == nAddress)
+		{
+			// add a reference to the device (so it won't be destroyed when list is freed)
+			libusb_ref_device(pDevice);
+			pRequestedDevice = pDevice;
+			break;	
+		}
+	}
+
+	libusb_free_device_list(ppDevices, 1);
+	
+	nRetVal = xnUSBOpenDeviceImpl(pRequestedDevice, pDevHandlePtr);
+	XN_IS_STATUS_OK(nRetVal);
 	
 	return (XN_STATUS_OK);
 }

@@ -3,7 +3,7 @@
 set MAJOR_VERSION=1
 set MINOR_VERSION=0
 set MAINTENANCE_VERSION=0
-set BUILD_VERSION=23
+set BUILD_VERSION=24
 
 @echo ************************
 @echo *** ONI Redist Maker ***

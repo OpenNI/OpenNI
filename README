@@ -3,7 +3,14 @@ OpenNI (Unstable branch)
 Website: www.openni.org
 
 A binary installer is avaiable at:
-http://openni.org/sites/default/files/unstable/OPENNI-Win32-1.0.0.23-Unstable.exe
+http://openni.org/sites/default/files/unstable/OPENNI-Win32-1.0.0.24-Unstable.exe
+
+Changes:
+* Added preliminary support for multi-sensor usage.
+* Shared memory bug fix: creating shared memory failed if the name contained slashes.
+* Added a brand new .NET wrapper and .NET samples.
+* Added a new "PlaybackSpeed" functionality to the Player.
+* ONI files seek optimization: added a data index for each node in ONI files. Seeking can be now done a lot faster!
 
 Release Notes:
 --------------

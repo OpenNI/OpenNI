@@ -28,7 +28,7 @@ import re
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_MAINTENANCE = 0
-VERSION_BUILD = 23
+VERSION_BUILD = 24
 
 # ---------------------- FUNCTIONS -----------------------
 def regx_replace(findStr,repStr,filePath):

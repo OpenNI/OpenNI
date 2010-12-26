@@ -86,7 +86,13 @@ XnStatus AccessFlagsToOpenFlags(XnUInt32 nAccessFlags, int* pFlags)
 
 static void NameToFileName(const XnChar* strName, XnChar* strFileName)
 {
-	sprintf(strFileName, "/%s", strName);
+	int i = 0;
+	for (; strName[i] != '\0'; ++i)
+	{
+		// replace slashes with dots
+		strFileName[i] = strName[i] == '/' ? '.' : strName[i];
+	}
+	strFileName[i] = '\0';
 }
 
 static XnStatus OpenSharedMemoryImpl(const XnChar* strName, XnUInt32 nAccessFlags, XN_SHARED_MEMORY_HANDLE* phSharedMem, XnUInt32 nSize)

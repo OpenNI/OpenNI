@@ -53,9 +53,9 @@ namespace xn
 
         // EnuemrateActiveJoints
 
-        public void GetSkeletonJoint(UserID user, SkeletonJoint eJoint, ref SkeletonJointTransformation joint)
+        public void GetSkeletonJoint(UserID user, SkeletonJoint eJoint, SkeletonJointTransformation joint)
         {
-            UInt32 status = OpenNIImporter.xnGetSkeletonJoint(this.InternalObject, user, eJoint, ref joint);
+            UInt32 status = OpenNIImporter.xnGetSkeletonJoint(this.InternalObject, user, eJoint, joint);
             WrapperUtils.CheckStatus(status);
         }
 
@@ -65,9 +65,9 @@ namespace xn
             WrapperUtils.CheckStatus(status);
         }
 
-        public void GetSkeletonJointOrientation(UserID user, SkeletonJoint eJoint, ref SkeletonJointOrientation joint)
+        public void GetSkeletonJointOrientation(UserID user, SkeletonJoint eJoint, SkeletonJointOrientation joint)
         {
-            UInt32 status = OpenNIImporter.xnGetSkeletonJointOrientation(this.InternalObject, user, eJoint, ref joint);
+            UInt32 status = OpenNIImporter.xnGetSkeletonJointOrientation(this.InternalObject, user, eJoint, joint);
             WrapperUtils.CheckStatus(status);
         }
 

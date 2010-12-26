@@ -286,25 +286,26 @@ namespace xn
 	public class Matrix3X3
 	{
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
-		public readonly float[] Elements = new float[9];
+		public readonly float[] elements = new float[9];
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	public class SkeletonJointOrientation
 	{
 		/** The actual orientation */
-		public Matrix3X3 Orientation;
+		[MarshalAs(UnmanagedType.Struct)]
+		public Matrix3X3 Orientation = new Matrix3X3();
 		/** The confidence in the orientation */
 		public XnConfidence Confidence;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct SkeletonJointTransformation
+	public class SkeletonJointTransformation
 	{
 		/** The position of the joint */
 		public SkeletonJointPosition position;
 		/** The orientation of the joint */
-		public SkeletonJointOrientation orientation;
+		public SkeletonJointOrientation orientation = new SkeletonJointOrientation();
 	};
 
 	/** A pair of 32-bit unsigned values. **/
@@ -841,11 +842,11 @@ namespace xn
 		[DllImport("OpenNI")]
 		public static extern XnStatus xnEnumerateActiveJoints(XnNodeHandle hInstance, SkeletonJoint pJoints, XnUInt16 pnJoints);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointTransformation pJoint);
+		public static extern XnStatus xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, SkeletonJoint eJoint, [Out] SkeletonJointTransformation pJoint);
 		[DllImport("OpenNI")]
 		public static extern XnStatus xnGetSkeletonJointPosition(XnNodeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointPosition pJoint);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetSkeletonJointOrientation(XnNodeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointOrientation pJoint);
+		public static extern XnStatus xnGetSkeletonJointOrientation(XnNodeHandle hInstance, XnUserID user, SkeletonJoint eJoint, [Out] SkeletonJointOrientation pJoint);
 		[DllImport("OpenNI")]
 		public static extern XnBool xnIsSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]

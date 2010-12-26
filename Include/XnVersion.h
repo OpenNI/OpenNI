@@ -41,7 +41,7 @@
 /** OpenNI maintenance version. */ 
 #define XN_MAINTENANCE_VERSION 0
 /** OpenNI build version. */ 
-#define XN_BUILD_VERSION 23
+#define XN_BUILD_VERSION 24
 
 /** OpenNI version (in brief string format): "Major.Minor.Maintenance (Build)" */ 
 #define XN_BRIEF_VERSION_STRING \

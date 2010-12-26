@@ -87,7 +87,13 @@ static XnStatus AccessFlagsToWin32ViewFlags(XnUInt32 nAccessFlags, DWORD* pFlags
 
 static XnStatus NameToWin32Name(const XnChar* strName, XnChar* strWin32Name)
 {
-	sprintf(strWin32Name, "%s", strName);
+	int i = 0;
+	for (; strName[i] != '\0'; ++i)
+	{
+		// replace all backslashes (not allowed)
+		strWin32Name[i] = strName[i] == '\\' ? '/' : strName[i];
+	}
+	strWin32Name[i] = '\0';
 	return (XN_STATUS_OK);
 }
 
