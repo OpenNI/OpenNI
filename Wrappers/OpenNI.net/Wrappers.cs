@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
 namespace xn
@@ -59,14 +60,12 @@ namespace xn
 		private UInt32 handle;
 	}
 
+    [ContractClass(typeof(Contracts.ObjectWrapperContract))]
 	public abstract class ObjectWrapper : IDisposable
 	{
 		internal ObjectWrapper(IntPtr ptr)
 		{
-			if (ptr == IntPtr.Zero)
-			{
-				throw new GeneralException("c# wrappers: Trying to wrap a null object!");
-			}
+            Contract.Requires(ptr != IntPtr.Zero);
 
 			this.ptr = ptr;
 		}
@@ -82,7 +81,9 @@ namespace xn
 		/// <returns>A pointer to the OpenNI object</returns>
 		public IntPtr ToNative()
 		{
-			return this.ptr;
+            Contract.Ensures(Contract.Result<IntPtr>() != IntPtr.Zero, "Native pointer was disposed.");
+
+            return this.ptr;
 		}
 
 		#region IDisposable Members
@@ -114,7 +115,29 @@ namespace xn
 		private IntPtr ptr;
 	}
 
-	public class GeneralException : System.Exception
+    #region Code contracts
+
+    namespace Contracts
+    {
+        [ContractClassFor(typeof(ObjectWrapper))]
+        internal abstract class ObjectWrapperContract
+            : ObjectWrapper
+        {
+            internal ObjectWrapperContract(IntPtr ptr)
+                : base(ptr)
+            {
+            }
+
+            protected override void FreeObject(IntPtr ptr)
+            {
+                Contract.Requires(ptr != IntPtr.Zero);
+            }
+        }
+    }
+
+    #endregion
+
+    public class GeneralException : System.Exception
 	{
 		public GeneralException(string message)
 			: base(message)
