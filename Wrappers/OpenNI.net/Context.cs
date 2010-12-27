@@ -194,7 +194,7 @@ namespace xn
 
 		public NodeInfo GetProductionNodeInfoByName(string name)
 		{
-            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(name));
+            Contract.Requires(!String.IsNullOrEmpty(name));
             Contract.Ensures(Contract.Result<NodeInfo>() != null);
 
 			IntPtr nodeHandle;
