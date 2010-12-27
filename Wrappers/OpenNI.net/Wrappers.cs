@@ -211,7 +211,7 @@ namespace xn
 		private UInt32 val;
 	}
 
-	public class NodeWrapper : ObjectWrapper
+	public class NodeWrapper : ObjectWrapper, IEquatable<NodeWrapper>
 	{
 		internal NodeWrapper(IntPtr hNode, bool addRef)
 			: base(hNode)
