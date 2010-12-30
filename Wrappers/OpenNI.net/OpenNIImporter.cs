@@ -22,6 +22,7 @@ using XnUInt32 = System.UInt32;
 using XnUInt64 = System.UInt64;
 using XnUInt8 = System.Byte;
 using XnUserID = System.UInt32;
+using System.Diagnostics;
 
 namespace OpenNI
 {
@@ -160,7 +161,8 @@ namespace OpenNI
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Version
+    [DebuggerDisplay("Version = {Major}.{Minor}.{Maintenance}.{Build}")]
+    public struct Version
 	{
 		public XnUInt8 Major;
 		public XnUInt8 Minor;
@@ -195,7 +197,8 @@ namespace OpenNI
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct FieldOfView
+    [DebuggerDisplay("Horizontal = {HFOV}, Vertical = {VFOV}")]
+    public struct FieldOfView
 	{
 		/** Horizontal Field Of View, in radians. */
 		public XnDouble HFOV;
@@ -204,7 +207,8 @@ namespace OpenNI
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Point3D
+    [DebuggerDisplay("X = {X}, Y = {Y}, Z = {Z}")]
+    public struct Point3D
 	{
 		public Point3D(XnFloat x, XnFloat y, XnFloat z)
 		{
@@ -226,7 +230,8 @@ namespace OpenNI
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct RGB24Pixel
+    [DebuggerDisplay("Red = {Red}, Green = {Green}, Blue = {Blue}")]
+    public struct RGB24Pixel
 	{
 		public XnUInt8 Red;
 		public XnUInt8 Green;
@@ -234,7 +239,8 @@ namespace OpenNI
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct YUV422DoublePixel
+    [DebuggerDisplay("U = {U}, Y1 = {Y1}, V = {V}, Y2 = {Y2}")]
+    public struct YUV422DoublePixel
 	{
 		public XnUInt8 U;
 		public XnUInt8 Y1;
@@ -304,7 +310,8 @@ namespace OpenNI
 
 	/** A pair of 32-bit unsigned values. **/
 	[StructLayout(LayoutKind.Sequential)]
-	public struct UInt32XYPair
+    [DebuggerDisplay("X = {X}, Y = {Y}")]
+    public struct UInt32XYPair
 	{
 		public XnUInt32 X;
 		public XnUInt32 Y;
