@@ -26,42 +26,69 @@ using System.Diagnostics;
 
 namespace OpenNI
 {
+    /// <summary>
+    /// Type of the production node. 
+    /// </summary>
 	public enum NodeType
 	{
-		/** A device node **/
+		/// <summary>
+        /// A device node
+		/// </summary>
 		Device = 1,
 
-		/** A depth generator **/
+		/// <summary>
+        /// A depth generator
+		/// </summary>
 		Depth = 2,
 		
-		/** An image generator **/
+		/// <summary>
+        /// An image generator
+		/// </summary>
 		Image = 3,
 
-		/** An audio generator **/
+		/// <summary>
+        /// An audio generator
+		/// </summary>
 		Audio = 4,
 		
-		/** An IR generator **/
+		/// <summary>
+        /// An IR generator
+		/// </summary>
 		IR = 5,
 
-		/** A user generator **/
+		/// <summary>
+        /// A user generator
+		/// </summary>
 		User = 6,
 		
-		/** A recorder **/
+		/// <summary>
+        /// A recorder
+		/// </summary>
 		Recorder = 7,
 		
-		/** A player **/
+		/// <summary>
+        /// A player
+		/// </summary>
 		Player = 8,
 		
-		/** A gesture generator **/
+		/// <summary>
+        /// A gesture generator
+		/// </summary>
 		Gesture = 9,
 		
-		/** A scene analyzer **/
+		/// <summary>
+        /// A scene analyzer
+		/// </summary>
 		Scene = 10,
 		
-		/** A hands generator **/
+		/// <summary>
+        /// A hands generator
+		/// </summary>
 		Hands = 11,
 
-		/** A Codec **/
+		/// <summary>
+        /// A Codec
+		/// </summary>
 		Codec = 12,
 	}
 
@@ -96,6 +123,9 @@ namespace OpenNI
 		P1080 = 10,
 	};
 
+    /// <summary>
+    /// A full list of available joints. 
+    /// </summary>
 	public enum SkeletonJoint
 	{
 		Head			= 1,
@@ -128,7 +158,9 @@ namespace OpenNI
 		RightFoot		=24	
 	};
 
-	/** A configuration of joints to be used by skeleton (see @ref xnSetSkeletonProfile) **/
+	/// <summary>
+    /// A configuration of joints to be used by skeleton.
+	/// </summary>
 	public enum SkeletonProfile
 	{
 		/** No joints at all **/

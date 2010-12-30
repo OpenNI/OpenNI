@@ -7,6 +7,9 @@ namespace OpenNI
 {
 	public delegate void ErrorStateChangedHandler(string currError);
 
+    /// <summary>
+    /// Represents an OpenNI context object.
+    /// </summary>
 	public class Context : ObjectWrapper
 	{
 		internal Context(ContextSafeHandle pContext) : 
@@ -38,6 +41,12 @@ namespace OpenNI
             return CreateProductionNodeObject(hNodeHandle);
 		}
 
+        /// <summary>
+        /// Runs an XML script in the this Context.
+        /// </summary>
+        /// <param name="xml">A string representation of the XML script.</param>
+        /// <exception cref="GeneralException"></exception>
+        /// <exception cref="XnStatusException"></exception>
 		public void RunXmlScript(string xml)
 		{
             Contract.Requires(!string.IsNullOrWhiteSpace(xml));
@@ -47,15 +56,24 @@ namespace OpenNI
 			WrapperUtils.CheckEnumeration(status, errors);
 		}
 
+        /// <summary>
+        /// Runs an XML script in the this Context.
+        /// </summary>
+        /// <param name="xmlFile">The file to open.</param>
 		public void RunXmlScriptFromFile(string xmlFile)
 		{
             Contract.Requires(!string.IsNullOrWhiteSpace(xmlFile));
+            Contract.Requires(System.IO.File.Exists(xmlFile));
             
             EnumerationErrors errors = new EnumerationErrors();
 			UInt32 status = OpenNIImporter.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
 		}
 
+        /// <summary>
+        /// Opens a recording file, adding all nodes in it to the context. 
+        /// </summary>
+        /// <param name="fileName">The file to open.</param>
 		public void OpenFileRecording(string fileName)
 		{
             Contract.Requires(!string.IsNullOrWhiteSpace(fileName));
@@ -63,11 +81,6 @@ namespace OpenNI
 			UInt32 status = OpenNIImporter.xnContextOpenFileRecording(this.InternalObject, fileName);
 			WrapperUtils.CheckStatus(status);
 		}
-
-        //public void Shutdown()
-        //{
-        //    Dispose();
-        //}
 
 		public void AddLicense(License license)
 		{
