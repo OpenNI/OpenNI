@@ -10,50 +10,42 @@ namespace OpenNI
 
 		public static void Init()
 		{
-			UInt32 status = OpenNIImporter.xnLogInitSystem();
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLogInitSystem());
 		}
 
 		public static void InitFromXmlFile(string xmlFile)
 		{
-			UInt32 status = OpenNIImporter.xnLogInitFromXmlFile(xmlFile);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLogInitFromXmlFile(xmlFile));
 		}
 
 		public static void Close()
 		{
-			UInt32 status = OpenNIImporter.xnLogClose();
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLogClose());
 		}
 
 		public static void SetMaskState(string maskName, bool on)
 		{
-			UInt32 status = OpenNIImporter.xnLogSetMaskState(maskName, on);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLogSetMaskState(maskName, on));
 		}
 
 		public static void SetSeverityFilter(LogSeverity severity)
 		{
-			UInt32 status = OpenNIImporter.xnLogSetSeverityFilter(severity);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLogSetSeverityFilter(severity));
 		}
 
 		public static void SetConsoleOutput(bool on)
 		{
-			UInt32 status = OpenNIImporter.xnLogSetConsoleOutput(on);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLogSetConsoleOutput(on));
 		}
 
 		public static void SetFileOutput(bool on)
 		{
-			UInt32 status = OpenNIImporter.xnLogSetFileOutput(on);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLogSetFileOutput(on));
 		}
 
 		public static void SetOutputFolder(string folder)
 		{
-			UInt32 status = OpenNIImporter.xnLogSetOutputFolder(folder);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLogSetOutputFolder(folder));
 		}
 	}
 }

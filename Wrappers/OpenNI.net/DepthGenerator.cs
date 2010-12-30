@@ -47,8 +47,8 @@ namespace OpenNI
 		public FieldOfView GetFieldOfView()
 		{
 			FieldOfView fov = new FieldOfView();
-			UInt32 status = OpenNIImporter.xnGetDepthFieldOfView(this.InternalObject, ref fov);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetDepthFieldOfView(this.InternalObject, ref fov));
+			
 			return fov;
 		}
 
@@ -61,8 +61,8 @@ namespace OpenNI
 		public Point3D[] ConvertProjectiveToRealWorld(Point3D[] projectivePoints)
 		{
 			Point3D[] realWorld = new Point3D[projectivePoints.Length];
-			UInt32 status = OpenNIImporter.xnConvertProjectiveToRealWorld(this.InternalObject, (uint)projectivePoints.Length, projectivePoints, realWorld);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnConvertProjectiveToRealWorld(this.InternalObject, (uint)projectivePoints.Length, projectivePoints, realWorld));
+			
 			return realWorld;
 		}
 
@@ -77,8 +77,8 @@ namespace OpenNI
         public Point3D[] ConvertRealWorldToProjective(Point3D[] realWorldPoints)
         {
             Point3D[] projective = new Point3D[realWorldPoints.Length];
-            UInt32 status = OpenNIImporter.xnConvertRealWorldToProjective(this.InternalObject, (uint)realWorldPoints.Length, realWorldPoints, projective);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnConvertRealWorldToProjective(this.InternalObject, (uint)realWorldPoints.Length, realWorldPoints, projective));
+            
             return projective;
         }
         
@@ -116,10 +116,10 @@ namespace OpenNI
 		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
             NodeSafeHandle handle;
-            UInt32 status = OpenNIImporter.xnCreateDepthGenerator(context.InternalObject, out handle,
+            Status.ThrowOnFail(OpenNIImporter.xnCreateDepthGenerator(context.InternalObject, out handle,
 				query == null ? QuerySafeHandle.Zero : query.InternalObject,
-				errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
-			WrapperUtils.CheckStatus(status);
+                errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
+			
 			return handle;
 		}
 

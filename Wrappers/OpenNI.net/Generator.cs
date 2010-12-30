@@ -20,8 +20,7 @@ namespace OpenNI
 
 		public void StartGenerating()
 		{
-			UInt32 status = OpenNIImporter.xnStartGenerating(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnStartGenerating(this.InternalObject));
 		}
 
 		public bool IsGenerating()
@@ -31,8 +30,7 @@ namespace OpenNI
 
 		public void StopGenerating()
 		{
-			UInt32 status = OpenNIImporter.xnStopGenerating(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnStopGenerating(this.InternalObject));
 		}
 
 		public event StateChangedHandler GenerationRunningChanged
@@ -60,8 +58,7 @@ namespace OpenNI
 
 		public void WaitAndUpdateData()
 		{
-			UInt32 status = OpenNIImporter.xnWaitAndUpdateData(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnWaitAndUpdateData(this.InternalObject));
 		}
 
 		public bool IsDataNew

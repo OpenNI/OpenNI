@@ -24,14 +24,12 @@ namespace OpenNI
 
 		public void AddNeededNode(ProductionNode needed)
 		{
-			UInt32 status = OpenNIImporter.xnAddNeededNode(this.InternalObject, needed.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnAddNeededNode(this.InternalObject, needed.InternalObject));
 		}
 
 		public void RemoveNeededNode(ProductionNode needed)
 		{
-			UInt32 status = OpenNIImporter.xnRemoveNeededNode(this.InternalObject, needed.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnRemoveNeededNode(this.InternalObject, needed.InternalObject));
 		}
 
 		public Context GetContext()
@@ -46,41 +44,35 @@ namespace OpenNI
 
 		public void SetIntProperty(string propName, UInt64 value)
 		{
-			UInt32 status = OpenNIImporter.xnSetIntProperty(this.InternalObject, propName, value);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnSetIntProperty(this.InternalObject, propName, value));
 		}
 
 		public void SetRealProperty(string propName, double value)
 		{
-			UInt32 status = OpenNIImporter.xnSetRealProperty(this.InternalObject, propName, value);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnSetRealProperty(this.InternalObject, propName, value));
 		}
 
 		public void SetStringProperty(string propName, string value)
 		{
-			UInt32 status = OpenNIImporter.xnSetStringProperty(this.InternalObject, propName, value);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnSetStringProperty(this.InternalObject, propName, value));
 		}
 
 		public void SetGeneralProperty(string propName, uint size, IntPtr buff)
 		{
-			UInt32 status = OpenNIImporter.xnSetGeneralProperty(this.InternalObject, propName, size, buff);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnSetGeneralProperty(this.InternalObject, propName, size, buff));
 		}
 
 		public UInt64 GetIntProperty(string propName)
 		{
 			UInt64 value;
-			UInt32 status = OpenNIImporter.xnGetIntProperty(this.InternalObject, propName, out value);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnGetIntProperty(this.InternalObject, propName, out value));
 			return value;
 		}
 
 		public double GetRealProperty(string propName)
 		{
 			double value;
-			UInt32 status = OpenNIImporter.xnGetRealProperty(this.InternalObject, propName, out value);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnGetRealProperty(this.InternalObject, propName, out value));
 			return value;
 		}
 
@@ -88,41 +80,35 @@ namespace OpenNI
 		{
 			const int size = 2048;
 			StringBuilder sb = new StringBuilder(size);
-			UInt32 status = OpenNIImporter.xnGetStringProperty(this.InternalObject, propName, sb, size);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnGetStringProperty(this.InternalObject, propName, sb, size));
 			return sb.ToString();
 		}
 
 		public void GetGeneralProperty(string propName, uint size, IntPtr buff)
 		{
-			UInt32 status = OpenNIImporter.xnGetGeneralProperty(this.InternalObject, propName, size, buff);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnGetGeneralProperty(this.InternalObject, propName, size, buff));
 		}
 
 		public LockHandle LockForChanges()
 		{
 			uint handle;
-			UInt32 status = OpenNIImporter.xnLockNodeForChanges(this.InternalObject, out handle);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLockNodeForChanges(this.InternalObject, out handle));
 			return new LockHandle(handle);
 		}
 
 		public void UnlockForChanges(LockHandle lockHandle)
 		{
-			UInt32 status = OpenNIImporter.xnUnlockNodeForChanges(this.InternalObject, lockHandle.InternalHandle);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnUnlockNodeForChanges(this.InternalObject, lockHandle.InternalHandle));
 		}
 
 		public void LockedNodeStartChanges(LockHandle lockHandle)
 		{
-			UInt32 status = OpenNIImporter.xnLockedNodeStartChanges(this.InternalObject, lockHandle.InternalHandle);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLockedNodeStartChanges(this.InternalObject, lockHandle.InternalHandle));
 		}
 
 		public void LockedNodeEndChanges(LockHandle lockHandle)
 		{
-			UInt32 status = OpenNIImporter.xnLockedNodeEndChanges(this.InternalObject, lockHandle.InternalHandle);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnLockedNodeEndChanges(this.InternalObject, lockHandle.InternalHandle));
 		}
 	}
 }

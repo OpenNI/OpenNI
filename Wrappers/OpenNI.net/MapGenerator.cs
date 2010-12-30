@@ -20,8 +20,7 @@ namespace OpenNI
             {
                 uint count = OpenNIImporter.xnGetSupportedMapOutputModesCount(this.InternalObject);
                 MapOutputMode[] supportedModes = new MapOutputMode[count];
-                UInt32 status = OpenNIImporter.xnGetSupportedMapOutputModes(this.InternalObject, supportedModes, ref count);
-                WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnGetSupportedMapOutputModes(this.InternalObject, supportedModes, ref count));
                 return supportedModes;
             }
 		}
@@ -31,14 +30,12 @@ namespace OpenNI
             get
             {
                 MapOutputMode mode = new MapOutputMode();
-                UInt32 status = OpenNIImporter.xnGetMapOutputMode(this.InternalObject, ref mode);
-                WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnGetMapOutputMode(this.InternalObject, ref mode));
                 return mode;
             }
             set
             {
-			    UInt32 status = OpenNIImporter.xnSetMapOutputMode(this.InternalObject, ref value);
-			    WrapperUtils.CheckStatus(status);
+			    Status.ThrowOnFail(OpenNIImporter.xnSetMapOutputMode(this.InternalObject, ref value));
             }
 		}
 

@@ -8,7 +8,7 @@ namespace OpenNI
 
 	internal class StateChangedEvent
 	{
-        public delegate UInt32 RegisterFunc(NodeSafeHandle hInstance, OpenNIImporter.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
+        public delegate Status RegisterFunc(NodeSafeHandle hInstance, OpenNIImporter.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
         public delegate void UnregisterFunc(NodeSafeHandle hInstance, IntPtr hCallback);
 
 		public StateChangedEvent(ProductionNode node, RegisterFunc reg, UnregisterFunc unreg)
@@ -25,8 +25,7 @@ namespace OpenNI
 			{
 				if (this.internalEvent == null)
 				{
-					UInt32 status = this.reg(this.node.InternalObject, this.internalHandler, IntPtr.Zero, out this.registerHandle);
-					WrapperUtils.CheckStatus(status);
+					Status.ThrowOnFail(this.reg(this.node.InternalObject, this.internalHandler, IntPtr.Zero, out this.registerHandle));
 				}
 
 				this.internalEvent += value;

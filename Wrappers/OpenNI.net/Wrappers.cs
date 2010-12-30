@@ -5,37 +5,6 @@ using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public class WrapperUtils
-	{
-		public static string GetErrorMessage(UInt32 status)
-		{
-            return Marshal.PtrToStringAnsi(OpenNIImporter.xnGetStatusString(status));
-		}
-
-		public static void CheckStatus(UInt32 status)
-		{
-			if (status != 0)
-			{
-				throw new XnStatusException(status);
-			}
-		}
-
-		public static void CheckEnumeration(UInt32 status, EnumerationErrors errors)
-		{
-			if (status != 0)
-			{
-				if (errors != null && !errors.IsEmpty())
-				{
-					throw new GeneralException(errors.ToString());
-				}
-				else
-				{
-					throw new XnStatusException(status);
-				}
-			}
-		}
-	}
-
 	public abstract class HandleWrapper
 	{
 		internal HandleWrapper(UInt32 handle)
@@ -138,30 +107,6 @@ namespace OpenNI
     }
 
     #endregion
-
-    public class GeneralException : System.Exception
-	{
-		public GeneralException(string message)
-			: base(message)
-		{
-		}
-	}
-
-	public class XnStatusException : GeneralException
-	{
-		public XnStatusException(UInt32 status)
-			: base(WrapperUtils.GetErrorMessage(status))
-		{
-			this.status = status;
-		}
-
-		public UInt32 Status
-		{
-			get { return status; }
-		}
-
-		private UInt32 status;
-	}
 
 	public class LockHandle : HandleWrapper
 	{

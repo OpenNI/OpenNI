@@ -34,8 +34,8 @@ namespace OpenNI
 					arr[i] = Marshal.AllocHGlobal(nameSize);
 				}
 
-				UInt32 status = OpenNIImporter.xnGetAllAvailablePoses(this.InternalObject, arr, nameSize, ref count);
-				WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnGetAllAvailablePoses(this.InternalObject, arr, nameSize, ref count));
+				
 
 				poses = new string[count];
 				for (int i = 0; i < count; ++i)
@@ -57,8 +57,8 @@ namespace OpenNI
 
 		public void StartPoseDetection(string pose, UserID user)
         {
-            UInt32 status = OpenNIImporter.xnStartPoseDetection(this.InternalObject, pose, user);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnStartPoseDetection(this.InternalObject, pose, user));
+            
         }
         public void StopPoseDetection(UserID user)
         {
@@ -74,8 +74,8 @@ namespace OpenNI
             {
                 if (this.poseDetectedEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterToPoseCallbacks(this.InternalObject, internalPoseDetected, null, IntPtr.Zero, out poseDetectedHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterToPoseCallbacks(this.InternalObject, internalPoseDetected, null, IntPtr.Zero, out poseDetectedHandle));
+                    
                 }
                 this.poseDetectedEvent += value;
             }
@@ -107,8 +107,8 @@ namespace OpenNI
             {
                 if (this.poseEndedEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterToPoseCallbacks(this.InternalObject, null, InternalPoseEnded, IntPtr.Zero, out poseEndedHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterToPoseCallbacks(this.InternalObject, null, InternalPoseEnded, IntPtr.Zero, out poseEndedHandle));
+                    
                 }
                 this.poseEndedEvent += value;
             }

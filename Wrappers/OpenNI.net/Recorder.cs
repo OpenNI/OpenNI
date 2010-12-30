@@ -23,14 +23,12 @@ namespace OpenNI
 
 		public void SetDestination(RecordMedium medium, string dest)
 		{
-			UInt32 status = OpenNIImporter.xnSetRecorderDestination(this.InternalObject, medium, dest);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnSetRecorderDestination(this.InternalObject, medium, dest));
 		}
 
 		public void AddNodeToRecording(ProductionNode node, CodecID codec)
 		{
-			UInt32 status = OpenNIImporter.xnAddNodeToRecording(this.InternalObject, node.InternalObject, codec.InternalValue);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnAddNodeToRecording(this.InternalObject, node.InternalObject, codec.InternalValue));
 		}
 
 		public void AddNodeToRecording(ProductionNode node)
@@ -40,21 +38,18 @@ namespace OpenNI
 
 		public void RemoveNodeFromRecording(ProductionNode node)
 		{
-			UInt32 status = OpenNIImporter.xnRemoveNodeFromRecording(this.InternalObject, node.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnRemoveNodeFromRecording(this.InternalObject, node.InternalObject));
 		}
 
 		public void Record()
 		{
-			UInt32 status = OpenNIImporter.xnRecord(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnRecord(this.InternalObject));
 		}
 
 		private static NodeSafeHandle Create(Context context, string formatName)
 		{
             NodeSafeHandle nodeHandle;
-            UInt32 status = OpenNIImporter.xnCreateRecorder(context.InternalObject, formatName, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnCreateRecorder(context.InternalObject, formatName, out nodeHandle));
 			return nodeHandle;
 		}
 	}

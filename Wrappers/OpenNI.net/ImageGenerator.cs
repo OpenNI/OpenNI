@@ -74,8 +74,8 @@ namespace OpenNI
             }
             set
             {
-			    UInt32 status = OpenNIImporter.xnSetPixelFormat(this.InternalObject, value);
-			    WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnSetPixelFormat(this.InternalObject, value));
+			    
             }
 		}
 
@@ -106,10 +106,10 @@ namespace OpenNI
 		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
             NodeSafeHandle handle;
-            UInt32 status = OpenNIImporter.xnCreateImageGenerator(context.InternalObject, out handle,
+            Status.ThrowOnFail(OpenNIImporter.xnCreateImageGenerator(context.InternalObject, out handle,
 				query == null ? QuerySafeHandle.Zero : query.InternalObject,
-				errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
-			WrapperUtils.CheckStatus(status);
+                errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
+			
 			return handle;
 		}
 

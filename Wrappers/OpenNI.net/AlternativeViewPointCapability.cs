@@ -21,14 +21,12 @@ namespace OpenNI
 
 		public void SetViewPoint(ProductionNode other)
 		{
-			UInt32 status = OpenNIImporter.xnSetViewPoint(this.InternalObject, other.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnSetViewPoint(this.InternalObject, other.InternalObject));
 		}
 
 		public void ResetViewPoint()
 		{
-			UInt32 status = OpenNIImporter.xnResetViewPoint(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnResetViewPoint(this.InternalObject));
 		}
 
 		public bool IsViewPointAs(ProductionNode other)

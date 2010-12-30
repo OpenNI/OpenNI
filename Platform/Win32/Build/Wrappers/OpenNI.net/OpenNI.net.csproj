@@ -205,6 +205,9 @@
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\NodeSafeHandle.cs">
       <Link>SafeHandles\NodeSafeHandle.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\OpenNiException.cs">
+      <Link>OpenNiException.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\OpenNIImporter.cs">
       <Link>OpenNIImporter.cs</Link>
     </Compile>
@@ -241,6 +244,9 @@
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\StateChangedEvent.cs">
       <Link>StateChangedEvent.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Status.cs">
+      <Link>Status.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\UserGenerator.cs">
       <Link>Nodes\UserGenerator.cs</Link>
     </Compile>
@@ -253,13 +259,16 @@
     <Compile Include="..\..\Res\AssemblyInfo-OpenNI.cs">
       <Link>AssemblyInfo-OpenNI.cs</Link>
     </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
@@ -283,6 +292,12 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

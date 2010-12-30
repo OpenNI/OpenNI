@@ -116,41 +116,41 @@ namespace OpenNI
 
 		public void Add(ProductionNodeDescription description, string creationInfo, NodeInfoList neededNodes)
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoListAdd(this.InternalObject, description, creationInfo,
-                neededNodes == null ? NodeInfoListSafeHandle.Zero : neededNodes.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListAdd(this.InternalObject, description, creationInfo,
+                neededNodes == null ? NodeInfoListSafeHandle.Zero : neededNodes.InternalObject));
+			
 		}
 
 		public void AddNode(NodeInfo nodeInfo)
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoListAddNode(this.InternalObject, nodeInfo.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListAddNode(this.InternalObject, nodeInfo.InternalObject));
+			
 		}
 
 		public void AddNodeFromList(IEnumerator<NodeInfo> curr)
 		{
 			NodeInfoListEnumerator enumer = (NodeInfoListEnumerator)curr;
-			UInt32 status = OpenNIImporter.xnNodeInfoListAddNodeFromList(this.InternalObject, enumer.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListAddNodeFromList(this.InternalObject, enumer.InternalObject));
+			
 		}
 
 		public void Remove(IEnumerator<NodeInfo> location)
 		{
 			NodeInfoListEnumerator enumer = (NodeInfoListEnumerator)location;
-			UInt32 status = OpenNIImporter.xnNodeInfoListRemove(this.InternalObject, enumer.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListRemove(this.InternalObject, enumer.InternalObject));
+			
 		}
 
 		public void Clear()
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoListClear(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListClear(this.InternalObject));
+			
 		}
 
 		public void Append(NodeInfoList other)
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoListAppend(this.InternalObject, other.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListAppend(this.InternalObject, other.InternalObject));
+			
 		}
 
 		public bool IsEmpty()

@@ -19,14 +19,12 @@ namespace OpenNI
             get
             {
 			    Cropping cropping = new Cropping();
-			    UInt32 status = OpenNIImporter.xnGetCropping(this.InternalObject, ref cropping);
-			    WrapperUtils.CheckStatus(status);
+			    Status.ThrowOnFail(OpenNIImporter.xnGetCropping(this.InternalObject, ref cropping));
 			    return cropping;
             }
             set
             {
-                UInt32 status = OpenNIImporter.xnSetCropping(this.InternalObject, ref value);
-                WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnSetCropping(this.InternalObject, ref value));
             }
 		}
 

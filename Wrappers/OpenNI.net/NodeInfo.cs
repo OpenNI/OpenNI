@@ -42,8 +42,8 @@ namespace OpenNI
             }
             set
             {
-			    UInt32 status = OpenNIImporter.xnNodeInfoSetInstanceName(this.InternalObject, value);
-			    WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnNodeInfoSetInstanceName(this.InternalObject, value));
+			    
             }
 		}
 

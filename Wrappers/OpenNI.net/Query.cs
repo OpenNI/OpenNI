@@ -28,8 +28,7 @@ namespace OpenNI
 		static public Query Create()
 		{
             QuerySafeHandle handle;
-            UInt32 status = OpenNIImporter.xnNodeQueryAllocate(out handle);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQueryAllocate(out handle));
             return new Query(handle);
 		}
 
@@ -40,68 +39,57 @@ namespace OpenNI
 
         public void SetVendor(string vendorName)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetVendor(this.InternalObject, vendorName);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnNodeQuerySetVendor(this.InternalObject, vendorName));
 		}
 
 		public void SetName(string name)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetName(this.InternalObject, name);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQuerySetName(this.InternalObject, name));
 		}
 
 		public void SetMinVersion(Version min)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetMinVersion(this.InternalObject, ref min);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQuerySetMinVersion(this.InternalObject, ref min));
 		}
 
 		public void SetMaxVersion(Version max)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetMaxVersion(this.InternalObject, ref max);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQuerySetMaxVersion(this.InternalObject, ref max));
 		}
 
 		public void AddSupportedCapability(string capName)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQueryAddSupportedCapability(this.InternalObject, capName);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQueryAddSupportedCapability(this.InternalObject, capName));
 		}
 
 		public void AddSupportedMapOutputMode(MapOutputMode mode)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQueryAddSupportedMapOutputMode(this.InternalObject, ref mode);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQueryAddSupportedMapOutputMode(this.InternalObject, ref mode));
 		}
 
 		public void SetSupportedMinUserPositions(uint count)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetSupportedMinUserPositions(this.InternalObject, count);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQuerySetSupportedMinUserPositions(this.InternalObject, count));
 		}
 
 		public void SetExistingNodeOnly(bool existing)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetExistingNodeOnly(this.InternalObject, existing);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQuerySetExistingNodeOnly(this.InternalObject, existing));
 		}
 
 		public void AddNeededNode(string nodeName)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQueryAddNeededNode(this.InternalObject, nodeName);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQueryAddNeededNode(this.InternalObject, nodeName));
 		}
 
 		public void SetCreationInfo(string creationInfo)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetCreationInfo(this.InternalObject, creationInfo);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQuerySetCreationInfo(this.InternalObject, creationInfo));
 		}
 
 		public void FilterList(Context context, NodeInfoList list)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQueryFilterList(context.InternalObject, this.InternalObject, list.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnNodeQueryFilterList(context.InternalObject, this.InternalObject, list.InternalObject));
 		}
 	}
 }

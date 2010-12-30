@@ -33,8 +33,8 @@ namespace OpenNI
 
 		public void SetData(UInt32 frameID, UInt64 timestamp, UInt32 dataSize, IntPtr buffer)
 		{
-			UInt32 status = OpenNIImporter.xnMockIRSetData(this.InternalObject, frameID, timestamp, dataSize, buffer);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnMockIRSetData(this.InternalObject, frameID, timestamp, dataSize, buffer));
+			
 		}
 
 		public void SetData(IRMetaData irMD, UInt32 frameID, UInt64 timestamp)
@@ -50,17 +50,17 @@ namespace OpenNI
 		private static NodeSafeHandle Create(Context context, string name)
 		{
             NodeSafeHandle handle;
-            UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.IR, name, out handle);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.IR, name, out handle));
+			
 			return handle;
 		}
 
         private static NodeSafeHandle CreateBasedOn(IRGenerator basedOn, string name)
 		{
             NodeSafeHandle handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
-                basedOn.InternalObject, name, out handle);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
+                basedOn.InternalObject, name, out handle));
+			
 			return handle;
 		}
 	}

@@ -30,13 +30,13 @@ namespace OpenNI
 
         public void SetSkeletonProfile(SkeletonProfile profile)
         {
-            UInt32 status = OpenNIImporter.xnSetSkeletonProfile(this.InternalObject, profile);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnSetSkeletonProfile(this.InternalObject, profile));
+            
         }
         public void SetJointActive(SkeletonJoint joint, bool state)
         {
-            UInt32 status = OpenNIImporter.xnSetJointActive(this.InternalObject, joint, state);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnSetJointActive(this.InternalObject, joint, state));
+            
         }
         public bool IsJointActive(SkeletonJoint joint)
         {
@@ -55,20 +55,20 @@ namespace OpenNI
 
         public void GetSkeletonJoint(UserID user, SkeletonJoint eJoint, SkeletonJointTransformation joint)
         {
-            UInt32 status = OpenNIImporter.xnGetSkeletonJoint(this.InternalObject, user, eJoint, joint);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetSkeletonJoint(this.InternalObject, user, eJoint, joint));
+            
         }
 
         public void GetSkeletonJointPosition(UserID user, SkeletonJoint eJoint, ref SkeletonJointPosition joint)
         {
-            UInt32 status = OpenNIImporter.xnGetSkeletonJointPosition(this.InternalObject, user, eJoint, ref joint);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetSkeletonJointPosition(this.InternalObject, user, eJoint, ref joint));
+            
         }
 
         public void GetSkeletonJointOrientation(UserID user, SkeletonJoint eJoint, SkeletonJointOrientation joint)
         {
-            UInt32 status = OpenNIImporter.xnGetSkeletonJointOrientation(this.InternalObject, user, eJoint, joint);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetSkeletonJointOrientation(this.InternalObject, user, eJoint, joint));
+            
         }
 
         public bool IsTracking(UserID user)
@@ -88,31 +88,31 @@ namespace OpenNI
 
         public void RequestCalibration(UserID user, bool force)
         {
-            UInt32 status = OpenNIImporter.xnRequestSkeletonCalibration(this.InternalObject, user, force);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnRequestSkeletonCalibration(this.InternalObject, user, force));
+            
         }
 
         public void AbortCalibration(UserID user)
         {
-            UInt32 status = OpenNIImporter.xnAbortSkeletonCalibration(this.InternalObject, user);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnAbortSkeletonCalibration(this.InternalObject, user));
+            
         }
 
         public void SaveCalibrationData(UserID user, UInt32 slot)
         {
-            UInt32 status = OpenNIImporter.xnSaveSkeletonCalibrationData(this.InternalObject, user, slot);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnSaveSkeletonCalibrationData(this.InternalObject, user, slot));
+            
         }
 
         public void LoadCalibrationData(UserID user, UInt32 slot)
         {
-            UInt32 status = OpenNIImporter.xnLoadSkeletonCalibrationData(this.InternalObject, user, slot);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnLoadSkeletonCalibrationData(this.InternalObject, user, slot));
+            
         }
         public void ClearCalibrationData(UInt32 slot)
         {
-            UInt32 status = OpenNIImporter.xnClearSkeletonCalibrationData(this.InternalObject, slot);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnClearSkeletonCalibrationData(this.InternalObject, slot));
+            
         }
         public bool IsCalibrationData(UInt32 slot)
         {
@@ -121,18 +121,18 @@ namespace OpenNI
 
         public void StartTracking(UserID user)
         {
-            UInt32 status = OpenNIImporter.xnStartSkeletonTracking(this.InternalObject, user);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnStartSkeletonTracking(this.InternalObject, user));
+            
         }
         public void StopTracking(UserID user)
         {
-            UInt32 status = OpenNIImporter.xnStopSkeletonTracking(this.InternalObject, user);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnStopSkeletonTracking(this.InternalObject, user));
+            
         }
         public void Reset(UserID user)
         {
-            UInt32 status = OpenNIImporter.xnResetSkeleton(this.InternalObject, user);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnResetSkeleton(this.InternalObject, user));
+            
         }
 
         public bool NeedPoseForCalibration()
@@ -142,14 +142,14 @@ namespace OpenNI
         public string GetCalibrationPose()
         {
             StringBuilder sb = new StringBuilder(1024);
-            UInt32 status = OpenNIImporter.xnGetSkeletonCalibrationPose(this.InternalObject, sb);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetSkeletonCalibrationPose(this.InternalObject, sb));
+            
             return sb.ToString();
         }
         public void SetSmoothing(float factor)
         {
-            UInt32 status = OpenNIImporter.xnSetSkeletonSmoothing(this.InternalObject, factor);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnSetSkeletonSmoothing(this.InternalObject, factor));
+            
         }
 
         #region Calibration Start
@@ -161,8 +161,8 @@ namespace OpenNI
             {
                 if (this.calibrationStartEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStart, null, IntPtr.Zero, out calibrationStartHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStart, null, IntPtr.Zero, out calibrationStartHandle));
+                    
                 }
                 this.calibrationStartEvent += value;
             }
@@ -194,8 +194,8 @@ namespace OpenNI
             {
                 if (this.calibrationEndEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterCalibrationCallbacks(this.InternalObject, null, internalCalibrationEnd, IntPtr.Zero, out calibrationEndHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterCalibrationCallbacks(this.InternalObject, null, internalCalibrationEnd, IntPtr.Zero, out calibrationEndHandle));
+                    
                 }
                 this.calibrationEndEvent += value;
             }

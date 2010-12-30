@@ -57,10 +57,10 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
             NodeSafeHandle handle;
-            UInt32 status = OpenNIImporter.xnCreateIRGenerator(context.InternalObject, out handle,
+            Status.ThrowOnFail(OpenNIImporter.xnCreateIRGenerator(context.InternalObject, out handle,
 				query == null ? QuerySafeHandle.Zero : query.InternalObject,
-				errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
-			WrapperUtils.CheckStatus(status);
+                errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
+			
 			return handle;
 		}
 	}

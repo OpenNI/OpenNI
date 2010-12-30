@@ -32,31 +32,30 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
             NodeSafeHandle handle;
-            UInt32 status =
-                OpenNIImporter.xnCreateGestureGenerator(context.InternalObject,
+            Status.ThrowOnFail(OpenNIImporter.xnCreateGestureGenerator(context.InternalObject,
                                                         out handle,
                                                         query == null ? QuerySafeHandle.Zero : query.InternalObject,
-                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
-            WrapperUtils.CheckStatus(status);
+                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
+            
             return handle;
         }
 
         public void AddGesture(string strGesture, BoundingBox3D area)
         {
-            UInt32 status = OpenNIImporter.xnAddGesture(InternalObject, strGesture, ref area);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnAddGesture(InternalObject, strGesture, ref area));
+            
         }
 
 		public void AddGesture(string strGesture)
 		{
-			UInt32 status = OpenNIImporter.xnAddGesture(InternalObject, strGesture, IntPtr.Zero);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnAddGesture(InternalObject, strGesture, IntPtr.Zero));
+			
 		}
 
 		public void RemoveGesture(string strGesture)
         {
-            UInt32 status = OpenNIImporter.xnRemoveGesture(InternalObject, strGesture);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnRemoveGesture(InternalObject, strGesture));
+            
         }
 
         public string[] GetAllActiveGestures()
@@ -73,8 +72,8 @@ namespace OpenNI
                     arr[i] = Marshal.AllocHGlobal(nameSize);
                 }
 
-                UInt32 status = OpenNIImporter.xnGetAllActiveGestures(this.InternalObject, arr, nameSize, ref count);
-                WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnGetAllActiveGestures(this.InternalObject, arr, nameSize, ref count));
+                
 
                 poses = new string[count];
                 for (int i = 0; i < count; ++i)
@@ -107,8 +106,8 @@ namespace OpenNI
                     arr[i] = Marshal.AllocHGlobal(nameSize);
                 }
 
-                UInt32 status = OpenNIImporter.xnEnumerateAllGestures(this.InternalObject, arr, nameSize, ref count);
-                WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnEnumerateAllGestures(this.InternalObject, arr, nameSize, ref count));
+                
 
                 poses = new string[count];
                 for (int i = 0; i < count; ++i)
@@ -158,8 +157,8 @@ namespace OpenNI
             {
                 if (this.gestureRecognizedEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterGestureCallbacks(this.InternalObject, this.internalGestureRecognized, null, IntPtr.Zero, out gestureRecognizedHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterGestureCallbacks(this.InternalObject, this.internalGestureRecognized, null, IntPtr.Zero, out gestureRecognizedHandle));
+                    
                 }
                 this.gestureRecognizedEvent += value;
             }
@@ -191,8 +190,8 @@ namespace OpenNI
             {
                 if (this.gestureProgressEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterGestureCallbacks(this.InternalObject, null, this.internalGestureProgress, IntPtr.Zero, out gestureProgressHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterGestureCallbacks(this.InternalObject, null, this.internalGestureProgress, IntPtr.Zero, out gestureProgressHandle));
+                    
                 }
                 this.gestureProgressEvent += value;
             }

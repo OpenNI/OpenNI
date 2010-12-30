@@ -31,34 +31,33 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
             NodeSafeHandle handle;
-            UInt32 status =
-                OpenNIImporter.xnCreateHandsGenerator(context.InternalObject,
+            Status.ThrowOnFail(OpenNIImporter.xnCreateHandsGenerator(context.InternalObject,
                                                         out handle,
                                                         query == null ? QuerySafeHandle.Zero : query.InternalObject,
-                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
-            WrapperUtils.CheckStatus(status);
+                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
+            
             return handle;
         }
 
         public void StopTracking(UserID id)
         {
-            UInt32 status = OpenNIImporter.xnStopTracking(this.InternalObject, id);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnStopTracking(this.InternalObject, id));
+            
         }
         public void StopTrackingAll()
         {
-            UInt32 status = OpenNIImporter.xnStopTrackingAll(this.InternalObject);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnStopTrackingAll(this.InternalObject));
+            
         }
         public void StartTracking(ref Point3D position)
         {
-            UInt32 status = OpenNIImporter.xnStartTracking(this.InternalObject, ref position);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnStartTracking(this.InternalObject, ref position));
+            
         }
         public void SetSmoothing(float factor)
         {
-            UInt32 status = OpenNIImporter.xnSetTrackingSmoothing(this.InternalObject, factor);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnSetTrackingSmoothing(this.InternalObject, factor));
+            
         }
 
         #region Hand Create
@@ -70,8 +69,8 @@ namespace OpenNI
             {
                 if (this.handCreateEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreate, null, null, IntPtr.Zero, out handCreateHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreate, null, null, IntPtr.Zero, out handCreateHandle));
+                    
                 }
                 this.handCreateEvent += value;
             }
@@ -103,8 +102,8 @@ namespace OpenNI
             {
                 if (this.handUpdateEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out handUpdateHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out handUpdateHandle));
+                    
                 }
                 this.handUpdateEvent += value;
             }
@@ -136,8 +135,8 @@ namespace OpenNI
             {
                 if (this.handDestroyEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out handDestroyHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out handDestroyHandle));
+                    
                 }
                 this.handDestroyEvent += value;
             }

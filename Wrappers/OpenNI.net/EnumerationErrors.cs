@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -17,10 +18,9 @@ namespace OpenNI
 			return OpenNIImporter.xnEnumerationErrorsGetCurrentDescription(this.it);
 		}
 
-		public string GetError()
+		public Status GetError()
 		{
-			UInt32 status = OpenNIImporter.xnEnumerationErrorsGetCurrentError(this.it);
-			return WrapperUtils.GetErrorMessage(status);
+			return OpenNIImporter.xnEnumerationErrorsGetCurrentError(this.it);
 		}
 
 		private IntPtr it;
@@ -43,18 +43,22 @@ namespace OpenNI
             get { return (EnumerationErrorsSafeHandle)base.InternalObject; }
         }
 
-        public bool IsEmpty()
+        [Pure]
+        public bool IsEmpty
 		{
-			IntPtr first = OpenNIImporter.xnEnumerationErrorsGetFirst(this.InternalObject);
-			return !OpenNIImporter.xnEnumerationErrorsIteratorIsValid(first);
+            get
+            {
+                IntPtr first = OpenNIImporter.xnEnumerationErrorsGetFirst(this.InternalObject);
+                return !OpenNIImporter.xnEnumerationErrorsIteratorIsValid(first);
+            }
 		}
 
 		public override string ToString()
 		{
 			const int size = 2048;
 			StringBuilder sb = new StringBuilder(size);
-			UInt32 status = OpenNIImporter.xnEnumerationErrorsToString(this.InternalObject, sb, size);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnEnumerationErrorsToString(this.InternalObject, sb, size));
+			
 			return sb.ToString();
 		}
 
@@ -143,8 +147,8 @@ namespace OpenNI
         private static EnumerationErrorsSafeHandle Create()
 		{
             EnumerationErrorsSafeHandle pErrors;
-			UInt32 status = OpenNIImporter.xnEnumerationErrorsAllocate(out pErrors);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnEnumerationErrorsAllocate(out pErrors));
+			
 			return pErrors;
 		}
 	}

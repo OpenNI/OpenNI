@@ -30,12 +30,11 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
             NodeSafeHandle handle;
-            UInt32 status =
-                OpenNIImporter.xnCreateUserGenerator(context.InternalObject,
+            Status.ThrowOnFail(OpenNIImporter.xnCreateUserGenerator(context.InternalObject,
                                                         out handle,
                                                         query == null ? QuerySafeHandle.Zero : query.InternalObject,
-                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
-            WrapperUtils.CheckStatus(status);
+                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
+            
             return handle;
         }
 
@@ -48,16 +47,16 @@ namespace OpenNI
         {
             ushort count = GetNumberOfUsers();
             UserID[] users = new UserID[count];
-            UInt32 status = OpenNIImporter.xnGetUsers(this.InternalObject, users, ref count);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetUsers(this.InternalObject, users, ref count));
+            
             return users;
         }
         
         public Point3D GetCoM(UserID id)
         {
             Point3D com = new Point3D();
-            UInt32 status = OpenNIImporter.xnGetUserCoM(this.InternalObject, id, out com);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetUserCoM(this.InternalObject, id, out com));
+            
             return com;
         }
 
@@ -66,8 +65,8 @@ namespace OpenNI
             SceneMetaData smd = new SceneMetaData();
 			using (IMarshaler marsh = smd.GetMarshaler(true))
 			{
-				UInt32 status = OpenNIImporter.xnGetUserPixels(this.InternalObject, id, marsh.Native);
-				WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnGetUserPixels(this.InternalObject, id, marsh.Native));
+				
 			}
 
             return smd;
@@ -91,8 +90,8 @@ namespace OpenNI
             {
                 if (this.newUserEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, this.internalNewUser, null, IntPtr.Zero, out newUserHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, this.internalNewUser, null, IntPtr.Zero, out newUserHandle));
+                    
                 }
                 this.newUserEvent += value;
             }
@@ -124,8 +123,8 @@ namespace OpenNI
             {
                 if (this.lostUserEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, null, this.internalLostUser, IntPtr.Zero, out lostUserHandle);
-                    WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, null, this.internalLostUser, IntPtr.Zero, out lostUserHandle));
+                    
                 }
                 this.lostUserEvent += value;
             }

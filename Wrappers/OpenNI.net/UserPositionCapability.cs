@@ -21,15 +21,13 @@ namespace OpenNI
 
 		public void SetPosition(uint index, BoundingBox3D pos)
 		{
-			UInt32 status = OpenNIImporter.xnSetUserPosition(this.InternalObject, index, ref pos);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnSetUserPosition(this.InternalObject, index, ref pos));
 		}
 
 		public BoundingBox3D GetPosition(uint index)
 		{
 			BoundingBox3D pos = new BoundingBox3D();
-			UInt32 status = OpenNIImporter.xnGetUserPosition(this.InternalObject, index, ref pos);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnGetUserPosition(this.InternalObject, index, ref pos));
 			return pos;
 		}
 

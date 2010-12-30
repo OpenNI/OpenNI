@@ -29,19 +29,18 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
             NodeSafeHandle handle;
-            UInt32 status =
-                OpenNIImporter.xnCreateSceneAnalyzer(context.InternalObject,
+            Status.ThrowOnFail(OpenNIImporter.xnCreateSceneAnalyzer(context.InternalObject,
                                                         out handle,
                                                         query == null ? QuerySafeHandle.Zero : query.InternalObject,
-                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
-            WrapperUtils.CheckStatus(status);
+                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
+            
             return handle;
         }
 
         public void GetFloor(ref Plane3D plane)
         {
-            UInt32 status = OpenNIImporter.xnGetFloor(this.InternalObject, ref plane);
-            WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetFloor(this.InternalObject, ref plane));
+            
         }
 
         public IntPtr GetLabelMapPtr()

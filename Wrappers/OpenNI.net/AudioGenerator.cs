@@ -35,8 +35,8 @@ namespace OpenNI
             {
                 uint count = OpenNIImporter.xnGetSupportedWaveOutputModesCount(this.InternalObject);
                 WaveOutputMode[] modes = new WaveOutputMode[count];
-                UInt32 status = OpenNIImporter.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count);
-                WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count));
+                
                 return modes;
             }
 		}
@@ -46,14 +46,14 @@ namespace OpenNI
             get
             {
                 WaveOutputMode mode = new WaveOutputMode();
-                UInt32 status = OpenNIImporter.xnGetWaveOutputMode(this.InternalObject, ref mode);
-                WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnGetWaveOutputMode(this.InternalObject, ref mode));
+                
                 return mode;
             }
             set
             {
-			    UInt32 status = OpenNIImporter.xnSetWaveOutputMode(this.InternalObject, ref value);
-			    WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnSetWaveOutputMode(this.InternalObject, ref value));
+			    
             }
 		}
 
@@ -92,10 +92,10 @@ namespace OpenNI
 		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
             NodeSafeHandle handle;
-			UInt32 status = OpenNIImporter.xnCreateAudioGenerator(context.InternalObject, out handle,
+			Status.ThrowOnFail(OpenNIImporter.xnCreateAudioGenerator(context.InternalObject, out handle,
 				query == null ? QuerySafeHandle.Zero : query.InternalObject,
-				errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
-			WrapperUtils.CheckStatus(status);
+                errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
+			
 			return handle;
 		}
 

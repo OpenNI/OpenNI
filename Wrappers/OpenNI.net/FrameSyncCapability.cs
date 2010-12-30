@@ -21,14 +21,12 @@ namespace OpenNI
 
 		public void FrameSyncWith(Generator other)
 		{
-			UInt32 status = OpenNIImporter.xnFrameSyncWith(this.InternalObject, other.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnFrameSyncWith(this.InternalObject, other.InternalObject));
 		}
 
 		public void StopFrameSyncWith(Generator other)
 		{
-			UInt32 status = OpenNIImporter.xnStopFrameSyncWith(this.InternalObject, other.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			Status.ThrowOnFail(OpenNIImporter.xnStopFrameSyncWith(this.InternalObject, other.InternalObject));
 		}
 
 		public bool IsFrameSyncedWith(Generator other)

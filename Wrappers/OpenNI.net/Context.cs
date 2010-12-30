@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public delegate void ErrorStateChangedHandler(string currError);
+	public delegate void ErrorStateChangedHandler(Status currError);
 
     /// <summary>
     /// Represents an OpenNI context object.
@@ -52,8 +52,8 @@ namespace OpenNI
             Contract.Requires(!string.IsNullOrWhiteSpace(xml));
 
 			EnumerationErrors errors = new EnumerationErrors();
-			UInt32 status = OpenNIImporter.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
-			WrapperUtils.CheckEnumeration(status, errors);
+            var status = OpenNIImporter.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
+            Status.ThrowOnFail(status, errors);
 		}
 
         /// <summary>
@@ -66,8 +66,8 @@ namespace OpenNI
             Contract.Requires(System.IO.File.Exists(xmlFile));
             
             EnumerationErrors errors = new EnumerationErrors();
-			UInt32 status = OpenNIImporter.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
-			WrapperUtils.CheckEnumeration(status, errors);
+            var status = OpenNIImporter.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
+            Status.ThrowOnFail(status, errors);
 		}
 
         /// <summary>
@@ -78,24 +78,24 @@ namespace OpenNI
 		{
             Contract.Requires(!string.IsNullOrWhiteSpace(fileName));
 
-			UInt32 status = OpenNIImporter.xnContextOpenFileRecording(this.InternalObject, fileName);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnContextOpenFileRecording(this.InternalObject, fileName));
+			
 		}
 
 		public void AddLicense(License license)
 		{
             Contract.Requires(license != null);
 
-			UInt32 status = OpenNIImporter.xnAddLicense(this.InternalObject, license);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnAddLicense(this.InternalObject, license));
+			
 		}
 
 		public License[] EnumerateLicenses()
 		{
 			IntPtr pArray;
 			uint size;
-			UInt32 status = OpenNIImporter.xnEnumerateLicenses(this.InternalObject, out pArray, out size);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnEnumerateLicenses(this.InternalObject, out pArray, out size));
+			
 
 			License[] result = null;
 
@@ -127,11 +127,11 @@ namespace OpenNI
 
 			using (EnumerationErrors errors = new EnumerationErrors())
 			{
-				UInt32 status = OpenNIImporter.xnEnumerateProductionTrees(this.InternalObject, type,
+				var status = OpenNIImporter.xnEnumerateProductionTrees(this.InternalObject, type,
 					query == null ? QuerySafeHandle.Zero : query.InternalObject,
 					out resultList,
-					errors.InternalObject);
-				WrapperUtils.CheckEnumeration(status, errors);
+                    errors.InternalObject);
+                Status.ThrowOnFail(status, errors);
 			}
 
 			return new NodeInfoList(resultList);
@@ -152,8 +152,8 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
             NodeSafeHandle nodeHandle;
-			UInt32 status = OpenNIImporter.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle));
+			
 			return CreateProductionNodeObject(nodeHandle, nodeInfo.Description.Type);
 		}
 
@@ -162,8 +162,8 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<NodeInfoList>() != null);
 
             NodeInfoListSafeHandle pList;
-			UInt32 status = OpenNIImporter.xnEnumerateExistingNodes(this.InternalObject, out pList);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnEnumerateExistingNodes(this.InternalObject, out pList));
+			
 			return new NodeInfoList(pList);
 		}
 
@@ -172,8 +172,8 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<NodeInfoList>() != null);
 
             NodeInfoListSafeHandle pList;
-			UInt32 status = OpenNIImporter.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList));
+			
 			return new NodeInfoList(pList);
 		}
 
@@ -182,8 +182,8 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
             NodeSafeHandle nodeHandle;
-			UInt32 status = OpenNIImporter.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle));
+			
 			return CreateProductionNodeObject(nodeHandle, type);
 		}
 
@@ -192,8 +192,8 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
             NodeSafeHandle nodeHandle;
-			UInt32 status = OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle));
+			
 			return CreateProductionNodeObject(nodeHandle);
 		}
 
@@ -203,22 +203,22 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<NodeInfo>() != null);
 
             NodeSafeHandle nodeHandle;
-			UInt32 status = OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle));
+			
 			NodeInfoSafeHandle nodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
 			return new NodeInfo(nodeInfo);
 		}
 
 		public void StartGeneratingAll()
 		{
-			UInt32 status = OpenNIImporter.xnStartGeneratingAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnStartGeneratingAll(this.InternalObject));
+			
 		}
 
 		public void StopGeneratingAll()
 		{
-			UInt32 status = OpenNIImporter.xnStopGeneratingAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnStopGeneratingAll(this.InternalObject));
+			
 		}
 
 		public bool GlobalMirror
@@ -229,8 +229,8 @@ namespace OpenNI
             }
             set
             {
-			    UInt32 status = OpenNIImporter.xnSetGlobalMirror(this.InternalObject, value);
-			    WrapperUtils.CheckStatus(status);
+                Status.ThrowOnFail(OpenNIImporter.xnSetGlobalMirror(this.InternalObject, value));
+			    
             }
 		}
 
@@ -238,17 +238,12 @@ namespace OpenNI
 		/// Gets the global error state.
 		/// </summary>
 		/// <returns>null if all is OK, a description of the error otherwise</returns>
-		public string GetGlobalErrorState()
+		public Status GlobalErrorState
 		{
-			UInt32 state = OpenNIImporter.xnGetGlobalErrorState(this.InternalObject);
-			if (state == 0)
-			{
-				return null;
-			}
-			else
-			{
-				return WrapperUtils.GetErrorMessage(state);
-			}
+            get
+            {
+                return OpenNIImporter.xnGetGlobalErrorState(this.InternalObject);
+            }
 		}
 
 		public event ErrorStateChangedHandler ErrorStateChanged
@@ -257,8 +252,8 @@ namespace OpenNI
 			{
 				if (this.errorStateChanged == null)
 				{
-					UInt32 status = OpenNIImporter.xnRegisterToGlobalErrorStateChange(this.InternalObject, ErrorStateChangedCallback, IntPtr.Zero, out this.errorStateCallbackHandle);
-					WrapperUtils.CheckStatus(status);
+                    Status.ThrowOnFail(OpenNIImporter.xnRegisterToGlobalErrorStateChange(this.InternalObject, ErrorStateChangedCallback, IntPtr.Zero, out this.errorStateCallbackHandle));
+					
 				}
 
 				this.errorStateChanged += value;
@@ -276,26 +271,26 @@ namespace OpenNI
 
 		public void WaitAndUpdateAll()
 		{
-			UInt32 status = OpenNIImporter.xnWaitAndUpdateAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnWaitAndUpdateAll(this.InternalObject));
+			
 		}
 
 		public void WaitAnyUpdateAll()
 		{
-			UInt32 status = OpenNIImporter.xnWaitAnyUpdateAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnWaitAnyUpdateAll(this.InternalObject));
+			
 		}
 
 		public void WaitOneUpdateAll(Generator node)
 		{
-			UInt32 status = OpenNIImporter.xnWaitOneUpdateAll(this.InternalObject, node.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnWaitOneUpdateAll(this.InternalObject, node.InternalObject));
+			
 		}
 
 		public void WaitNoneUpdateAll()
 		{
-			UInt32 status = OpenNIImporter.xnWaitNoneUpdateAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnWaitNoneUpdateAll(this.InternalObject));
+			
 		}
 
         internal NodeSafeHandle CreateAnyProductionTreeImpl(NodeType type, Query query)
@@ -303,10 +298,10 @@ namespace OpenNI
             NodeSafeHandle nodeHandle;
 			using (EnumerationErrors errors = new EnumerationErrors())
 			{
-				UInt32 status = OpenNIImporter.xnCreateAnyProductionTree(this.InternalObject, type,
+				var status = (OpenNIImporter.xnCreateAnyProductionTree(this.InternalObject, type,
 					query == null ? QuerySafeHandle.Zero : query.InternalObject,
-					out nodeHandle, errors.InternalObject);
-				WrapperUtils.CheckEnumeration(status, errors);
+                    out nodeHandle, errors.InternalObject));
+                Status.ThrowOnFail(status, errors);
 			}
 
 			return nodeHandle;
@@ -315,8 +310,8 @@ namespace OpenNI
         public static Context Init()
 		{
 			ContextSafeHandle pContext;
-			UInt32 status = OpenNIImporter.xnInit(out pContext);
-			WrapperUtils.CheckStatus(status);
+            Status.ThrowOnFail(OpenNIImporter.xnInit(out pContext));
+			
 			return new Context(pContext);
 		}
 
@@ -324,8 +319,8 @@ namespace OpenNI
 		{
             ContextSafeHandle pContext;
             EnumerationErrors errors = new EnumerationErrors();
-			UInt32 status = OpenNIImporter.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
-			WrapperUtils.CheckEnumeration(status, errors);
+            var status = OpenNIImporter.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
+            Status.ThrowOnFail(status, errors);
             return new Context(pContext);
 		}
 
@@ -373,18 +368,11 @@ namespace OpenNI
 			return CreateProductionNodeObject(nodeHandle, null);
 		}
 
-		private void ErrorStateChangedCallback(UInt32 status, IntPtr cookie)
+		private void ErrorStateChangedCallback(Status status, IntPtr cookie)
 		{
 			if (this.errorStateChanged != null)
 			{
-				if (status == 0)
-				{
-					this.errorStateChanged(null);
-				}
-				else
-				{
-					this.errorStateChanged(WrapperUtils.GetErrorMessage(status));
-				}
+    			this.errorStateChanged(status);
 			}
 		}
 

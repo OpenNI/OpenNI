@@ -22,8 +22,7 @@ namespace OpenNI
             }
             set
             {
-			    UInt32 status = OpenNIImporter.xnSetMirror(this.InternalObject, value);
-			    WrapperUtils.CheckStatus(status);
+			    Status.ThrowOnFail(OpenNIImporter.xnSetMirror(this.InternalObject, value));
             }
 		}
 
