@@ -65,6 +65,8 @@
     <CodeContractsCacheAnalysisResults>False</CodeContractsCacheAnalysisResults>
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>..\..\..\Bin\Release\</OutputPath>
@@ -95,6 +97,7 @@
     <CodeContractsCacheAnalysisResults>False</CodeContractsCacheAnalysisResults>
     <CodeContractsRuntimeCheckingLevel>ReleaseRequires</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
+    <DocumentationFile>..\..\..\Bin\Release\OpenNI.net.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\AlternativeViewPointCapability.cs">
