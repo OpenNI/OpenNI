@@ -83,7 +83,7 @@ namespace OpenNI
             }
 		}
 
-		public event StateChangedHandler WaveOutputModeChanged
+		public event EventHandler<StateChangedArgs> WaveOutputModeChanged
 		{
 			add { this.outputModeChanged.Event += value; }
 			remove { this.outputModeChanged.Event -= value; }

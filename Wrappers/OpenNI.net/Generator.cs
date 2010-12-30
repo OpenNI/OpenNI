@@ -33,7 +33,7 @@ namespace OpenNI
 			Status.ThrowOnFail(OpenNIImporter.xnStopGenerating(this.InternalObject));
 		}
 
-		public event StateChangedHandler GenerationRunningChanged
+		public event EventHandler<StateChangedArgs> GenerationRunningChanged
 		{
 			add { generationRunningChanged.Event += value; }
 			remove { generationRunningChanged.Event -= value; }
@@ -50,7 +50,7 @@ namespace OpenNI
 			return OpenNIImporter.xnIsNewDataAvailable(this.InternalObject, out timestamp);
 		}
 
-		public event StateChangedHandler NewDataAvailable
+		public event EventHandler<StateChangedArgs> NewDataAvailable
 		{
 			add { newDataAvailable.Event += value; }
 			remove { newDataAvailable.Event -= value; }

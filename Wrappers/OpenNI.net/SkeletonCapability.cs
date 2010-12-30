@@ -43,7 +43,7 @@ namespace OpenNI
             return OpenNIImporter.xnIsJointActive(this.InternalObject, joint);
         }
 
-        public event StateChangedHandler JointConfigurationChangedEvent
+        public event EventHandler<StateChangedArgs> JointConfigurationChangedEvent
         {
             add { this.jointConfigurationChangedEvent.Event += value; }
             remove { this.jointConfigurationChangedEvent.Event -= value; }
@@ -153,69 +153,118 @@ namespace OpenNI
         }
 
         #region Calibration Start
-        public delegate void CalibrationStartHandler(ProductionNode node, UserID id);
-        private event CalibrationStartHandler calibrationStartEvent;
-        public event CalibrationStartHandler CalibrationStart
+        private event EventHandler<CalibrationStartedArgs> calibrationStartedEvent;
+        public event EventHandler<CalibrationStartedArgs> CalibrationStarted
         {
             add
             {
-                if (this.calibrationStartEvent == null)
+                if (this.calibrationStartedEvent == null)
                 {
                     Status.ThrowOnFail(OpenNIImporter.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStart, null, IntPtr.Zero, out calibrationStartHandle));
                     
                 }
-                this.calibrationStartEvent += value;
+                this.calibrationStartedEvent += value;
             }
             remove
             {
-                this.calibrationStartEvent -= value;
+                this.calibrationStartedEvent -= value;
 
-                if (this.calibrationStartEvent == null)
+                if (this.calibrationStartedEvent == null)
                 {
                     OpenNIImporter.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationStartHandle);
                 }
             }
         }
-        private void InternalCalibrationStart(NodeSafeHandle hNode, UserID id, IntPtr pCookie)
+        private void InternalCalibrationStart(NodeSafeHandle hNode, UserID id, IntPtr cookie)
         {
-            if (this.calibrationStartEvent != null)
-                this.calibrationStartEvent(this.node, id);
+            var handler = this.calibrationStartedEvent;
+            if (handler != null)
+                handler(this, new CalibrationStartedArgs(id, cookie));
         }
         private OpenNIImporter.XnCalibrationStart internalCalibrationStart;
         private IntPtr calibrationStartHandle;
         #endregion
 
         #region Calibration End
-        public delegate void CalibrationEndHandler(ProductionNode node, UserID id, bool success);
-        private event CalibrationEndHandler calibrationEndEvent;
-        public event CalibrationEndHandler CalibrationEnd
+        private event EventHandler<CalibrationEndedArgs> calibrationEndedEvent;
+        public event EventHandler<CalibrationEndedArgs> CalibrationEnded
         {
             add
             {
-                if (this.calibrationEndEvent == null)
+                if (this.calibrationEndedEvent == null)
                 {
                     Status.ThrowOnFail(OpenNIImporter.xnRegisterCalibrationCallbacks(this.InternalObject, null, internalCalibrationEnd, IntPtr.Zero, out calibrationEndHandle));
                     
                 }
-                this.calibrationEndEvent += value;
+                this.calibrationEndedEvent += value;
             }
             remove
             {
-                this.calibrationEndEvent -= value;
+                this.calibrationEndedEvent -= value;
 
-                if (this.calibrationEndEvent == null)
+                if (this.calibrationEndedEvent == null)
                 {
                     OpenNIImporter.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationEndHandle);
                 }
             }
         }
-        private void InternalCalibrationEnd(NodeSafeHandle hNode, UserID id, bool success, IntPtr pCookie)
+        private void InternalCalibrationEnd(NodeSafeHandle hNode, UserID id, bool success, IntPtr cookie)
         {
-            if (this.calibrationEndEvent != null)
-                this.calibrationEndEvent(this.node, id, success);
+            var handler = this.calibrationEndedEvent;
+            if (handler != null)
+                handler(this, new CalibrationEndedArgs(id, success, cookie));
         }
         private OpenNIImporter.XnCalibrationEnd internalCalibrationEnd;
         private IntPtr calibrationEndHandle;
         #endregion
+    }
+
+    /// <summary>
+    /// Provides data for calibration started event.
+    /// </summary>
+    public class CalibrationStartedArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the CalibrationStartedArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public CalibrationStartedArgs(UserID user, IntPtr cookie)
+        {
+            this.Cookie = cookie;
+            this.UserID = UserID;
+        }
+
+        /// <summary>
+        /// Gets the id of the user that's being calibrated.
+        /// </summary>
+        public UserID UserID { get; private set; }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
+    /// <summary>
+    /// Provides data for calibration ended event.
+    /// </summary>
+    public class CalibrationEndedArgs
+        : CalibrationStartedArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the CalibrationEndedArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public CalibrationEndedArgs(UserID user, bool success, IntPtr cookie)
+            : base(user, cookie)
+        {
+            this.Success = success;
+        }
+
+        /// <summary>
+        /// Gets an indication of whether or not the calibration attempt succeeded.
+        /// </summary>
+        public bool Success { get; private set; }
     }
 }

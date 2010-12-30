@@ -66,9 +66,8 @@ namespace OpenNI
         }
 
         #region Pose Detected
-        public delegate void PoseDetectedHandler(ProductionNode node, string pose, UserID id);
-        private event PoseDetectedHandler poseDetectedEvent;
-        public event PoseDetectedHandler PoseDetected
+        private event EventHandler<PoseDetectionArgs> poseDetectedEvent;
+        public event EventHandler<PoseDetectionArgs> PoseDetected
         {
             add
             {
@@ -91,17 +90,17 @@ namespace OpenNI
         }
         private void InternalPoseDetected(NodeSafeHandle hNode, string pose, UserID id, IntPtr pCookie)
         {
-            if (this.poseDetectedEvent != null)
-                this.poseDetectedEvent(this.node, pose, id);
+            var handler = this.poseDetectedEvent;
+            if (handler != null)
+                handler(this, new PoseDetectionArgs(pose, id, pCookie));
         }
         private OpenNIImporter.XnPoseDetectionCallback internalPoseDetected;
         private IntPtr poseDetectedHandle;
         #endregion
 
         #region Pose Ended
-        public delegate void PoseEndedHandler(ProductionNode node, string pose, UserID id);
-        private event PoseEndedHandler poseEndedEvent;
-        public event PoseEndedHandler PoseEnded
+        private event EventHandler<PoseDetectionArgs> poseEndedEvent;
+        public event EventHandler<PoseDetectionArgs> PoseEnded
         {
             add
             {
@@ -124,12 +123,47 @@ namespace OpenNI
         }
         private void InternalPoseEnded(NodeSafeHandle hNode, string pose, UserID id, IntPtr pCookie)
         {
-            if (this.poseEndedEvent != null)
-                this.poseEndedEvent(this.node, pose, id);
+            var handler = this.poseEndedEvent;
+            if (handler != null)
+                handler(this, new PoseDetectionArgs(pose, id, pCookie));
         }
         private OpenNIImporter.XnPoseDetectionCallback internalPoseEnded;
         private IntPtr poseEndedHandle;
         #endregion
 
     }
+
+    /// <summary>
+    /// Provides data for pose detection events.
+    /// </summary>
+    public class PoseDetectionArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the PoseDetectedArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public PoseDetectionArgs(string pose, UserID userId, IntPtr cookie)
+        {
+            this.Pose = pose;
+            this.UserID = userId;
+            this.Cookie = cookie;
+        }
+
+        /// <summary>
+        /// Gets the pose detected.
+        /// </summary>
+        public string Pose { get; private set; }
+
+        /// <summary>
+        /// Gets the id of the user that entered the pose or left it. 
+        /// </summary>
+        public UserID UserID { get; private set; }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
 }

@@ -39,7 +39,7 @@ namespace OpenNI
             }
 		}
 
-		public event StateChangedHandler MapOutputModeChanged
+		public event EventHandler<StateChangedArgs> MapOutputModeChanged
 		{
 			add { this.mapOutputModeChanged.Event += value; }
 			remove { this.mapOutputModeChanged.Event -= value; }

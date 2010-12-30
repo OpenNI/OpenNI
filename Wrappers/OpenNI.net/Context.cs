@@ -246,14 +246,13 @@ namespace OpenNI
             }
 		}
 
-		public event ErrorStateChangedHandler ErrorStateChanged
+        public event EventHandler<ErrorStateChangedArgs> ErrorStateChanged
 		{
 			add
 			{
 				if (this.errorStateChanged == null)
 				{
                     Status.ThrowOnFail(OpenNIImporter.xnRegisterToGlobalErrorStateChange(this.InternalObject, ErrorStateChangedCallback, IntPtr.Zero, out this.errorStateCallbackHandle));
-					
 				}
 
 				this.errorStateChanged += value;
@@ -370,13 +369,42 @@ namespace OpenNI
 
 		private void ErrorStateChangedCallback(Status status, IntPtr cookie)
 		{
-			if (this.errorStateChanged != null)
+            var handler = this.errorStateChanged;
+            if (handler != null)
 			{
-    			this.errorStateChanged(status);
+                handler(this, new ErrorStateChangedArgs(status, cookie));
 			}
 		}
 
 		private IntPtr errorStateCallbackHandle;
-		private event ErrorStateChangedHandler errorStateChanged;
+        private event EventHandler<ErrorStateChangedArgs> errorStateChanged;
 	}
+
+    /// <summary>
+    /// Provides data for state change event.
+    /// </summary>
+    public class ErrorStateChangedArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the StateChangedArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public ErrorStateChangedArgs(Status status, IntPtr cookie)
+        {
+            this.Status = status;
+            this.Cookie = cookie;
+        }
+
+        /// <summary>
+        /// Gets the status.
+        /// </summary>
+        public Status Status { get; private set; }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
 }

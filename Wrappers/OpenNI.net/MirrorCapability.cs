@@ -26,7 +26,7 @@ namespace OpenNI
             }
 		}
 
-		public event StateChangedHandler MirrorChangedEvent
+		public event EventHandler<StateChangedArgs> MirrorChangedEvent
 		{
 			add { this.mirrorChangedEvent.Event += value; }
 			remove { this.mirrorChangedEvent.Event -= value; }

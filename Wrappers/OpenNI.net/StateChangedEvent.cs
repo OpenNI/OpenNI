@@ -4,8 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public delegate void StateChangedHandler(ProductionNode node);
-
 	internal class StateChangedEvent
 	{
         public delegate Status RegisterFunc(NodeSafeHandle hInstance, OpenNIImporter.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
@@ -19,7 +17,7 @@ namespace OpenNI
 			this.internalHandler = new OpenNIImporter.XnStateChangedHandler(InternalHandler);
 		}
 
-		public event StateChangedHandler Event
+        public event EventHandler<StateChangedArgs> Event
 		{
 			add
 			{
@@ -43,16 +41,39 @@ namespace OpenNI
 
         private void InternalHandler(NodeSafeHandle hNode, IntPtr pCookie)
 		{
-			if (this.internalEvent != null)
-				this.internalEvent(this.node);
+            var handler = this.internalEvent;
+			if (handler != null)
+                handler(this, new StateChangedArgs(pCookie)); // TODO: add node
 		}
 
-		private ProductionNode node;
-		private RegisterFunc reg;
-		private UnregisterFunc unreg;
-		private IntPtr registerHandle;
-		private event StateChangedHandler internalEvent;
+		private readonly ProductionNode node;
+        private readonly RegisterFunc reg;
+        private readonly UnregisterFunc unreg;
+        private IntPtr registerHandle;
+        private event EventHandler<StateChangedArgs> internalEvent;
 		// must keep a reference to the delegate
-		private OpenNIImporter.XnStateChangedHandler internalHandler;
+        private readonly OpenNIImporter.XnStateChangedHandler internalHandler;
 	}
+
+    /// <summary>
+    /// Provides data for state change event.
+    /// </summary>
+    public class StateChangedArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the StateChangedArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public StateChangedArgs(IntPtr cookie)
+        {
+            this.Cookie = cookie;
+        }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
 }

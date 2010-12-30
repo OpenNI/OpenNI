@@ -34,7 +34,7 @@ namespace OpenNI
 			return OpenNIImporter.xnIsViewPointAs(this.InternalObject, other.InternalObject);
 		}
 
-		public event StateChangedHandler ViewPointChanged
+		public event EventHandler<StateChangedArgs> ViewPointChanged
 		{
 			add { this.viewPointChangedEvent.Event += value; }
 			remove { this.viewPointChangedEvent.Event -= value; }

@@ -25,16 +25,16 @@ namespace UserTracker.net
 			}
 
             this.userGenerator = new UserGenerator(this.context);
-            this.skeletonCapbility = new SkeletonCapability(this.userGenerator);
+            this.skeletonCapability = new SkeletonCapability(this.userGenerator);
             this.poseDetectionCapability = new PoseDetectionCapability(this.userGenerator);
-            this.calibPose = this.skeletonCapbility.GetCalibrationPose();
+            this.calibPose = this.skeletonCapability.GetCalibrationPose();
 
-            this.userGenerator.NewUser += new UserGenerator.NewUserHandler(userGenerator_NewUser);
-            this.userGenerator.LostUser += new UserGenerator.LostUserHandler(userGenerator_LostUser);
-            this.poseDetectionCapability.PoseDetected += new PoseDetectionCapability.PoseDetectedHandler(poseDetectionCapability_PoseDetected);
-            this.skeletonCapbility.CalibrationEnd += new SkeletonCapability.CalibrationEndHandler(skeletonCapbility_CalibrationEnd);
+            this.userGenerator.UserFound += new EventHandler<UserFoundArgs>(userGenerator_UserFound);
+            this.userGenerator.UserLost += new EventHandler<UserLostArgs>(userGenerator_LostUser);
+            this.poseDetectionCapability.PoseDetected += new EventHandler<PoseDetectionArgs>(poseDetectionCapability_PoseDetected);
+            this.skeletonCapability.CalibrationEnded += new EventHandler<CalibrationEndedArgs>(skeletonCapability_CalibrationEnded);
 
-            this.skeletonCapbility.SetSkeletonProfile(SkeletonProfile.All);
+            this.skeletonCapability.SetSkeletonProfile(SkeletonProfile.All);
             this.joints = new Dictionary<uint,Dictionary<SkeletonJoint,SkeletonJointPosition>>();
             this.userGenerator.StartGenerating();
 
@@ -49,33 +49,33 @@ namespace UserTracker.net
 			this.readerThread.Start();
 		}
 
-        void skeletonCapbility_CalibrationEnd(ProductionNode node, uint id, bool success)
+        void skeletonCapability_CalibrationEnded(object sender, CalibrationEndedArgs args)
         {
-            if (success)
+            if (args.Success)
             {
-                this.skeletonCapbility.StartTracking(id);
-                this.joints.Add(id, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
+                this.skeletonCapability.StartTracking(args.UserID);
+                this.joints.Add(args.UserID, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
             }
             else
             {
-                this.poseDetectionCapability.StartPoseDetection(calibPose, id);
+                this.poseDetectionCapability.StartPoseDetection(calibPose, args.UserID);
             }
         }
 
-        void poseDetectionCapability_PoseDetected(ProductionNode node, string pose, uint id)
+        void poseDetectionCapability_PoseDetected(object sender, PoseDetectionArgs args)
         {
-            this.poseDetectionCapability.StopPoseDetection(id);
-            this.skeletonCapbility.RequestCalibration(id, true);
+            this.poseDetectionCapability.StopPoseDetection(args.UserID);
+            this.skeletonCapability.RequestCalibration(args.UserID, true);
         }
 
-        void userGenerator_NewUser(ProductionNode node, uint id)
+        void userGenerator_UserFound(object sender, UserFoundArgs args)
         {
-            this.poseDetectionCapability.StartPoseDetection(this.calibPose, id);
+            this.poseDetectionCapability.StartPoseDetection(this.calibPose, args.UserID);
         }
 
-        void userGenerator_LostUser(ProductionNode node, uint id)
+        void userGenerator_LostUser(object sender, UserLostArgs args)
         {
-            this.joints.Remove(id);
+            this.joints.Remove(args.UserID);
         }
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -177,7 +177,7 @@ namespace UserTracker.net
         private void GetJoint(uint user, SkeletonJoint joint)
         {
             SkeletonJointPosition pos = new SkeletonJointPosition();
-            this.skeletonCapbility.GetSkeletonJointPosition(user, joint, ref pos);
+            this.skeletonCapability.GetSkeletonJointPosition(user, joint, ref pos);
 			if (pos.Position.Z == 0)
 			{
 				pos.Confidence = 0;
@@ -323,9 +323,9 @@ namespace UserTracker.net
                             string label = "";
                             if (!this.shouldPrintState)
                                 label += user;
-                            else if (this.skeletonCapbility.IsTracking(user))
+                            else if (this.skeletonCapability.IsTracking(user))
                                 label += user + " - Tracking";
-                            else if (this.skeletonCapbility.IsCalibrating(user))
+                            else if (this.skeletonCapability.IsCalibrating(user))
                                 label += user + " - Calibrating...";
                             else
                                 label += user + " - Looking for pose";
@@ -334,8 +334,8 @@ namespace UserTracker.net
 
                         }
 
-                        if (this.shouldDrawSkeleton && this.skeletonCapbility.IsTracking(user))
-//                        if (this.skeletonCapbility.IsTracking(user))
+                        if (this.shouldDrawSkeleton && this.skeletonCapability.IsTracking(user))
+//                        if (this.skeletonCapability.IsTracking(user))
                             DrawSkeleton(g, anticolors[user % ncolors], user);
 
                     }
@@ -351,7 +351,7 @@ namespace UserTracker.net
 		private Context context;
 		private DepthGenerator depth;
         private UserGenerator userGenerator;
-        private SkeletonCapability skeletonCapbility;
+        private SkeletonCapability skeletonCapability;
         private PoseDetectionCapability poseDetectionCapability;
         private string calibPose;
 		private Thread readerThread;

@@ -52,7 +52,7 @@ namespace OpenNI
 			return fov;
 		}
 
-		public event StateChangedHandler FieldOfViewChanged
+		public event EventHandler<StateChangedArgs> FieldOfViewChanged
 		{
 			add { this.fovChanged.Event += value; }
 			remove { this.fovChanged.Event -= value; }

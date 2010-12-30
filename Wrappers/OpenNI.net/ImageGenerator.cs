@@ -97,7 +97,7 @@ namespace OpenNI
             }
 		}
 
-		public event StateChangedHandler PixelFormatChanged
+		public event EventHandler<StateChangedArgs> PixelFormatChanged
 		{
 			add { this.pixelFormatChanged.Event += value; }
 			remove { this.pixelFormatChanged.Event -= value; }

@@ -31,7 +31,7 @@ namespace OpenNI
 			return pos;
 		}
 
-		public event StateChangedHandler UserPositionChanged
+		public event EventHandler<StateChangedArgs> UserPositionChanged
 		{
 			add { this.userPositionChanged.Event += value; }
 			remove { this.userPositionChanged.Event -= value; }

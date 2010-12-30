@@ -110,7 +110,7 @@ namespace OpenNI
             }
 		}
 
-		public event StateChangedHandler EndOfFileReached
+		public event EventHandler<StateChangedArgs> EndOfFileReached
 		{
 			add { this.endOfFileReachedEvent.Event += value; }
 			remove { this.endOfFileReachedEvent.Event -= value; }

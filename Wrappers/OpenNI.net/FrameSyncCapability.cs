@@ -34,7 +34,7 @@ namespace OpenNI
 			return OpenNIImporter.xnIsFrameSyncedWith(this.InternalObject, other.InternalObject);
 		}
 
-		public event StateChangedHandler FrameSyncChanged
+		public event EventHandler<StateChangedArgs> FrameSyncChanged
 		{
 			add { this.frameSyncChangedEvent.Event += value; }
 			remove { this.frameSyncChangedEvent.Event -= value; }

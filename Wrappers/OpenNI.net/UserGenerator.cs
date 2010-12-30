@@ -81,25 +81,24 @@ namespace OpenNI
             return new PoseDetectionCapability(this);
         }
 
-        #region New User
-        public delegate void NewUserHandler(ProductionNode node, UserID id);
-        private event NewUserHandler newUserEvent;
-        public event NewUserHandler NewUser
+        #region User Found
+        private event EventHandler<UserFoundArgs> userFoundEvent;
+        public event EventHandler<UserFoundArgs> UserFound
         {
             add
             {
-                if (this.newUserEvent == null)
+                if (this.userFoundEvent == null)
                 {
                     Status.ThrowOnFail(OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, this.internalNewUser, null, IntPtr.Zero, out newUserHandle));
                     
                 }
-                this.newUserEvent += value;
+                this.userFoundEvent += value;
             }
             remove
             {
-                this.newUserEvent -= value;
+                this.userFoundEvent -= value;
 
-                if (this.newUserEvent == null)
+                if (this.userFoundEvent == null)
                 {
                     OpenNIImporter.xnUnregisterUserCallbacks(this.InternalObject, this.newUserHandle);
                 }
@@ -107,32 +106,32 @@ namespace OpenNI
         }
         private void InternalNewUser(NodeSafeHandle hNode, UserID id, IntPtr pCookie)
         {
-            if (this.newUserEvent != null)
-                this.newUserEvent(this, id);
+            var handler = this.userFoundEvent;
+            if (handler != null)
+                handler(this, new UserFoundArgs(id, pCookie));
         }
         private OpenNIImporter.XnUserHandler internalNewUser;
         private IntPtr newUserHandle;
         #endregion
 
-        #region Lost User
-        public delegate void LostUserHandler(ProductionNode node, UserID id);
-        private event LostUserHandler lostUserEvent;
-        public event LostUserHandler LostUser
+        #region User Lost
+        private event EventHandler<UserLostArgs> userLostEvent;
+        public event EventHandler<UserLostArgs> UserLost
         {
             add
             {
-                if (this.lostUserEvent == null)
+                if (this.userLostEvent == null)
                 {
                     Status.ThrowOnFail(OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, null, this.internalLostUser, IntPtr.Zero, out lostUserHandle));
                     
                 }
-                this.lostUserEvent += value;
+                this.userLostEvent += value;
             }
             remove
             {
-                this.lostUserEvent -= value;
+                this.userLostEvent -= value;
 
-                if (this.lostUserEvent == null)
+                if (this.userLostEvent == null)
                 {
                     OpenNIImporter.xnUnregisterUserCallbacks(this.InternalObject, this.lostUserHandle);
                 }
@@ -140,11 +139,68 @@ namespace OpenNI
         }
         private void InternalLostUser(NodeSafeHandle hNode, UserID id, IntPtr pCookie)
         {
-            if (this.lostUserEvent != null)
-                this.lostUserEvent(this, id);
+            var handler = this.userLostEvent;
+            if (handler != null)
+                handler(this, new UserLostArgs(id, pCookie));
         }
         private OpenNIImporter.XnUserHandler internalLostUser;
         private IntPtr lostUserHandle;
         #endregion
     }
+
+    /// <summary>
+    /// Provides data for user found event.
+    /// </summary>
+    public class UserFoundArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the UserFoundArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public UserFoundArgs(UserID userId, IntPtr cookie)
+        {
+            this.UserID = userId;
+           this.Cookie = cookie;
+        }
+
+        /// <summary>
+        /// Gets the id of the user found.
+        /// </summary>
+        public UserID UserID { get; private set; }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
+    /// <summary>
+    /// Provides data for user lost event.
+    /// </summary>
+    public class UserLostArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the UserLostArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public UserLostArgs(UserID userId, IntPtr cookie)
+        {
+            this.UserID = userId;
+            this.Cookie = cookie;
+        }
+
+        /// <summary>
+        /// Gets the id of the user lost.
+        /// </summary>
+        public UserID UserID { get; private set; }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
+
 }

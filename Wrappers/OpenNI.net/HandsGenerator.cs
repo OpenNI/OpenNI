@@ -60,25 +60,24 @@ namespace OpenNI
             
         }
 
-        #region Hand Create
-        public delegate void HandCreateHandler(ProductionNode node, UserID id, ref Point3D position, float fTime);
-        private event HandCreateHandler handCreateEvent;
-        public event HandCreateHandler HandCreate
+        #region Hand Created
+        private event EventHandler<HandCreatedArgs> handCreatedEvent;
+        public event EventHandler<HandCreatedArgs> HandCreated
         {
             add
             {
-                if (this.handCreateEvent == null)
+                if (this.handCreatedEvent == null)
                 {
                     Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreate, null, null, IntPtr.Zero, out handCreateHandle));
                     
                 }
-                this.handCreateEvent += value;
+                this.handCreatedEvent += value;
             }
             remove
             {
-                this.handCreateEvent -= value;
+                this.handCreatedEvent -= value;
 
-                if (this.handCreateEvent == null)
+                if (this.handCreatedEvent == null)
                 {
                     OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handCreateHandle);
                 }
@@ -86,32 +85,32 @@ namespace OpenNI
         }
         private void InternalHandCreate(NodeSafeHandle hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
         {
-            if (this.handCreateEvent != null)
-                this.handCreateEvent(this, id, ref position, fTime);
+            var handler = this.handCreatedEvent;
+            if (handler != null)
+                handler(this, new HandCreatedArgs(id, position, fTime, pCookie));
         }
         private OpenNIImporter.XnHandCreate internalHandCreate;
         private IntPtr handCreateHandle;
         #endregion
 
-        #region Hand Update
-        public delegate void HandUpdateHandler(ProductionNode node, UserID id, ref Point3D position, float fTime);
-        private event HandUpdateHandler handUpdateEvent;
-        public event HandUpdateHandler HandUpdate
+        #region Hand Updated
+        private event EventHandler<HandUpdatedArgs> handUpdatedEvent;
+        public event EventHandler<HandUpdatedArgs> HandUpdated
         {
             add
             {
-                if (this.handUpdateEvent == null)
+                if (this.handUpdatedEvent == null)
                 {
                     Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out handUpdateHandle));
                     
                 }
-                this.handUpdateEvent += value;
+                this.handUpdatedEvent += value;
             }
             remove
             {
-                this.handUpdateEvent -= value;
+                this.handUpdatedEvent -= value;
 
-                if (this.handUpdateEvent == null)
+                if (this.handUpdatedEvent == null)
                 {
                     OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
                 }
@@ -119,32 +118,32 @@ namespace OpenNI
         }
         private void InternalHandUpdate(NodeSafeHandle hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
         {
-            if (this.handUpdateEvent != null)
-                this.handUpdateEvent(this, id, ref position, fTime);
+            var handler = this.handUpdatedEvent;
+            if (handler != null)
+                handler(this, new HandUpdatedArgs(id, position, fTime, pCookie));
         }
         private OpenNIImporter.XnHandUpdate internalHandUpdate;
         private IntPtr handUpdateHandle;
         #endregion
 
         #region Hand Destroy
-        public delegate void HandDestroyHandler(ProductionNode node, UserID id, float fTime);
-        private event HandDestroyHandler handDestroyEvent;
-        public event HandDestroyHandler HandDestroy
+        private event EventHandler<HandDestroyedArgs> handDestroyedEvent;
+        public event EventHandler<HandDestroyedArgs> HandDestroyed
         {
             add
             {
-                if (this.handDestroyEvent == null)
+                if (this.handDestroyedEvent == null)
                 {
                     Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out handDestroyHandle));
                     
                 }
-                this.handDestroyEvent += value;
+                this.handDestroyedEvent += value;
             }
             remove
             {
-                this.handDestroyEvent -= value;
+                this.handDestroyedEvent -= value;
 
-                if (this.handDestroyEvent == null)
+                if (this.handDestroyedEvent == null)
                 {
                     OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle);
                 }
@@ -152,12 +151,125 @@ namespace OpenNI
         }
         private void InternalHandDestroy(NodeSafeHandle hNode, UserID id, float fTime, IntPtr pCookie)
         {
-            if (this.handDestroyEvent != null)
-                this.handDestroyEvent(this, id, fTime);
+            var handler = this.handDestroyedEvent;
+            if (handler != null)
+                handler(this, new HandDestroyedArgs(id, fTime, pCookie));
         }
         private OpenNIImporter.XnHandDestroy internalHandDestroy;
         private IntPtr handDestroyHandle;
         #endregion
 
     }
+
+    /// <summary>
+    /// Provides data for hand created event.
+    /// </summary>
+    public class HandCreatedArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the HandCreatedArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public HandCreatedArgs(UserID userId, Point3D position, float timestamp, IntPtr cookie)
+        {
+            this.UserID = userId;
+            this.Position = position;
+            this.Timestamp = timestamp;
+            this.Cookie = cookie;
+        }
+
+        /// <summary>
+        /// Gets the id of the new hand.
+        /// </summary>
+        public UserID UserID { get; private set; }
+
+        /// <summary>
+        /// Gets the position in which the hand was created. 
+        /// </summary>
+        public Point3D Position { get; private set; }
+
+        /// <summary>
+        /// Timestamp, in seconds.
+        /// </summary>
+        public float Timestamp { get; private set; }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
+    /// <summary>
+    /// Provides data for hand updated event.
+    /// </summary>
+    public class HandUpdatedArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the HandUpdatedArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public HandUpdatedArgs(UserID userId, Point3D position, float timestamp, IntPtr cookie)
+        {
+            this.UserID = userId;
+            this.Position = position;
+            this.Timestamp = timestamp;
+            this.Cookie = cookie;
+        }
+
+        /// <summary>
+        /// Gets the id of the hand that moved.
+        /// </summary>
+        public UserID UserID { get; private set; }
+
+        /// <summary>
+        /// Gets the new position of the hand. 
+        /// </summary>
+        public Point3D Position { get; private set; }
+
+        /// <summary>
+        /// Timestamp, in seconds.
+        /// </summary>
+        public float Timestamp { get; private set; }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
+    /// <summary>
+    /// Provides data for hand destroyed event.
+    /// </summary>
+    public class HandDestroyedArgs
+        : EventArgs
+    {
+        /// <summary>
+        /// Initializes a new instance of the HandDestroyedArgs class.
+        /// </summary>
+        /// <param name="cookie">The object that contains data about the Capability.</param>
+        public HandDestroyedArgs(UserID userId, float timestamp, IntPtr cookie)
+        {
+            this.UserID = userId;
+            this.Timestamp = timestamp;
+            this.Cookie = cookie;
+        }
+
+        /// <summary>
+        /// Gets the id of the hand that disappeared.
+        /// </summary>
+        public UserID UserID { get; private set; }
+
+        /// <summary>
+        /// Timestamp, in seconds.
+        /// </summary>
+        public float Timestamp { get; private set; }
+
+        /// <summary>
+        /// Gets the object that contains data about the Capability.
+        /// </summary>
+        public IntPtr Cookie { get; private set; }
+    }
+
 }
