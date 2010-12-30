@@ -6,7 +6,7 @@ namespace xn
 {
     public class GestureGenerator : Generator
     {
-		internal GestureGenerator(IntPtr nodeHandle, bool addRef)
+        internal GestureGenerator(NodeSafeHandle nodeHandle, bool addRef)
             : base(nodeHandle, addRef)
         {
             this.gestureChanged = new StateChangedEvent(this,
@@ -29,14 +29,14 @@ namespace xn
         {
         }
 
-        private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
+        private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
-            IntPtr handle;
+            NodeSafeHandle handle;
             UInt32 status =
                 OpenNIImporter.xnCreateGestureGenerator(context.InternalObject,
                                                         out handle,
-                                                        query == null ? IntPtr.Zero : query.InternalObject,
-                                                        errors == null ? IntPtr.Zero : errors.InternalObject);
+                                                        query == null ? QuerySafeHandle.Zero : query.InternalObject,
+                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
             WrapperUtils.CheckStatus(status);
             return handle;
         }
@@ -173,7 +173,7 @@ namespace xn
                 }
             }
         }
-        private void InternalGestureRecognized(IntPtr hNode, string strGesture, ref Point3D idPosition, ref Point3D endPosition, IntPtr pCookie)
+        private void InternalGestureRecognized(NodeSafeHandle hNode, string strGesture, ref Point3D idPosition, ref Point3D endPosition, IntPtr pCookie)
         {
             if (this.gestureRecognizedEvent != null)
                 this.gestureRecognizedEvent(this, strGesture, ref idPosition, ref endPosition);
@@ -206,7 +206,7 @@ namespace xn
                 }
             }
         }
-        private void InternalGestureProgress(IntPtr hNode, string strGesture, ref Point3D position, float progress, IntPtr pCookie)
+        private void InternalGestureProgress(NodeSafeHandle hNode, string strGesture, ref Point3D position, float progress, IntPtr pCookie)
         {
             if (this.gestureProgressEvent != null)
                 this.gestureProgressEvent(this, strGesture, ref position, progress);

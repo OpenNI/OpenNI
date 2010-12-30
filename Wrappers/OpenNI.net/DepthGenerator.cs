@@ -6,7 +6,7 @@ namespace xn
 {
 	public class DepthGenerator : MapGenerator
 	{
-		internal DepthGenerator(IntPtr nodeHandle, bool addRef) :
+		internal DepthGenerator(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 			this.fovChanged = new StateChangedEvent(this,
@@ -110,12 +110,12 @@ namespace xn
 			return depthMD;
 		}
 
-		private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
+		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateDepthGenerator(context.InternalObject, out handle,
-				query == null ? IntPtr.Zero : query.InternalObject,
-				errors == null ? IntPtr.Zero : errors.InternalObject);
+            NodeSafeHandle handle;
+            UInt32 status = OpenNIImporter.xnCreateDepthGenerator(context.InternalObject, out handle,
+				query == null ? QuerySafeHandle.Zero : query.InternalObject,
+				errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}

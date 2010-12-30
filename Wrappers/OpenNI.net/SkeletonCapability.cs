@@ -176,7 +176,7 @@ namespace xn
                 }
             }
         }
-        private void InternalCalibrationStart(IntPtr hNode, UserID id, IntPtr pCookie)
+        private void InternalCalibrationStart(NodeSafeHandle hNode, UserID id, IntPtr pCookie)
         {
             if (this.calibrationStartEvent != null)
                 this.calibrationStartEvent(this.node, id);
@@ -209,7 +209,7 @@ namespace xn
                 }
             }
         }
-        private void InternalCalibrationEnd(IntPtr hNode, UserID id, bool success, IntPtr pCookie)
+        private void InternalCalibrationEnd(NodeSafeHandle hNode, UserID id, bool success, IntPtr pCookie)
         {
             if (this.calibrationEndEvent != null)
                 this.calibrationEndEvent(this.node, id, success);

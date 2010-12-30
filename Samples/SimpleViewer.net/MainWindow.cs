@@ -16,7 +16,7 @@ namespace SimpleViewer.net
 		{
 			InitializeComponent();
 
-			this.context = new Context(SAMPLE_XML_FILE);
+			this.context = Context.InitFromXml(SAMPLE_XML_FILE);
 			this.depth = context.FindExistingNode(NodeType.Depth) as DepthGenerator;
 			if (this.depth == null)
 			{

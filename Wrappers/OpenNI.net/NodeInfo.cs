@@ -6,7 +6,7 @@ namespace xn
 {
 	public class NodeInfo : ObjectWrapper
 	{
-		internal NodeInfo(IntPtr pNodeInfo)
+		internal NodeInfo(NodeInfoSafeHandle pNodeInfo)
 			: base(pNodeInfo)
 		{
 		}
@@ -16,12 +16,17 @@ namespace xn
 		/// </summary>
 		/// <param name="pNodeInfo">The native node info pointer</param>
 		/// <returns>A managed NodeInfo object</returns>
-		static public NodeInfo FromNative(IntPtr pNodeInfo)
+        static internal NodeInfo FromNative(NodeInfoSafeHandle pNodeInfo)
 		{
 			return new NodeInfo(pNodeInfo);
 		}
 
-		public void SetInstanceName(string strName)
+        internal new NodeInfoSafeHandle InternalObject
+        {
+            get { return (NodeInfoSafeHandle)base.InternalObject; }
+        }
+
+        public void SetInstanceName(string strName)
 		{
 			UInt32 status = OpenNIImporter.xnNodeInfoSetInstanceName(this.InternalObject, strName);
 			WrapperUtils.CheckStatus(status);
@@ -49,16 +54,11 @@ namespace xn
 
 		public ProductionNode GetInstance()
 		{
-			IntPtr handle = OpenNIImporter.xnNodeInfoGetHandle(this.InternalObject);
-			if (handle == IntPtr.Zero)
+			NodeSafeHandle handle = OpenNIImporter.xnNodeInfoGetHandle(this.InternalObject);
+			if (handle.IsInvalid)
 				return null;
 			else
 				return ProductionNode.FromNative(handle);
-		}
-
-		protected override void FreeObject(IntPtr ptr)
-		{
-			// no need to free anything
 		}
 	}
 }

@@ -28,7 +28,7 @@ namespace xn
 
 	public class EnumerationErrors : ObjectWrapper, IEnumerable<EnumerationError>
 	{
-		internal EnumerationErrors(IntPtr pErrors) :
+		internal EnumerationErrors(EnumerationErrorsSafeHandle pErrors) :
 			base(pErrors)
 		{
 		}
@@ -38,7 +38,12 @@ namespace xn
 		{
 		}
 
-		public bool IsEmpty()
+        internal new EnumerationErrorsSafeHandle InternalObject
+        {
+            get { return (EnumerationErrorsSafeHandle)base.InternalObject; }
+        }
+
+        public bool IsEmpty()
 		{
 			IntPtr first = OpenNIImporter.xnEnumerationErrorsGetFirst(this.InternalObject);
 			return !OpenNIImporter.xnEnumerationErrorsIteratorIsValid(first);
@@ -135,14 +140,9 @@ namespace xn
 
 		#endregion
 
-		protected override void FreeObject(IntPtr ptr)
+        private static EnumerationErrorsSafeHandle Create()
 		{
-			OpenNIImporter.xnEnumerationErrorsFree(ptr);
-		}
-
-		private static IntPtr Create()
-		{
-			IntPtr pErrors;
+            EnumerationErrorsSafeHandle pErrors;
 			UInt32 status = OpenNIImporter.xnEnumerationErrorsAllocate(out pErrors);
 			WrapperUtils.CheckStatus(status);
 			return pErrors;

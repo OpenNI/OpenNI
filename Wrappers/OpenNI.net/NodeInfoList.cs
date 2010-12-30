@@ -6,7 +6,7 @@ namespace xn
 {
 	public class NodeInfoList : ObjectWrapper, IEnumerable<NodeInfo>
 	{
-		internal NodeInfoList(IntPtr pList)
+        internal NodeInfoList(NodeInfoListSafeHandle pList)
 			: base(pList)
 		{
 		}
@@ -16,12 +16,17 @@ namespace xn
 		/// </summary>
 		/// <param name="pList">The native node info list pointer</param>
 		/// <returns>A managed NodeInfoList object</returns>
-		static public NodeInfoList FromNative(IntPtr pList)
+        static internal NodeInfoList FromNative(NodeInfoListSafeHandle pList)
 		{
 			return new NodeInfoList(pList);
 		}
 
-		#region NodeInfoListEnumerator Class
+        internal new NodeInfoListSafeHandle InternalObject
+        {
+            get { return (NodeInfoListSafeHandle)base.InternalObject; }
+        }
+
+        #region NodeInfoListEnumerator Class
 
 		private class NodeInfoListEnumerator : IEnumerator<NodeInfo>
 		{
@@ -112,7 +117,7 @@ namespace xn
 		public void Add(ProductionNodeDescription description, string creationInfo, NodeInfoList neededNodes)
 		{
 			UInt32 status = OpenNIImporter.xnNodeInfoListAdd(this.InternalObject, description, creationInfo,
-				neededNodes == null ? IntPtr.Zero : neededNodes.InternalObject);
+                neededNodes == null ? NodeInfoListSafeHandle.Zero : neededNodes.InternalObject);
 			WrapperUtils.CheckStatus(status);
 		}
 
@@ -156,11 +161,6 @@ namespace xn
 		public void Filter(Context context, Query query)
 		{
 			query.FilterList(context, this);
-		}
-
-		protected override void FreeObject(IntPtr ptr)
-		{
-			OpenNIImporter.xnNodeInfoListFree(ptr);
 		}
 	}
 }

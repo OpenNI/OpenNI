@@ -63,11 +63,14 @@ namespace xn
     [ContractClass(typeof(Contracts.ObjectWrapperContract))]
 	public abstract class ObjectWrapper : IDisposable
 	{
-		internal ObjectWrapper(IntPtr ptr)
+        internal ObjectWrapper(SafeHandle handle)
 		{
-            Contract.Requires(ptr != IntPtr.Zero);
+            Contract.Requires(handle != null);
+            Contract.Requires(!handle.IsClosed);
+            Contract.Ensures(this.handle != null);
+            Contract.Ensures(!this.handle.IsClosed);
 
-			this.ptr = ptr;
+			this.handle = handle;
 		}
 
 		~ObjectWrapper()
@@ -75,44 +78,47 @@ namespace xn
 			Dispose(false);
 		}
 
-		/// <summary>
-		/// Gets the native (C language) OpenNI object. This method should only be used for native-managed transitions.
-		/// </summary>
-		/// <returns>A pointer to the OpenNI object</returns>
-		public IntPtr ToNative()
-		{
-            Contract.Ensures(Contract.Result<IntPtr>() != IntPtr.Zero, "Native pointer was disposed.");
+        ///// <summary>
+        ///// Gets the native (C language) OpenNI object. This method should only be used for native-managed transitions.
+        ///// </summary>
+        ///// <returns>A pointer to the OpenNI object</returns>
+        //public IntPtr ToNative()
+        //{
+        //    Contract.Ensures(Contract.Result<IntPtr>() != IntPtr.Zero, "Native pointer was disposed.");
 
-            return this.ptr;
-		}
+        //    return this.handle;
+        //}
 
 		#region IDisposable Members
 
 		public void Dispose()
 		{
-			Dispose(true);
+            Contract.Ensures(this.handle.IsClosed);
+            
+            Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
 		#endregion
 
-		internal IntPtr InternalObject
+        internal SafeHandle InternalObject
 		{
-			get { return this.ptr; }
+			get { return this.handle; }
 		}
-
-		protected abstract void FreeObject(IntPtr ptr);
 
 		protected virtual void Dispose(bool disposing)
 		{
-			if (this.InternalObject != IntPtr.Zero)
+			if (!this.handle.IsClosed) // if not disposed already
 			{
-				FreeObject(this.InternalObject);
-				this.ptr = IntPtr.Zero;
+                if (disposing) // no need to dispose managed resources on termination
+                {
+                    this.handle.Dispose();
+                    this.handle = null;
+                }
 			}
 		}
 
-		private IntPtr ptr;
+		private SafeHandle handle;
 	}
 
     #region Code contracts
@@ -123,15 +129,11 @@ namespace xn
         internal abstract class ObjectWrapperContract
             : ObjectWrapper
         {
-            internal ObjectWrapperContract(IntPtr ptr)
-                : base(ptr)
+            internal ObjectWrapperContract(SafeHandle handle)
+                : base(handle)
             {
             }
 
-            protected override void FreeObject(IntPtr ptr)
-            {
-                Contract.Requires(ptr != IntPtr.Zero);
-            }
         }
     }
 
@@ -213,7 +215,7 @@ namespace xn
 
 	public class NodeWrapper : ObjectWrapper, IEquatable<NodeWrapper>
 	{
-		internal NodeWrapper(IntPtr hNode, bool addRef)
+		internal NodeWrapper(NodeSafeHandle hNode, bool addRef)
 			: base(hNode)
 		{
 			if (addRef)
@@ -221,6 +223,11 @@ namespace xn
 				OpenNIImporter.xnProductionNodeAddRef(hNode);
 			}
 		}
+
+        internal new NodeSafeHandle InternalObject
+        {
+            get { return (NodeSafeHandle)base.InternalObject; }
+        }
 
 		public override bool Equals(object obj)
 		{
@@ -243,17 +250,12 @@ namespace xn
  		/// TRUE if the object points to an actual node, FALSE otherwise.
  		public bool IsValid
 		{
-			get { return (this.InternalObject != IntPtr.Zero); }
+			get { return this.InternalObject.IsClosed; }
 		}
 
 		public string GetName()
 		{
 			return OpenNIImporter.xnGetNodeName(this.InternalObject);
-		}
-
-		protected override void FreeObject(IntPtr ptr)
-		{
-			OpenNIImporter.xnProductionNodeRelease(ptr);
 		}
 	};
 

@@ -6,7 +6,7 @@ namespace xn
 {
 	public class Query : ObjectWrapper
 	{
-		internal Query(IntPtr pQuery) :
+		internal Query(QuerySafeHandle pQuery) :
 			base(pQuery)
 		{
 		}
@@ -16,12 +16,29 @@ namespace xn
 		/// </summary>
 		/// <param name="pQuery">The native query pointer</param>
 		/// <returns>A managed Query object</returns>
-		static public Query FromNative(IntPtr pQuery)
+        static internal Query FromNative(QuerySafeHandle pQuery)
 		{
 			return new Query(pQuery);
 		}
 
-		public void SetVendor(string vendorName)
+		/// <summary>
+		/// Creates a managed Query object.
+		/// </summary>
+		/// <returns>A managed Query object</returns>
+		static public Query Create()
+		{
+            QuerySafeHandle handle;
+            UInt32 status = OpenNIImporter.xnNodeQueryAllocate(out handle);
+			WrapperUtils.CheckStatus(status);
+            return new Query(handle);
+		}
+
+        internal new QuerySafeHandle InternalObject
+        {
+            get { return (QuerySafeHandle)base.InternalObject; }
+        }
+
+        public void SetVendor(string vendorName)
 		{
 			UInt32 status = OpenNIImporter.xnNodeQuerySetVendor(this.InternalObject, vendorName);
 			WrapperUtils.CheckStatus(status);
@@ -85,11 +102,6 @@ namespace xn
 		{
 			UInt32 status = OpenNIImporter.xnNodeQueryFilterList(context.InternalObject, this.InternalObject, list.InternalObject);
 			WrapperUtils.CheckStatus(status);
-		}
-
-		protected override void FreeObject(IntPtr ptr)
-		{
-			OpenNIImporter.xnNodeQueryFree(ptr);
 		}
 	}
 }

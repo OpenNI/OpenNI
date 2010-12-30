@@ -6,7 +6,7 @@ namespace xn
 {
 	public class Device : ProductionNode
 	{
-		internal Device(IntPtr nodeHandle, bool addRef) :
+		internal Device(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 		}
@@ -21,7 +21,7 @@ namespace xn
 		{
 		}
 
-		private static IntPtr Create(Context context, Query query)
+        private static NodeSafeHandle Create(Context context, Query query)
 		{
 			return context.CreateAnyProductionTreeImpl(NodeType.Device, query);
 		}

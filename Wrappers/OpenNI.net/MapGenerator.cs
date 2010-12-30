@@ -6,7 +6,7 @@ namespace xn
 {
 	public class MapGenerator : Generator
 	{
-		internal MapGenerator(IntPtr nodeHandle, bool addRef) :
+		internal MapGenerator(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 			this.mapOutputModeChanged = new StateChangedEvent(this,

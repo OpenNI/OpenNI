@@ -7,7 +7,7 @@ namespace xn
 {
 	public class UserGenerator : Generator
     {
-        public UserGenerator(IntPtr nodeHandle, bool addRef) : 
+        internal UserGenerator(NodeSafeHandle nodeHandle, bool addRef) : 
 			base(nodeHandle, addRef)
         {
             this.internalNewUser = new OpenNIImporter.XnUserHandler(this.InternalNewUser);
@@ -27,14 +27,14 @@ namespace xn
         {
         }
 
-        private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
+        private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
-            IntPtr handle;
+            NodeSafeHandle handle;
             UInt32 status =
                 OpenNIImporter.xnCreateUserGenerator(context.InternalObject,
                                                         out handle,
-                                                        query == null ? IntPtr.Zero : query.InternalObject,
-                                                        errors == null ? IntPtr.Zero : errors.InternalObject);
+                                                        query == null ? QuerySafeHandle.Zero : query.InternalObject,
+                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
             WrapperUtils.CheckStatus(status);
             return handle;
         }
@@ -106,7 +106,7 @@ namespace xn
                 }
             }
         }
-        private void InternalNewUser(IntPtr hNode, UserID id, IntPtr pCookie)
+        private void InternalNewUser(NodeSafeHandle hNode, UserID id, IntPtr pCookie)
         {
             if (this.newUserEvent != null)
                 this.newUserEvent(this, id);
@@ -139,7 +139,7 @@ namespace xn
                 }
             }
         }
-        private void InternalLostUser(IntPtr hNode, UserID id, IntPtr pCookie)
+        private void InternalLostUser(NodeSafeHandle hNode, UserID id, IntPtr pCookie)
         {
             if (this.lostUserEvent != null)
                 this.lostUserEvent(this, id);

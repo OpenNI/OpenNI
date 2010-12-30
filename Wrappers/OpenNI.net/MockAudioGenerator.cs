@@ -6,7 +6,7 @@ namespace xn
 {
 	public class MockAudioGenerator : AudioGenerator
 	{
-		internal MockAudioGenerator(IntPtr nodeHandle, bool addRef) :
+		internal MockAudioGenerator(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 		}
@@ -47,19 +47,19 @@ namespace xn
 			SetData(audioMD, audioMD.FrameID, audioMD.Timestamp);
 		}
 
-		private static IntPtr Create(Context context, string name)
+		private static NodeSafeHandle Create(Context context, string name)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Audio, name, out handle);
+            NodeSafeHandle handle;
+            UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Audio, name, out handle);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}
 
-		private static IntPtr CreateBasedOn(AudioGenerator basedOn, string name)
+        private static NodeSafeHandle CreateBasedOn(AudioGenerator basedOn, string name)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject, 
-				basedOn.InternalObject, name, out handle);
+            NodeSafeHandle handle;
+			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
+                basedOn.InternalObject, name, out handle);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}

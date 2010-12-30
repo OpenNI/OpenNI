@@ -7,7 +7,7 @@ namespace xn
 {
     public class HandsGenerator : Generator
     {
-		internal HandsGenerator(IntPtr nodeHandle, bool addRef)
+        internal HandsGenerator(NodeSafeHandle nodeHandle, bool addRef)
 			: base(nodeHandle, addRef)
         {
             this.internalHandCreate = new OpenNIImporter.XnHandCreate(this.InternalHandCreate);
@@ -28,14 +28,14 @@ namespace xn
         {
         }
 
-        private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
+        private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
-            IntPtr handle;
+            NodeSafeHandle handle;
             UInt32 status =
                 OpenNIImporter.xnCreateHandsGenerator(context.InternalObject,
                                                         out handle,
-                                                        query == null ? IntPtr.Zero : query.InternalObject,
-                                                        errors == null ? IntPtr.Zero : errors.InternalObject);
+                                                        query == null ? QuerySafeHandle.Zero : query.InternalObject,
+                                                        errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
             WrapperUtils.CheckStatus(status);
             return handle;
         }
@@ -85,7 +85,7 @@ namespace xn
                 }
             }
         }
-        private void InternalHandCreate(IntPtr hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
+        private void InternalHandCreate(NodeSafeHandle hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
         {
             if (this.handCreateEvent != null)
                 this.handCreateEvent(this, id, ref position, fTime);
@@ -116,9 +116,9 @@ namespace xn
                 {
                     OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
                 }
-            }
+            } 
         }
-        private void InternalHandUpdate(IntPtr hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
+        private void InternalHandUpdate(NodeSafeHandle hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
         {
             if (this.handUpdateEvent != null)
                 this.handUpdateEvent(this, id, ref position, fTime);
@@ -151,7 +151,7 @@ namespace xn
                 }
             }
         }
-        private void InternalHandDestroy(IntPtr hNode, UserID id, float fTime, IntPtr pCookie)
+        private void InternalHandDestroy(NodeSafeHandle hNode, UserID id, float fTime, IntPtr pCookie)
         {
             if (this.handDestroyEvent != null)
                 this.handDestroyEvent(this, id, fTime);

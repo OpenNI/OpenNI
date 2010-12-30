@@ -7,7 +7,7 @@ namespace xn
 {
 	public class Player : ProductionNode
 	{
-		internal Player(IntPtr nodeHandle, bool addRef) :
+        internal Player(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 			this.endOfFileReachedEvent = new StateChangedEvent(this,
@@ -105,7 +105,7 @@ namespace xn
 
 		public NodeInfoList EnumerateNodes()
 		{
-			IntPtr pList;
+			NodeInfoListSafeHandle pList;
 			UInt32 status = OpenNIImporter.xnEnumeratePlayerNodes(this.InternalObject, out pList);
 			WrapperUtils.CheckStatus(status);
 
@@ -134,9 +134,9 @@ namespace xn
 			return OpenNIImporter.xnGetPlaybackSpeed(this.InternalObject);
 		}
 
-		private static IntPtr Create(Context context, string formatName)
+        private static NodeSafeHandle Create(Context context, string formatName)
 		{
-			IntPtr nodeHandle;
+            NodeSafeHandle nodeHandle;
 			UInt32 status = OpenNIImporter.xnCreatePlayer(context.InternalObject, formatName, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
 			return nodeHandle;

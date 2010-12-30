@@ -115,6 +115,9 @@
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Context.cs">
       <Link>Context.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\ContextSafeHandle.cs">
+      <Link>SafeHandles\ContextSafeHandle.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\CroppingCapability.cs">
       <Link>Capabilities\CroppingCapability.cs</Link>
     </Compile>
@@ -129,6 +132,9 @@
     </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\EnumerationErrors.cs">
       <Link>EnumerationErrors.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\EnumerationErrorsSafeHandle.cs">
+      <Link>SafeHandles\EnumerationErrorsSafeHandle.cs</Link>
     </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\FrameSyncCapability.cs">
       <Link>Capabilities\FrameSyncCapability.cs</Link>
@@ -187,6 +193,15 @@
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\NodeInfoList.cs">
       <Link>NodeInfoList.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\NodeInfoListSafeHandle.cs">
+      <Link>SafeHandles\NodeInfoListSafeHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\NodeInfoSafeHandle.cs">
+      <Link>SafeHandles\NodeInfoSafeHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\NodeSafeHandle.cs">
+      <Link>SafeHandles\NodeSafeHandle.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\OpenNIImporter.cs">
       <Link>OpenNIImporter.cs</Link>
     </Compile>
@@ -204,6 +219,9 @@
     </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Query.cs">
       <Link>Query.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\QuerySafeHandle.cs">
+      <Link>SafeHandles\QuerySafeHandle.cs</Link>
     </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Recorder.cs">
       <Link>Nodes\Recorder.cs</Link>

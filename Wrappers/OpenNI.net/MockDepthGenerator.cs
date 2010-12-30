@@ -6,7 +6,7 @@ namespace xn
 {
 	public class MockDepthGenerator : DepthGenerator
 	{
-		internal MockDepthGenerator(IntPtr nodeHandle, bool addRef) :
+		internal MockDepthGenerator(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 		}
@@ -47,19 +47,19 @@ namespace xn
 			SetData(depthMD, depthMD.FrameID, depthMD.Timestamp);
 		}
 
-		private static IntPtr Create(Context context, string name)
+        private static NodeSafeHandle Create(Context context, string name)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Depth, name, out handle);
+            NodeSafeHandle handle;
+            UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Depth, name, out handle);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}
 
-		private static IntPtr CreateBasedOn(DepthGenerator basedOn, string name)
+        private static NodeSafeHandle CreateBasedOn(DepthGenerator basedOn, string name)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject, 
-				basedOn.InternalObject, name, out handle);
+            NodeSafeHandle handle;
+			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
+                basedOn.InternalObject, name, out handle);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}

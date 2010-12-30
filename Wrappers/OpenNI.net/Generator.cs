@@ -6,7 +6,7 @@ namespace xn
 {
 	public class Generator : ProductionNode
 	{
-		internal Generator(IntPtr pNode, bool addRef)
+		internal Generator(NodeSafeHandle pNode, bool addRef)
 			: base(pNode, addRef)
 		{
 			this.generationRunningChanged = new StateChangedEvent(this,

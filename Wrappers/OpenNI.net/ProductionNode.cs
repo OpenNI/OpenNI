@@ -7,12 +7,12 @@ namespace xn
 {
 	public class ProductionNode : NodeWrapper
 	{
-		internal ProductionNode(IntPtr nodeHandle, bool addRef)
+		internal ProductionNode(NodeSafeHandle nodeHandle, bool addRef)
 			: base(nodeHandle, addRef)
 		{
 		}
 
-		public static ProductionNode FromNative(IntPtr nodeHandle)
+        static internal ProductionNode FromNative(NodeSafeHandle nodeHandle)
 		{
 			return Context.CreateProductionNodeFromNative(nodeHandle);
 		}

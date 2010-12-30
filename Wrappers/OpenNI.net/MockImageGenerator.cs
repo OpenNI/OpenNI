@@ -6,7 +6,7 @@ namespace xn
 {
 	public class MockImageGenerator : ImageGenerator
 	{
-		internal MockImageGenerator(IntPtr nodeHandle, bool addRef) :
+		internal MockImageGenerator(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 		}
@@ -47,19 +47,19 @@ namespace xn
 			SetData(imageMD, imageMD.FrameID, imageMD.Timestamp);
 		}
 
-		private static IntPtr Create(Context context, string name)
+		private static NodeSafeHandle Create(Context context, string name)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Image, name, out handle);
+            NodeSafeHandle handle;
+            UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Image, name, out handle);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}
 
-		private static IntPtr CreateBasedOn(ImageGenerator basedOn, string name)
+        private static NodeSafeHandle CreateBasedOn(ImageGenerator basedOn, string name)
 		{
-			IntPtr handle;
+            NodeSafeHandle handle;
 			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
-				basedOn.InternalObject, name, out handle);
+                basedOn.InternalObject, name, out handle);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}

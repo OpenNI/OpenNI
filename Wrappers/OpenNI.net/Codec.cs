@@ -6,7 +6,7 @@ namespace xn
 {
 	public class Codec : ProductionNode
 	{
-		internal Codec(IntPtr nodeHandle, bool addRef) :
+		internal Codec(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 		}
@@ -37,10 +37,10 @@ namespace xn
 			return written;
 		}
 
-		private static IntPtr Create(Context context, CodecID codecID, ProductionNode initializer)
+		private static NodeSafeHandle Create(Context context, CodecID codecID, ProductionNode initializer)
 		{
-			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnCreateCodec(context.InternalObject, codecID.InternalValue, initializer.InternalObject, out nodeHandle);
+            NodeSafeHandle nodeHandle;
+            UInt32 status = OpenNIImporter.xnCreateCodec(context.InternalObject, codecID.InternalValue, initializer.InternalObject, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
 			return nodeHandle;
 		}

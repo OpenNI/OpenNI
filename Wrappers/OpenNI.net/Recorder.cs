@@ -6,7 +6,7 @@ namespace xn
 {
 	public class Recorder : ProductionNode
 	{
-		internal Recorder(IntPtr nodeHandle, bool addRef) :
+		internal Recorder(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 		}
@@ -50,10 +50,10 @@ namespace xn
 			WrapperUtils.CheckStatus(status);
 		}
 
-		private static IntPtr Create(Context context, string formatName)
+		private static NodeSafeHandle Create(Context context, string formatName)
 		{
-			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnCreateRecorder(context.InternalObject, formatName, out nodeHandle);
+            NodeSafeHandle nodeHandle;
+            UInt32 status = OpenNIImporter.xnCreateRecorder(context.InternalObject, formatName, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
 			return nodeHandle;
 		}

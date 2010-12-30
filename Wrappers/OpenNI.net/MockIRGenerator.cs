@@ -6,7 +6,7 @@ namespace xn
 {
 	public class MockIRGenerator : IRGenerator
 	{
-		internal MockIRGenerator(IntPtr nodeHandle, bool addRef) :
+		internal MockIRGenerator(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 		}
@@ -47,19 +47,19 @@ namespace xn
 			SetData(irMD, irMD.FrameID, irMD.Timestamp);
 		}
 
-		private static IntPtr Create(Context context, string name)
+		private static NodeSafeHandle Create(Context context, string name)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.IR, name, out handle);
+            NodeSafeHandle handle;
+            UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.IR, name, out handle);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}
 
-		private static IntPtr CreateBasedOn(IRGenerator basedOn, string name)
+        private static NodeSafeHandle CreateBasedOn(IRGenerator basedOn, string name)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject, 
-				basedOn.InternalObject, name, out handle);
+            NodeSafeHandle handle;
+			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
+                basedOn.InternalObject, name, out handle);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}

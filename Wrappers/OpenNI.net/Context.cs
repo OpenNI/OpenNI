@@ -9,39 +9,31 @@ namespace xn
 
 	public class Context : ObjectWrapper
 	{
-		internal Context(IntPtr pContext) : 
+		internal Context(ContextSafeHandle pContext) : 
 			base(pContext)
 		{
-            Contract.Requires(pContext != IntPtr.Zero);
-
 		}
-
-		public Context() :
-			this(Init())
-		{
-		}
-
-        public Context(string xmlFile) :
-			this(InitFromXml(xmlFile))
-		{
-            Contract.Requires(!string.IsNullOrWhiteSpace(xmlFile));
-        }
 
 		/// <summary>
 		/// Creates a managed Context object to wrap a native one.
 		/// </summary>
 		/// <param name="pContext">A pointer to the native object</param>
 		/// <returns>A managed Context object</returns>
-		internal Context FromNative(IntPtr pContext)
+		static internal Context FromNative(ContextSafeHandle pContext)
 		{
-            Contract.Requires(pContext != IntPtr.Zero);
+            Contract.Requires(pContext != null);
             
             return new Context(pContext);
 		}
 
-		static public ProductionNode CreateProductionNodeFromNative(IntPtr hNodeHandle)
+        internal new ContextSafeHandle InternalObject
+        {
+            get { return (ContextSafeHandle)base.InternalObject; }
+        }
+
+        static internal ProductionNode CreateProductionNodeFromNative(NodeSafeHandle hNodeHandle)
 		{
-            Contract.Requires(hNodeHandle != IntPtr.Zero);
+            Contract.Requires(!hNodeHandle.IsClosed);
 
             return CreateProductionNodeObject(hNodeHandle);
 		}
@@ -118,12 +110,12 @@ namespace xn
             Contract.Requires(query != null);
             Contract.Ensures(Contract.Result<NodeInfoList>() != null);
 
-			IntPtr resultList;
+            NodeInfoListSafeHandle resultList;
 
 			using (EnumerationErrors errors = new EnumerationErrors())
 			{
 				UInt32 status = OpenNIImporter.xnEnumerateProductionTrees(this.InternalObject, type,
-					query == null ? IntPtr.Zero : query.InternalObject,
+					query == null ? QuerySafeHandle.Zero : query.InternalObject,
 					out resultList,
 					errors.InternalObject);
 				WrapperUtils.CheckEnumeration(status, errors);
@@ -137,7 +129,7 @@ namespace xn
             Contract.Requires(query != null);
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
             
-            IntPtr nodeHandle = CreateAnyProductionTreeImpl(type, query);
+            NodeSafeHandle nodeHandle = CreateAnyProductionTreeImpl(type, query);
 			return CreateProductionNodeObject(nodeHandle, type);
 		}
 
@@ -146,7 +138,7 @@ namespace xn
             Contract.Requires(nodeInfo != null);
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
-            IntPtr nodeHandle;
+            NodeSafeHandle nodeHandle;
 			UInt32 status = OpenNIImporter.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
 			return CreateProductionNodeObject(nodeHandle, nodeInfo.GetDescription().Type);
@@ -156,7 +148,7 @@ namespace xn
 		{
             Contract.Ensures(Contract.Result<NodeInfoList>() != null);
 
-			IntPtr pList;
+            NodeInfoListSafeHandle pList;
 			UInt32 status = OpenNIImporter.xnEnumerateExistingNodes(this.InternalObject, out pList);
 			WrapperUtils.CheckStatus(status);
 			return new NodeInfoList(pList);
@@ -166,7 +158,7 @@ namespace xn
 		{
             Contract.Ensures(Contract.Result<NodeInfoList>() != null);
 
-			IntPtr pList;
+            NodeInfoListSafeHandle pList;
 			UInt32 status = OpenNIImporter.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList);
 			WrapperUtils.CheckStatus(status);
 			return new NodeInfoList(pList);
@@ -176,7 +168,7 @@ namespace xn
 		{
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
-			IntPtr nodeHandle;
+            NodeSafeHandle nodeHandle;
 			UInt32 status = OpenNIImporter.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
 			return CreateProductionNodeObject(nodeHandle, type);
@@ -186,7 +178,7 @@ namespace xn
 		{
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
-            IntPtr nodeHandle;
+            NodeSafeHandle nodeHandle;
 			UInt32 status = OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
 			return CreateProductionNodeObject(nodeHandle);
@@ -197,10 +189,10 @@ namespace xn
             Contract.Requires(!String.IsNullOrEmpty(name));
             Contract.Ensures(Contract.Result<NodeInfo>() != null);
 
-			IntPtr nodeHandle;
+            NodeSafeHandle nodeHandle;
 			UInt32 status = OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
-			IntPtr nodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
+			NodeInfoSafeHandle nodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
 			return new NodeInfo(nodeInfo);
 		}
 
@@ -291,13 +283,13 @@ namespace xn
 			WrapperUtils.CheckStatus(status);
 		}
 
-		internal IntPtr CreateAnyProductionTreeImpl(NodeType type, Query query)
+        internal NodeSafeHandle CreateAnyProductionTreeImpl(NodeType type, Query query)
 		{
-			IntPtr nodeHandle;
+            NodeSafeHandle nodeHandle;
 			using (EnumerationErrors errors = new EnumerationErrors())
 			{
 				UInt32 status = OpenNIImporter.xnCreateAnyProductionTree(this.InternalObject, type,
-					query == null ? IntPtr.Zero : query.InternalObject,
+					query == null ? QuerySafeHandle.Zero : query.InternalObject,
 					out nodeHandle, errors.InternalObject);
 				WrapperUtils.CheckEnumeration(status, errors);
 			}
@@ -305,33 +297,28 @@ namespace xn
 			return nodeHandle;
 		}
 
-		protected override void FreeObject(IntPtr ptr)
+        public static Context Init()
 		{
-			OpenNIImporter.xnShutdown(ptr);
-		}
-
-		private static IntPtr Init()
-		{
-			IntPtr pContext;
+			ContextSafeHandle pContext;
 			UInt32 status = OpenNIImporter.xnInit(out pContext);
 			WrapperUtils.CheckStatus(status);
-			return pContext;
+			return new Context(pContext);
 		}
 
-		private static IntPtr InitFromXml(string xmlFile)
+        public static Context InitFromXml(string xmlFile)
 		{
-			IntPtr pContext;
-			EnumerationErrors errors = new EnumerationErrors();
+            ContextSafeHandle pContext;
+            EnumerationErrors errors = new EnumerationErrors();
 			UInt32 status = OpenNIImporter.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
-			return pContext;
+            return new Context(pContext);
 		}
 
-		private static ProductionNode CreateProductionNodeObject(IntPtr nodeHandle, NodeType? type)
+        private static ProductionNode CreateProductionNodeObject(NodeSafeHandle nodeHandle, NodeType? type)
 		{
 			if (type == null)
 			{
-				IntPtr pNodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
+				NodeInfoSafeHandle pNodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
 				type = OpenNIImporter.xnNodeInfoGetDescription(pNodeInfo).Type;
 			}
 
@@ -366,7 +353,7 @@ namespace xn
 			}
 		}
 
-		private static ProductionNode CreateProductionNodeObject(IntPtr nodeHandle)
+		private static ProductionNode CreateProductionNodeObject(NodeSafeHandle nodeHandle)
 		{
 			return CreateProductionNodeObject(nodeHandle, null);
 		}

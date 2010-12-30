@@ -7,18 +7,14 @@ using XnBool = System.Boolean;
 using XnCallbackHandle = System.IntPtr;
 using XnCodecID = System.UInt32;
 using XnConfidence = System.Single;
-using XnContext = System.IntPtr;
 using XnDepthPixel = System.UInt16;
 using XnDouble = System.Double;
-using XnEnumerationErrors = System.IntPtr;
 using XnEnumerationErrorsIterator = System.IntPtr;
 using XnFloat = System.Single;
 using XnInt32 = System.Int32;
 using XnInt64 = System.Int64;
 using XnLockHandle = System.UInt32;
 using XnNodeHandle = System.IntPtr;
-using XnNodeInfo = System.IntPtr;
-using XnNodeInfoList = System.IntPtr;
 using XnNodeInfoListIterator = System.IntPtr;
 using XnNodeQuery = System.IntPtr;
 using XnStatus = System.UInt32;
@@ -451,86 +447,86 @@ namespace xn
 		};
 
 		public delegate void XnErrorStateChangedHandler(XnStatus errorState, IntPtr pCookie);
-		public delegate void XnStateChangedHandler(XnNodeHandle hNode, IntPtr pCookie);
-		public delegate void XnGestureRecognized(XnNodeHandle hNode, string strGesture, ref Point3D pIDPosition, ref Point3D pEndPosition, IntPtr pCookie);
-		public delegate void XnGestureProgress(XnNodeHandle hNode, string strGesture, ref Point3D pPosition, XnFloat fProgress, IntPtr pCookie);
-		public delegate void XnCalibrationStart(XnNodeHandle hNode, XnUserID user, IntPtr pCookie);
-		public delegate void XnCalibrationEnd(XnNodeHandle hNode, XnUserID user, XnBool bSuccess, IntPtr pCookie);
-		public delegate void XnPoseDetectionCallback(XnNodeHandle hNode, string strPose, XnUserID user, IntPtr pCookie);
+		public delegate void XnStateChangedHandler(NodeSafeHandle hNode, IntPtr pCookie);
+		public delegate void XnGestureRecognized(NodeSafeHandle hNode, string strGesture, ref Point3D pIDPosition, ref Point3D pEndPosition, IntPtr pCookie);
+		public delegate void XnGestureProgress(NodeSafeHandle hNode, string strGesture, ref Point3D pPosition, XnFloat fProgress, IntPtr pCookie);
+		public delegate void XnCalibrationStart(NodeSafeHandle hNode, XnUserID user, IntPtr pCookie);
+		public delegate void XnCalibrationEnd(NodeSafeHandle hNode, XnUserID user, XnBool bSuccess, IntPtr pCookie);
+		public delegate void XnPoseDetectionCallback(NodeSafeHandle hNode, string strPose, XnUserID user, IntPtr pCookie);
 
-		public delegate void XnUserHandler(XnNodeHandle hNode, XnUserID user, IntPtr pCookie);
-		public delegate void XnHandCreate(XnNodeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
-		public delegate void XnHandUpdate(XnNodeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
-		public delegate void XnHandDestroy(XnNodeHandle hNode, XnUserID user, XnFloat fTime, IntPtr pCookie);
+		public delegate void XnUserHandler(NodeSafeHandle hNode, XnUserID user, IntPtr pCookie);
+		public delegate void XnHandCreate(NodeSafeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
+		public delegate void XnHandUpdate(NodeSafeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
+		public delegate void XnHandDestroy(NodeSafeHandle hNode, XnUserID user, XnFloat fTime, IntPtr pCookie);
 
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnInit(out XnContext pContext);
+		public static extern XnStatus xnInit(out ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnContextRunXmlScriptFromFile(XnContext pContext, string strFileName, XnEnumerationErrors pErrors);
+		public static extern XnStatus xnContextRunXmlScriptFromFile(ContextSafeHandle pContext, string strFileName, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnContextRunXmlScript(XnContext pContext, string xmlScript, XnEnumerationErrors pErrors);
+		public static extern XnStatus xnContextRunXmlScript(ContextSafeHandle pContext, string xmlScript, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnInitFromXmlFile(string strFileName, out XnContext ppContext, XnEnumerationErrors pErrors);
+		public static extern XnStatus xnInitFromXmlFile(string strFileName, out ContextSafeHandle ppContext, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnContextOpenFileRecording(XnContext pContext, string strFileName);
+		public static extern XnStatus xnContextOpenFileRecording(ContextSafeHandle pContext, string strFileName);
 		[DllImport("OpenNI")]
-		public static extern void xnShutdown(XnContext pContext);
+		public static extern void xnShutdown(ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumerateProductionTrees(XnContext pContext, NodeType Type, XnNodeQuery pQuery, out XnNodeInfoList ppTreesList, XnEnumerationErrors pErrors);
+		public static extern XnStatus xnEnumerateProductionTrees(ContextSafeHandle pContext, NodeType Type, QuerySafeHandle pQuery, out NodeInfoListSafeHandle ppTreesList, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateProductionTree(XnContext pContext, XnNodeInfo pTree, out XnNodeHandle phNode);
+		public static extern XnStatus xnCreateProductionTree(ContextSafeHandle pContext, NodeInfoSafeHandle pTree, out NodeSafeHandle phNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateAnyProductionTree(XnContext pContext, NodeType type, XnNodeQuery pQuery, out XnNodeHandle phNode, XnEnumerationErrors pErrors);
+		public static extern XnStatus xnCreateAnyProductionTree(ContextSafeHandle pContext, NodeType type, QuerySafeHandle pQuery, out NodeSafeHandle phNode, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateMockNode(XnContext pContext, NodeType type, string strName, out XnNodeHandle phNode);
+		public static extern XnStatus xnCreateMockNode(ContextSafeHandle pContext, NodeType type, string strName, out NodeSafeHandle phNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateMockNodeBasedOn(XnContext pContext, XnNodeHandle hOriginalNode, string strName, out XnNodeHandle phMockNode);
+		public static extern XnStatus xnCreateMockNodeBasedOn(ContextSafeHandle pContext, NodeSafeHandle hOriginalNode, string strName, out NodeSafeHandle phMockNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnProductionNodeAddRef(XnNodeHandle hNode);
+		public static extern XnStatus xnProductionNodeAddRef(NodeSafeHandle hNode);
 		[DllImport("OpenNI")]
-		public static extern void xnProductionNodeRelease(XnNodeHandle hNode);
+		public static extern void xnProductionNodeRelease(NodeSafeHandle hNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumerateExistingNodes(XnContext pContext, out XnNodeInfoList ppList);
+		public static extern XnStatus xnEnumerateExistingNodes(ContextSafeHandle pContext, out NodeInfoListSafeHandle ppList);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumerateExistingNodesByType(XnContext pContext, NodeType type, out XnNodeInfoList ppList);
+		public static extern XnStatus xnEnumerateExistingNodesByType(ContextSafeHandle pContext, NodeType type, out NodeInfoListSafeHandle ppList);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnFindExistingNodeByType(XnContext pContext, NodeType type, out XnNodeHandle phNode);
+		public static extern XnStatus xnFindExistingNodeByType(ContextSafeHandle pContext, NodeType type, out NodeSafeHandle phNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetNodeHandleByName(XnContext pContext, string strInstanceName, out XnNodeHandle phNode);
+		public static extern XnStatus xnGetNodeHandleByName(ContextSafeHandle pContext, string strInstanceName, out NodeSafeHandle phNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnWaitAndUpdateAll(XnContext pContext);
+		public static extern XnStatus xnWaitAndUpdateAll(ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnWaitOneUpdateAll(XnContext pContext, XnNodeHandle hNode);
+		public static extern XnStatus xnWaitOneUpdateAll(ContextSafeHandle pContext, NodeSafeHandle hNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnWaitAnyUpdateAll(XnContext pContext);
+		public static extern XnStatus xnWaitAnyUpdateAll(ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnWaitNoneUpdateAll(XnContext pContext);
+		public static extern XnStatus xnWaitNoneUpdateAll(ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStartGeneratingAll(XnContext pContext);
+		public static extern XnStatus xnStartGeneratingAll(ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStopGeneratingAll(XnContext pContext);
+		public static extern XnStatus xnStopGeneratingAll(ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetGlobalMirror(XnContext pContext, XnBool bMirror);
+		public static extern XnStatus xnSetGlobalMirror(ContextSafeHandle pContext, XnBool bMirror);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnGetGlobalMirror(XnContext pContext);
+		public static extern XnBool xnGetGlobalMirror(ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetGlobalErrorState(XnContext pContext);
+		public static extern XnStatus xnGetGlobalErrorState(ContextSafeHandle pContext);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToGlobalErrorStateChange(XnContext pContext, [MarshalAs(UnmanagedType.FunctionPtr)] XnErrorStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToGlobalErrorStateChange(ContextSafeHandle pContext, [MarshalAs(UnmanagedType.FunctionPtr)] XnErrorStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromGlobalErrorStateChange(XnContext pContext, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromGlobalErrorStateChange(ContextSafeHandle pContext, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumerationErrorsAllocate(out XnEnumerationErrors ppErrors);
+        public static extern XnStatus xnEnumerationErrorsAllocate(out EnumerationErrorsSafeHandle ppErrors);
 		[DllImport("OpenNI")]
-		public static extern void xnEnumerationErrorsFree(XnEnumerationErrors pErrors);
+		public static extern void xnEnumerationErrorsFree(EnumerationErrorsSafeHandle pErrors);
 //		[DllImport("OpenNI")]
-//		public static extern XnStatus xnEnumerationErrorsAdd(XnEnumerationErrors pErrors, ProductionNodeDescription pDesc, XnStatus nError);
+//		public static extern XnStatus xnEnumerationErrorsAdd(EnumerationErrorsSafeHandle pErrors, ProductionNodeDescription pDesc, XnStatus nError);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumerationErrorsToString(XnEnumerationErrors pErrors, StringBuilder csBuffer, XnUInt32 nSize);
+		public static extern XnStatus xnEnumerationErrorsToString(EnumerationErrorsSafeHandle pErrors, StringBuilder csBuffer, XnUInt32 nSize);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumerationErrorsClear(XnEnumerationErrors pErrors);
+		public static extern XnStatus xnEnumerationErrorsClear(EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnEnumerationErrorsIterator xnEnumerationErrorsGetFirst(XnEnumerationErrors pErrors);
+		public static extern XnEnumerationErrorsIterator xnEnumerationErrorsGetFirst(EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
 		public static extern XnEnumerationErrorsIterator xnEnumerationErrorsGetNext(XnEnumerationErrorsIterator it);
 		[DllImport("OpenNI")]
@@ -550,9 +546,9 @@ namespace xn
 		public static extern XnStatus xnFPSFree(XnFPSData pFPS);
 */
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnAddLicense(XnContext pContext, License pLicense);
+		public static extern XnStatus xnAddLicense(ContextSafeHandle pContext, License pLicense);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumerateLicenses(XnContext pContext, out IntPtr paLicenses, out XnUInt32 pnCount);
+		public static extern XnStatus xnEnumerateLicenses(ContextSafeHandle pContext, out IntPtr paLicenses, out XnUInt32 pnCount);
 		[DllImport("OpenNI")]
 		public static extern void xnFreeLicensesList(IntPtr aLicenses);
 		[DllImport("OpenNI")]
@@ -603,431 +599,431 @@ namespace xn
 		public static extern void xnDumpFlush(XnDump dump);
 */
 		[DllImport("OpenNI")]
-		public static extern XnNodeInfo xnGetNodeInfo(XnNodeHandle hNode);
+		public static extern NodeInfoSafeHandle xnGetNodeInfo(NodeSafeHandle hNode);
 		[DllImport("OpenNI")]
-		public static extern string xnGetNodeName(XnNodeHandle hNode);
+		public static extern string xnGetNodeName(NodeSafeHandle hNode);
 		[DllImport("OpenNI")]
-		public static extern XnContext xnGetContextFromNodeHandle(XnNodeHandle hNode);
+		public static extern ContextSafeHandle xnGetContextFromNodeHandle(NodeSafeHandle hNode);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsCapabilitySupported(XnNodeHandle hInstance, string strCapabilityName);
+		public static extern XnBool xnIsCapabilitySupported(NodeSafeHandle hInstance, string strCapabilityName);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetIntProperty(XnNodeHandle hInstance, string strName, XnUInt64 nValue);
+		public static extern XnStatus xnSetIntProperty(NodeSafeHandle hInstance, string strName, XnUInt64 nValue);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetRealProperty(XnNodeHandle hInstance, string strName, XnDouble dValue);
+		public static extern XnStatus xnSetRealProperty(NodeSafeHandle hInstance, string strName, XnDouble dValue);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetStringProperty(XnNodeHandle hInstance, string strName, string strValue);
+		public static extern XnStatus xnSetStringProperty(NodeSafeHandle hInstance, string strName, string strValue);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetGeneralProperty(XnNodeHandle hInstance, string strName, XnUInt32 nBufferSize, IntPtr pBuffer);
+		public static extern XnStatus xnSetGeneralProperty(NodeSafeHandle hInstance, string strName, XnUInt32 nBufferSize, IntPtr pBuffer);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetIntProperty(XnNodeHandle hInstance, string strName, out XnUInt64 pnValue);
+		public static extern XnStatus xnGetIntProperty(NodeSafeHandle hInstance, string strName, out XnUInt64 pnValue);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetRealProperty(XnNodeHandle hInstance, string strName, out XnDouble pdValue);
+		public static extern XnStatus xnGetRealProperty(NodeSafeHandle hInstance, string strName, out XnDouble pdValue);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetStringProperty(XnNodeHandle hInstance, string strName, StringBuilder csValue, XnUInt32 nBufSize);
+		public static extern XnStatus xnGetStringProperty(NodeSafeHandle hInstance, string strName, StringBuilder csValue, XnUInt32 nBufSize);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetGeneralProperty(XnNodeHandle hInstance, string strName, XnUInt32 nBufferSize, IntPtr pBuffer);
+		public static extern XnStatus xnGetGeneralProperty(NodeSafeHandle hInstance, string strName, XnUInt32 nBufferSize, IntPtr pBuffer);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnLockNodeForChanges(XnNodeHandle hInstance, out XnLockHandle phLock);
+		public static extern XnStatus xnLockNodeForChanges(NodeSafeHandle hInstance, out XnLockHandle phLock);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnUnlockNodeForChanges(XnNodeHandle hInstance, XnLockHandle hLock);
+		public static extern XnStatus xnUnlockNodeForChanges(NodeSafeHandle hInstance, XnLockHandle hLock);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnLockedNodeStartChanges(XnNodeHandle hInstance, XnLockHandle hLock);
+		public static extern XnStatus xnLockedNodeStartChanges(NodeSafeHandle hInstance, XnLockHandle hLock);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnLockedNodeEndChanges(XnNodeHandle hInstance, XnLockHandle hLock);
+		public static extern XnStatus xnLockedNodeEndChanges(NodeSafeHandle hInstance, XnLockHandle hLock);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnAddNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNode);
+		public static extern XnStatus xnAddNeededNode(NodeSafeHandle hInstance, NodeSafeHandle hNeededNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRemoveNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNode);
+		public static extern XnStatus xnRemoveNeededNode(NodeSafeHandle hInstance, NodeSafeHandle hNeededNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetNodeErrorState(XnNodeHandle hInstance);
+		public static extern XnStatus xnGetNodeErrorState(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToNodeErrorStateChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToNodeErrorStateChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromNodeErrorStateChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromNodeErrorStateChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStartGenerating(XnNodeHandle hInstance);
+		public static extern XnStatus xnStartGenerating(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsGenerating(XnNodeHandle hInstance);
+		public static extern XnBool xnIsGenerating(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStopGenerating(XnNodeHandle hInstance);
+		public static extern XnStatus xnStopGenerating(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToGenerationRunningChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToGenerationRunningChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromGenerationRunningChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromGenerationRunningChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToNewDataAvailable(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToNewDataAvailable(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromNewDataAvailable(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromNewDataAvailable(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsNewDataAvailable(XnNodeHandle hInstance, out XnUInt64 pnTimestamp);
+		public static extern XnBool xnIsNewDataAvailable(NodeSafeHandle hInstance, out XnUInt64 pnTimestamp);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance);
+		public static extern XnStatus xnWaitAndUpdateData(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsDataNew(XnNodeHandle hInstance);
+		public static extern XnBool xnIsDataNew(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnUInt32 xnGetDataSize(XnNodeHandle hInstance);
+		public static extern XnUInt32 xnGetDataSize(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnUInt64 xnGetTimestamp(XnNodeHandle hInstance);
+		public static extern XnUInt64 xnGetTimestamp(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnUInt32 xnGetFrameID(XnNodeHandle hInstance);
+		public static extern XnUInt32 xnGetFrameID(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetMirror(XnNodeHandle hInstance, XnBool bMirror);
+		public static extern XnStatus xnSetMirror(NodeSafeHandle hInstance, XnBool bMirror);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsMirrored(XnNodeHandle hInstance);
+		public static extern XnBool xnIsMirrored(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToMirrorChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToMirrorChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromMirrorChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromMirrorChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsViewPointSupported(XnNodeHandle hInstance, XnNodeHandle hOther);
+		public static extern XnBool xnIsViewPointSupported(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetViewPoint(XnNodeHandle hInstance, XnNodeHandle hOther);
+		public static extern XnStatus xnSetViewPoint(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnResetViewPoint(XnNodeHandle hInstance);
+		public static extern XnStatus xnResetViewPoint(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsViewPointAs(XnNodeHandle hInstance, XnNodeHandle hOther);
+		public static extern XnBool xnIsViewPointAs(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToViewPointChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToViewPointChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromViewPointChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromViewPointChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnCanFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
+		public static extern XnBool xnCanFrameSyncWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
+		public static extern XnStatus xnFrameSyncWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStopFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
+		public static extern XnStatus xnStopFrameSyncWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsFrameSyncedWith(XnNodeHandle hInstance, XnNodeHandle hOther);
+		public static extern XnBool xnIsFrameSyncedWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToFrameSyncChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToFrameSyncChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromFrameSyncChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromFrameSyncChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnUInt32 xnGetSupportedMapOutputModesCount(XnNodeHandle hInstance);
+		public static extern XnUInt32 xnGetSupportedMapOutputModesCount(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetSupportedMapOutputModes(XnNodeHandle hInstance, [In][Out] MapOutputMode[] aModes, ref XnUInt32 pnCount);
+		public static extern XnStatus xnGetSupportedMapOutputModes(NodeSafeHandle hInstance, [Out] MapOutputMode[] aModes, ref XnUInt32 pnCount);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetMapOutputMode(XnNodeHandle hInstance, ref MapOutputMode pOutputMode);
+		public static extern XnStatus xnSetMapOutputMode(NodeSafeHandle hInstance, ref MapOutputMode pOutputMode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetMapOutputMode(XnNodeHandle hInstance, ref MapOutputMode pOutputMode);
+		public static extern XnStatus xnGetMapOutputMode(NodeSafeHandle hInstance, ref MapOutputMode pOutputMode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToMapOutputModeChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToMapOutputModeChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromMapOutputModeChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromMapOutputModeChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetCropping(XnNodeHandle hInstance, ref Cropping pCropping);
+		public static extern XnStatus xnSetCropping(NodeSafeHandle hInstance, ref Cropping pCropping);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetCropping(XnNodeHandle hInstance, ref Cropping pCropping);
+		public static extern XnStatus xnGetCropping(NodeSafeHandle hInstance, ref Cropping pCropping);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToCroppingChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToCroppingChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromCroppingChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromCroppingChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateDepthGenerator(XnContext pContext, out XnNodeHandle phDepthGenerator, XnNodeQuery pQuery,  XnEnumerationErrors pErrors);
+		public static extern XnStatus xnCreateDepthGenerator(ContextSafeHandle pContext, out NodeSafeHandle phDepthGenerator, QuerySafeHandle pQuery,  EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnDepthPixel xnGetDeviceMaxDepth(XnNodeHandle hInstance);
+		public static extern XnDepthPixel xnGetDeviceMaxDepth(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetDepthFieldOfView(XnNodeHandle hInstance, ref FieldOfView pFOV);
+		public static extern XnStatus xnGetDepthFieldOfView(NodeSafeHandle hInstance, ref FieldOfView pFOV);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToDepthFieldOfViewChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToDepthFieldOfViewChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromDepthFieldOfViewChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromDepthFieldOfViewChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnConvertProjectiveToRealWorld(XnNodeHandle hInstance, XnUInt32 nCount, Point3D[] aProjective, [In][Out] Point3D[] aRealWorld);
+		public static extern XnStatus xnConvertProjectiveToRealWorld(NodeSafeHandle hInstance, XnUInt32 nCount, Point3D[] aProjective, [Out] Point3D[] aRealWorld);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnConvertRealWorldToProjective(XnNodeHandle hInstance, XnUInt32 nCount, Point3D[] aRealWorld, [In][Out] Point3D[] aProjective);
+		public static extern XnStatus xnConvertRealWorldToProjective(NodeSafeHandle hInstance, XnUInt32 nCount, Point3D[] aRealWorld, [Out] Point3D[] aProjective);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetDepthMap(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetDepthMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern void xnGetDepthMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
+		public static extern void xnGetDepthMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI")]
-		public static extern XnUInt32 xnGetSupportedUserPositionsCount(XnNodeHandle hInstance);
+		public static extern XnUInt32 xnGetSupportedUserPositionsCount(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, ref BoundingBox3D pPosition);
+		public static extern XnStatus xnSetUserPosition(NodeSafeHandle hInstance, XnUInt32 nIndex, ref BoundingBox3D pPosition);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, ref BoundingBox3D pPosition);
+		public static extern XnStatus xnGetUserPosition(NodeSafeHandle hInstance, XnUInt32 nIndex, ref BoundingBox3D pPosition);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToUserPositionChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToUserPositionChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromUserPositionChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromUserPositionChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateImageGenerator(XnContext pContext, out XnNodeHandle phImageGenerator, XnNodeQuery pQuery,  XnEnumerationErrors pErrors);
+		public static extern XnStatus xnCreateImageGenerator(ContextSafeHandle pContext, out NodeSafeHandle phImageGenerator, QuerySafeHandle pQuery,  EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetRGB24ImageMap(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetRGB24ImageMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetYUV422ImageMap(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetYUV422ImageMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetGrayscale8ImageMap(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetGrayscale8ImageMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetGrayscale16ImageMap(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetGrayscale16ImageMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetImageMap(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetImageMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsPixelFormatSupported(XnNodeHandle hInstance, PixelFormat Format);
+		public static extern XnBool xnIsPixelFormatSupported(NodeSafeHandle hInstance, PixelFormat Format);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetPixelFormat(XnNodeHandle hInstance, PixelFormat Format);
+		public static extern XnStatus xnSetPixelFormat(NodeSafeHandle hInstance, PixelFormat Format);
 		[DllImport("OpenNI")]
-		public static extern PixelFormat xnGetPixelFormat(XnNodeHandle hInstance);
+		public static extern PixelFormat xnGetPixelFormat(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToPixelFormatChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToPixelFormatChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromPixelFormatChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromPixelFormatChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnGetImageMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
+		public static extern void xnGetImageMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateIRGenerator(XnContext pContext, out XnNodeHandle phIRGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
+		public static extern XnStatus xnCreateIRGenerator(ContextSafeHandle pContext, out NodeSafeHandle phIRGenerator, QuerySafeHandle pQuery, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetIRMap(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetIRMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern void xnGetIRMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
+		public static extern void xnGetIRMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateGestureGenerator(XnContext pContext, out XnNodeHandle phGestureGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
+        public static extern XnStatus xnCreateGestureGenerator(ContextSafeHandle pContext, out NodeSafeHandle phGestureGenerator, QuerySafeHandle pQuery, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnAddGesture(XnNodeHandle hInstance, string strGesture, ref BoundingBox3D pArea);
+		public static extern XnStatus xnAddGesture(NodeSafeHandle hInstance, string strGesture, ref BoundingBox3D pArea);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnAddGesture(XnNodeHandle hInstance, string strGesture, IntPtr pArea);
+		public static extern XnStatus xnAddGesture(NodeSafeHandle hInstance, string strGesture, IntPtr pArea);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRemoveGesture(XnNodeHandle hInstance, string strGesture);
+		public static extern XnStatus xnRemoveGesture(NodeSafeHandle hInstance, string strGesture);
 		[DllImport("OpenNI")]
-        public static extern XnStatus xnGetAllActiveGestures(XnNodeHandle hInstance, [In] [Out] IntPtr[] pstrGestures, XnUInt32 nNameLength, ref XnUInt16 nGestures);
+        public static extern XnStatus xnGetAllActiveGestures(NodeSafeHandle hInstance,  [Out] IntPtr[] pstrGestures, XnUInt32 nNameLength, ref XnUInt16 nGestures);
 		[DllImport("OpenNI")]
-        public static extern XnStatus xnEnumerateAllGestures(XnNodeHandle hInstance, [In] [Out] IntPtr[] pstrGestures, XnUInt32 nNameLength, ref XnUInt16 nGestures);
+        public static extern XnStatus xnEnumerateAllGestures(NodeSafeHandle hInstance,  [Out] IntPtr[] pstrGestures, XnUInt32 nNameLength, ref XnUInt16 nGestures);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsGestureAvailable(XnNodeHandle hInstance, string strGesture);
+		public static extern XnBool xnIsGestureAvailable(NodeSafeHandle hInstance, string strGesture);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsGestureProgressSupported(XnNodeHandle hInstance, string strGesture);
+		public static extern XnBool xnIsGestureProgressSupported(NodeSafeHandle hInstance, string strGesture);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterGestureCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureRecognized RecognizedCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureProgress ProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterGestureCallbacks(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureRecognized RecognizedCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureProgress ProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterGestureCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterGestureCallbacks(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToGestureChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToGestureChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromGestureChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromGestureChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateSceneAnalyzer(XnContext pContext, out XnNodeHandle phSceneAnalyzer, XnNodeQuery pQuery,  XnEnumerationErrors pErrors);
+		public static extern XnStatus xnCreateSceneAnalyzer(ContextSafeHandle pContext, out NodeSafeHandle phSceneAnalyzer, QuerySafeHandle pQuery,  EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetLabelMap(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetLabelMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetFloor(XnNodeHandle hInstance, ref Plane3D pPlane);
+		public static extern XnStatus xnGetFloor(NodeSafeHandle hInstance, ref Plane3D pPlane);
 		[DllImport("OpenNI")]
-		public static extern void xnGetSceneMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
+		public static extern void xnGetSceneMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateUserGenerator(XnContext pContext, out XnNodeHandle phUserGenerator, XnNodeQuery pQuery,  XnEnumerationErrors pErrors);
+        public static extern XnStatus xnCreateUserGenerator(ContextSafeHandle pContext, out NodeSafeHandle phUserGenerator, QuerySafeHandle pQuery, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnUInt16 xnGetNumberOfUsers(XnNodeHandle hInstance);
+		public static extern XnUInt16 xnGetNumberOfUsers(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-        public static extern XnStatus xnGetUsers(XnNodeHandle hInstance, [In][Out] XnUserID[] users, ref XnUInt16 pnUsers);
+        public static extern XnStatus xnGetUsers(NodeSafeHandle hInstance, [Out] XnUserID[] users, ref XnUInt16 pnUsers);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetUserCoM(XnNodeHandle hInstance, XnUserID user, out Point3D pCoM);
+		public static extern XnStatus xnGetUserCoM(NodeSafeHandle hInstance, XnUserID user, out Point3D pCoM);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetUserPixels(XnNodeHandle hInstance, XnUserID user, IntPtr pScene);
+		public static extern XnStatus xnGetUserPixels(NodeSafeHandle hInstance, XnUserID user, IntPtr pScene);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterUserCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler NewUserCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler LostUserCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterUserCallbacks(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler NewUserCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler LostUserCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterUserCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterUserCallbacks(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsJointAvailable(XnNodeHandle hInstance, SkeletonJoint eJoint);
+		public static extern XnBool xnIsJointAvailable(NodeSafeHandle hInstance, SkeletonJoint eJoint);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsProfileAvailable(XnNodeHandle hInstance, SkeletonProfile eProfile);
+		public static extern XnBool xnIsProfileAvailable(NodeSafeHandle hInstance, SkeletonProfile eProfile);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetSkeletonProfile(XnNodeHandle hInstance, SkeletonProfile eProfile);
+		public static extern XnStatus xnSetSkeletonProfile(NodeSafeHandle hInstance, SkeletonProfile eProfile);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetJointActive(XnNodeHandle hInstance, SkeletonJoint eJoint, XnBool bState);
+		public static extern XnStatus xnSetJointActive(NodeSafeHandle hInstance, SkeletonJoint eJoint, XnBool bState);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsJointActive(XnNodeHandle hInstance, SkeletonJoint eJoint);
+		public static extern XnBool xnIsJointActive(NodeSafeHandle hInstance, SkeletonJoint eJoint);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToJointConfigurationChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToJointConfigurationChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromJointConfigurationChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromJointConfigurationChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumerateActiveJoints(XnNodeHandle hInstance, SkeletonJoint pJoints, XnUInt16 pnJoints);
+		public static extern XnStatus xnEnumerateActiveJoints(NodeSafeHandle hInstance, SkeletonJoint pJoints, XnUInt16 pnJoints);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, SkeletonJoint eJoint, [Out] SkeletonJointTransformation pJoint);
+		public static extern XnStatus xnGetSkeletonJoint(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, [Out] SkeletonJointTransformation pJoint);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetSkeletonJointPosition(XnNodeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointPosition pJoint);
+		public static extern XnStatus xnGetSkeletonJointPosition(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointPosition pJoint);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetSkeletonJointOrientation(XnNodeHandle hInstance, XnUserID user, SkeletonJoint eJoint, [Out] SkeletonJointOrientation pJoint);
+		public static extern XnStatus xnGetSkeletonJointOrientation(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, [Out] SkeletonJointOrientation pJoint);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnBool xnIsSkeletonTracking(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsSkeletonCalibrated(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnBool xnIsSkeletonCalibrated(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsSkeletonCalibrating(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnBool xnIsSkeletonCalibrating(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRequestSkeletonCalibration(XnNodeHandle hInstance, XnUserID user, XnBool bForce);
+		public static extern XnStatus xnRequestSkeletonCalibration(NodeSafeHandle hInstance, XnUserID user, XnBool bForce);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnAbortSkeletonCalibration(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnStatus xnAbortSkeletonCalibration(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSaveSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot);
+		public static extern XnStatus xnSaveSkeletonCalibrationData(NodeSafeHandle hInstance, XnUserID user, XnUInt32 nSlot);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnLoadSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot);
+		public static extern XnStatus xnLoadSkeletonCalibrationData(NodeSafeHandle hInstance, XnUserID user, XnUInt32 nSlot);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnClearSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot);
+		public static extern XnStatus xnClearSkeletonCalibrationData(NodeSafeHandle hInstance, XnUInt32 nSlot);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot);
+		public static extern XnBool xnIsSkeletonCalibrationData(NodeSafeHandle hInstance, XnUInt32 nSlot);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStartSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnStatus xnStartSkeletonTracking(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStopSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnStatus xnStopSkeletonTracking(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnResetSkeleton(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnStatus xnResetSkeleton(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnNeedPoseForSkeletonCalibration(XnNodeHandle hInstance);
+		public static extern XnBool xnNeedPoseForSkeletonCalibration(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetSkeletonCalibrationPose(XnNodeHandle hInstance, StringBuilder sb);
+		public static extern XnStatus xnGetSkeletonCalibrationPose(NodeSafeHandle hInstance, StringBuilder sb);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetSkeletonSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
+		public static extern XnStatus xnSetSkeletonSmoothing(NodeSafeHandle hInstance, XnFloat fFactor);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationStart CalibrationStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationEnd CalibrationEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterCalibrationCallbacks(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationStart CalibrationStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationEnd CalibrationEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterCalibrationCallbacks(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance);
+		public static extern XnUInt32 xnGetNumberOfPoses(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, [In] [Out] IntPtr[] pstrPoses, XnUInt32 nNameLength, ref XnUInt32 pnPoses);
+		public static extern XnStatus xnGetAllAvailablePoses(NodeSafeHandle hInstance,  [Out] IntPtr[] pstrPoses, XnUInt32 nNameLength, ref XnUInt32 pnPoses);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStartPoseDetection(XnNodeHandle hInstance, string strPose, XnUserID user);
+		public static extern XnStatus xnStartPoseDetection(NodeSafeHandle hInstance, string strPose, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnStatus xnStopPoseDetection(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToPoseCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToPoseCallbacks(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromPoseCallbacks(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateHandsGenerator(XnContext pContext, out XnNodeHandle phHandsGenerator, XnNodeQuery pQuery,  XnEnumerationErrors pErrors);
+		public static extern XnStatus xnCreateHandsGenerator(ContextSafeHandle pContext, out NodeSafeHandle phHandsGenerator, QuerySafeHandle pQuery,  EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterHandCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandCreate CreateCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandUpdate UpdateCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandDestroy DestroyCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterHandCallbacks(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandCreate CreateCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandUpdate UpdateCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandDestroy DestroyCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterHandCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterHandCallbacks(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStopTracking(XnNodeHandle hInstance, XnUserID user);
+		public static extern XnStatus xnStopTracking(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStopTrackingAll(XnNodeHandle hInstance);
+		public static extern XnStatus xnStopTrackingAll(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnStartTracking(XnNodeHandle hInstance, ref Point3D pPosition);
+		public static extern XnStatus xnStartTracking(NodeSafeHandle hInstance, ref Point3D pPosition);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetTrackingSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
+		public static extern XnStatus xnSetTrackingSmoothing(NodeSafeHandle hInstance, XnFloat fFactor);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateAudioGenerator(XnContext pContext, out XnNodeHandle phAudioGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
+		public static extern XnStatus xnCreateAudioGenerator(ContextSafeHandle pContext, out NodeSafeHandle phAudioGenerator, QuerySafeHandle pQuery, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI")]
-		public static extern IntPtr xnGetAudioBuffer(XnNodeHandle hInstance);
+		public static extern IntPtr xnGetAudioBuffer(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnUInt32 xnGetSupportedWaveOutputModesCount(XnNodeHandle hInstance);
+		public static extern XnUInt32 xnGetSupportedWaveOutputModesCount(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetSupportedWaveOutputModes(XnNodeHandle hInstance, [In][Out] WaveOutputMode[] aSupportedModes, ref XnUInt32 pnCount);
+		public static extern XnStatus xnGetSupportedWaveOutputModes(NodeSafeHandle hInstance, [Out] WaveOutputMode[] aSupportedModes, ref XnUInt32 pnCount);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetWaveOutputMode(XnNodeHandle hInstance, ref WaveOutputMode OutputMode);
+		public static extern XnStatus xnSetWaveOutputMode(NodeSafeHandle hInstance, ref WaveOutputMode OutputMode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetWaveOutputMode(XnNodeHandle hInstance, ref WaveOutputMode OutputMode);
+		public static extern XnStatus xnGetWaveOutputMode(NodeSafeHandle hInstance, ref WaveOutputMode OutputMode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToWaveOutputModeChanges(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToWaveOutputModeChanges(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromWaveOutputModeChanges(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromWaveOutputModeChanges(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnGetAudioMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
+		public static extern void xnGetAudioMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnMockDepthSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
+		public static extern XnStatus xnMockDepthSetData(NodeSafeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnMockImageSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
+		public static extern XnStatus xnMockImageSetData(NodeSafeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnMockIRSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
+		public static extern XnStatus xnMockIRSetData(NodeSafeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnMockAudioSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
+		public static extern XnStatus xnMockAudioSetData(NodeSafeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateCodec(XnContext pContext, XnCodecID codecID, XnNodeHandle hInitializerNode, out XnNodeHandle phCodec);
+        public static extern XnStatus xnCreateCodec(ContextSafeHandle pContext, XnCodecID codecID, NodeSafeHandle hInitializerNode, out NodeSafeHandle phCodec);
 		[DllImport("OpenNI")]
-		public static extern XnCodecID xnGetCodecID(XnNodeHandle hCodec);
+		public static extern XnCodecID xnGetCodecID(NodeSafeHandle hCodec);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEncodeData(XnNodeHandle hCodec, IntPtr pSrc, XnUInt32 nSrcSize, IntPtr pDst, XnUInt32 nDstSize, [MarshalAs(UnmanagedType.SysUInt)] out UInt32 pnBytesWritten);
+		public static extern XnStatus xnEncodeData(NodeSafeHandle hCodec, IntPtr pSrc, XnUInt32 nSrcSize, IntPtr pDst, XnUInt32 nDstSize, [MarshalAs(UnmanagedType.SysUInt)] out UInt32 pnBytesWritten);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnDecodeData(XnNodeHandle hCodec, IntPtr pSrc, XnUInt32 nSrcSize, IntPtr pDst, XnUInt32 nDstSize, [MarshalAs(UnmanagedType.SysUInt)] out UInt32 pnBytesWritten);
+		public static extern XnStatus xnDecodeData(NodeSafeHandle hCodec, IntPtr pSrc, XnUInt32 nSrcSize, IntPtr pDst, XnUInt32 nDstSize, [MarshalAs(UnmanagedType.SysUInt)] out UInt32 pnBytesWritten);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreateRecorder(XnContext pContext, string strFormatName, out XnNodeHandle phRecorder);
+		public static extern XnStatus xnCreateRecorder(ContextSafeHandle pContext, string strFormatName, out NodeSafeHandle phRecorder);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetRecorderDestination(XnNodeHandle hRecorder, RecordMedium destType, string strDest);
+		public static extern XnStatus xnSetRecorderDestination(NodeSafeHandle hRecorder, RecordMedium destType, string strDest);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnAddNodeToRecording(XnNodeHandle hRecorder, XnNodeHandle hNode, XnCodecID compression);
+		public static extern XnStatus xnAddNodeToRecording(NodeSafeHandle hRecorder, NodeSafeHandle hNode, XnCodecID compression);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRemoveNodeFromRecording(XnNodeHandle hRecorder, XnNodeHandle hNode);
+		public static extern XnStatus xnRemoveNodeFromRecording(NodeSafeHandle hRecorder, NodeSafeHandle hNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRecord(XnNodeHandle hRecorder);
+		public static extern XnStatus xnRecord(NodeSafeHandle hRecorder);
 		[DllImport("OpenNI")]
-		public static extern string xnGetRecorderFormat(XnNodeHandle hRecorder);
+		public static extern string xnGetRecorderFormat(NodeSafeHandle hRecorder);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnCreatePlayer(XnContext pContext, string strFormatName, out XnNodeHandle phPlayer);
+		public static extern XnStatus xnCreatePlayer(ContextSafeHandle pContext, string strFormatName, out NodeSafeHandle phPlayer);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetPlayerRepeat(XnNodeHandle hPlayer, XnBool bRepeat);
+		public static extern XnStatus xnSetPlayerRepeat(NodeSafeHandle hPlayer, XnBool bRepeat);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetPlayerSource(XnNodeHandle hPlayer, RecordMedium sourceType, string strSource);
+		public static extern XnStatus xnSetPlayerSource(NodeSafeHandle hPlayer, RecordMedium sourceType, string strSource);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetPlayerSource(XnNodeHandle hPlayer, out RecordMedium pSourceType, StringBuilder strSource, XnUInt32 nBufSize);
+		public static extern XnStatus xnGetPlayerSource(NodeSafeHandle hPlayer, out RecordMedium pSourceType, StringBuilder strSource, XnUInt32 nBufSize);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnPlayerReadNext(XnNodeHandle hPlayer);
+		public static extern XnStatus xnPlayerReadNext(NodeSafeHandle hPlayer);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSeekPlayerToTimeStamp(XnNodeHandle hPlayer, XnInt64 nTimeOffset, PlayerSeekOrigin origin);
+		public static extern XnStatus xnSeekPlayerToTimeStamp(NodeSafeHandle hPlayer, XnInt64 nTimeOffset, PlayerSeekOrigin origin);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer, string strNodeName, XnInt32 nFrameOffset, PlayerSeekOrigin origin);
+		public static extern XnStatus xnSeekPlayerToFrame(NodeSafeHandle hPlayer, string strNodeName, XnInt32 nFrameOffset, PlayerSeekOrigin origin);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnTellPlayerTimestamp(XnNodeHandle hPlayer, out XnUInt64 pnTimestamp);
+		public static extern XnStatus xnTellPlayerTimestamp(NodeSafeHandle hPlayer, out XnUInt64 pnTimestamp);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnTellPlayerFrame(XnNodeHandle hPlayer, string strNodeName, out XnUInt32 pnFrame);
+		public static extern XnStatus xnTellPlayerFrame(NodeSafeHandle hPlayer, string strNodeName, out XnUInt32 pnFrame);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnGetPlayerNumFrames(XnNodeHandle hPlayer, string strNodeName, out XnUInt32 pnFrames);
+		public static extern XnStatus xnGetPlayerNumFrames(NodeSafeHandle hPlayer, string strNodeName, out XnUInt32 pnFrames);
 		[DllImport("OpenNI")]
-		public static extern string xnGetPlayerSupportedFormat(XnNodeHandle hPlayer);
+		public static extern string xnGetPlayerSupportedFormat(NodeSafeHandle hPlayer);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnEnumeratePlayerNodes(XnNodeHandle hPlayer, out XnNodeInfoList ppList);
+		public static extern XnStatus xnEnumeratePlayerNodes(NodeSafeHandle hPlayer, out NodeInfoListSafeHandle ppList);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnIsPlayerAtEOF(XnNodeHandle hPlayer);
+		public static extern XnBool xnIsPlayerAtEOF(NodeSafeHandle hPlayer);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnRegisterToEndOfFileReached(XnNodeHandle hPlayer, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToEndOfFileReached(NodeSafeHandle hPlayer, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI")]
-		public static extern void xnUnregisterFromEndOfFileReached(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromEndOfFileReached(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed);
+		public static extern XnStatus xnSetPlaybackSpeed(NodeSafeHandle hInstance, XnDouble dSpeed);
 		[DllImport("OpenNI")]
-		public static extern XnDouble xnGetPlaybackSpeed(XnNodeHandle hInstance);
+		public static extern XnDouble xnGetPlaybackSpeed(NodeSafeHandle hInstance);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoSetInstanceName(XnNodeInfo pNodeInfo, string strInstanceName);
+		public static extern XnStatus xnNodeInfoSetInstanceName(NodeInfoSafeHandle pNodeInfo, string strInstanceName);
 		[DllImport("OpenNI")]
-		public static extern ProductionNodeDescription xnNodeInfoGetDescription(XnNodeInfo pNodeInfo);
+		public static extern ProductionNodeDescription xnNodeInfoGetDescription(NodeInfoSafeHandle pNodeInfo);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo pNodeInfo, IntPtr csResult, XnUInt32 nSize);
+		public static extern XnStatus xnNodeInfoGetTreeStringRepresentation(NodeInfoSafeHandle pNodeInfo, IntPtr csResult, XnUInt32 nSize);
 		[DllImport("OpenNI")]
-		public static extern string xnNodeInfoGetInstanceName(XnNodeInfo pNodeInfo);
+		public static extern string xnNodeInfoGetInstanceName(NodeInfoSafeHandle pNodeInfo);
 		[DllImport("OpenNI")]
-		public static extern string xnNodeInfoGetCreationInfo(XnNodeInfo pNodeInfo);
+		public static extern string xnNodeInfoGetCreationInfo(NodeInfoSafeHandle pNodeInfo);
 		[DllImport("OpenNI")]
-		public static extern XnNodeInfoList xnNodeInfoGetNeededNodes(XnNodeInfo pNodeInfo);
+		public static extern NodeInfoListSafeHandle xnNodeInfoGetNeededNodes(NodeInfoSafeHandle pNodeInfo);
 		[DllImport("OpenNI")]
-		public static extern XnNodeHandle xnNodeInfoGetHandle(XnNodeInfo pNodeInfo);
+		public static extern NodeSafeHandle xnNodeInfoGetHandle(NodeInfoSafeHandle pNodeInfo);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoListAllocate(out XnNodeInfoList ppList);
+		public static extern XnStatus xnNodeInfoListAllocate(out NodeInfoListSafeHandle ppList);
 		[DllImport("OpenNI")]
-		public static extern void xnNodeInfoListFree(XnNodeInfoList pList);
+		public static extern void xnNodeInfoListFree(NodeInfoListSafeHandle pList);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoListAdd(XnNodeInfoList pList, ProductionNodeDescription pDescription, string strCreationInfo, XnNodeInfoList pNeededNodes);
+		public static extern XnStatus xnNodeInfoListAdd(NodeInfoListSafeHandle pList, ProductionNodeDescription pDescription, string strCreationInfo, NodeInfoListSafeHandle pNeededNodes);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoListAddNode(XnNodeInfoList pList, XnNodeInfo pNode);
+		public static extern XnStatus xnNodeInfoListAddNode(NodeInfoListSafeHandle pList, NodeInfoSafeHandle pNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoListAddNodeFromList(XnNodeInfoList pList, XnNodeInfoListIterator otherListIt);
+		public static extern XnStatus xnNodeInfoListAddNodeFromList(NodeInfoListSafeHandle pList, XnNodeInfoListIterator otherListIt);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoListRemove(XnNodeInfoList pList, XnNodeInfoListIterator it);
+		public static extern XnStatus xnNodeInfoListRemove(NodeInfoListSafeHandle pList, XnNodeInfoListIterator it);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoListClear(XnNodeInfoList pList);
+		public static extern XnStatus xnNodeInfoListClear(NodeInfoListSafeHandle pList);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeInfoListAppend(XnNodeInfoList pList, XnNodeInfoList pOther);
+		public static extern XnStatus xnNodeInfoListAppend(NodeInfoListSafeHandle pList, NodeInfoListSafeHandle pOther);
 		[DllImport("OpenNI")]
-		public static extern XnBool xnNodeInfoListIsEmpty(XnNodeInfoList pList);
+		public static extern XnBool xnNodeInfoListIsEmpty(NodeInfoListSafeHandle pList);
 		[DllImport("OpenNI")]
-		public static extern XnNodeInfoListIterator xnNodeInfoListGetFirst(XnNodeInfoList pList);
+		public static extern XnNodeInfoListIterator xnNodeInfoListGetFirst(NodeInfoListSafeHandle pList);
 		[DllImport("OpenNI")]
-		public static extern XnNodeInfoListIterator xnNodeInfoListGetLast(XnNodeInfoList pList);
+		public static extern XnNodeInfoListIterator xnNodeInfoListGetLast(NodeInfoListSafeHandle pList);
 		[DllImport("OpenNI")]
 		public static extern XnBool xnNodeInfoListIteratorIsValid(XnNodeInfoListIterator it);
 		[DllImport("OpenNI")]
-		public static extern XnNodeInfo xnNodeInfoListGetCurrent(XnNodeInfoListIterator it);
+		public static extern NodeInfoSafeHandle xnNodeInfoListGetCurrent(XnNodeInfoListIterator it);
 		[DllImport("OpenNI")]
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetNext(XnNodeInfoListIterator it);
 		[DllImport("OpenNI")]
@@ -1046,31 +1042,31 @@ namespace xn
 		public static extern XnStatus xnProfilingSectionEnd(XnProfilingHandle pHandle);
 */
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQueryAllocate(XnNodeQuery ppQuery);
+        public static extern XnStatus xnNodeQueryAllocate(out QuerySafeHandle ppQuery);
 		[DllImport("OpenNI")]
-		public static extern void xnNodeQueryFree(XnNodeQuery pQuery);
+		public static extern void xnNodeQueryFree(QuerySafeHandle pQuery);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQuerySetVendor(XnNodeQuery pQuery, string strVendor);
+		public static extern XnStatus xnNodeQuerySetVendor(QuerySafeHandle pQuery, string strVendor);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQuerySetName(XnNodeQuery pQuery, string strName);
+		public static extern XnStatus xnNodeQuerySetName(QuerySafeHandle pQuery, string strName);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQuerySetMinVersion(XnNodeQuery pQuery, ref Version pMinVersion);
+		public static extern XnStatus xnNodeQuerySetMinVersion(QuerySafeHandle pQuery, ref Version pMinVersion);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQuerySetMaxVersion(XnNodeQuery pQuery, ref Version pMaxVersion);
+		public static extern XnStatus xnNodeQuerySetMaxVersion(QuerySafeHandle pQuery, ref Version pMaxVersion);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQueryAddSupportedCapability(XnNodeQuery pQuery, string strNeededCapability);
+		public static extern XnStatus xnNodeQueryAddSupportedCapability(QuerySafeHandle pQuery, string strNeededCapability);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQueryAddSupportedMapOutputMode(XnNodeQuery pQuery, ref MapOutputMode pMapOutputMode);
+		public static extern XnStatus xnNodeQueryAddSupportedMapOutputMode(QuerySafeHandle pQuery, ref MapOutputMode pMapOutputMode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQuerySetSupportedMinUserPositions(XnNodeQuery pQuery, XnUInt32 nCount);
+		public static extern XnStatus xnNodeQuerySetSupportedMinUserPositions(QuerySafeHandle pQuery, XnUInt32 nCount);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQuerySetExistingNodeOnly(XnNodeQuery pQuery, XnBool bExistingNode);
+		public static extern XnStatus xnNodeQuerySetExistingNodeOnly(QuerySafeHandle pQuery, XnBool bExistingNode);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQueryAddNeededNode(XnNodeQuery pQuery, string strInstanceName);
+		public static extern XnStatus xnNodeQueryAddNeededNode(QuerySafeHandle pQuery, string strInstanceName);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQuerySetCreationInfo(XnNodeQuery pQuery, string strCreationInfo);
+		public static extern XnStatus xnNodeQuerySetCreationInfo(QuerySafeHandle pQuery, string strCreationInfo);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnNodeQueryFilterList(XnContext pContext, XnNodeQuery pQuery, XnNodeInfoList pList);
+		public static extern XnStatus xnNodeQueryFilterList(ContextSafeHandle pContext, QuerySafeHandle pQuery, NodeInfoListSafeHandle pList);
 /*		[DllImport("OpenNI")]
 		public static extern XnStatus xnSchedulerStart(out XnScheduler ppScheduler);
 		[DllImport("OpenNI")]
@@ -1177,6 +1173,6 @@ namespace xn
 		[DllImport("OpenNI")]
 		public static extern XnStatus xnCopySceneMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport("OpenNI")]
-		public static extern XnStatus xnAutoEnumerateOverSingleInput(XnContext pContext, XnNodeInfoList pList, ProductionNodeDescription pDescription, string strCreationInfo, NodeType InputType, XnEnumerationErrors pErrors, XnNodeQuery pQuery);
+		public static extern XnStatus xnAutoEnumerateOverSingleInput(ContextSafeHandle pContext, NodeInfoListSafeHandle pList, ProductionNodeDescription pDescription, string strCreationInfo, NodeType InputType, EnumerationErrorsSafeHandle pErrors, QuerySafeHandle pQuery);
 	}
 }

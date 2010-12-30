@@ -6,7 +6,7 @@ namespace xn
 {
 	public class ImageGenerator : MapGenerator
 	{
-		internal ImageGenerator(IntPtr nodeHandle, bool addRef) :
+		internal ImageGenerator(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)
 		{
 			this.pixelFormatChanged = new StateChangedEvent(this,
@@ -86,12 +86,12 @@ namespace xn
 			remove { this.pixelFormatChanged.Event -= value; }
 		}
 
-		private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
+		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
-			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateImageGenerator(context.InternalObject, out handle,
-				query == null ? IntPtr.Zero : query.InternalObject,
-				errors == null ? IntPtr.Zero : errors.InternalObject);
+            NodeSafeHandle handle;
+            UInt32 status = OpenNIImporter.xnCreateImageGenerator(context.InternalObject, out handle,
+				query == null ? QuerySafeHandle.Zero : query.InternalObject,
+				errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject);
 			WrapperUtils.CheckStatus(status);
 			return handle;
 		}

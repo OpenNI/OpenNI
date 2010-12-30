@@ -89,7 +89,7 @@ namespace xn
                 }
             }
         }
-        private void InternalPoseDetected(IntPtr hNode, string pose, UserID id, IntPtr pCookie)
+        private void InternalPoseDetected(NodeSafeHandle hNode, string pose, UserID id, IntPtr pCookie)
         {
             if (this.poseDetectedEvent != null)
                 this.poseDetectedEvent(this.node, pose, id);
@@ -122,7 +122,7 @@ namespace xn
                 }
             }
         }
-        private void InternalPoseEnded(IntPtr hNode, string pose, UserID id, IntPtr pCookie)
+        private void InternalPoseEnded(NodeSafeHandle hNode, string pose, UserID id, IntPtr pCookie)
         {
             if (this.poseEndedEvent != null)
                 this.poseEndedEvent(this.node, pose, id);

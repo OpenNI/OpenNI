@@ -8,8 +8,8 @@ namespace xn
 
 	internal class StateChangedEvent
 	{
-		public delegate UInt32 RegisterFunc(IntPtr hInstance, OpenNIImporter.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
-		public delegate void UnregisterFunc(IntPtr hInstance, IntPtr hCallback);
+        public delegate UInt32 RegisterFunc(NodeSafeHandle hInstance, OpenNIImporter.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
+        public delegate void UnregisterFunc(NodeSafeHandle hInstance, IntPtr hCallback);
 
 		public StateChangedEvent(ProductionNode node, RegisterFunc reg, UnregisterFunc unreg)
 		{
@@ -42,7 +42,7 @@ namespace xn
 			}
 		}
 
-		private void InternalHandler(IntPtr hNode, IntPtr pCookie)
+        private void InternalHandler(NodeSafeHandle hNode, IntPtr pCookie)
 		{
 			if (this.internalEvent != null)
 				this.internalEvent(this.node);
