@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using UserID = System.UInt32;
 using System.Text;
 
-namespace xn
+namespace OpenNI
 {
     public class PoseDetectionCapability : Capability
     {

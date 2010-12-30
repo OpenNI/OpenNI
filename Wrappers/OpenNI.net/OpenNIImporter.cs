@@ -23,7 +23,7 @@ using XnUInt64 = System.UInt64;
 using XnUInt8 = System.Byte;
 using XnUserID = System.UInt32;
 
-namespace xn
+namespace OpenNI
 {
 	public enum NodeType
 	{

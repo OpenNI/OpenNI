@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UserID = System.UInt32;
 
-namespace xn
+namespace OpenNI
 {
     public class HandsGenerator : Generator
     {

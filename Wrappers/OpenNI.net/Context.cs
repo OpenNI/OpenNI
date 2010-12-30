@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public delegate void ErrorStateChangedHandler(string currError);
 

@@ -8,7 +8,7 @@
     <ProjectGuid>{2FE4F6DE-12C8-41EE-9588-EB91CB6112FE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>xn</RootNamespace>
+    <RootNamespace>OpenNI</RootNamespace>
     <AssemblyName>OpenNI.net</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

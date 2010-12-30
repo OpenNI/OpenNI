@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.ConstrainedExecution;
 
-namespace xn
+namespace OpenNI
 {
     internal class NodeInfoSafeHandle
         : Microsoft.Win32.SafeHandles.SafeHandleZeroOrMinusOneIsInvalid

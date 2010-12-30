@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public abstract class MapMetaData : OutputMetaData
 	{
