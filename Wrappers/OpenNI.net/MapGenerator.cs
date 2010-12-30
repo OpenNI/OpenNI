@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace xn
 {
-	public class MapGenerator : Generator
+	public abstract class MapGenerator : Generator
 	{
 		internal MapGenerator(NodeSafeHandle nodeHandle, bool addRef) :
 			base(nodeHandle, addRef)

@@ -44,11 +44,14 @@ namespace xn
 			}
 		}
 
-		public IRMetaData GetMetaData()
+		public IRMetaData MetaData
 		{
-			IRMetaData irMD = new IRMetaData();
-			GetMetaData(irMD);
-			return irMD;
+            get
+            {
+                IRMetaData irMD = new IRMetaData();
+                GetMetaData(irMD);
+                return irMD;
+            }
 		}
 
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)

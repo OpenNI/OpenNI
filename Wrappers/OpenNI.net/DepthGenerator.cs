@@ -103,11 +103,14 @@ namespace xn
 			}
 		}
 
-		public DepthMetaData GetMetaData()
+		public DepthMetaData MetaData
 		{
-			DepthMetaData depthMD = new DepthMetaData();
-			GetMetaData(depthMD);
-			return depthMD;
+            get
+            {
+                DepthMetaData depthMD = new DepthMetaData();
+                GetMetaData(depthMD);
+                return depthMD;
+            }
 		}
 
 		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)

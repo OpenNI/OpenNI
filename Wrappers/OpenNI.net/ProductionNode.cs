@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace xn
 {
-	public class ProductionNode : NodeWrapper
+	public abstract class ProductionNode : NodeWrapper
 	{
 		internal ProductionNode(NodeSafeHandle nodeHandle, bool addRef)
 			: base(nodeHandle, addRef)

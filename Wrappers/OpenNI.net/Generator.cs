@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace xn
 {
-	public class Generator : ProductionNode
+	public abstract class Generator : ProductionNode
 	{
 		internal Generator(NodeSafeHandle pNode, bool addRef)
 			: base(pNode, addRef)
@@ -64,24 +64,36 @@ namespace xn
 			WrapperUtils.CheckStatus(status);
 		}
 
-		public bool IsDataNew()
+		public bool IsDataNew
 		{
-			return OpenNIImporter.xnIsDataNew(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnIsDataNew(this.InternalObject);
+            }
 		}
 
-		public UInt32 GetDataSize()
+		public UInt32 DataSize
 		{
-			return OpenNIImporter.xnGetDataSize(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnGetDataSize(this.InternalObject);
+            }
 		}
 
-		public UInt64 GetTimestamp()
+		public UInt64 Timestamp
 		{
-			return OpenNIImporter.xnGetTimestamp(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnGetTimestamp(this.InternalObject);
+            }
 		}
 
-		public UInt32 GetFrameID()
+		public UInt32 FrameID
 		{
-			return OpenNIImporter.xnGetFrameID(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnGetFrameID(this.InternalObject);
+            }
 		}
 
 		public MirrorCapability GetMirrorCap()
