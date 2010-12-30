@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace xn
 {
-	public class MapMetaData : OutputMetaData
+	public abstract class MapMetaData : OutputMetaData
 	{
 		public MapMetaData()
 		{

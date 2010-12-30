@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace xn
 {
-	public class OutputMetaData
+	public abstract class OutputMetaData
 	{
 		public UInt64 Timestamp
 		{
