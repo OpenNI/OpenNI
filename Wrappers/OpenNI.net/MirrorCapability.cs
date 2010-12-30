@@ -14,15 +14,17 @@ namespace xn
 				OpenNIImporter.xnUnregisterFromMirrorChange);
 		}
 
-		public void SetMirror(bool mirror)
+		public bool IsMirrored
 		{
-			UInt32 status = OpenNIImporter.xnSetMirror(this.InternalObject, mirror);
-			WrapperUtils.CheckStatus(status);
-		}
-
-		public bool IsMirrored()
-		{
-			return OpenNIImporter.xnIsMirrored(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnIsMirrored(this.InternalObject);
+            }
+            set
+            {
+			    UInt32 status = OpenNIImporter.xnSetMirror(this.InternalObject, value);
+			    WrapperUtils.CheckStatus(status);
+            }
 		}
 
 		public event StateChangedHandler MirrorChangedEvent

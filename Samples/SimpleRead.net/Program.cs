@@ -21,7 +21,7 @@ namespace SimpleRead.net
 				return;
 			}
 
-			MapOutputMode mapMode = depth.GetMapOutputMode();
+			MapOutputMode mapMode = depth.MapOutputMode;
 
 			DepthMetaData depthMD = new DepthMetaData();
 

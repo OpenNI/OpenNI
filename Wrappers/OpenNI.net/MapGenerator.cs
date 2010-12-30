@@ -14,27 +14,32 @@ namespace xn
 				OpenNIImporter.xnUnregisterFromMapOutputModeChange);
 		}
 
-		public MapOutputMode[] GetSupportedMapOutputModes()
+		public MapOutputMode[] SupportedMapOutputModes
 		{
-			uint count = OpenNIImporter.xnGetSupportedMapOutputModesCount(this.InternalObject);
-			MapOutputMode[] supportedModes = new MapOutputMode[count];
-			UInt32 status = OpenNIImporter.xnGetSupportedMapOutputModes(this.InternalObject, supportedModes, ref count);
-			WrapperUtils.CheckStatus(status);
-			return supportedModes;
+            get
+            {
+                uint count = OpenNIImporter.xnGetSupportedMapOutputModesCount(this.InternalObject);
+                MapOutputMode[] supportedModes = new MapOutputMode[count];
+                UInt32 status = OpenNIImporter.xnGetSupportedMapOutputModes(this.InternalObject, supportedModes, ref count);
+                WrapperUtils.CheckStatus(status);
+                return supportedModes;
+            }
 		}
 
-		public void SetMapOutputMode(MapOutputMode mode)
+		public MapOutputMode MapOutputMode
 		{
-			UInt32 status = OpenNIImporter.xnSetMapOutputMode(this.InternalObject, ref mode);
-			WrapperUtils.CheckStatus(status);
-		}
-
-		public MapOutputMode GetMapOutputMode()
-		{
-			MapOutputMode mode = new MapOutputMode();
-			UInt32 status = OpenNIImporter.xnGetMapOutputMode(this.InternalObject, ref mode);
-			WrapperUtils.CheckStatus(status);
-			return mode;
+            get
+            {
+                MapOutputMode mode = new MapOutputMode();
+                UInt32 status = OpenNIImporter.xnGetMapOutputMode(this.InternalObject, ref mode);
+                WrapperUtils.CheckStatus(status);
+                return mode;
+            }
+            set
+            {
+			    UInt32 status = OpenNIImporter.xnSetMapOutputMode(this.InternalObject, ref value);
+			    WrapperUtils.CheckStatus(status);
+            }
 		}
 
 		public event StateChangedHandler MapOutputModeChanged
@@ -50,7 +55,7 @@ namespace xn
 
 		protected MapData<T> GetMapData<T>(IntPtr pData)
 		{
-			MapOutputMode mode = GetMapOutputMode();
+			MapOutputMode mode = this.MapOutputMode;
 			return new MapData<T>((int)mode.nXRes, (int)mode.nYRes, pData);
 		}
 

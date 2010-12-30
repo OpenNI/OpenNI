@@ -29,24 +29,36 @@ namespace xn
 		{
 		}
 
-		public IntPtr GetImageMapPtr()
+		public IntPtr ImageMapPtr
 		{
-			return OpenNIImporter.xnGetImageMap(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnGetImageMap(this.InternalObject);
+            }
 		}
 
-		public MapData<RGB24Pixel> GetRGB24ImageMap()
+		public MapData<RGB24Pixel> RGB24ImageMap
 		{
-			return GetMapData<RGB24Pixel>(OpenNIImporter.xnGetRGB24ImageMap(this.InternalObject));
+            get
+            {
+                return GetMapData<RGB24Pixel>(OpenNIImporter.xnGetRGB24ImageMap(this.InternalObject));
+            }
 		}
 
-		public MapData<byte> GetGrayscale8ImageMap()
+		public MapData<byte> Grayscale8ImageMap
 		{
-			return GetMapData<byte>(OpenNIImporter.xnGetGrayscale8ImageMap(this.InternalObject));
+            get
+            {
+                return GetMapData<byte>(OpenNIImporter.xnGetGrayscale8ImageMap(this.InternalObject));
+            }
 		}
 
-		public MapData<UInt16> GetGrayscale16ImageMap()
+		public MapData<UInt16> Grayscale16ImageMap
 		{
-			return GetMapData<UInt16>(OpenNIImporter.xnGetGrayscale16ImageMap(this.InternalObject));
+            get
+            {
+                return GetMapData<UInt16>(OpenNIImporter.xnGetGrayscale16ImageMap(this.InternalObject));
+            }
 		}
 
 		public bool IsPixelFormatSupported(PixelFormat format)
@@ -54,15 +66,17 @@ namespace xn
 			return OpenNIImporter.xnIsPixelFormatSupported(this.InternalObject, format);
 		}
 
-		public void SetPixelFormat(PixelFormat format)
+		public PixelFormat PixelFormat
 		{
-			UInt32 status = OpenNIImporter.xnSetPixelFormat(this.InternalObject, format);
-			WrapperUtils.CheckStatus(status);
-		}
-
-		public PixelFormat GetPixelFormat()
-		{
-			return OpenNIImporter.xnGetPixelFormat(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnGetPixelFormat(this.InternalObject);
+            }
+            set
+            {
+			    UInt32 status = OpenNIImporter.xnSetPixelFormat(this.InternalObject, value);
+			    WrapperUtils.CheckStatus(status);
+            }
 		}
 
 		public void GetMetaData(ImageMetaData imageMD)
@@ -73,11 +87,14 @@ namespace xn
 			}
 		}
 
-		public ImageMetaData GetMetaData()
+		public ImageMetaData MetaData
 		{
-			ImageMetaData imageMD = new ImageMetaData();
-			GetMetaData(imageMD);
-			return imageMD;
+            get
+            {
+                ImageMetaData imageMD = new ImageMetaData();
+                GetMetaData(imageMD);
+                return imageMD;
+            }
 		}
 
 		public event StateChangedHandler PixelFormatChanged

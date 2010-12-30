@@ -26,39 +26,53 @@ namespace xn
             get { return (NodeInfoSafeHandle)base.InternalObject; }
         }
 
-        public void SetInstanceName(string strName)
+ 		public ProductionNodeDescription Description
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoSetInstanceName(this.InternalObject, strName);
-			WrapperUtils.CheckStatus(status);
+            get
+            {
+                return OpenNIImporter.xnNodeInfoGetDescription(this.InternalObject);
+            }
 		}
 
-		public ProductionNodeDescription GetDescription()
+		public string InstanceName
 		{
-			return OpenNIImporter.xnNodeInfoGetDescription(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnNodeInfoGetInstanceName(this.InternalObject);
+            }
+            set
+            {
+			    UInt32 status = OpenNIImporter.xnNodeInfoSetInstanceName(this.InternalObject, value);
+			    WrapperUtils.CheckStatus(status);
+            }
 		}
 
-		public string GetInstanceName()
+		public string CreationInfo
 		{
-			return OpenNIImporter.xnNodeInfoGetInstanceName(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnNodeInfoGetCreationInfo(this.InternalObject);
+            }
 		}
 
-		public string GetCreationInfo()
+		public NodeInfoList NeededNodes
 		{
-			return OpenNIImporter.xnNodeInfoGetCreationInfo(this.InternalObject);
+            get
+            {
+                return new NodeInfoList(OpenNIImporter.xnNodeInfoGetNeededNodes(this.InternalObject));
+            }
 		}
 
-		public NodeInfoList GetNeededNodes()
+		public ProductionNode Instance
 		{
-			return new NodeInfoList(OpenNIImporter.xnNodeInfoGetNeededNodes(this.InternalObject));
-		}
-
-		public ProductionNode GetInstance()
-		{
-			NodeSafeHandle handle = OpenNIImporter.xnNodeInfoGetHandle(this.InternalObject);
-			if (handle.IsInvalid)
-				return null;
-			else
-				return ProductionNode.FromNative(handle);
+            get
+            {
+                NodeSafeHandle handle = OpenNIImporter.xnNodeInfoGetHandle(this.InternalObject);
+                if (handle.IsInvalid)
+                    return null;
+                else
+                    return ProductionNode.FromNative(handle);
+            }
 		}
 	}
 }

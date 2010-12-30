@@ -141,7 +141,7 @@ namespace xn
             NodeSafeHandle nodeHandle;
 			UInt32 status = OpenNIImporter.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle);
 			WrapperUtils.CheckStatus(status);
-			return CreateProductionNodeObject(nodeHandle, nodeInfo.GetDescription().Type);
+			return CreateProductionNodeObject(nodeHandle, nodeInfo.Description.Type);
 		}
 
 		public NodeInfoList EnumerateExistingNodes()
@@ -208,15 +208,17 @@ namespace xn
 			WrapperUtils.CheckStatus(status);
 		}
 
-		public void SetGlobalMirror(bool mirror)
-		{
-			UInt32 status = OpenNIImporter.xnSetGlobalMirror(this.InternalObject, mirror);
-			WrapperUtils.CheckStatus(status);
-		}
-
-		public bool GetGlobalMirror()
-		{
-			return OpenNIImporter.xnGetGlobalMirror(this.InternalObject);
+		public bool GlobalMirror
+        {
+            get
+            {
+                return OpenNIImporter.xnGetGlobalMirror(this.InternalObject);
+            }
+            set
+            {
+			    UInt32 status = OpenNIImporter.xnSetGlobalMirror(this.InternalObject, value);
+			    WrapperUtils.CheckStatus(status);
+            }
 		}
 
 		/// <summary>

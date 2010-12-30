@@ -112,9 +112,12 @@ namespace xn
 			return new NodeInfoList(pList);
 		}
 
-		public bool IsEOF()
+		public bool IsEOF
 		{
-			return OpenNIImporter.xnIsPlayerAtEOF(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnIsPlayerAtEOF(this.InternalObject);
+            }
 		}
 
 		public event StateChangedHandler EndOfFileReached
@@ -123,15 +126,17 @@ namespace xn
 			remove { this.endOfFileReachedEvent.Event -= value; }
 		}
 
-		public void SetPlaybackSpeed(double dSpeed)
+		public double GetPlaybackSpeed
 		{
-			UInt32 status = OpenNIImporter.xnSetPlaybackSpeed(this.InternalObject, dSpeed);
-			WrapperUtils.CheckStatus(status);
-		}
-
-		public double GetPlaybackSpeed()
-		{
-			return OpenNIImporter.xnGetPlaybackSpeed(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnGetPlaybackSpeed(this.InternalObject);
+            }
+            set
+            {
+			    UInt32 status = OpenNIImporter.xnSetPlaybackSpeed(this.InternalObject, value);
+			    WrapperUtils.CheckStatus(status);
+            }
 		}
 
         private static NodeSafeHandle Create(Context context, string formatName)

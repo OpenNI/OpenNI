@@ -29,32 +29,40 @@ namespace xn
 		{
 		}
 
-		public WaveOutputMode[] GetSupportedWaveOutputModes()
+		public WaveOutputMode[] SupportedWaveOutputModes
 		{
-			uint count = OpenNIImporter.xnGetSupportedWaveOutputModesCount(this.InternalObject);
-			WaveOutputMode[] modes = new WaveOutputMode[count];
-			UInt32 status = OpenNIImporter.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count);
-			WrapperUtils.CheckStatus(status);
-			return modes;
+            get
+            {
+                uint count = OpenNIImporter.xnGetSupportedWaveOutputModesCount(this.InternalObject);
+                WaveOutputMode[] modes = new WaveOutputMode[count];
+                UInt32 status = OpenNIImporter.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count);
+                WrapperUtils.CheckStatus(status);
+                return modes;
+            }
 		}
 
-		public void SetWaveOutputMode(WaveOutputMode mode)
+		public WaveOutputMode WaveOutputMode
 		{
-			UInt32 status = OpenNIImporter.xnSetWaveOutputMode(this.InternalObject, ref mode);
-			WrapperUtils.CheckStatus(status);
+            get
+            {
+                WaveOutputMode mode = new WaveOutputMode();
+                UInt32 status = OpenNIImporter.xnGetWaveOutputMode(this.InternalObject, ref mode);
+                WrapperUtils.CheckStatus(status);
+                return mode;
+            }
+            set
+            {
+			    UInt32 status = OpenNIImporter.xnSetWaveOutputMode(this.InternalObject, ref value);
+			    WrapperUtils.CheckStatus(status);
+            }
 		}
 
-		public WaveOutputMode GetWaveOutputMode()
+		public IntPtr AudioBufferPtr
 		{
-			WaveOutputMode mode = new WaveOutputMode();
-			UInt32 status = OpenNIImporter.xnGetWaveOutputMode(this.InternalObject, ref mode);
-			WrapperUtils.CheckStatus(status);
-			return mode;
-		}
-
-		public IntPtr GetAudioBufferPtr()
-		{
-			return OpenNIImporter.xnGetAudioBuffer(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnGetAudioBuffer(this.InternalObject);
+            }
 		}
 
 		public void GetMetaData(AudioMetaData audioMD)
@@ -65,11 +73,14 @@ namespace xn
 			}
 		}
 
-		public AudioMetaData GetMetaData()
+		public AudioMetaData MetaData
 		{
-			AudioMetaData audioMD = new AudioMetaData();
-			GetMetaData(audioMD);
-			return audioMD;
+            get
+            {
+                AudioMetaData audioMD = new AudioMetaData();
+                GetMetaData(audioMD);
+                return audioMD;
+            }
 		}
 
 		public event StateChangedHandler WaveOutputModeChanged
