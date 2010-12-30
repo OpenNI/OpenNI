@@ -28,7 +28,7 @@ namespace OpenNI
 
 		public IntPtr GetIRMapPtr()
 		{
-			return OpenNIImporter.xnGetIRMap(this.InternalObject);
+			return SafeNativeMethods.xnGetIRMap(this.InternalObject);
 		}
 
 		public MapData<UInt16> GetIRMap()
@@ -40,7 +40,7 @@ namespace OpenNI
 		{
 			using (IMarshaler marsh = irMD.GetMarshaler(true))
 			{
-				OpenNIImporter.xnGetIRMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetIRMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateIRGenerator(context.InternalObject, out handle,
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateIRGenerator(context.InternalObject, out handle,
 				query == null ? QuerySafeHandle.Zero : query.InternalObject,
                 errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
 			

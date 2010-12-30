@@ -38,9 +38,9 @@ namespace OpenNI
 			return new AudioMetaDataMarshaler(this, passOut);
 		}
 
-		private OpenNIImporter.XnAudioMetaData audio = new OpenNIImporter.XnAudioMetaData();
+		private SafeNativeMethods.XnAudioMetaData audio = new SafeNativeMethods.XnAudioMetaData();
 
-		private class AudioMetaDataMarshaler : Marshaler<OpenNIImporter.XnAudioMetaData>
+		private class AudioMetaDataMarshaler : Marshaler<SafeNativeMethods.XnAudioMetaData>
 		{
 			public AudioMetaDataMarshaler(AudioMetaData obj, bool marshalOut) :
 				base(obj.audio, marshalOut,

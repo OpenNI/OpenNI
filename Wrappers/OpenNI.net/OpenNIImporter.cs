@@ -102,8 +102,8 @@ namespace OpenNI
 
 	public enum PixelFormat
 	{
-		RGB24 = 1,
-		YUV422 = 2,
+		Rgb24 = 1,
+		Yuv422 = 2,
 		Grayscale8Bit = 3,
 		Grayscale16Bit = 4,
 	};
@@ -382,7 +382,7 @@ namespace OpenNI
 	};
 
     [SuppressUnmanagedCodeSecurity]
-	internal class OpenNIImporter
+	internal static class SafeNativeMethods
 	{
 		/** Holds information about a general frame of data. **/
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]

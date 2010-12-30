@@ -30,7 +30,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnNodeInfoGetDescription(this.InternalObject);
+                return SafeNativeMethods.xnNodeInfoGetDescription(this.InternalObject);
             }
 		}
 
@@ -38,11 +38,11 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnNodeInfoGetInstanceName(this.InternalObject);
+                return SafeNativeMethods.xnNodeInfoGetInstanceName(this.InternalObject);
             }
             set
             {
-                Status.ThrowOnFail(OpenNIImporter.xnNodeInfoSetInstanceName(this.InternalObject, value));
+                Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoSetInstanceName(this.InternalObject, value));
 			    
             }
 		}
@@ -51,7 +51,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnNodeInfoGetCreationInfo(this.InternalObject);
+                return SafeNativeMethods.xnNodeInfoGetCreationInfo(this.InternalObject);
             }
 		}
 
@@ -59,7 +59,7 @@ namespace OpenNI
 		{
             get
             {
-                return new NodeInfoList(OpenNIImporter.xnNodeInfoGetNeededNodes(this.InternalObject));
+                return new NodeInfoList(SafeNativeMethods.xnNodeInfoGetNeededNodes(this.InternalObject));
             }
 		}
 
@@ -67,7 +67,7 @@ namespace OpenNI
 		{
             get
             {
-                NodeSafeHandle handle = OpenNIImporter.xnNodeInfoGetHandle(this.InternalObject);
+                NodeSafeHandle handle = SafeNativeMethods.xnNodeInfoGetHandle(this.InternalObject);
                 if (handle.IsInvalid)
                     return null;
                 else

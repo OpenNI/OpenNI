@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UserID = System.UInt32;
+using UserId = System.UInt32;
 
 namespace OpenNI
 {
@@ -10,9 +10,9 @@ namespace OpenNI
         internal HandsGenerator(NodeSafeHandle nodeHandle, bool addRef)
 			: base(nodeHandle, addRef)
         {
-            this.internalHandCreate = new OpenNIImporter.XnHandCreate(this.InternalHandCreate);
-            this.internalHandUpdate = new OpenNIImporter.XnHandUpdate(this.InternalHandUpdate);
-            this.internalHandDestroy = new OpenNIImporter.XnHandDestroy(this.InternalHandDestroy);
+            this.internalHandCreate = new SafeNativeMethods.XnHandCreate(this.InternalHandCreate);
+            this.internalHandUpdate = new SafeNativeMethods.XnHandUpdate(this.InternalHandUpdate);
+            this.internalHandDestroy = new SafeNativeMethods.XnHandDestroy(this.InternalHandDestroy);
         }
 
         public HandsGenerator(Context context, Query query, EnumerationErrors errors) :
@@ -31,7 +31,7 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateHandsGenerator(context.InternalObject,
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateHandsGenerator(context.InternalObject,
                                                         out handle,
                                                         query == null ? QuerySafeHandle.Zero : query.InternalObject,
                                                         errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
@@ -39,24 +39,24 @@ namespace OpenNI
             return handle;
         }
 
-        public void StopTracking(UserID id)
+        public void StopTracking(UserId id)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnStopTracking(this.InternalObject, id));
+            Status.ThrowOnFail(SafeNativeMethods.xnStopTracking(this.InternalObject, id));
             
         }
         public void StopTrackingAll()
         {
-            Status.ThrowOnFail(OpenNIImporter.xnStopTrackingAll(this.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnStopTrackingAll(this.InternalObject));
             
         }
         public void StartTracking(ref Point3D position)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnStartTracking(this.InternalObject, ref position));
+            Status.ThrowOnFail(SafeNativeMethods.xnStartTracking(this.InternalObject, ref position));
             
         }
         public void SetSmoothing(float factor)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnSetTrackingSmoothing(this.InternalObject, factor));
+            Status.ThrowOnFail(SafeNativeMethods.xnSetTrackingSmoothing(this.InternalObject, factor));
             
         }
 
@@ -68,7 +68,7 @@ namespace OpenNI
             {
                 if (this.handCreatedEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreate, null, null, IntPtr.Zero, out handCreateHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreate, null, null, IntPtr.Zero, out handCreateHandle));
                     
                 }
                 this.handCreatedEvent += value;
@@ -79,17 +79,17 @@ namespace OpenNI
 
                 if (this.handCreatedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handCreateHandle);
+                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handCreateHandle);
                 }
             }
         }
-        private void InternalHandCreate(NodeSafeHandle hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
+        private void InternalHandCreate(NodeSafeHandle hNode, UserId id, ref Point3D position, float fTime, IntPtr pCookie)
         {
             var handler = this.handCreatedEvent;
             if (handler != null)
                 handler(this, new HandCreatedArgs(id, position, fTime, pCookie));
         }
-        private OpenNIImporter.XnHandCreate internalHandCreate;
+        private SafeNativeMethods.XnHandCreate internalHandCreate;
         private IntPtr handCreateHandle;
         #endregion
 
@@ -101,7 +101,7 @@ namespace OpenNI
             {
                 if (this.handUpdatedEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out handUpdateHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out handUpdateHandle));
                     
                 }
                 this.handUpdatedEvent += value;
@@ -112,17 +112,17 @@ namespace OpenNI
 
                 if (this.handUpdatedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
+                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
                 }
             } 
         }
-        private void InternalHandUpdate(NodeSafeHandle hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
+        private void InternalHandUpdate(NodeSafeHandle hNode, UserId id, ref Point3D position, float fTime, IntPtr pCookie)
         {
             var handler = this.handUpdatedEvent;
             if (handler != null)
                 handler(this, new HandUpdatedArgs(id, position, fTime, pCookie));
         }
-        private OpenNIImporter.XnHandUpdate internalHandUpdate;
+        private SafeNativeMethods.XnHandUpdate internalHandUpdate;
         private IntPtr handUpdateHandle;
         #endregion
 
@@ -134,7 +134,7 @@ namespace OpenNI
             {
                 if (this.handDestroyedEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out handDestroyHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out handDestroyHandle));
                     
                 }
                 this.handDestroyedEvent += value;
@@ -145,17 +145,17 @@ namespace OpenNI
 
                 if (this.handDestroyedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle);
+                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle);
                 }
             }
         }
-        private void InternalHandDestroy(NodeSafeHandle hNode, UserID id, float fTime, IntPtr pCookie)
+        private void InternalHandDestroy(NodeSafeHandle hNode, UserId id, float fTime, IntPtr pCookie)
         {
             var handler = this.handDestroyedEvent;
             if (handler != null)
                 handler(this, new HandDestroyedArgs(id, fTime, pCookie));
         }
-        private OpenNIImporter.XnHandDestroy internalHandDestroy;
+        private SafeNativeMethods.XnHandDestroy internalHandDestroy;
         private IntPtr handDestroyHandle;
         #endregion
 
@@ -171,9 +171,9 @@ namespace OpenNI
         /// Initializes a new instance of the HandCreatedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public HandCreatedArgs(UserID userId, Point3D position, float timestamp, IntPtr cookie)
+        public HandCreatedArgs(UserId userId, Point3D position, float timestamp, IntPtr cookie)
         {
-            this.UserID = userId;
+            this.UserId = userId;
             this.Position = position;
             this.Timestamp = timestamp;
             this.Cookie = cookie;
@@ -182,7 +182,7 @@ namespace OpenNI
         /// <summary>
         /// Gets the id of the new hand.
         /// </summary>
-        public UserID UserID { get; private set; }
+        public UserId UserId { get; private set; }
 
         /// <summary>
         /// Gets the position in which the hand was created. 
@@ -210,9 +210,9 @@ namespace OpenNI
         /// Initializes a new instance of the HandUpdatedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public HandUpdatedArgs(UserID userId, Point3D position, float timestamp, IntPtr cookie)
+        public HandUpdatedArgs(UserId userId, Point3D position, float timestamp, IntPtr cookie)
         {
-            this.UserID = userId;
+            this.UserId = userId;
             this.Position = position;
             this.Timestamp = timestamp;
             this.Cookie = cookie;
@@ -221,7 +221,7 @@ namespace OpenNI
         /// <summary>
         /// Gets the id of the hand that moved.
         /// </summary>
-        public UserID UserID { get; private set; }
+        public UserId UserId { get; private set; }
 
         /// <summary>
         /// Gets the new position of the hand. 
@@ -249,9 +249,9 @@ namespace OpenNI
         /// Initializes a new instance of the HandDestroyedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public HandDestroyedArgs(UserID userId, float timestamp, IntPtr cookie)
+        public HandDestroyedArgs(UserId userId, float timestamp, IntPtr cookie)
         {
-            this.UserID = userId;
+            this.UserId = userId;
             this.Timestamp = timestamp;
             this.Cookie = cookie;
         }
@@ -259,7 +259,7 @@ namespace OpenNI
         /// <summary>
         /// Gets the id of the hand that disappeared.
         /// </summary>
-        public UserID UserID { get; private set; }
+        public UserId UserId { get; private set; }
 
         /// <summary>
         /// Timestamp, in seconds.

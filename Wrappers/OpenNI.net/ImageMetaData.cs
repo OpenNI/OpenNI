@@ -16,7 +16,7 @@ namespace OpenNI
 			set { this.PixelFormatInternal = value; }
 		}
 
-		public MapData<RGB24Pixel> GetRGB24ImageMap()
+		public MapData<RGB24Pixel> GetRgb24ImageMap()
 		{
 			return new MapData<RGB24Pixel>(XRes, YRes, this.image.pData);
 		}
@@ -41,9 +41,9 @@ namespace OpenNI
 			return new ImageMetaDataMarshaler(this, passOut);
 		}
 
-		internal OpenNIImporter.XnImageMetaData image = new OpenNIImporter.XnImageMetaData();
+		internal SafeNativeMethods.XnImageMetaData image = new SafeNativeMethods.XnImageMetaData();
 
-		private class ImageMetaDataMarshaler : Marshaler<OpenNIImporter.XnImageMetaData>
+		private class ImageMetaDataMarshaler : Marshaler<SafeNativeMethods.XnImageMetaData>
 		{
 			public ImageMetaDataMarshaler(ImageMetaData obj, bool marshalOut) :
 				base(obj.image, marshalOut,

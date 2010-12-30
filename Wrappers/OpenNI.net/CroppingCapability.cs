@@ -10,8 +10,8 @@ namespace OpenNI
 			base(node)
 		{
 			this.croppingChanged = new StateChangedEvent(node,
-				OpenNIImporter.xnRegisterToCroppingChange,
-				OpenNIImporter.xnUnregisterFromCroppingChange);
+				SafeNativeMethods.xnRegisterToCroppingChange,
+				SafeNativeMethods.xnUnregisterFromCroppingChange);
 		}
 
         public Cropping Cropping
@@ -19,12 +19,12 @@ namespace OpenNI
             get
             {
 			    Cropping cropping = new Cropping();
-			    Status.ThrowOnFail(OpenNIImporter.xnGetCropping(this.InternalObject, ref cropping));
+			    Status.ThrowOnFail(SafeNativeMethods.xnGetCropping(this.InternalObject, ref cropping));
 			    return cropping;
             }
             set
             {
-                Status.ThrowOnFail(OpenNIImporter.xnSetCropping(this.InternalObject, ref value));
+                Status.ThrowOnFail(SafeNativeMethods.xnSetCropping(this.InternalObject, ref value));
             }
 		}
 

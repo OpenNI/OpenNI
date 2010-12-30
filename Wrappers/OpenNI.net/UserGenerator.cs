@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UserID = System.UInt32;
+using UserId = System.UInt32;
 
 namespace OpenNI
 {
@@ -10,8 +10,8 @@ namespace OpenNI
         internal UserGenerator(NodeSafeHandle nodeHandle, bool addRef) : 
 			base(nodeHandle, addRef)
         {
-            this.internalNewUser = new OpenNIImporter.XnUserHandler(this.InternalNewUser);
-            this.internalLostUser = new OpenNIImporter.XnUserHandler(this.InternalLostUser);
+            this.internalNewUser = new SafeNativeMethods.XnUserHandler(this.InternalNewUser);
+            this.internalLostUser = new SafeNativeMethods.XnUserHandler(this.InternalLostUser);
         }
 
         public UserGenerator(Context context, Query query, EnumerationErrors errors) :
@@ -30,7 +30,7 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateUserGenerator(context.InternalObject,
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateUserGenerator(context.InternalObject,
                                                         out handle,
                                                         query == null ? QuerySafeHandle.Zero : query.InternalObject,
                                                         errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
@@ -40,32 +40,32 @@ namespace OpenNI
 
         public UInt16 GetNumberOfUsers()
         {
-            return OpenNIImporter.xnGetNumberOfUsers(this.InternalObject);
+            return SafeNativeMethods.xnGetNumberOfUsers(this.InternalObject);
         }
         
-        public UserID[] GetUsers()
+        public UserId[] GetUsers()
         {
             ushort count = GetNumberOfUsers();
-            UserID[] users = new UserID[count];
-            Status.ThrowOnFail(OpenNIImporter.xnGetUsers(this.InternalObject, users, ref count));
+            UserId[] users = new UserId[count];
+            Status.ThrowOnFail(SafeNativeMethods.xnGetUsers(this.InternalObject, users, ref count));
             
             return users;
         }
         
-        public Point3D GetCoM(UserID id)
+        public Point3D GetCoM(UserId id)
         {
             Point3D com = new Point3D();
-            Status.ThrowOnFail(OpenNIImporter.xnGetUserCoM(this.InternalObject, id, out com));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetUserCoM(this.InternalObject, id, out com));
             
             return com;
         }
 
-        public SceneMetaData GetUserPixels(UserID id)
+        public SceneMetaData GetUserPixels(UserId id)
         {
             SceneMetaData smd = new SceneMetaData();
 			using (IMarshaler marsh = smd.GetMarshaler(true))
 			{
-                Status.ThrowOnFail(OpenNIImporter.xnGetUserPixels(this.InternalObject, id, marsh.Native));
+                Status.ThrowOnFail(SafeNativeMethods.xnGetUserPixels(this.InternalObject, id, marsh.Native));
 				
 			}
 
@@ -89,7 +89,7 @@ namespace OpenNI
             {
                 if (this.userFoundEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, this.internalNewUser, null, IntPtr.Zero, out newUserHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterUserCallbacks(this.InternalObject, this.internalNewUser, null, IntPtr.Zero, out newUserHandle));
                     
                 }
                 this.userFoundEvent += value;
@@ -100,17 +100,17 @@ namespace OpenNI
 
                 if (this.userFoundEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterUserCallbacks(this.InternalObject, this.newUserHandle);
+                    SafeNativeMethods.xnUnregisterUserCallbacks(this.InternalObject, this.newUserHandle);
                 }
             }
         }
-        private void InternalNewUser(NodeSafeHandle hNode, UserID id, IntPtr pCookie)
+        private void InternalNewUser(NodeSafeHandle hNode, UserId id, IntPtr pCookie)
         {
             var handler = this.userFoundEvent;
             if (handler != null)
                 handler(this, new UserFoundArgs(id, pCookie));
         }
-        private OpenNIImporter.XnUserHandler internalNewUser;
+        private SafeNativeMethods.XnUserHandler internalNewUser;
         private IntPtr newUserHandle;
         #endregion
 
@@ -122,7 +122,7 @@ namespace OpenNI
             {
                 if (this.userLostEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, null, this.internalLostUser, IntPtr.Zero, out lostUserHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterUserCallbacks(this.InternalObject, null, this.internalLostUser, IntPtr.Zero, out lostUserHandle));
                     
                 }
                 this.userLostEvent += value;
@@ -133,17 +133,17 @@ namespace OpenNI
 
                 if (this.userLostEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterUserCallbacks(this.InternalObject, this.lostUserHandle);
+                    SafeNativeMethods.xnUnregisterUserCallbacks(this.InternalObject, this.lostUserHandle);
                 }
             }
         }
-        private void InternalLostUser(NodeSafeHandle hNode, UserID id, IntPtr pCookie)
+        private void InternalLostUser(NodeSafeHandle hNode, UserId id, IntPtr pCookie)
         {
             var handler = this.userLostEvent;
             if (handler != null)
                 handler(this, new UserLostArgs(id, pCookie));
         }
-        private OpenNIImporter.XnUserHandler internalLostUser;
+        private SafeNativeMethods.XnUserHandler internalLostUser;
         private IntPtr lostUserHandle;
         #endregion
     }
@@ -158,16 +158,16 @@ namespace OpenNI
         /// Initializes a new instance of the UserFoundArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public UserFoundArgs(UserID userId, IntPtr cookie)
+        public UserFoundArgs(UserId userId, IntPtr cookie)
         {
-            this.UserID = userId;
+            this.UserId = userId;
            this.Cookie = cookie;
         }
 
         /// <summary>
         /// Gets the id of the user found.
         /// </summary>
-        public UserID UserID { get; private set; }
+        public UserId UserId { get; private set; }
 
         /// <summary>
         /// Gets the object that contains data about the Capability.
@@ -185,16 +185,16 @@ namespace OpenNI
         /// Initializes a new instance of the UserLostArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public UserLostArgs(UserID userId, IntPtr cookie)
+        public UserLostArgs(UserId userId, IntPtr cookie)
         {
-            this.UserID = userId;
+            this.UserId = userId;
             this.Cookie = cookie;
         }
 
         /// <summary>
         /// Gets the id of the user lost.
         /// </summary>
-        public UserID UserID { get; private set; }
+        public UserId UserId { get; private set; }
 
         /// <summary>
         /// Gets the object that contains data about the Capability.

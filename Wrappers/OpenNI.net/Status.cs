@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Security;
 
@@ -87,7 +88,7 @@ namespace OpenNI
         /// <returns>A meaningful error string.</returns>
         public static string GetString(Status status)
         {
-            return OpenNIImporter.xnGetStatusString(status);
+            return SafeNativeMethods.xnGetStatusString(status);
         }
 
         /// <summary>
@@ -96,7 +97,7 @@ namespace OpenNI
         /// <returns>The name of the status.</returns>
         public static string GetName(Status status)
         {
-            return OpenNIImporter.xnGetStatusName(status);
+            return SafeNativeMethods.xnGetStatusName(status);
         }
 
         public bool Equals(Status other)
@@ -132,7 +133,7 @@ namespace OpenNI
 
         public override string ToString()
         {
-            return string.Format("{0}: {1}", Status.GetName(this), Status.GetString(this));
+            return string.Format(CultureInfo.CurrentCulture, "{0}: {1}", Status.GetName(this), Status.GetString(this));
         }
 
         #endregion

@@ -10,17 +10,17 @@ namespace OpenNI
 			base(nodeHandle, addRef)
 		{
 			this.mapOutputModeChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToMapOutputModeChange,
-				OpenNIImporter.xnUnregisterFromMapOutputModeChange);
+				SafeNativeMethods.xnRegisterToMapOutputModeChange,
+				SafeNativeMethods.xnUnregisterFromMapOutputModeChange);
 		}
 
 		public MapOutputMode[] SupportedMapOutputModes
 		{
             get
             {
-                uint count = OpenNIImporter.xnGetSupportedMapOutputModesCount(this.InternalObject);
+                uint count = SafeNativeMethods.xnGetSupportedMapOutputModesCount(this.InternalObject);
                 MapOutputMode[] supportedModes = new MapOutputMode[count];
-                Status.ThrowOnFail(OpenNIImporter.xnGetSupportedMapOutputModes(this.InternalObject, supportedModes, ref count));
+                Status.ThrowOnFail(SafeNativeMethods.xnGetSupportedMapOutputModes(this.InternalObject, supportedModes, ref count));
                 return supportedModes;
             }
 		}
@@ -30,12 +30,12 @@ namespace OpenNI
             get
             {
                 MapOutputMode mode = new MapOutputMode();
-                Status.ThrowOnFail(OpenNIImporter.xnGetMapOutputMode(this.InternalObject, ref mode));
+                Status.ThrowOnFail(SafeNativeMethods.xnGetMapOutputMode(this.InternalObject, ref mode));
                 return mode;
             }
             set
             {
-			    Status.ThrowOnFail(OpenNIImporter.xnSetMapOutputMode(this.InternalObject, ref value));
+			    Status.ThrowOnFail(SafeNativeMethods.xnSetMapOutputMode(this.InternalObject, ref value));
             }
 		}
 

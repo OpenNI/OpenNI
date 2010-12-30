@@ -10,8 +10,8 @@ namespace OpenNI
 			base(nodeHandle, addRef)
 		{
 			this.pixelFormatChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToPixelFormatChange,
-				OpenNIImporter.xnUnregisterFromPixelFormatChange);
+				SafeNativeMethods.xnRegisterToPixelFormatChange,
+				SafeNativeMethods.xnUnregisterFromPixelFormatChange);
 		}
 
 		public ImageGenerator(Context context, Query query, EnumerationErrors errors) :
@@ -33,7 +33,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnGetImageMap(this.InternalObject);
+                return SafeNativeMethods.xnGetImageMap(this.InternalObject);
             }
 		}
 
@@ -41,7 +41,7 @@ namespace OpenNI
 		{
             get
             {
-                return GetMapData<RGB24Pixel>(OpenNIImporter.xnGetRGB24ImageMap(this.InternalObject));
+                return GetMapData<RGB24Pixel>(SafeNativeMethods.xnGetRGB24ImageMap(this.InternalObject));
             }
 		}
 
@@ -49,7 +49,7 @@ namespace OpenNI
 		{
             get
             {
-                return GetMapData<byte>(OpenNIImporter.xnGetGrayscale8ImageMap(this.InternalObject));
+                return GetMapData<byte>(SafeNativeMethods.xnGetGrayscale8ImageMap(this.InternalObject));
             }
 		}
 
@@ -57,24 +57,24 @@ namespace OpenNI
 		{
             get
             {
-                return GetMapData<UInt16>(OpenNIImporter.xnGetGrayscale16ImageMap(this.InternalObject));
+                return GetMapData<UInt16>(SafeNativeMethods.xnGetGrayscale16ImageMap(this.InternalObject));
             }
 		}
 
 		public bool IsPixelFormatSupported(PixelFormat format)
 		{
-			return OpenNIImporter.xnIsPixelFormatSupported(this.InternalObject, format);
+			return SafeNativeMethods.xnIsPixelFormatSupported(this.InternalObject, format);
 		}
 
 		public PixelFormat PixelFormat
 		{
             get
             {
-                return OpenNIImporter.xnGetPixelFormat(this.InternalObject);
+                return SafeNativeMethods.xnGetPixelFormat(this.InternalObject);
             }
             set
             {
-                Status.ThrowOnFail(OpenNIImporter.xnSetPixelFormat(this.InternalObject, value));
+                Status.ThrowOnFail(SafeNativeMethods.xnSetPixelFormat(this.InternalObject, value));
 			    
             }
 		}
@@ -83,7 +83,7 @@ namespace OpenNI
 		{
 			using (IMarshaler marsh = imageMD.GetMarshaler(true))
 			{
-				OpenNIImporter.xnGetImageMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetImageMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 
@@ -106,7 +106,7 @@ namespace OpenNI
 		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateImageGenerator(context.InternalObject, out handle,
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateImageGenerator(context.InternalObject, out handle,
 				query == null ? QuerySafeHandle.Zero : query.InternalObject,
                 errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
 			

@@ -11,8 +11,8 @@ namespace OpenNI
 			base(nodeHandle, addRef)
 		{
 			this.endOfFileReachedEvent = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToEndOfFileReached,
-				OpenNIImporter.xnUnregisterFromEndOfFileReached);
+				SafeNativeMethods.xnRegisterToEndOfFileReached,
+				SafeNativeMethods.xnUnregisterFromEndOfFileReached);
 		}
 
 		public Player(Context context, string formatName) :
@@ -22,35 +22,35 @@ namespace OpenNI
 
 		public void SetRepeat(bool repeat)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnSetPlayerRepeat(this.InternalObject, repeat));
+			Status.ThrowOnFail(SafeNativeMethods.xnSetPlayerRepeat(this.InternalObject, repeat));
 		}
 
 		public void SetSource(RecordMedium medium, string source)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnSetPlayerSource(this.InternalObject, medium, source));
+			Status.ThrowOnFail(SafeNativeMethods.xnSetPlayerSource(this.InternalObject, medium, source));
 		}
 
 		public string GetSource(out RecordMedium medium)
 		{
 			const int size = 512;
 			StringBuilder sb = new StringBuilder(size);
-			Status.ThrowOnFail(OpenNIImporter.xnGetPlayerSource(this.InternalObject, out medium, sb, size));
+			Status.ThrowOnFail(SafeNativeMethods.xnGetPlayerSource(this.InternalObject, out medium, sb, size));
 			return sb.ToString();
 		}
 
 		public void ReadNext()
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnPlayerReadNext(this.InternalObject));
+			Status.ThrowOnFail(SafeNativeMethods.xnPlayerReadNext(this.InternalObject));
 		}
 
 		public void SeekToTimestamp(Int64 timeOffset, PlayerSeekOrigin origin)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnSeekPlayerToTimeStamp(this.InternalObject, timeOffset, origin));
+			Status.ThrowOnFail(SafeNativeMethods.xnSeekPlayerToTimeStamp(this.InternalObject, timeOffset, origin));
 		}
 
 		public void SeekToFrame(string nodeName, Int32 frameOffset, PlayerSeekOrigin origin)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnSeekPlayerToFrame(this.InternalObject, nodeName, frameOffset, origin));
+			Status.ThrowOnFail(SafeNativeMethods.xnSeekPlayerToFrame(this.InternalObject, nodeName, frameOffset, origin));
 		}
 
 		public void SeekToFrame(ProductionNode node, Int32 frameOffset, PlayerSeekOrigin origin)
@@ -61,14 +61,14 @@ namespace OpenNI
 		public UInt64 TellTimestamp()
 		{
 			UInt64 timestamp;
-			Status.ThrowOnFail(OpenNIImporter.xnTellPlayerTimestamp(this.InternalObject, out timestamp));
+			Status.ThrowOnFail(SafeNativeMethods.xnTellPlayerTimestamp(this.InternalObject, out timestamp));
 			return timestamp;
 		}
 
 		public UInt32 TellFrame(string nodeName)
 		{
 			UInt32 frame;
-			Status.ThrowOnFail(OpenNIImporter.xnTellPlayerFrame(this.InternalObject, nodeName, out frame));
+			Status.ThrowOnFail(SafeNativeMethods.xnTellPlayerFrame(this.InternalObject, nodeName, out frame));
 			return frame;
 		}
 
@@ -80,7 +80,7 @@ namespace OpenNI
 		public UInt32 GetNumFrames(string nodeName)
 		{
 			UInt32 frames;
-			Status.ThrowOnFail(OpenNIImporter.xnGetPlayerNumFrames(this.InternalObject, nodeName, out frames));
+			Status.ThrowOnFail(SafeNativeMethods.xnGetPlayerNumFrames(this.InternalObject, nodeName, out frames));
 			return frames;
 		}
 
@@ -91,13 +91,13 @@ namespace OpenNI
 
 		public string GetSupportedFormat()
 		{
-			return OpenNIImporter.xnGetPlayerSupportedFormat(this.InternalObject);
+			return SafeNativeMethods.xnGetPlayerSupportedFormat(this.InternalObject);
 		}
 
 		public NodeInfoList EnumerateNodes()
 		{
 			NodeInfoListSafeHandle pList;
-			Status.ThrowOnFail(OpenNIImporter.xnEnumeratePlayerNodes(this.InternalObject, out pList));
+			Status.ThrowOnFail(SafeNativeMethods.xnEnumeratePlayerNodes(this.InternalObject, out pList));
 
 			return new NodeInfoList(pList);
 		}
@@ -106,7 +106,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnIsPlayerAtEOF(this.InternalObject);
+                return SafeNativeMethods.xnIsPlayerAtEOF(this.InternalObject);
             }
 		}
 
@@ -120,18 +120,18 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnGetPlaybackSpeed(this.InternalObject);
+                return SafeNativeMethods.xnGetPlaybackSpeed(this.InternalObject);
             }
             set
             {
-			    Status.ThrowOnFail(OpenNIImporter.xnSetPlaybackSpeed(this.InternalObject, value));
+			    Status.ThrowOnFail(SafeNativeMethods.xnSetPlaybackSpeed(this.InternalObject, value));
             }
 		}
 
         private static NodeSafeHandle Create(Context context, string formatName)
 		{
             NodeSafeHandle nodeHandle;
-			Status.ThrowOnFail(OpenNIImporter.xnCreatePlayer(context.InternalObject, formatName, out nodeHandle));
+			Status.ThrowOnFail(SafeNativeMethods.xnCreatePlayer(context.InternalObject, formatName, out nodeHandle));
 			return nodeHandle;
 		}
 

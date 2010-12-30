@@ -10,8 +10,8 @@ namespace OpenNI
 			base(nodeHandle, addRef)
 		{
 			this.outputModeChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToWaveOutputModeChanges,
-				OpenNIImporter.xnUnregisterFromWaveOutputModeChanges);
+				SafeNativeMethods.xnRegisterToWaveOutputModeChanges,
+				SafeNativeMethods.xnUnregisterFromWaveOutputModeChanges);
 		}
 
 		public AudioGenerator(Context context, Query query, EnumerationErrors errors) :
@@ -33,9 +33,9 @@ namespace OpenNI
 		{
             get
             {
-                uint count = OpenNIImporter.xnGetSupportedWaveOutputModesCount(this.InternalObject);
+                uint count = SafeNativeMethods.xnGetSupportedWaveOutputModesCount(this.InternalObject);
                 WaveOutputMode[] modes = new WaveOutputMode[count];
-                Status.ThrowOnFail(OpenNIImporter.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count));
+                Status.ThrowOnFail(SafeNativeMethods.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count));
                 
                 return modes;
             }
@@ -46,13 +46,13 @@ namespace OpenNI
             get
             {
                 WaveOutputMode mode = new WaveOutputMode();
-                Status.ThrowOnFail(OpenNIImporter.xnGetWaveOutputMode(this.InternalObject, ref mode));
+                Status.ThrowOnFail(SafeNativeMethods.xnGetWaveOutputMode(this.InternalObject, ref mode));
                 
                 return mode;
             }
             set
             {
-                Status.ThrowOnFail(OpenNIImporter.xnSetWaveOutputMode(this.InternalObject, ref value));
+                Status.ThrowOnFail(SafeNativeMethods.xnSetWaveOutputMode(this.InternalObject, ref value));
 			    
             }
 		}
@@ -61,7 +61,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnGetAudioBuffer(this.InternalObject);
+                return SafeNativeMethods.xnGetAudioBuffer(this.InternalObject);
             }
 		}
 
@@ -69,7 +69,7 @@ namespace OpenNI
 		{
 			using (IMarshaler marsh = audioMD.GetMarshaler(true))
 			{
-				OpenNIImporter.xnGetAudioMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetAudioMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 
@@ -92,7 +92,7 @@ namespace OpenNI
 		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
             NodeSafeHandle handle;
-			Status.ThrowOnFail(OpenNIImporter.xnCreateAudioGenerator(context.InternalObject, out handle,
+			Status.ThrowOnFail(SafeNativeMethods.xnCreateAudioGenerator(context.InternalObject, out handle,
 				query == null ? QuerySafeHandle.Zero : query.InternalObject,
                 errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
 			

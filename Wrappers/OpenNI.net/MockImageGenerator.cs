@@ -31,26 +31,26 @@ namespace OpenNI
 		{
 		}
 
-		public void SetData(UInt32 frameID, UInt64 timestamp, UInt32 dataSize, IntPtr buffer)
+		public void SetData(UInt32 frameId, UInt64 timestamp, UInt32 dataSize, IntPtr buffer)
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnMockImageSetData(this.InternalObject, frameID, timestamp, dataSize, buffer));
+            Status.ThrowOnFail(SafeNativeMethods.xnMockImageSetData(this.InternalObject, frameId, timestamp, dataSize, buffer));
 			
 		}
 
-		public void SetData(ImageMetaData imageMD, UInt32 frameID, UInt64 timestamp)
+		public void SetData(ImageMetaData imageMetadata, UInt32 frameId, UInt64 timestamp)
 		{
-			SetData(frameID, timestamp, imageMD.DataSize, imageMD.ImageMapPtr);
+			SetData(frameId, timestamp, imageMetadata.DataSize, imageMetadata.ImageMapPtr);
 		}
 
-		public void SetData(ImageMetaData imageMD)
+		public void SetData(ImageMetaData imageMetadata)
 		{
-			SetData(imageMD, imageMD.FrameID, imageMD.Timestamp);
+			SetData(imageMetadata, imageMetadata.FrameId, imageMetadata.Timestamp);
 		}
 
 		private static NodeSafeHandle Create(Context context, string name)
 		{
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Image, name, out handle));
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateMockNode(context.InternalObject, NodeType.Image, name, out handle));
 			
 			return handle;
 		}
@@ -58,7 +58,7 @@ namespace OpenNI
         private static NodeSafeHandle CreateBasedOn(ImageGenerator basedOn, string name)
 		{
             NodeSafeHandle handle;
-			Status.ThrowOnFail(OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
+			Status.ThrowOnFail(SafeNativeMethods.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
                 basedOn.InternalObject, name, out handle));
 			
 			return handle;

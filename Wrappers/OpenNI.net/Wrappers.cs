@@ -165,7 +165,7 @@ namespace OpenNI
 		{
 			if (addRef)
 			{
-				OpenNIImporter.xnProductionNodeAddRef(hNode);
+				SafeNativeMethods.xnProductionNodeAddRef(hNode);
 			}
 		}
 
@@ -202,7 +202,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnGetNodeName(this.InternalObject);
+                return SafeNativeMethods.xnGetNodeName(this.InternalObject);
             }
 		}
 	};

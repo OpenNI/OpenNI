@@ -6,7 +6,7 @@ namespace OpenNI
 {
 	internal class StateChangedEvent
 	{
-        public delegate Status RegisterFunc(NodeSafeHandle hInstance, OpenNIImporter.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
+        public delegate Status RegisterFunc(NodeSafeHandle hInstance, SafeNativeMethods.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
         public delegate void UnregisterFunc(NodeSafeHandle hInstance, IntPtr hCallback);
 
 		public StateChangedEvent(ProductionNode node, RegisterFunc reg, UnregisterFunc unreg)
@@ -14,7 +14,7 @@ namespace OpenNI
 			this.node = node;
 			this.reg = reg;
 			this.unreg = unreg;
-			this.internalHandler = new OpenNIImporter.XnStateChangedHandler(InternalHandler);
+			this.internalHandler = new SafeNativeMethods.XnStateChangedHandler(InternalHandler);
 		}
 
         public event EventHandler<StateChangedArgs> Event
@@ -52,7 +52,7 @@ namespace OpenNI
         private IntPtr registerHandle;
         private event EventHandler<StateChangedArgs> internalEvent;
 		// must keep a reference to the delegate
-        private readonly OpenNIImporter.XnStateChangedHandler internalHandler;
+        private readonly SafeNativeMethods.XnStateChangedHandler internalHandler;
 	}
 
     /// <summary>

@@ -37,9 +37,9 @@ namespace OpenNI
 			return new IRMetaDataMarshaler(this, passOut);
 		}
 
-		internal OpenNIImporter.XnIRMetaData ir = new OpenNIImporter.XnIRMetaData();
+		internal SafeNativeMethods.XnIRMetaData ir = new SafeNativeMethods.XnIRMetaData();
 
-		private class IRMetaDataMarshaler : Marshaler<OpenNIImporter.XnIRMetaData>
+		private class IRMetaDataMarshaler : Marshaler<SafeNativeMethods.XnIRMetaData>
 		{
 			public IRMetaDataMarshaler(IRMetaData obj, bool marshalOut) :
 				base(obj.ir, marshalOut,

@@ -10,24 +10,24 @@ namespace OpenNI
 			base(node)
 		{
 			this.userPositionChanged = new StateChangedEvent(node,
-				OpenNIImporter.xnRegisterToUserPositionChange,
-				OpenNIImporter.xnUnregisterFromUserPositionChange);
+				SafeNativeMethods.xnRegisterToUserPositionChange,
+				SafeNativeMethods.xnUnregisterFromUserPositionChange);
 		}
 
 		public uint GetSupportedPositionsCount()
 		{
-			return OpenNIImporter.xnGetSupportedUserPositionsCount(this.InternalObject);
+			return SafeNativeMethods.xnGetSupportedUserPositionsCount(this.InternalObject);
 		}
 
 		public void SetPosition(uint index, BoundingBox3D pos)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnSetUserPosition(this.InternalObject, index, ref pos));
+			Status.ThrowOnFail(SafeNativeMethods.xnSetUserPosition(this.InternalObject, index, ref pos));
 		}
 
 		public BoundingBox3D GetPosition(uint index)
 		{
 			BoundingBox3D pos = new BoundingBox3D();
-			Status.ThrowOnFail(OpenNIImporter.xnGetUserPosition(this.InternalObject, index, ref pos));
+			Status.ThrowOnFail(SafeNativeMethods.xnGetUserPosition(this.InternalObject, index, ref pos));
 			return pos;
 		}
 

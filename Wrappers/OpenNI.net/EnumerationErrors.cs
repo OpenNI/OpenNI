@@ -15,12 +15,12 @@ namespace OpenNI
 
 		public ProductionNodeDescription GetDescription()
 		{
-			return OpenNIImporter.xnEnumerationErrorsGetCurrentDescription(this.it);
+			return SafeNativeMethods.xnEnumerationErrorsGetCurrentDescription(this.it);
 		}
 
 		public Status GetError()
 		{
-			return OpenNIImporter.xnEnumerationErrorsGetCurrentError(this.it);
+			return SafeNativeMethods.xnEnumerationErrorsGetCurrentError(this.it);
 		}
 
 		private IntPtr it;
@@ -48,8 +48,8 @@ namespace OpenNI
 		{
             get
             {
-                IntPtr first = OpenNIImporter.xnEnumerationErrorsGetFirst(this.InternalObject);
-                return !OpenNIImporter.xnEnumerationErrorsIteratorIsValid(first);
+                IntPtr first = SafeNativeMethods.xnEnumerationErrorsGetFirst(this.InternalObject);
+                return !SafeNativeMethods.xnEnumerationErrorsIteratorIsValid(first);
             }
 		}
 
@@ -57,7 +57,7 @@ namespace OpenNI
 		{
 			const int size = 2048;
 			StringBuilder sb = new StringBuilder(size);
-			Status.ThrowOnFail(OpenNIImporter.xnEnumerationErrorsToString(this.InternalObject, sb, size));
+			Status.ThrowOnFail(SafeNativeMethods.xnEnumerationErrorsToString(this.InternalObject, sb, size));
 			
 			return sb.ToString();
 		}
@@ -101,15 +101,15 @@ namespace OpenNI
 			{
 				if (this.reset)
 				{
-					this.it = OpenNIImporter.xnEnumerationErrorsGetFirst(this.errors.InternalObject);
+					this.it = SafeNativeMethods.xnEnumerationErrorsGetFirst(this.errors.InternalObject);
 					this.reset = false;
 				}
 				else
 				{
-					this.it = OpenNIImporter.xnEnumerationErrorsGetNext(this.it);
+					this.it = SafeNativeMethods.xnEnumerationErrorsGetNext(this.it);
 				}
 
-				return OpenNIImporter.xnEnumerationErrorsIteratorIsValid(this.it);
+				return SafeNativeMethods.xnEnumerationErrorsIteratorIsValid(this.it);
 			}
 
 			public void Reset()
@@ -147,7 +147,7 @@ namespace OpenNI
         private static EnumerationErrorsSafeHandle Create()
 		{
             EnumerationErrorsSafeHandle pErrors;
-            Status.ThrowOnFail(OpenNIImporter.xnEnumerationErrorsAllocate(out pErrors));
+            Status.ThrowOnFail(SafeNativeMethods.xnEnumerationErrorsAllocate(out pErrors));
 			
 			return pErrors;
 		}

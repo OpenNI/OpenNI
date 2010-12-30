@@ -53,29 +53,29 @@ namespace UserTracker.net
         {
             if (args.Success)
             {
-                this.skeletonCapability.StartTracking(args.UserID);
-                this.joints.Add(args.UserID, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
+                this.skeletonCapability.StartTracking(args.UserId);
+                this.joints.Add(args.UserId, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
             }
             else
             {
-                this.poseDetectionCapability.StartPoseDetection(calibPose, args.UserID);
+                this.poseDetectionCapability.StartPoseDetection(calibPose, args.UserId);
             }
         }
 
         void poseDetectionCapability_PoseDetected(object sender, PoseDetectionArgs args)
         {
-            this.poseDetectionCapability.StopPoseDetection(args.UserID);
-            this.skeletonCapability.RequestCalibration(args.UserID, true);
+            this.poseDetectionCapability.StopPoseDetection(args.UserId);
+            this.skeletonCapability.RequestCalibration(args.UserId, true);
         }
 
         void userGenerator_UserFound(object sender, UserFoundArgs args)
         {
-            this.poseDetectionCapability.StartPoseDetection(this.calibPose, args.UserID);
+            this.poseDetectionCapability.StartPoseDetection(this.calibPose, args.UserId);
         }
 
         void userGenerator_LostUser(object sender, UserLostArgs args)
         {
-            this.joints.Remove(args.UserID);
+            this.joints.Remove(args.UserId);
         }
 
 		protected override void OnPaint(PaintEventArgs e)

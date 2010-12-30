@@ -6,10 +6,6 @@ namespace OpenNI
 {
 	public abstract class MapMetaData : OutputMetaData
 	{
-		public MapMetaData()
-		{
-		}
-
 		public int XRes
 		{
 			get { return (int)this.map.Res.X; }
@@ -63,9 +59,9 @@ namespace OpenNI
 			{
 				switch (PixelFormat)
 				{
-					case PixelFormat.RGB24:
+					case PixelFormat.Rgb24:
 						return 3;
-					case PixelFormat.YUV422:
+					case PixelFormat.Yuv422:
 						return 2;
 					case PixelFormat.Grayscale8Bit:
 						return 1;
@@ -87,7 +83,7 @@ namespace OpenNI
 			set { this.map.PixelFormat = value; }
 		}
 
-		private class MapMetaDataMarshaler : Marshaler<OpenNIImporter.XnMapMetaData>
+		private class MapMetaDataMarshaler : Marshaler<SafeNativeMethods.XnMapMetaData>
 		{
 			public MapMetaDataMarshaler(MapMetaData obj, bool marshalOut) :
 				base(obj.map, marshalOut,
@@ -103,7 +99,7 @@ namespace OpenNI
 			}
 		}
 
-		internal OpenNIImporter.XnMapMetaData map = new OpenNIImporter.XnMapMetaData();
+		internal SafeNativeMethods.XnMapMetaData map = new SafeNativeMethods.XnMapMetaData();
 	}
 
 	public abstract class MapMetaData<T> : MapMetaData

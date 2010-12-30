@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UserID = System.UInt32;
+using UserId = System.UInt32;
 
 namespace OpenNI
 {
@@ -29,7 +29,7 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateSceneAnalyzer(context.InternalObject,
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateSceneAnalyzer(context.InternalObject,
                                                         out handle,
                                                         query == null ? QuerySafeHandle.Zero : query.InternalObject,
                                                         errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
@@ -39,13 +39,13 @@ namespace OpenNI
 
         public void GetFloor(ref Plane3D plane)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnGetFloor(this.InternalObject, ref plane));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetFloor(this.InternalObject, ref plane));
             
         }
 
         public IntPtr GetLabelMapPtr()
         {
-            return OpenNIImporter.xnGetLabelMap(this.InternalObject);
+            return SafeNativeMethods.xnGetLabelMap(this.InternalObject);
         }
 
         public MapData<UInt16> GetLabelMap()

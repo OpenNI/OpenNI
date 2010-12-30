@@ -33,7 +33,7 @@ namespace SimpleRead.net
 
 				depth.GetMetaData(depthMD);
 
-				Console.WriteLine("Frame {0} Middle point is: {1}.", depthMD.FrameID, depthMD[(int)mapMode.XRes/2, (int)mapMode.YRes/2]);
+				Console.WriteLine("Frame {0} Middle point is: {1}.", depthMD.FrameId, depthMD[(int)mapMode.XRes/2, (int)mapMode.YRes/2]);
 			}
 		}
 	}

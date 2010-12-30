@@ -41,7 +41,7 @@ namespace OpenNI
 			{
 				get
 				{
-					return new NodeInfo(OpenNIImporter.xnNodeInfoListGetCurrent(it));
+					return new NodeInfo(SafeNativeMethods.xnNodeInfoListGetCurrent(it));
 				}
 			}
 
@@ -66,15 +66,15 @@ namespace OpenNI
 			{
 				if (this.reset)
 				{
-					it = OpenNIImporter.xnNodeInfoListGetFirst(list.InternalObject);
+					it = SafeNativeMethods.xnNodeInfoListGetFirst(list.InternalObject);
 					this.reset = false;
 				}
 				else
 				{
-					it = OpenNIImporter.xnNodeInfoListGetNext(it);
+					it = SafeNativeMethods.xnNodeInfoListGetNext(it);
 				}
 
-				return OpenNIImporter.xnNodeInfoListIteratorIsValid(it);
+				return SafeNativeMethods.xnNodeInfoListIteratorIsValid(it);
 			}
 
 			public void Reset()
@@ -116,46 +116,46 @@ namespace OpenNI
 
 		public void Add(ProductionNodeDescription description, string creationInfo, NodeInfoList neededNodes)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListAdd(this.InternalObject, description, creationInfo,
+			Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoListAdd(this.InternalObject, description, creationInfo,
                 neededNodes == null ? NodeInfoListSafeHandle.Zero : neededNodes.InternalObject));
 			
 		}
 
 		public void AddNode(NodeInfo nodeInfo)
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListAddNode(this.InternalObject, nodeInfo.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoListAddNode(this.InternalObject, nodeInfo.InternalObject));
 			
 		}
 
 		public void AddNodeFromList(IEnumerator<NodeInfo> curr)
 		{
 			NodeInfoListEnumerator enumer = (NodeInfoListEnumerator)curr;
-            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListAddNodeFromList(this.InternalObject, enumer.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoListAddNodeFromList(this.InternalObject, enumer.InternalObject));
 			
 		}
 
 		public void Remove(IEnumerator<NodeInfo> location)
 		{
 			NodeInfoListEnumerator enumer = (NodeInfoListEnumerator)location;
-            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListRemove(this.InternalObject, enumer.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoListRemove(this.InternalObject, enumer.InternalObject));
 			
 		}
 
 		public void Clear()
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListClear(this.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoListClear(this.InternalObject));
 			
 		}
 
 		public void Append(NodeInfoList other)
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnNodeInfoListAppend(this.InternalObject, other.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoListAppend(this.InternalObject, other.InternalObject));
 			
 		}
 
 		public bool IsEmpty()
 		{
-			return OpenNIImporter.xnNodeInfoListIsEmpty(this.InternalObject);
+			return SafeNativeMethods.xnNodeInfoListIsEmpty(this.InternalObject);
 		}
 
 		public void Filter(Context context, Query query)

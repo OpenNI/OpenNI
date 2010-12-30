@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UserID = System.UInt32;
+using UserId = System.UInt32;
 using System.Text;
 
 namespace OpenNI
@@ -11,18 +11,18 @@ namespace OpenNI
         public PoseDetectionCapability(ProductionNode node)
             : base(node)
         {
-            this.internalPoseDetected = new OpenNIImporter.XnPoseDetectionCallback(this.InternalPoseDetected);
-            this.internalPoseEnded = new OpenNIImporter.XnPoseDetectionCallback(this.InternalPoseEnded);
+            this.internalPoseDetected = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseDetected);
+            this.internalPoseEnded = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseEnded);
         }
 
         public UInt32 GetNumberOfPoses()
         {
-            return OpenNIImporter.xnGetNumberOfPoses(this.InternalObject);
+            return SafeNativeMethods.xnGetNumberOfPoses(this.InternalObject);
         }
 
 		public string[] GetAllAvailablePoses()
 		{
-			uint count = OpenNIImporter.xnGetNumberOfPoses(this.InternalObject);
+			uint count = SafeNativeMethods.xnGetNumberOfPoses(this.InternalObject);
 			IntPtr[] arr = new IntPtr[count];
 			const int nameSize = 80;
 			string[] poses;
@@ -34,7 +34,7 @@ namespace OpenNI
 					arr[i] = Marshal.AllocHGlobal(nameSize);
 				}
 
-                Status.ThrowOnFail(OpenNIImporter.xnGetAllAvailablePoses(this.InternalObject, arr, nameSize, ref count));
+                Status.ThrowOnFail(SafeNativeMethods.xnGetAllAvailablePoses(this.InternalObject, arr, nameSize, ref count));
 				
 
 				poses = new string[count];
@@ -55,14 +55,14 @@ namespace OpenNI
 			return poses;
 		}
 
-		public void StartPoseDetection(string pose, UserID user)
+		public void StartPoseDetection(string pose, UserId user)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnStartPoseDetection(this.InternalObject, pose, user));
+            Status.ThrowOnFail(SafeNativeMethods.xnStartPoseDetection(this.InternalObject, pose, user));
             
         }
-        public void StopPoseDetection(UserID user)
+        public void StopPoseDetection(UserId user)
         {
-            OpenNIImporter.xnStopPoseDetection(this.InternalObject, user);
+            SafeNativeMethods.xnStopPoseDetection(this.InternalObject, user);
         }
 
         #region Pose Detected
@@ -73,7 +73,7 @@ namespace OpenNI
             {
                 if (this.poseDetectedEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterToPoseCallbacks(this.InternalObject, internalPoseDetected, null, IntPtr.Zero, out poseDetectedHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, internalPoseDetected, null, IntPtr.Zero, out poseDetectedHandle));
                     
                 }
                 this.poseDetectedEvent += value;
@@ -84,17 +84,17 @@ namespace OpenNI
 
                 if (this.poseDetectedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseDetectedHandle);
+                    SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseDetectedHandle);
                 }
             }
         }
-        private void InternalPoseDetected(NodeSafeHandle hNode, string pose, UserID id, IntPtr pCookie)
+        private void InternalPoseDetected(NodeSafeHandle hNode, string pose, UserId id, IntPtr pCookie)
         {
             var handler = this.poseDetectedEvent;
             if (handler != null)
                 handler(this, new PoseDetectionArgs(pose, id, pCookie));
         }
-        private OpenNIImporter.XnPoseDetectionCallback internalPoseDetected;
+        private SafeNativeMethods.XnPoseDetectionCallback internalPoseDetected;
         private IntPtr poseDetectedHandle;
         #endregion
 
@@ -106,7 +106,7 @@ namespace OpenNI
             {
                 if (this.poseEndedEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterToPoseCallbacks(this.InternalObject, null, InternalPoseEnded, IntPtr.Zero, out poseEndedHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, null, InternalPoseEnded, IntPtr.Zero, out poseEndedHandle));
                     
                 }
                 this.poseEndedEvent += value;
@@ -117,17 +117,17 @@ namespace OpenNI
 
                 if (this.poseEndedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseEndedHandle);
+                    SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseEndedHandle);
                 }
             }
         }
-        private void InternalPoseEnded(NodeSafeHandle hNode, string pose, UserID id, IntPtr pCookie)
+        private void InternalPoseEnded(NodeSafeHandle hNode, string pose, UserId id, IntPtr pCookie)
         {
             var handler = this.poseEndedEvent;
             if (handler != null)
                 handler(this, new PoseDetectionArgs(pose, id, pCookie));
         }
-        private OpenNIImporter.XnPoseDetectionCallback internalPoseEnded;
+        private SafeNativeMethods.XnPoseDetectionCallback internalPoseEnded;
         private IntPtr poseEndedHandle;
         #endregion
 
@@ -143,10 +143,10 @@ namespace OpenNI
         /// Initializes a new instance of the PoseDetectedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public PoseDetectionArgs(string pose, UserID userId, IntPtr cookie)
+        public PoseDetectionArgs(string pose, UserId userId, IntPtr cookie)
         {
             this.Pose = pose;
-            this.UserID = userId;
+            this.UserId = userId;
             this.Cookie = cookie;
         }
 
@@ -158,7 +158,7 @@ namespace OpenNI
         /// <summary>
         /// Gets the id of the user that entered the pose or left it. 
         /// </summary>
-        public UserID UserID { get; private set; }
+        public UserId UserId { get; private set; }
 
         /// <summary>
         /// Gets the object that contains data about the Capability.

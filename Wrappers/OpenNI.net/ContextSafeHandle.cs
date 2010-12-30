@@ -23,7 +23,7 @@ namespace OpenNI
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
-            OpenNIImporter.xnShutdown(this);
+            SafeNativeMethods.xnShutdown(this);
 
             return true;
         }

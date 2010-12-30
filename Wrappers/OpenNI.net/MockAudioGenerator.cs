@@ -33,7 +33,7 @@ namespace OpenNI
 
 		public void SetData(UInt32 frameID, UInt64 timestamp, UInt32 dataSize, IntPtr buffer)
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnMockAudioSetData(this.InternalObject, frameID, timestamp, dataSize, buffer));
+            Status.ThrowOnFail(SafeNativeMethods.xnMockAudioSetData(this.InternalObject, frameID, timestamp, dataSize, buffer));
 			
 		}
 
@@ -44,13 +44,13 @@ namespace OpenNI
 
 		public void SetData(AudioMetaData audioMD)
 		{
-			SetData(audioMD, audioMD.FrameID, audioMD.Timestamp);
+			SetData(audioMD, audioMD.FrameId, audioMD.Timestamp);
 		}
 
 		private static NodeSafeHandle Create(Context context, string name)
 		{
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Audio, name, out handle));
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateMockNode(context.InternalObject, NodeType.Audio, name, out handle));
 			
 			return handle;
 		}
@@ -58,7 +58,7 @@ namespace OpenNI
         private static NodeSafeHandle CreateBasedOn(AudioGenerator basedOn, string name)
 		{
             NodeSafeHandle handle;
-			Status.ThrowOnFail(OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
+			Status.ThrowOnFail(SafeNativeMethods.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
                 basedOn.InternalObject, name, out handle));
 			
 			return handle;

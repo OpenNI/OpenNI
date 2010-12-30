@@ -10,42 +10,42 @@ namespace OpenNI
 
 		public static void Init()
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnLogInitSystem());
+			Status.ThrowOnFail(SafeNativeMethods.xnLogInitSystem());
 		}
 
 		public static void InitFromXmlFile(string xmlFile)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnLogInitFromXmlFile(xmlFile));
+			Status.ThrowOnFail(SafeNativeMethods.xnLogInitFromXmlFile(xmlFile));
 		}
 
 		public static void Close()
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnLogClose());
+			Status.ThrowOnFail(SafeNativeMethods.xnLogClose());
 		}
 
 		public static void SetMaskState(string maskName, bool on)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnLogSetMaskState(maskName, on));
+			Status.ThrowOnFail(SafeNativeMethods.xnLogSetMaskState(maskName, on));
 		}
 
 		public static void SetSeverityFilter(LogSeverity severity)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnLogSetSeverityFilter(severity));
+			Status.ThrowOnFail(SafeNativeMethods.xnLogSetSeverityFilter(severity));
 		}
 
 		public static void SetConsoleOutput(bool on)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnLogSetConsoleOutput(on));
+			Status.ThrowOnFail(SafeNativeMethods.xnLogSetConsoleOutput(on));
 		}
 
 		public static void SetFileOutput(bool on)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnLogSetFileOutput(on));
+			Status.ThrowOnFail(SafeNativeMethods.xnLogSetFileOutput(on));
 		}
 
 		public static void SetOutputFolder(string folder)
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnLogSetOutputFolder(folder));
+			Status.ThrowOnFail(SafeNativeMethods.xnLogSetOutputFolder(folder));
 		}
 	}
 }

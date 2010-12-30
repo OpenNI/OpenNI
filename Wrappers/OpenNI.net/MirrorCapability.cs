@@ -10,19 +10,19 @@ namespace OpenNI
 			base(node)
 		{
 			this.mirrorChangedEvent = new StateChangedEvent(node,
-				OpenNIImporter.xnRegisterToMirrorChange,
-				OpenNIImporter.xnUnregisterFromMirrorChange);
+				SafeNativeMethods.xnRegisterToMirrorChange,
+				SafeNativeMethods.xnUnregisterFromMirrorChange);
 		}
 
 		public bool IsMirrored
 		{
             get
             {
-                return OpenNIImporter.xnIsMirrored(this.InternalObject);
+                return SafeNativeMethods.xnIsMirrored(this.InternalObject);
             }
             set
             {
-			    Status.ThrowOnFail(OpenNIImporter.xnSetMirror(this.InternalObject, value));
+			    Status.ThrowOnFail(SafeNativeMethods.xnSetMirror(this.InternalObject, value));
             }
 		}
 

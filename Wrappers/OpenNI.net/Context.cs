@@ -52,7 +52,7 @@ namespace OpenNI
             Contract.Requires(!string.IsNullOrWhiteSpace(xml));
 
 			EnumerationErrors errors = new EnumerationErrors();
-            var status = OpenNIImporter.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
+            var status = SafeNativeMethods.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
             Status.ThrowOnFail(status, errors);
 		}
 
@@ -66,7 +66,7 @@ namespace OpenNI
             Contract.Requires(System.IO.File.Exists(xmlFile));
             
             EnumerationErrors errors = new EnumerationErrors();
-            var status = OpenNIImporter.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
+            var status = SafeNativeMethods.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
             Status.ThrowOnFail(status, errors);
 		}
 
@@ -78,7 +78,7 @@ namespace OpenNI
 		{
             Contract.Requires(!string.IsNullOrWhiteSpace(fileName));
 
-            Status.ThrowOnFail(OpenNIImporter.xnContextOpenFileRecording(this.InternalObject, fileName));
+            Status.ThrowOnFail(SafeNativeMethods.xnContextOpenFileRecording(this.InternalObject, fileName));
 			
 		}
 
@@ -86,7 +86,7 @@ namespace OpenNI
 		{
             Contract.Requires(license != null);
 
-            Status.ThrowOnFail(OpenNIImporter.xnAddLicense(this.InternalObject, license));
+            Status.ThrowOnFail(SafeNativeMethods.xnAddLicense(this.InternalObject, license));
 			
 		}
 
@@ -94,7 +94,7 @@ namespace OpenNI
 		{
 			IntPtr pArray;
 			uint size;
-            Status.ThrowOnFail(OpenNIImporter.xnEnumerateLicenses(this.InternalObject, out pArray, out size));
+            Status.ThrowOnFail(SafeNativeMethods.xnEnumerateLicenses(this.InternalObject, out pArray, out size));
 			
 
 			License[] result = null;
@@ -112,7 +112,7 @@ namespace OpenNI
 			}
 			finally
 			{
-				OpenNIImporter.xnFreeLicensesList(pArray);
+				SafeNativeMethods.xnFreeLicensesList(pArray);
 			}
 
 			return result;
@@ -127,7 +127,7 @@ namespace OpenNI
 
 			using (EnumerationErrors errors = new EnumerationErrors())
 			{
-				var status = OpenNIImporter.xnEnumerateProductionTrees(this.InternalObject, type,
+				var status = SafeNativeMethods.xnEnumerateProductionTrees(this.InternalObject, type,
 					query == null ? QuerySafeHandle.Zero : query.InternalObject,
 					out resultList,
                     errors.InternalObject);
@@ -152,7 +152,7 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
             NodeSafeHandle nodeHandle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle));
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle));
 			
 			return CreateProductionNodeObject(nodeHandle, nodeInfo.Description.Type);
 		}
@@ -162,7 +162,7 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<NodeInfoList>() != null);
 
             NodeInfoListSafeHandle pList;
-            Status.ThrowOnFail(OpenNIImporter.xnEnumerateExistingNodes(this.InternalObject, out pList));
+            Status.ThrowOnFail(SafeNativeMethods.xnEnumerateExistingNodes(this.InternalObject, out pList));
 			
 			return new NodeInfoList(pList);
 		}
@@ -172,7 +172,7 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<NodeInfoList>() != null);
 
             NodeInfoListSafeHandle pList;
-            Status.ThrowOnFail(OpenNIImporter.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList));
+            Status.ThrowOnFail(SafeNativeMethods.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList));
 			
 			return new NodeInfoList(pList);
 		}
@@ -182,7 +182,7 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
             NodeSafeHandle nodeHandle;
-            Status.ThrowOnFail(OpenNIImporter.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle));
+            Status.ThrowOnFail(SafeNativeMethods.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle));
 			
 			return CreateProductionNodeObject(nodeHandle, type);
 		}
@@ -192,7 +192,7 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<ProductionNode>() != null);
 
             NodeSafeHandle nodeHandle;
-            Status.ThrowOnFail(OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle));
 			
 			return CreateProductionNodeObject(nodeHandle);
 		}
@@ -203,21 +203,21 @@ namespace OpenNI
             Contract.Ensures(Contract.Result<NodeInfo>() != null);
 
             NodeSafeHandle nodeHandle;
-            Status.ThrowOnFail(OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle));
 			
-			NodeInfoSafeHandle nodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
+			NodeInfoSafeHandle nodeInfo = SafeNativeMethods.xnGetNodeInfo(nodeHandle);
 			return new NodeInfo(nodeInfo);
 		}
 
 		public void StartGeneratingAll()
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnStartGeneratingAll(this.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnStartGeneratingAll(this.InternalObject));
 			
 		}
 
 		public void StopGeneratingAll()
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnStopGeneratingAll(this.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnStopGeneratingAll(this.InternalObject));
 			
 		}
 
@@ -225,11 +225,11 @@ namespace OpenNI
         {
             get
             {
-                return OpenNIImporter.xnGetGlobalMirror(this.InternalObject);
+                return SafeNativeMethods.xnGetGlobalMirror(this.InternalObject);
             }
             set
             {
-                Status.ThrowOnFail(OpenNIImporter.xnSetGlobalMirror(this.InternalObject, value));
+                Status.ThrowOnFail(SafeNativeMethods.xnSetGlobalMirror(this.InternalObject, value));
 			    
             }
 		}
@@ -242,7 +242,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnGetGlobalErrorState(this.InternalObject);
+                return SafeNativeMethods.xnGetGlobalErrorState(this.InternalObject);
             }
 		}
 
@@ -252,7 +252,7 @@ namespace OpenNI
 			{
 				if (this.errorStateChanged == null)
 				{
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterToGlobalErrorStateChange(this.InternalObject, ErrorStateChangedCallback, IntPtr.Zero, out this.errorStateCallbackHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterToGlobalErrorStateChange(this.InternalObject, ErrorStateChangedCallback, IntPtr.Zero, out this.errorStateCallbackHandle));
 				}
 
 				this.errorStateChanged += value;
@@ -263,32 +263,32 @@ namespace OpenNI
 
 				if (this.errorStateChanged == null)
 				{
-					OpenNIImporter.xnUnregisterFromGlobalErrorStateChange(this.InternalObject, this.errorStateCallbackHandle);
+					SafeNativeMethods.xnUnregisterFromGlobalErrorStateChange(this.InternalObject, this.errorStateCallbackHandle);
 				}
 			}
 		}
 
 		public void WaitAndUpdateAll()
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnWaitAndUpdateAll(this.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnWaitAndUpdateAll(this.InternalObject));
 			
 		}
 
 		public void WaitAnyUpdateAll()
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnWaitAnyUpdateAll(this.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnWaitAnyUpdateAll(this.InternalObject));
 			
 		}
 
 		public void WaitOneUpdateAll(Generator node)
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnWaitOneUpdateAll(this.InternalObject, node.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnWaitOneUpdateAll(this.InternalObject, node.InternalObject));
 			
 		}
 
 		public void WaitNoneUpdateAll()
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnWaitNoneUpdateAll(this.InternalObject));
+            Status.ThrowOnFail(SafeNativeMethods.xnWaitNoneUpdateAll(this.InternalObject));
 			
 		}
 
@@ -297,7 +297,7 @@ namespace OpenNI
             NodeSafeHandle nodeHandle;
 			using (EnumerationErrors errors = new EnumerationErrors())
 			{
-				var status = (OpenNIImporter.xnCreateAnyProductionTree(this.InternalObject, type,
+				var status = (SafeNativeMethods.xnCreateAnyProductionTree(this.InternalObject, type,
 					query == null ? QuerySafeHandle.Zero : query.InternalObject,
                     out nodeHandle, errors.InternalObject));
                 Status.ThrowOnFail(status, errors);
@@ -309,7 +309,7 @@ namespace OpenNI
         public static Context Init()
 		{
 			ContextSafeHandle pContext;
-            Status.ThrowOnFail(OpenNIImporter.xnInit(out pContext));
+            Status.ThrowOnFail(SafeNativeMethods.xnInit(out pContext));
 			
 			return new Context(pContext);
 		}
@@ -318,7 +318,7 @@ namespace OpenNI
 		{
             ContextSafeHandle pContext;
             EnumerationErrors errors = new EnumerationErrors();
-            var status = OpenNIImporter.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
+            var status = SafeNativeMethods.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
             Status.ThrowOnFail(status, errors);
             return new Context(pContext);
 		}
@@ -327,8 +327,8 @@ namespace OpenNI
 		{
 			if (type == null)
 			{
-				NodeInfoSafeHandle pNodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
-				type = OpenNIImporter.xnNodeInfoGetDescription(pNodeInfo).Type;
+				NodeInfoSafeHandle pNodeInfo = SafeNativeMethods.xnGetNodeInfo(nodeHandle);
+				type = SafeNativeMethods.xnNodeInfoGetDescription(pNodeInfo).Type;
 			}
 
 			switch (type)

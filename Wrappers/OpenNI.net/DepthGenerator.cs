@@ -10,8 +10,8 @@ namespace OpenNI
 			base(nodeHandle, addRef)
 		{
 			this.fovChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToDepthFieldOfViewChange,
-				OpenNIImporter.xnUnregisterFromDepthFieldOfViewChange);
+				SafeNativeMethods.xnRegisterToDepthFieldOfViewChange,
+				SafeNativeMethods.xnUnregisterFromDepthFieldOfViewChange);
 		}
 
 		public DepthGenerator(Context context, Query query, EnumerationErrors errors) :
@@ -31,7 +31,7 @@ namespace OpenNI
 
 		public IntPtr GetDepthMapPtr()
 		{
-			return OpenNIImporter.xnGetDepthMap(this.InternalObject);
+			return SafeNativeMethods.xnGetDepthMap(this.InternalObject);
 		}
 
 		public MapData<UInt16> GetDepthMap()
@@ -41,13 +41,13 @@ namespace OpenNI
 
 		public UInt16 GetDeviceMaxDepth()
 		{
-			return OpenNIImporter.xnGetDeviceMaxDepth(this.InternalObject);
+			return SafeNativeMethods.xnGetDeviceMaxDepth(this.InternalObject);
 		}
 
 		public FieldOfView GetFieldOfView()
 		{
 			FieldOfView fov = new FieldOfView();
-            Status.ThrowOnFail(OpenNIImporter.xnGetDepthFieldOfView(this.InternalObject, ref fov));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetDepthFieldOfView(this.InternalObject, ref fov));
 			
 			return fov;
 		}
@@ -61,7 +61,7 @@ namespace OpenNI
 		public Point3D[] ConvertProjectiveToRealWorld(Point3D[] projectivePoints)
 		{
 			Point3D[] realWorld = new Point3D[projectivePoints.Length];
-            Status.ThrowOnFail(OpenNIImporter.xnConvertProjectiveToRealWorld(this.InternalObject, (uint)projectivePoints.Length, projectivePoints, realWorld));
+            Status.ThrowOnFail(SafeNativeMethods.xnConvertProjectiveToRealWorld(this.InternalObject, (uint)projectivePoints.Length, projectivePoints, realWorld));
 			
 			return realWorld;
 		}
@@ -77,7 +77,7 @@ namespace OpenNI
         public Point3D[] ConvertRealWorldToProjective(Point3D[] realWorldPoints)
         {
             Point3D[] projective = new Point3D[realWorldPoints.Length];
-            Status.ThrowOnFail(OpenNIImporter.xnConvertRealWorldToProjective(this.InternalObject, (uint)realWorldPoints.Length, realWorldPoints, projective));
+            Status.ThrowOnFail(SafeNativeMethods.xnConvertRealWorldToProjective(this.InternalObject, (uint)realWorldPoints.Length, realWorldPoints, projective));
             
             return projective;
         }
@@ -99,7 +99,7 @@ namespace OpenNI
 		{
 			using (IMarshaler marsh = depthMD.GetMarshaler(true))
 			{
-				OpenNIImporter.xnGetDepthMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetDepthMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 
@@ -116,7 +116,7 @@ namespace OpenNI
 		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
 		{
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateDepthGenerator(context.InternalObject, out handle,
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateDepthGenerator(context.InternalObject, out handle,
 				query == null ? QuerySafeHandle.Zero : query.InternalObject,
                 errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
 			

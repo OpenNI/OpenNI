@@ -10,27 +10,27 @@ namespace OpenNI
 			: base(pNode, addRef)
 		{
 			this.generationRunningChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToGenerationRunningChange,
-				OpenNIImporter.xnUnregisterFromGenerationRunningChange);
+				SafeNativeMethods.xnRegisterToGenerationRunningChange,
+				SafeNativeMethods.xnUnregisterFromGenerationRunningChange);
 
 			this.newDataAvailable = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToNewDataAvailable,
-				OpenNIImporter.xnUnregisterFromNewDataAvailable);
+				SafeNativeMethods.xnRegisterToNewDataAvailable,
+				SafeNativeMethods.xnUnregisterFromNewDataAvailable);
 		}
 
 		public void StartGenerating()
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnStartGenerating(this.InternalObject));
+			Status.ThrowOnFail(SafeNativeMethods.xnStartGenerating(this.InternalObject));
 		}
 
 		public bool IsGenerating()
 		{
-			return OpenNIImporter.xnIsGenerating(this.InternalObject);
+			return SafeNativeMethods.xnIsGenerating(this.InternalObject);
 		}
 
 		public void StopGenerating()
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnStopGenerating(this.InternalObject));
+			Status.ThrowOnFail(SafeNativeMethods.xnStopGenerating(this.InternalObject));
 		}
 
 		public event EventHandler<StateChangedArgs> GenerationRunningChanged
@@ -41,13 +41,13 @@ namespace OpenNI
 
 		public bool IsNewDataAvailable(out UInt64 timestamp)
 		{
-			return OpenNIImporter.xnIsNewDataAvailable(this.InternalObject, out timestamp);
+			return SafeNativeMethods.xnIsNewDataAvailable(this.InternalObject, out timestamp);
 		}
 
 		public bool IsNewDataAvailable()
 		{
 			UInt64 timestamp;
-			return OpenNIImporter.xnIsNewDataAvailable(this.InternalObject, out timestamp);
+			return SafeNativeMethods.xnIsNewDataAvailable(this.InternalObject, out timestamp);
 		}
 
 		public event EventHandler<StateChangedArgs> NewDataAvailable
@@ -58,14 +58,14 @@ namespace OpenNI
 
 		public void WaitAndUpdateData()
 		{
-			Status.ThrowOnFail(OpenNIImporter.xnWaitAndUpdateData(this.InternalObject));
+			Status.ThrowOnFail(SafeNativeMethods.xnWaitAndUpdateData(this.InternalObject));
 		}
 
 		public bool IsDataNew
 		{
             get
             {
-                return OpenNIImporter.xnIsDataNew(this.InternalObject);
+                return SafeNativeMethods.xnIsDataNew(this.InternalObject);
             }
 		}
 
@@ -73,7 +73,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnGetDataSize(this.InternalObject);
+                return SafeNativeMethods.xnGetDataSize(this.InternalObject);
             }
 		}
 
@@ -81,7 +81,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnGetTimestamp(this.InternalObject);
+                return SafeNativeMethods.xnGetTimestamp(this.InternalObject);
             }
 		}
 
@@ -89,7 +89,7 @@ namespace OpenNI
 		{
             get
             {
-                return OpenNIImporter.xnGetFrameID(this.InternalObject);
+                return SafeNativeMethods.xnGetFrameID(this.InternalObject);
             }
 		}
 

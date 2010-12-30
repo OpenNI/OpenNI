@@ -2,7 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UserID = System.UInt32;
+using UserId = System.UInt32;
 
 namespace OpenNI
 {
@@ -12,35 +12,35 @@ namespace OpenNI
             : base(node)
         {
             this.jointConfigurationChangedEvent = new StateChangedEvent(node,
-                OpenNIImporter.xnRegisterToJointConfigurationChange,
-                OpenNIImporter.xnUnregisterFromJointConfigurationChange);
+                SafeNativeMethods.xnRegisterToJointConfigurationChange,
+                SafeNativeMethods.xnUnregisterFromJointConfigurationChange);
 
-            this.internalCalibrationStart = new OpenNIImporter.XnCalibrationStart(this.InternalCalibrationStart);
-            this.internalCalibrationEnd = new OpenNIImporter.XnCalibrationEnd(this.InternalCalibrationEnd);
+            this.internalCalibrationStart = new SafeNativeMethods.XnCalibrationStart(this.InternalCalibrationStart);
+            this.internalCalibrationEnd = new SafeNativeMethods.XnCalibrationEnd(this.InternalCalibrationEnd);
         }
 
         public bool IsJointAvailable(SkeletonJoint joint)
         {
-            return OpenNIImporter.xnIsJointAvailable(this.InternalObject, joint);
+            return SafeNativeMethods.xnIsJointAvailable(this.InternalObject, joint);
         }
         public bool IsProfileAvailable(SkeletonProfile profile)
         {
-            return OpenNIImporter.xnIsProfileAvailable(this.InternalObject, profile);
+            return SafeNativeMethods.xnIsProfileAvailable(this.InternalObject, profile);
         }
 
         public void SetSkeletonProfile(SkeletonProfile profile)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnSetSkeletonProfile(this.InternalObject, profile));
+            Status.ThrowOnFail(SafeNativeMethods.xnSetSkeletonProfile(this.InternalObject, profile));
             
         }
         public void SetJointActive(SkeletonJoint joint, bool state)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnSetJointActive(this.InternalObject, joint, state));
+            Status.ThrowOnFail(SafeNativeMethods.xnSetJointActive(this.InternalObject, joint, state));
             
         }
         public bool IsJointActive(SkeletonJoint joint)
         {
-            return OpenNIImporter.xnIsJointActive(this.InternalObject, joint);
+            return SafeNativeMethods.xnIsJointActive(this.InternalObject, joint);
         }
 
         public event EventHandler<StateChangedArgs> JointConfigurationChangedEvent
@@ -53,102 +53,102 @@ namespace OpenNI
 
         // EnuemrateActiveJoints
 
-        public void GetSkeletonJoint(UserID user, SkeletonJoint eJoint, SkeletonJointTransformation joint)
+        public void GetSkeletonJoint(UserId user, SkeletonJoint eJoint, SkeletonJointTransformation joint)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnGetSkeletonJoint(this.InternalObject, user, eJoint, joint));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonJoint(this.InternalObject, user, eJoint, joint));
             
         }
 
-        public void GetSkeletonJointPosition(UserID user, SkeletonJoint eJoint, ref SkeletonJointPosition joint)
+        public void GetSkeletonJointPosition(UserId user, SkeletonJoint eJoint, ref SkeletonJointPosition joint)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnGetSkeletonJointPosition(this.InternalObject, user, eJoint, ref joint));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonJointPosition(this.InternalObject, user, eJoint, ref joint));
             
         }
 
-        public void GetSkeletonJointOrientation(UserID user, SkeletonJoint eJoint, SkeletonJointOrientation joint)
+        public void GetSkeletonJointOrientation(UserId user, SkeletonJoint eJoint, SkeletonJointOrientation joint)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnGetSkeletonJointOrientation(this.InternalObject, user, eJoint, joint));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonJointOrientation(this.InternalObject, user, eJoint, joint));
             
         }
 
-        public bool IsTracking(UserID user)
+        public bool IsTracking(UserId user)
         {
-            return OpenNIImporter.xnIsSkeletonTracking(this.InternalObject, user);
+            return SafeNativeMethods.xnIsSkeletonTracking(this.InternalObject, user);
         }
 
-        public bool IsCalibrated(UserID user)
+        public bool IsCalibrated(UserId user)
         {
-            return OpenNIImporter.xnIsSkeletonCalibrated(this.InternalObject, user);
+            return SafeNativeMethods.xnIsSkeletonCalibrated(this.InternalObject, user);
         }
 
-        public bool IsCalibrating(UserID user)
+        public bool IsCalibrating(UserId user)
         {
-            return OpenNIImporter.xnIsSkeletonCalibrating(this.InternalObject, user);
+            return SafeNativeMethods.xnIsSkeletonCalibrating(this.InternalObject, user);
         }
 
-        public void RequestCalibration(UserID user, bool force)
+        public void RequestCalibration(UserId user, bool force)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnRequestSkeletonCalibration(this.InternalObject, user, force));
+            Status.ThrowOnFail(SafeNativeMethods.xnRequestSkeletonCalibration(this.InternalObject, user, force));
             
         }
 
-        public void AbortCalibration(UserID user)
+        public void AbortCalibration(UserId user)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnAbortSkeletonCalibration(this.InternalObject, user));
+            Status.ThrowOnFail(SafeNativeMethods.xnAbortSkeletonCalibration(this.InternalObject, user));
             
         }
 
-        public void SaveCalibrationData(UserID user, UInt32 slot)
+        public void SaveCalibrationData(UserId user, UInt32 slot)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnSaveSkeletonCalibrationData(this.InternalObject, user, slot));
+            Status.ThrowOnFail(SafeNativeMethods.xnSaveSkeletonCalibrationData(this.InternalObject, user, slot));
             
         }
 
-        public void LoadCalibrationData(UserID user, UInt32 slot)
+        public void LoadCalibrationData(UserId user, UInt32 slot)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnLoadSkeletonCalibrationData(this.InternalObject, user, slot));
+            Status.ThrowOnFail(SafeNativeMethods.xnLoadSkeletonCalibrationData(this.InternalObject, user, slot));
             
         }
         public void ClearCalibrationData(UInt32 slot)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnClearSkeletonCalibrationData(this.InternalObject, slot));
+            Status.ThrowOnFail(SafeNativeMethods.xnClearSkeletonCalibrationData(this.InternalObject, slot));
             
         }
         public bool IsCalibrationData(UInt32 slot)
         {
-            return OpenNIImporter.xnIsSkeletonCalibrationData(this.InternalObject, slot);
+            return SafeNativeMethods.xnIsSkeletonCalibrationData(this.InternalObject, slot);
         }
 
-        public void StartTracking(UserID user)
+        public void StartTracking(UserId user)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnStartSkeletonTracking(this.InternalObject, user));
+            Status.ThrowOnFail(SafeNativeMethods.xnStartSkeletonTracking(this.InternalObject, user));
             
         }
-        public void StopTracking(UserID user)
+        public void StopTracking(UserId user)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnStopSkeletonTracking(this.InternalObject, user));
+            Status.ThrowOnFail(SafeNativeMethods.xnStopSkeletonTracking(this.InternalObject, user));
             
         }
-        public void Reset(UserID user)
+        public void Reset(UserId user)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnResetSkeleton(this.InternalObject, user));
+            Status.ThrowOnFail(SafeNativeMethods.xnResetSkeleton(this.InternalObject, user));
             
         }
 
         public bool NeedPoseForCalibration()
         {
-            return OpenNIImporter.xnNeedPoseForSkeletonCalibration(this.InternalObject);
+            return SafeNativeMethods.xnNeedPoseForSkeletonCalibration(this.InternalObject);
         }
         public string GetCalibrationPose()
         {
             StringBuilder sb = new StringBuilder(1024);
-            Status.ThrowOnFail(OpenNIImporter.xnGetSkeletonCalibrationPose(this.InternalObject, sb));
+            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonCalibrationPose(this.InternalObject, sb));
             
             return sb.ToString();
         }
         public void SetSmoothing(float factor)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnSetSkeletonSmoothing(this.InternalObject, factor));
+            Status.ThrowOnFail(SafeNativeMethods.xnSetSkeletonSmoothing(this.InternalObject, factor));
             
         }
 
@@ -160,7 +160,7 @@ namespace OpenNI
             {
                 if (this.calibrationStartedEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStart, null, IntPtr.Zero, out calibrationStartHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStart, null, IntPtr.Zero, out calibrationStartHandle));
                     
                 }
                 this.calibrationStartedEvent += value;
@@ -171,17 +171,17 @@ namespace OpenNI
 
                 if (this.calibrationStartedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationStartHandle);
+                    SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationStartHandle);
                 }
             }
         }
-        private void InternalCalibrationStart(NodeSafeHandle hNode, UserID id, IntPtr cookie)
+        private void InternalCalibrationStart(NodeSafeHandle hNode, UserId id, IntPtr cookie)
         {
             var handler = this.calibrationStartedEvent;
             if (handler != null)
                 handler(this, new CalibrationStartedArgs(id, cookie));
         }
-        private OpenNIImporter.XnCalibrationStart internalCalibrationStart;
+        private SafeNativeMethods.XnCalibrationStart internalCalibrationStart;
         private IntPtr calibrationStartHandle;
         #endregion
 
@@ -193,7 +193,7 @@ namespace OpenNI
             {
                 if (this.calibrationEndedEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterCalibrationCallbacks(this.InternalObject, null, internalCalibrationEnd, IntPtr.Zero, out calibrationEndHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, null, internalCalibrationEnd, IntPtr.Zero, out calibrationEndHandle));
                     
                 }
                 this.calibrationEndedEvent += value;
@@ -204,17 +204,17 @@ namespace OpenNI
 
                 if (this.calibrationEndedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationEndHandle);
+                    SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationEndHandle);
                 }
             }
         }
-        private void InternalCalibrationEnd(NodeSafeHandle hNode, UserID id, bool success, IntPtr cookie)
+        private void InternalCalibrationEnd(NodeSafeHandle hNode, UserId id, bool success, IntPtr cookie)
         {
             var handler = this.calibrationEndedEvent;
             if (handler != null)
                 handler(this, new CalibrationEndedArgs(id, success, cookie));
         }
-        private OpenNIImporter.XnCalibrationEnd internalCalibrationEnd;
+        private SafeNativeMethods.XnCalibrationEnd internalCalibrationEnd;
         private IntPtr calibrationEndHandle;
         #endregion
     }
@@ -229,16 +229,16 @@ namespace OpenNI
         /// Initializes a new instance of the CalibrationStartedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public CalibrationStartedArgs(UserID user, IntPtr cookie)
+        public CalibrationStartedArgs(UserId user, IntPtr cookie)
         {
             this.Cookie = cookie;
-            this.UserID = UserID;
+            this.UserId = UserId;
         }
 
         /// <summary>
         /// Gets the id of the user that's being calibrated.
         /// </summary>
-        public UserID UserID { get; private set; }
+        public UserId UserId { get; private set; }
 
         /// <summary>
         /// Gets the object that contains data about the Capability.
@@ -256,7 +256,7 @@ namespace OpenNI
         /// Initializes a new instance of the CalibrationEndedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public CalibrationEndedArgs(UserID user, bool success, IntPtr cookie)
+        public CalibrationEndedArgs(UserId user, bool success, IntPtr cookie)
             : base(user, cookie)
         {
             this.Success = success;

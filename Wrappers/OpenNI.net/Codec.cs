@@ -18,27 +18,27 @@ namespace OpenNI
 
 		public CodecID GetCodecID()
 		{
-			return new CodecID(OpenNIImporter.xnGetCodecID(this.InternalObject));
+			return new CodecID(SafeNativeMethods.xnGetCodecID(this.InternalObject));
 		}
 
 		public UInt32 EncodeData(IntPtr source, UInt32 sourceSize, IntPtr dest, UInt32 destSize)
 		{
 			UInt32 written;
-			Status.ThrowOnFail(OpenNIImporter.xnEncodeData(this.InternalObject, source, sourceSize, dest, destSize, out written));
+			Status.ThrowOnFail(SafeNativeMethods.xnEncodeData(this.InternalObject, source, sourceSize, dest, destSize, out written));
 			return written;
 		}
 
 		public UInt32 DecodeData(IntPtr source, UInt32 sourceSize, IntPtr dest, UInt32 destSize)
 		{
 			UInt32 written;
-			Status.ThrowOnFail(OpenNIImporter.xnDecodeData(this.InternalObject, source, sourceSize, dest, destSize, out written));
+			Status.ThrowOnFail(SafeNativeMethods.xnDecodeData(this.InternalObject, source, sourceSize, dest, destSize, out written));
 			return written;
 		}
 
 		private static NodeSafeHandle Create(Context context, CodecID codecID, ProductionNode initializer)
 		{
             NodeSafeHandle nodeHandle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateCodec(context.InternalObject, codecID.InternalValue, initializer.InternalObject, out nodeHandle));
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateCodec(context.InternalObject, codecID.InternalValue, initializer.InternalObject, out nodeHandle));
 			return nodeHandle;
 		}
 	}

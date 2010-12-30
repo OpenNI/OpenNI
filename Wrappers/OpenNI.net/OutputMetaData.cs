@@ -12,7 +12,7 @@ namespace OpenNI
 			set { this.data.nTimestamp = value; }
 		}
 
-		public UInt32 FrameID
+		public UInt32 FrameId
 		{
 			get { return this.data.nFrameID; }
 			set { this.data.nFrameID = value; }
@@ -35,7 +35,7 @@ namespace OpenNI
 			return new OutputMetaDataMarshaler(this, passOut);
 		}
 
-		internal class OutputMetaDataMarshaler : Marshaler<OpenNIImporter.XnOutputMetaData>
+		internal class OutputMetaDataMarshaler : Marshaler<SafeNativeMethods.XnOutputMetaData>
 		{
 			public OutputMetaDataMarshaler(OutputMetaData output, bool marshalOut) :
 				base(output.data, marshalOut)
@@ -43,6 +43,6 @@ namespace OpenNI
 			}
 		}
 
-		internal OpenNIImporter.XnOutputMetaData data = new OpenNIImporter.XnOutputMetaData();
+		internal SafeNativeMethods.XnOutputMetaData data = new SafeNativeMethods.XnOutputMetaData();
 	}
 }

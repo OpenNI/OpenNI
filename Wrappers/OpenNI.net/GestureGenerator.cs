@@ -10,11 +10,11 @@ namespace OpenNI
             : base(nodeHandle, addRef)
         {
             this.gestureChanged = new StateChangedEvent(this,
-                OpenNIImporter.xnRegisterToGestureChange,
-                OpenNIImporter.xnUnregisterFromGestureChange);
+                SafeNativeMethods.xnRegisterToGestureChange,
+                SafeNativeMethods.xnUnregisterFromGestureChange);
 
-            this.internalGestureRecognized = new OpenNIImporter.XnGestureRecognized(this.InternalGestureRecognized);
-            this.internalGestureProgress = new OpenNIImporter.XnGestureProgress(this.InternalGestureProgress);
+            this.internalGestureRecognized = new SafeNativeMethods.XnGestureRecognized(this.InternalGestureRecognized);
+            this.internalGestureProgress = new SafeNativeMethods.XnGestureProgress(this.InternalGestureProgress);
         }
         public GestureGenerator(Context context, Query query, EnumerationErrors errors) :
             this(Create(context, query, errors), false)
@@ -32,7 +32,7 @@ namespace OpenNI
         private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
         {
             NodeSafeHandle handle;
-            Status.ThrowOnFail(OpenNIImporter.xnCreateGestureGenerator(context.InternalObject,
+            Status.ThrowOnFail(SafeNativeMethods.xnCreateGestureGenerator(context.InternalObject,
                                                         out handle,
                                                         query == null ? QuerySafeHandle.Zero : query.InternalObject,
                                                         errors == null ? EnumerationErrorsSafeHandle.Zero : errors.InternalObject));
@@ -42,19 +42,19 @@ namespace OpenNI
 
         public void AddGesture(string strGesture, BoundingBox3D area)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnAddGesture(InternalObject, strGesture, ref area));
+            Status.ThrowOnFail(SafeNativeMethods.xnAddGesture(InternalObject, strGesture, ref area));
             
         }
 
 		public void AddGesture(string strGesture)
 		{
-            Status.ThrowOnFail(OpenNIImporter.xnAddGesture(InternalObject, strGesture, IntPtr.Zero));
+            Status.ThrowOnFail(SafeNativeMethods.xnAddGesture(InternalObject, strGesture, IntPtr.Zero));
 			
 		}
 
 		public void RemoveGesture(string strGesture)
         {
-            Status.ThrowOnFail(OpenNIImporter.xnRemoveGesture(InternalObject, strGesture));
+            Status.ThrowOnFail(SafeNativeMethods.xnRemoveGesture(InternalObject, strGesture));
             
         }
 
@@ -72,7 +72,7 @@ namespace OpenNI
                     arr[i] = Marshal.AllocHGlobal(nameSize);
                 }
 
-                Status.ThrowOnFail(OpenNIImporter.xnGetAllActiveGestures(this.InternalObject, arr, nameSize, ref count));
+                Status.ThrowOnFail(SafeNativeMethods.xnGetAllActiveGestures(this.InternalObject, arr, nameSize, ref count));
                 
 
                 poses = new string[count];
@@ -106,7 +106,7 @@ namespace OpenNI
                     arr[i] = Marshal.AllocHGlobal(nameSize);
                 }
 
-                Status.ThrowOnFail(OpenNIImporter.xnEnumerateAllGestures(this.InternalObject, arr, nameSize, ref count));
+                Status.ThrowOnFail(SafeNativeMethods.xnEnumerateAllGestures(this.InternalObject, arr, nameSize, ref count));
                 
 
                 poses = new string[count];
@@ -129,11 +129,11 @@ namespace OpenNI
 
         public bool IsGestureAvailable(string strGesture)
         {
-            return OpenNIImporter.xnIsGestureAvailable(InternalObject, strGesture);
+            return SafeNativeMethods.xnIsGestureAvailable(InternalObject, strGesture);
         }
         public bool IsGestureProgressSupported(string strGesture)
         {
-            return OpenNIImporter.xnIsGestureProgressSupported(InternalObject, strGesture);
+            return SafeNativeMethods.xnIsGestureProgressSupported(InternalObject, strGesture);
         }
         public event EventHandler<StateChangedArgs> GestureChanged
         {
@@ -156,7 +156,7 @@ namespace OpenNI
             {
                 if (this.gestureRecognizedEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterGestureCallbacks(this.InternalObject, this.internalGestureRecognized, null, IntPtr.Zero, out gestureRecognizedHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, this.internalGestureRecognized, null, IntPtr.Zero, out gestureRecognizedHandle));
                     
                 }
                 this.gestureRecognizedEvent += value;
@@ -167,7 +167,7 @@ namespace OpenNI
 
                 if (this.gestureRecognizedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureRecognizedHandle);
+                    SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureRecognizedHandle);
                 }
             }
         }
@@ -177,7 +177,7 @@ namespace OpenNI
             if (handler != null)
                 handler(this, new GestureRecognizedArgs(strGesture, idPosition, endPosition, pCookie));
         }
-        private OpenNIImporter.XnGestureRecognized internalGestureRecognized;
+        private SafeNativeMethods.XnGestureRecognized internalGestureRecognized;
         private IntPtr gestureRecognizedHandle;
         #endregion
 
@@ -189,7 +189,7 @@ namespace OpenNI
             {
                 if (this.gestureProgressEvent == null)
                 {
-                    Status.ThrowOnFail(OpenNIImporter.xnRegisterGestureCallbacks(this.InternalObject, null, this.internalGestureProgress, IntPtr.Zero, out gestureProgressHandle));
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, null, this.internalGestureProgress, IntPtr.Zero, out gestureProgressHandle));
                     
                 }
                 this.gestureProgressEvent += value;
@@ -200,7 +200,7 @@ namespace OpenNI
 
                 if (this.gestureProgressEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureProgressHandle);
+                    SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureProgressHandle);
                 }
             }
         }
@@ -210,7 +210,7 @@ namespace OpenNI
             if (handler != null)
                 handler(this, new GestureProgressArgs(strGesture, position, progress, pCookie));
         }
-        private OpenNIImporter.XnGestureProgress internalGestureProgress;
+        private SafeNativeMethods.XnGestureProgress internalGestureProgress;
         private IntPtr gestureProgressHandle;
         #endregion
     }
