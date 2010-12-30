@@ -14,9 +14,7 @@ using XnFloat = System.Single;
 using XnInt32 = System.Int32;
 using XnInt64 = System.Int64;
 using XnLockHandle = System.UInt32;
-using XnNodeHandle = System.IntPtr;
 using XnNodeInfoListIterator = System.IntPtr;
-using XnNodeQuery = System.IntPtr;
 using XnStatus = System.UInt32;
 using XnUInt = System.IntPtr;
 using XnUInt16 = System.UInt16;
@@ -164,45 +162,45 @@ namespace xn
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Version
 	{
-		public XnUInt8 nMajor;
-		public XnUInt8 nMinor;
-		public XnUInt16 nMaintenance;
-		public XnUInt32 nBuild;
+		public XnUInt8 Major;
+		public XnUInt8 Minor;
+		public XnUInt16 Maintenance;
+		public XnUInt32 Build;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Cropping
 	{
 		/** TRUE if cropping is turned on, FALSE otherwise. */
-		public XnBool bEnabled;
+		public XnBool Enabled;
 		/** Offset in the X-axis, in pixels. */
-		public XnUInt16 nXOffset;
+		public XnUInt16 XOffset;
 		/** Offset in the Y-axis, in pixels. */
-		public XnUInt16 nYOffset;
+		public XnUInt16 YOffset;
 		/** Number of pixels in the X-axis. */
-		public XnUInt16 nXSize;
+		public XnUInt16 XSize;
 		/** Number of pixels in the Y-axis. */
-		public XnUInt16 nYSize;
+		public XnUInt16 YSize;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct MapOutputMode
 	{
 		/** Number of elements in the X-axis. */
-		public XnUInt32 nXRes;
+		public XnUInt32 XRes;
 		/** Number of elements in the Y-axis. */
-		public XnUInt32 nYRes;
+		public XnUInt32 YRes;
 		/** Number of frames per second. */
-		public XnUInt32 nFPS;
+		public XnUInt32 FPS;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct FieldOfView
 	{
 		/** Horizontal Field Of View, in radians. */
-		public XnDouble fHFOV;
+		public XnDouble HFOV;
 		/** Horizontal Field Of View, in radians. */
-		public XnDouble fVFOV;
+		public XnDouble VFOV;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -230,18 +228,18 @@ namespace xn
 	[StructLayout(LayoutKind.Sequential)]
 	public struct RGB24Pixel
 	{
-		public XnUInt8 nRed;
-		public XnUInt8 nGreen;
-		public XnUInt8 nBlue;
+		public XnUInt8 Red;
+		public XnUInt8 Green;
+		public XnUInt8 Blue;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct YUV422DoublePixel
 	{
-		public XnUInt8 nU;
-		public XnUInt8 nY1;
-		public XnUInt8 nV;
-		public XnUInt8 nY2;
+		public XnUInt8 U;
+		public XnUInt8 Y1;
+		public XnUInt8 V;
+		public XnUInt8 Y2;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -249,40 +247,40 @@ namespace xn
 	{
 		public Plane3D(Point3D normal, Point3D point)
 		{
-			this.vNormal = normal;
-			this.ptPoint = point;
+			this.Normal = normal;
+			this.Point = point;
 		}
 
 		/** The normal of the plane. **/
-		public Point3D vNormal;
+		public Point3D Normal;
 
 		/** A point on the plane. **/
-		public Point3D ptPoint;
+		public Point3D Point;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct WaveOutputMode
 	{
-		public XnUInt32 nSampleRate;
-		public XnUInt16 nBitsPerSample;
-		public XnUInt8 nChannels;
+		public XnUInt32 SampleRate;
+		public XnUInt16 BitsPerSample;
+		public XnUInt8 Channels;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SkeletonJointPosition
 	{
 		/** The actual position in real world coordinations */
-		public Point3D position;
+		public Point3D Position;
 
 		/** The confidence in the position */
-		public XnConfidence fConfidence;
+		public XnConfidence Confidence;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	public class Matrix3X3
 	{
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
-		public readonly float[] elements = new float[9];
+		public readonly float[] Elements = new float[9];
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -299,9 +297,9 @@ namespace xn
 	public class SkeletonJointTransformation
 	{
 		/** The position of the joint */
-		public SkeletonJointPosition position;
+		public SkeletonJointPosition Position;
 		/** The orientation of the joint */
-		public SkeletonJointOrientation orientation = new SkeletonJointOrientation();
+		public SkeletonJointOrientation Orientation = new SkeletonJointOrientation();
 	};
 
 	/** A pair of 32-bit unsigned values. **/
@@ -325,10 +323,10 @@ namespace xn
 		public NodeType Type;
 		/** Vendor name */
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_NAME_LENGTH)]
-		public string strVendor;
+		public string Vendor;
 		/** Generator name. Should be unique under Type and Vendor. */
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_NAME_LENGTH)]
-		public string strName;
+		public string Name;
 		/** Current version */
 		Version Version;
 	};
@@ -338,10 +336,10 @@ namespace xn
 	{
 		/** Vendor name **/
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_NAME_LENGTH)]
-		public string strVendor;
+		public string Vendor;
 		/** License key **/
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_LICENSE_LENGTH)]
-		public string strKey;
+		public string Key;
 	};
 
     [SuppressUnmanagedCodeSecurity]

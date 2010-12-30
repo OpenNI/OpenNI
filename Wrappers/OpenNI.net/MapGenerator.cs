@@ -56,7 +56,7 @@ namespace xn
 		protected MapData<T> GetMapData<T>(IntPtr pData)
 		{
 			MapOutputMode mode = this.MapOutputMode;
-			return new MapData<T>((int)mode.nXRes, (int)mode.nYRes, pData);
+			return new MapData<T>((int)mode.XRes, (int)mode.YRes, pData);
 		}
 
 		private StateChangedEvent mapOutputModeChanged;

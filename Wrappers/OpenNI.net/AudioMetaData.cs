@@ -12,20 +12,20 @@ namespace xn
 
 		public byte NumberOfChannels
 		{
-			get { return this.audio.Wave.nChannels; }
-			set { this.audio.Wave.nChannels = value; }
+			get { return this.audio.Wave.Channels; }
+			set { this.audio.Wave.Channels = value; }
 		}
 
 		public UInt32 SampleRate
 		{
-			get { return this.audio.Wave.nSampleRate; }
-			set { this.audio.Wave.nSampleRate = value; }
+			get { return this.audio.Wave.SampleRate; }
+			set { this.audio.Wave.SampleRate = value; }
 		}
 
 		public UInt16 BitsPerSample
 		{
-			get { return this.audio.Wave.nBitsPerSample; }
-			set { this.audio.Wave.nBitsPerSample = value; }
+			get { return this.audio.Wave.BitsPerSample; }
+			set { this.audio.Wave.BitsPerSample = value; }
 		}
 
 		public IntPtr AudioBufferPtr

@@ -43,7 +43,7 @@ namespace UserTracker.net
 
 			MapOutputMode mapMode = this.depth.MapOutputMode;
 
-			this.bitmap = new Bitmap((int)mapMode.nXRes, (int)mapMode.nYRes/*, System.Drawing.Imaging.PixelFormat.Format24bppRgb*/);
+			this.bitmap = new Bitmap((int)mapMode.XRes, (int)mapMode.YRes/*, System.Drawing.Imaging.PixelFormat.Format24bppRgb*/);
 			this.shouldRun = true;
 			this.readerThread = new Thread(ReaderThread);
 			this.readerThread.Start();
@@ -178,13 +178,13 @@ namespace UserTracker.net
         {
             SkeletonJointPosition pos = new SkeletonJointPosition();
             this.skeletonCapbility.GetSkeletonJointPosition(user, joint, ref pos);
-			if (pos.position.Z == 0)
+			if (pos.Position.Z == 0)
 			{
-				pos.fConfidence = 0;
+				pos.Confidence = 0;
 			}
 			else
 			{
-				pos.position = this.depth.ConvertRealWorldToProjective(pos.position);
+				pos.Position = this.depth.ConvertRealWorldToProjective(pos.Position);
 			}
 			this.joints[user][joint] = pos;
         }
@@ -215,10 +215,10 @@ namespace UserTracker.net
 
         private void DrawLine(Graphics g, Color color, Dictionary<SkeletonJoint, SkeletonJointPosition> dict, SkeletonJoint j1, SkeletonJoint j2)
         {
-			Point3D pos1 = dict[j1].position;
-			Point3D pos2 = dict[j2].position;
+			Point3D pos1 = dict[j1].Position;
+			Point3D pos2 = dict[j2].Position;
 
-			if (dict[j1].fConfidence == 0 || dict[j2].fConfidence == 0)
+			if (dict[j1].Confidence == 0 || dict[j2].Confidence == 0)
 				return;
 
             g.DrawLine(new Pen(color),

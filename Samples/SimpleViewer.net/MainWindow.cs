@@ -27,7 +27,7 @@ namespace SimpleViewer.net
 
 			MapOutputMode mapMode = this.depth.MapOutputMode;
 
-			this.bitmap = new Bitmap((int)mapMode.nXRes, (int)mapMode.nYRes, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			this.bitmap = new Bitmap((int)mapMode.XRes, (int)mapMode.YRes, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			this.shouldRun = true;
 			this.readerThread = new Thread(ReaderThread);
 			this.readerThread.Start();
