@@ -53,7 +53,7 @@ namespace xn
 			return new CroppingCapability(this);
 		}
 
-		protected MapData<T> GetMapData<T>(IntPtr pData)
+		protected MapData<T> GetMapData<T>(IntPtr pData) where T: struct
 		{
 			MapOutputMode mode = this.MapOutputMode;
 			return new MapData<T>((int)mode.XRes, (int)mode.YRes, pData);
