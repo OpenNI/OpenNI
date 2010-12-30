@@ -106,8 +106,12 @@ namespace xn
 		internal OpenNIImporter.XnMapMetaData map = new OpenNIImporter.XnMapMetaData();
 	}
 
-	public class MapMetaData<T> : MapMetaData
+	public abstract class MapMetaData<T> : MapMetaData
 	{
+        // TODO: is there a performance penalty for these?
+        //public abstract T this[int index] { get; set; }
+        //public abstract T this[int x, int y] { get; set; }
+
 		protected T this[int index, IntPtr buff]
 		{
 			get
