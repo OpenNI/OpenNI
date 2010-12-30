@@ -61,7 +61,7 @@ namespace xn
 
 		public void SeekToFrame(ProductionNode node, Int32 frameOffset, PlayerSeekOrigin origin)
 		{
-			SeekToFrame(node.GetName(), frameOffset, origin);
+			SeekToFrame(node.Name, frameOffset, origin);
 		}
 
 		public UInt64 TellTimestamp()
@@ -82,7 +82,7 @@ namespace xn
 
 		public UInt32 TellFrame(ProductionNode node)
 		{
-			return TellFrame(node.GetName());
+			return TellFrame(node.Name);
 		}
 
 		public UInt32 GetNumFrames(string nodeName)
@@ -95,7 +95,7 @@ namespace xn
 
 		public UInt32 GetNumFrames(ProductionNode node)
 		{
-			return GetNumFrames(node.GetName());
+			return GetNumFrames(node.Name);
 		}
 
 		public string GetSupportedFormat()

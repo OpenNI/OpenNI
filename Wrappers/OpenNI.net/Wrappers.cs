@@ -213,7 +213,7 @@ namespace xn
 		private UInt32 val;
 	}
 
-	public class NodeWrapper : ObjectWrapper, IEquatable<NodeWrapper>
+	public abstract class NodeWrapper : ObjectWrapper, IEquatable<NodeWrapper>
 	{
 		internal NodeWrapper(NodeSafeHandle hNode, bool addRef)
 			: base(hNode)
@@ -253,9 +253,12 @@ namespace xn
 			get { return this.InternalObject.IsClosed; }
 		}
 
-		public string GetName()
+		public string Name
 		{
-			return OpenNIImporter.xnGetNodeName(this.InternalObject);
+            get
+            {
+                return OpenNIImporter.xnGetNodeName(this.InternalObject);
+            }
 		}
 	};
 
