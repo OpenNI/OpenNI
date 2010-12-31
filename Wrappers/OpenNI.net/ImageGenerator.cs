@@ -14,7 +14,7 @@ namespace OpenNI
 				SafeNativeMethods.xnUnregisterFromPixelFormatChange);
 		}
 
-		public ImageGenerator(Context context, Query query, EnumerationErrors errors) :
+		public ImageGenerator(Context context, Query query, ErrorCollection errors) :
 			this(Create(context, query, errors), false)
 		{
 		}
@@ -79,21 +79,21 @@ namespace OpenNI
             }
 		}
 
-		public void GetMetaData(ImageMetaData imageMD)
+		public void GetMetadata(ImageMetadata imageMetadata)
 		{
-			using (IMarshaler marsh = imageMD.GetMarshaler(true))
+			using (IMarshaler marsh = imageMetadata.GetMarshaler(true))
 			{
-				SafeNativeMethods.xnGetImageMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetImageMetadata(this.InternalObject, marsh.Native);
 			}
 		}
 
-		public ImageMetaData MetaData
+		public ImageMetadata Metadata
 		{
             get
             {
-                ImageMetaData imageMD = new ImageMetaData();
-                GetMetaData(imageMD);
-                return imageMD;
+                ImageMetadata imageMetadata = new ImageMetadata();
+                GetMetadata(imageMetadata);
+                return imageMetadata;
             }
 		}
 
@@ -103,7 +103,7 @@ namespace OpenNI
 			remove { this.pixelFormatChanged.Event -= value; }
 		}
 
-		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
+		private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)
 		{
             NodeSafeHandle handle;
             Status.ThrowOnFail(SafeNativeMethods.xnCreateImageGenerator(context.InternalObject, out handle,

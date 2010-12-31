@@ -23,7 +23,7 @@ namespace SimpleRead.net
 
 			MapOutputMode mapMode = depth.MapOutputMode;
 
-			DepthMetaData depthMD = new DepthMetaData();
+			DepthMetadata depthMetadata = new DepthMetadata();
 
 			Console.WriteLine("Press any key to stop...");
 
@@ -31,9 +31,9 @@ namespace SimpleRead.net
 			{
 				context.WaitOneUpdateAll(depth);
 
-				depth.GetMetaData(depthMD);
+				depth.GetMetadata(depthMetadata);
 
-				Console.WriteLine("Frame {0} Middle point is: {1}.", depthMD.FrameId, depthMD[(int)mapMode.XRes/2, (int)mapMode.YRes/2]);
+				Console.WriteLine("Frame {0} Middle point is: {1}.", depthMetadata.FrameId, depthMetadata[(int)mapMode.XRes/2, (int)mapMode.YRes/2]);
 			}
 		}
 	}

@@ -4,21 +4,21 @@ using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public class NodeInfoList : ObjectWrapper, IEnumerable<NodeInfo>
+	public class NodeInfoCollection : ObjectWrapper, IEnumerable<NodeInfo>
 	{
-        internal NodeInfoList(NodeInfoListSafeHandle pList)
+        internal NodeInfoCollection(NodeInfoListSafeHandle pList)
 			: base(pList)
 		{
 		}
 
 		/// <summary>
-		/// Creates a managed NodeInfoList object to wrap a native one.
+		/// Creates a managed NodeInfoCollection object to wrap a native one.
 		/// </summary>
 		/// <param name="pList">The native node info list pointer</param>
-		/// <returns>A managed NodeInfoList object</returns>
-        static internal NodeInfoList FromNative(NodeInfoListSafeHandle pList)
+		/// <returns>A managed NodeInfoCollection object</returns>
+        static internal NodeInfoCollection FromNative(NodeInfoListSafeHandle pList)
 		{
-			return new NodeInfoList(pList);
+			return new NodeInfoCollection(pList);
 		}
 
         internal new NodeInfoListSafeHandle InternalObject
@@ -30,7 +30,7 @@ namespace OpenNI
 
 		private class NodeInfoListEnumerator : IEnumerator<NodeInfo>
 		{
-			public NodeInfoListEnumerator(NodeInfoList list)
+			public NodeInfoListEnumerator(NodeInfoCollection list)
 			{
 				this.list = list;
 			}
@@ -89,7 +89,7 @@ namespace OpenNI
 				get { return this.it; }
 			}
 
-			private NodeInfoList list;
+			private NodeInfoCollection list;
 			private IntPtr it;
 			private bool reset = true;
 		}
@@ -114,7 +114,7 @@ namespace OpenNI
 
 		#endregion
 
-		public void Add(ProductionNodeDescription description, string creationInfo, NodeInfoList neededNodes)
+		public void Add(ProductionNodeDescription description, string creationInfo, NodeInfoCollection neededNodes)
 		{
 			Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoListAdd(this.InternalObject, description, creationInfo,
                 neededNodes == null ? NodeInfoListSafeHandle.Zero : neededNodes.InternalObject));
@@ -147,7 +147,7 @@ namespace OpenNI
 			
 		}
 
-		public void Append(NodeInfoList other)
+		public void Append(NodeInfoCollection other)
 		{
             Status.ThrowOnFail(SafeNativeMethods.xnNodeInfoListAppend(this.InternalObject, other.InternalObject));
 			

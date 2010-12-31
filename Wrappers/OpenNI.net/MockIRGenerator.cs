@@ -37,14 +37,14 @@ namespace OpenNI
 			
 		}
 
-		public void SetData(IRMetaData irMD, UInt32 frameID, UInt64 timestamp)
+		public void SetData(IRMetadata irMetadata, UInt32 frameID, UInt64 timestamp)
 		{
-			SetData(frameID, timestamp, irMD.DataSize, irMD.IRMapPtr);
+			SetData(frameID, timestamp, irMetadata.DataSize, irMetadata.IRMapPtr);
 		}
 
-		public void SetData(IRMetaData irMD)
+		public void SetData(IRMetadata irMetadata)
 		{
-			SetData(irMD, irMD.FrameId, irMD.Timestamp);
+			SetData(irMetadata, irMetadata.FrameId, irMetadata.Timestamp);
 		}
 
 		private static NodeSafeHandle Create(Context context, string name)

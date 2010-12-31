@@ -67,7 +67,7 @@ namespace OpenNI
                 throw new OpenNiException(status);
         }
 
-        internal static void ThrowOnFail(Status status, EnumerationErrors errors)
+        internal static void ThrowOnFail(Status status, ErrorCollection errors)
         {
             if (!status.IsOK)
             {

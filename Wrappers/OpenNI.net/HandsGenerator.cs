@@ -15,7 +15,7 @@ namespace OpenNI
             this.internalHandDestroy = new SafeNativeMethods.XnHandDestroy(this.InternalHandDestroy);
         }
 
-        public HandsGenerator(Context context, Query query, EnumerationErrors errors) :
+        public HandsGenerator(Context context, Query query, ErrorCollection errors) :
             this(Create(context, query, errors), false)
         {
         }
@@ -28,7 +28,7 @@ namespace OpenNI
         {
         }
 
-        private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
+        private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)
         {
             NodeSafeHandle handle;
             Status.ThrowOnFail(SafeNativeMethods.xnCreateHandsGenerator(context.InternalObject,

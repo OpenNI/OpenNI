@@ -87,7 +87,7 @@ namespace OpenNI
             Status.ThrowOnFail(SafeNativeMethods.xnNodeQuerySetCreationInfo(this.InternalObject, creationInfo));
 		}
 
-		public void FilterList(Context context, NodeInfoList list)
+		public void FilterList(Context context, NodeInfoCollection list)
 		{
             Status.ThrowOnFail(SafeNativeMethods.xnNodeQueryFilterList(context.InternalObject, this.InternalObject, list.InternalObject));
 		}

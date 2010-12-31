@@ -51,7 +51,7 @@ namespace OpenNI
 		{
             Contract.Requires(!string.IsNullOrWhiteSpace(xml));
 
-			EnumerationErrors errors = new EnumerationErrors();
+			ErrorCollection errors = new ErrorCollection();
             var status = SafeNativeMethods.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
             Status.ThrowOnFail(status, errors);
 		}
@@ -65,7 +65,7 @@ namespace OpenNI
             Contract.Requires(!string.IsNullOrWhiteSpace(xmlFile));
             Contract.Requires(System.IO.File.Exists(xmlFile));
             
-            EnumerationErrors errors = new EnumerationErrors();
+            ErrorCollection errors = new ErrorCollection();
             var status = SafeNativeMethods.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
             Status.ThrowOnFail(status, errors);
 		}
@@ -118,14 +118,14 @@ namespace OpenNI
 			return result;
 		}
 
-		public NodeInfoList EnumerateProductionTrees(NodeType type, Query query)
+		public NodeInfoCollection EnumerateProductionTrees(NodeType type, Query query)
 		{
             Contract.Requires(query != null);
-            Contract.Ensures(Contract.Result<NodeInfoList>() != null);
+            Contract.Ensures(Contract.Result<NodeInfoCollection>() != null);
 
             NodeInfoListSafeHandle resultList;
 
-			using (EnumerationErrors errors = new EnumerationErrors())
+			using (ErrorCollection errors = new ErrorCollection())
 			{
 				var status = SafeNativeMethods.xnEnumerateProductionTrees(this.InternalObject, type,
 					query == null ? QuerySafeHandle.Zero : query.InternalObject,
@@ -134,7 +134,7 @@ namespace OpenNI
                 Status.ThrowOnFail(status, errors);
 			}
 
-			return new NodeInfoList(resultList);
+			return new NodeInfoCollection(resultList);
 		}
 
 		public ProductionNode CreateAnyProductionTree(NodeType type, Query query)
@@ -157,24 +157,24 @@ namespace OpenNI
 			return CreateProductionNodeObject(nodeHandle, nodeInfo.Description.Type);
 		}
 
-		public NodeInfoList EnumerateExistingNodes()
+		public NodeInfoCollection EnumerateExistingNodes()
 		{
-            Contract.Ensures(Contract.Result<NodeInfoList>() != null);
+            Contract.Ensures(Contract.Result<NodeInfoCollection>() != null);
 
             NodeInfoListSafeHandle pList;
             Status.ThrowOnFail(SafeNativeMethods.xnEnumerateExistingNodes(this.InternalObject, out pList));
 			
-			return new NodeInfoList(pList);
+			return new NodeInfoCollection(pList);
 		}
 
-		public NodeInfoList EnumerateExistingNodes(NodeType type)
+		public NodeInfoCollection EnumerateExistingNodes(NodeType type)
 		{
-            Contract.Ensures(Contract.Result<NodeInfoList>() != null);
+            Contract.Ensures(Contract.Result<NodeInfoCollection>() != null);
 
             NodeInfoListSafeHandle pList;
             Status.ThrowOnFail(SafeNativeMethods.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList));
 			
-			return new NodeInfoList(pList);
+			return new NodeInfoCollection(pList);
 		}
 
 		public ProductionNode FindExistingNode(NodeType type)
@@ -295,7 +295,7 @@ namespace OpenNI
         internal NodeSafeHandle CreateAnyProductionTreeImpl(NodeType type, Query query)
 		{
             NodeSafeHandle nodeHandle;
-			using (EnumerationErrors errors = new EnumerationErrors())
+			using (ErrorCollection errors = new ErrorCollection())
 			{
 				var status = (SafeNativeMethods.xnCreateAnyProductionTree(this.InternalObject, type,
 					query == null ? QuerySafeHandle.Zero : query.InternalObject,
@@ -317,7 +317,7 @@ namespace OpenNI
         public static Context InitFromXml(string xmlFile)
 		{
             ContextSafeHandle pContext;
-            EnumerationErrors errors = new EnumerationErrors();
+            ErrorCollection errors = new ErrorCollection();
             var status = SafeNativeMethods.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
             Status.ThrowOnFail(status, errors);
             return new Context(pContext);

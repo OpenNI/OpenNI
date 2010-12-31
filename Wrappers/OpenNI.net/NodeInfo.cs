@@ -55,11 +55,11 @@ namespace OpenNI
             }
 		}
 
-		public NodeInfoList NeededNodes
+		public NodeInfoCollection NeededNodes
 		{
             get
             {
-                return new NodeInfoList(SafeNativeMethods.xnNodeInfoGetNeededNodes(this.InternalObject));
+                return new NodeInfoCollection(SafeNativeMethods.xnNodeInfoGetNeededNodes(this.InternalObject));
             }
 		}
 

@@ -14,7 +14,7 @@ namespace OpenNI
 				SafeNativeMethods.xnUnregisterFromDepthFieldOfViewChange);
 		}
 
-		public DepthGenerator(Context context, Query query, EnumerationErrors errors) :
+		public DepthGenerator(Context context, Query query, ErrorCollection errors) :
 			this(Create(context, query, errors), false)
 		{
 		}
@@ -95,25 +95,25 @@ namespace OpenNI
 			return new UserPositionCapability(this);
 		}
 
-		public void GetMetaData(DepthMetaData depthMD)
+		public void GetMetadata(DepthMetadata depthMetadata)
 		{
-			using (IMarshaler marsh = depthMD.GetMarshaler(true))
+			using (IMarshaler marsh = depthMetadata.GetMarshaler(true))
 			{
-				SafeNativeMethods.xnGetDepthMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetDepthMetadata(this.InternalObject, marsh.Native);
 			}
 		}
 
-		public DepthMetaData MetaData
+		public DepthMetadata Metadata
 		{
             get
             {
-                DepthMetaData depthMD = new DepthMetaData();
-                GetMetaData(depthMD);
-                return depthMD;
+                DepthMetadata depthMetadata = new DepthMetadata();
+                GetMetadata(depthMetadata);
+                return depthMetadata;
             }
 		}
 
-		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
+		private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)
 		{
             NodeSafeHandle handle;
             Status.ThrowOnFail(SafeNativeMethods.xnCreateDepthGenerator(context.InternalObject, out handle,

@@ -4,15 +4,15 @@ using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public class ImageMetaData : MapMetaData
+	public class ImageMetadata : MapMetadata
 	{
-		public ImageMetaData()
+		public ImageMetadata()
 		{
 		}
 
 		public new PixelFormat PixelFormat
 		{
-			get { return ((MapMetaData)this).PixelFormat; }
+			get { return ((MapMetadata)this).PixelFormat; }
 			set { this.PixelFormatInternal = value; }
 		}
 
@@ -38,22 +38,22 @@ namespace OpenNI
 
 		internal new IMarshaler GetMarshaler(bool passOut)
 		{
-			return new ImageMetaDataMarshaler(this, passOut);
+			return new ImageMetadataMarshaler(this, passOut);
 		}
 
-		internal SafeNativeMethods.XnImageMetaData image = new SafeNativeMethods.XnImageMetaData();
+		internal SafeNativeMethods.XnImageMetadata image = new SafeNativeMethods.XnImageMetadata();
 
-		private class ImageMetaDataMarshaler : Marshaler<SafeNativeMethods.XnImageMetaData>
+		private class ImageMetadataMarshaler : Marshaler<SafeNativeMethods.XnImageMetadata>
 		{
-			public ImageMetaDataMarshaler(ImageMetaData obj, bool marshalOut) :
+			public ImageMetadataMarshaler(ImageMetadata obj, bool marshalOut) :
 				base(obj.image, marshalOut,
 					MarshalInner(obj, marshalOut))
 			{
 			}
 
-			private static IMarshaler MarshalInner(ImageMetaData obj, bool marshalOut)
+			private static IMarshaler MarshalInner(ImageMetadata obj, bool marshalOut)
 			{
-				IMarshaler inner = ((MapMetaData)obj).GetMarshaler(marshalOut);
+				IMarshaler inner = ((MapMetadata)obj).GetMarshaler(marshalOut);
 				obj.image.pMap = inner.Native;
 				return inner;
 			}

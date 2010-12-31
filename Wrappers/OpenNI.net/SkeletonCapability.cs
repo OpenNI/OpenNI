@@ -231,8 +231,8 @@ namespace OpenNI
         /// <param name="cookie">The object that contains data about the Capability.</param>
         public CalibrationStartedArgs(UserId user, IntPtr cookie)
         {
+            this.UserId = user;
             this.Cookie = cookie;
-            this.UserId = UserId;
         }
 
         /// <summary>

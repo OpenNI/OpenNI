@@ -14,7 +14,7 @@ namespace OpenNI
             this.internalLostUser = new SafeNativeMethods.XnUserHandler(this.InternalLostUser);
         }
 
-        public UserGenerator(Context context, Query query, EnumerationErrors errors) :
+        public UserGenerator(Context context, Query query, ErrorCollection errors) :
             this(Create(context, query, errors), false)
         {
         }
@@ -27,7 +27,7 @@ namespace OpenNI
         {
         }
 
-        private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
+        private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)
         {
             NodeSafeHandle handle;
             Status.ThrowOnFail(SafeNativeMethods.xnCreateUserGenerator(context.InternalObject,
@@ -60,9 +60,9 @@ namespace OpenNI
             return com;
         }
 
-        public SceneMetaData GetUserPixels(UserId id)
+        public SceneMetadata GetUserPixels(UserId id)
         {
-            SceneMetaData smd = new SceneMetaData();
+            SceneMetadata smd = new SceneMetadata();
 			using (IMarshaler marsh = smd.GetMarshaler(true))
 			{
                 Status.ThrowOnFail(SafeNativeMethods.xnGetUserPixels(this.InternalObject, id, marsh.Native));

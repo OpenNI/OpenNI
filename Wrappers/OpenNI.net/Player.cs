@@ -94,15 +94,15 @@ namespace OpenNI
 			return SafeNativeMethods.xnGetPlayerSupportedFormat(this.InternalObject);
 		}
 
-		public NodeInfoList EnumerateNodes()
+		public NodeInfoCollection EnumerateNodes()
 		{
 			NodeInfoListSafeHandle pList;
 			Status.ThrowOnFail(SafeNativeMethods.xnEnumeratePlayerNodes(this.InternalObject, out pList));
 
-			return new NodeInfoList(pList);
+			return new NodeInfoCollection(pList);
 		}
 
-		public bool IsEOF
+		public bool IsEndOfFile
 		{
             get
             {

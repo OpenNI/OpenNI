@@ -6,34 +6,40 @@ using System.Text;
 
 namespace OpenNI
 {
-	public class EnumerationError
+	public class ErrorCollectionItem
 	{
-		internal EnumerationError(IntPtr it)
+		internal ErrorCollectionItem(IntPtr it)
 		{
 			this.it = it;
 		}
 
-		public ProductionNodeDescription GetDescription()
+		public ProductionNodeDescription Description
 		{
-			return SafeNativeMethods.xnEnumerationErrorsGetCurrentDescription(this.it);
+            get
+            {
+                return SafeNativeMethods.xnEnumerationErrorsGetCurrentDescription(this.it);
+            }
 		}
 
-		public Status GetError()
+		public Status Error
 		{
-			return SafeNativeMethods.xnEnumerationErrorsGetCurrentError(this.it);
+            get
+            {
+                return SafeNativeMethods.xnEnumerationErrorsGetCurrentError(this.it);
+            }
 		}
 
 		private IntPtr it;
 	}
 
-	public class EnumerationErrors : ObjectWrapper, IEnumerable<EnumerationError>
+	public class ErrorCollection : ObjectWrapper, IEnumerable<ErrorCollectionItem>
 	{
-		internal EnumerationErrors(EnumerationErrorsSafeHandle pErrors) :
+		internal ErrorCollection(EnumerationErrorsSafeHandle pErrors) :
 			base(pErrors)
 		{
 		}
 
-		public EnumerationErrors() :
+		public ErrorCollection() :
 			this(Create())
 		{
 		}
@@ -62,22 +68,36 @@ namespace OpenNI
 			return sb.ToString();
 		}
 
-		#region EnumerationErrosEnumerator class
+		#region ErrorCollectionEnumerator class
 
-		private class EnumerationErrosEnumerator : IEnumerator<EnumerationError>
+		private class ErrorCollectionEnumerator : IEnumerator<ErrorCollectionItem>
 		{
-			public EnumerationErrosEnumerator(EnumerationErrors errors)
+			public ErrorCollectionEnumerator(ErrorCollection errors)
 			{
 				this.errors = errors;
 				this.reset = true;
 				this.it = IntPtr.Zero;
 			}
 
-			#region IEnumerator<EnumerationError> Members
+            ~ErrorCollectionEnumerator()
+            {
+                Dispose(false);
+            }
 
-			public EnumerationError Current
+            private void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+				    this.reset = true;
+				    this.it = IntPtr.Zero;
+                }
+            }
+
+            #region IEnumerator<ErrorCollectionItem> Members
+
+			public ErrorCollectionItem Current
 			{
-				get { return new EnumerationError(this.it); }
+				get { return new ErrorCollectionItem(this.it); }
 			}
 
 			#endregion
@@ -86,7 +106,9 @@ namespace OpenNI
 
 			public void Dispose()
 			{
-			}
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
 
 			#endregion
 
@@ -94,7 +116,7 @@ namespace OpenNI
 
 			object System.Collections.IEnumerator.Current
 			{
-				get { return ((IEnumerator<EnumerationError>)this).Current; }
+				get { return ((IEnumerator<ErrorCollectionItem>)this).Current; }
 			}
 
 			public bool MoveNext()
@@ -119,18 +141,18 @@ namespace OpenNI
 
 			#endregion
 
-			private EnumerationErrors errors;
+			private ErrorCollection errors;
 			private IntPtr it;
 			private bool reset;
 		}
 
 		#endregion
 
-		#region IEnumerable<EnumerationError> Members
+		#region IEnumerable<ErrorCollectionItem> Members
 
-		public IEnumerator<EnumerationError> GetEnumerator()
+		public IEnumerator<ErrorCollectionItem> GetEnumerator()
 		{
-			return new EnumerationErrosEnumerator(this);
+			return new ErrorCollectionEnumerator(this);
 		}
 
 		#endregion
@@ -139,7 +161,7 @@ namespace OpenNI
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 		{
-			return ((IEnumerable<EnumerationError>)this).GetEnumerator();
+			return ((IEnumerable<ErrorCollectionItem>)this).GetEnumerator();
 		}
 
 		#endregion

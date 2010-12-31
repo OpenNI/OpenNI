@@ -37,12 +37,12 @@ namespace OpenNI
 			
 		}
 
-		public void SetData(ImageMetaData imageMetadata, UInt32 frameId, UInt64 timestamp)
+		public void SetData(ImageMetadata imageMetadata, UInt32 frameId, UInt64 timestamp)
 		{
 			SetData(frameId, timestamp, imageMetadata.DataSize, imageMetadata.ImageMapPtr);
 		}
 
-		public void SetData(ImageMetaData imageMetadata)
+		public void SetData(ImageMetadata imageMetadata)
 		{
 			SetData(imageMetadata, imageMetadata.FrameId, imageMetadata.Timestamp);
 		}

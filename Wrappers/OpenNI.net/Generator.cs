@@ -85,7 +85,7 @@ namespace OpenNI
             }
 		}
 
-		public UInt32 FrameID
+		public UInt32 FrameId
 		{
             get
             {
@@ -98,9 +98,9 @@ namespace OpenNI
 			return new MirrorCapability(this);
 		}
 
-		public AlternativeViewPointCapability GetAlternativeViewPointCap()
+		public AlternativeViewpointCapability GetAlternativeViewpointCap()
 		{
-			return new AlternativeViewPointCapability(this);
+			return new AlternativeViewpointCapability(this);
 		}
 
 		public FrameSyncCapability GetFrameSyncCap()

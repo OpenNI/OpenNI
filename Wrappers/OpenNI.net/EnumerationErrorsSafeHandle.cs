@@ -14,12 +14,6 @@ namespace OpenNI
 
         }
 
-        public EnumerationErrorsSafeHandle(IntPtr handle)
-            : this()
-        {
-            this.SetHandle(handle);
-        }
-
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {

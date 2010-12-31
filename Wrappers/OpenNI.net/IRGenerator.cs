@@ -11,7 +11,7 @@ namespace OpenNI
 		{
 		}
 
-		public IRGenerator(Context context, Query query, EnumerationErrors errors) :
+		public IRGenerator(Context context, Query query, ErrorCollection errors) :
 			this(Create(context, query, errors), false)
 		{
 		}
@@ -36,25 +36,25 @@ namespace OpenNI
 			return GetMapData<UInt16>(GetIRMapPtr());
 		}
 
-		public void GetMetaData(IRMetaData irMD)
+		public void GetMetadata(IRMetadata irMetadata)
 		{
-			using (IMarshaler marsh = irMD.GetMarshaler(true))
+			using (IMarshaler marsh = irMetadata.GetMarshaler(true))
 			{
-				SafeNativeMethods.xnGetIRMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetIRMetadata(this.InternalObject, marsh.Native);
 			}
 		}
 
-		public IRMetaData MetaData
+		public IRMetadata Metadata
 		{
             get
             {
-                IRMetaData irMD = new IRMetaData();
-                GetMetaData(irMD);
-                return irMD;
+                IRMetadata irMetadata = new IRMetadata();
+                GetMetadata(irMetadata);
+                return irMetadata;
             }
 		}
 
-        private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
+        private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)
 		{
             NodeSafeHandle handle;
             Status.ThrowOnFail(SafeNativeMethods.xnCreateIRGenerator(context.InternalObject, out handle,

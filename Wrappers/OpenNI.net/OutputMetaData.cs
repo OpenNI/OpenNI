@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public abstract class OutputMetaData
+	public abstract class OutputMetadata
 	{
 		public UInt64 Timestamp
 		{
@@ -32,17 +32,17 @@ namespace OpenNI
 
 		internal IMarshaler GetMarshaler(bool passOut)
 		{
-			return new OutputMetaDataMarshaler(this, passOut);
+			return new OutputMetadataMarshaler(this, passOut);
 		}
 
-		internal class OutputMetaDataMarshaler : Marshaler<SafeNativeMethods.XnOutputMetaData>
+		internal class OutputMetadataMarshaler : Marshaler<SafeNativeMethods.XnOutputMetadata>
 		{
-			public OutputMetaDataMarshaler(OutputMetaData output, bool marshalOut) :
+			public OutputMetadataMarshaler(OutputMetadata output, bool marshalOut) :
 				base(output.data, marshalOut)
 			{
 			}
 		}
 
-		internal SafeNativeMethods.XnOutputMetaData data = new SafeNativeMethods.XnOutputMetaData();
+		internal SafeNativeMethods.XnOutputMetadata data = new SafeNativeMethods.XnOutputMetadata();
 	}
 }

@@ -14,7 +14,7 @@ namespace OpenNI
 				SafeNativeMethods.xnUnregisterFromWaveOutputModeChanges);
 		}
 
-		public AudioGenerator(Context context, Query query, EnumerationErrors errors) :
+		public AudioGenerator(Context context, Query query, ErrorCollection errors) :
 			this(Create(context, query, errors), false)
 		{
 		}
@@ -65,21 +65,21 @@ namespace OpenNI
             }
 		}
 
-		public void GetMetaData(AudioMetaData audioMD)
+		public void GetMetadata(AudioMetadata audioMetadata)
 		{
-			using (IMarshaler marsh = audioMD.GetMarshaler(true))
+			using (IMarshaler marsh = audioMetadata.GetMarshaler(true))
 			{
-				SafeNativeMethods.xnGetAudioMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetAudioMetadata(this.InternalObject, marsh.Native);
 			}
 		}
 
-		public AudioMetaData MetaData
+		public AudioMetadata Metadata
 		{
             get
             {
-                AudioMetaData audioMD = new AudioMetaData();
-                GetMetaData(audioMD);
-                return audioMD;
+                AudioMetadata audioMetadata = new AudioMetadata();
+                GetMetadata(audioMetadata);
+                return audioMetadata;
             }
 		}
 
@@ -89,7 +89,7 @@ namespace OpenNI
 			remove { this.outputModeChanged.Event -= value; }
 		}
 
-		private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
+		private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)
 		{
             NodeSafeHandle handle;
 			Status.ThrowOnFail(SafeNativeMethods.xnCreateAudioGenerator(context.InternalObject, out handle,

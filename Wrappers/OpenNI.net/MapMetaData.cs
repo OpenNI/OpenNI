@@ -1,56 +1,65 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public abstract class MapMetaData : OutputMetaData
+	public abstract class MapMetadata : OutputMetadata
 	{
 		public int XRes
 		{
+            [Pure]
 			get { return (int)this.map.Res.X; }
 			set { this.map.Res.X = (uint)value; }
 		}
 
 		public int YRes
 		{
-			get { return (int)this.map.Res.Y; }
+            [Pure]
+            get { return (int)this.map.Res.Y; }
 			set { this.map.Res.Y = (uint)value; }
 		}
 
 		public int XOffset
 		{
-			get { return (int)this.map.Offset.X; }
+            [Pure]
+            get { return (int)this.map.Offset.X; }
 			set { this.map.Offset.X = (uint)value; }
 		}
 
 		public int YOffset
 		{
-			get { return (int)this.map.Offset.Y; }
+            [Pure]
+            get { return (int)this.map.Offset.Y; }
 			set { this.map.Offset.Y = (uint)value; }
 		}
 
 		public int FullXRes
 		{
-			get { return (int)this.map.FullRes.X; }
+            [Pure]
+            get { return (int)this.map.FullRes.X; }
 			set { this.map.FullRes.X = (uint)value; }
 		}
 
 		public int FullYRes
 		{
-			get { return (int)this.map.FullRes.Y; }
+            [Pure]
+            get { return (int)this.map.FullRes.Y; }
 			set { this.map.FullRes.Y = (uint)value; }
 		}
 
 		public int FPS
 		{
-			get { return (int)this.map.nFPS; }
+            [Pure]
+            get { return (int)this.map.nFPS; }
 			set { this.map.nFPS = (uint)value; }
 		}
 
 		public PixelFormat PixelFormat
 		{
-			get { return this.map.PixelFormat; }
+            [Pure]
+            get { return this.map.PixelFormat; }
 		}
 
 		public int BytesPerPixel
@@ -75,7 +84,7 @@ namespace OpenNI
 
 		internal new IMarshaler GetMarshaler(bool passOut)
 		{
-			return new MapMetaDataMarshaler(this, passOut);
+			return new MapMetadataMarshaler(this, passOut);
 		}
 
 		protected PixelFormat PixelFormatInternal
@@ -83,26 +92,26 @@ namespace OpenNI
 			set { this.map.PixelFormat = value; }
 		}
 
-		private class MapMetaDataMarshaler : Marshaler<SafeNativeMethods.XnMapMetaData>
+		private class MapMetadataMarshaler : Marshaler<SafeNativeMethods.XnMapMetadata>
 		{
-			public MapMetaDataMarshaler(MapMetaData obj, bool marshalOut) :
+			public MapMetadataMarshaler(MapMetadata obj, bool marshalOut) :
 				base(obj.map, marshalOut,
 					MarshalInner(obj, marshalOut))
 			{
 			}
 
-			private static IMarshaler MarshalInner(MapMetaData obj, bool marshalOut)
+			private static IMarshaler MarshalInner(MapMetadata obj, bool marshalOut)
 			{
-				IMarshaler inner = ((OutputMetaData)obj).GetMarshaler(marshalOut);
+				IMarshaler inner = ((OutputMetadata)obj).GetMarshaler(marshalOut);
 				obj.map.pOutput = inner.Native;
 				return inner;
 			}
 		}
 
-		internal SafeNativeMethods.XnMapMetaData map = new SafeNativeMethods.XnMapMetaData();
+		internal SafeNativeMethods.XnMapMetadata map = new SafeNativeMethods.XnMapMetadata();
 	}
 
-	public abstract class MapMetaData<T> : MapMetaData
+	public abstract class MapMetadata<T> : MapMetadata
 	{
         // TODO: is there a performance penalty for these?
         //public abstract T this[int index] { get; set; }

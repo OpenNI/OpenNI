@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public class AudioMetaData : OutputMetaData
+	public class AudioMetadata : OutputMetadata
 	{
-		public AudioMetaData()
+		public AudioMetadata()
 		{
 		}
 
@@ -35,22 +35,22 @@ namespace OpenNI
 
 		public new IMarshaler GetMarshaler(bool passOut)
 		{
-			return new AudioMetaDataMarshaler(this, passOut);
+			return new AudioMetadataMarshaler(this, passOut);
 		}
 
-		private SafeNativeMethods.XnAudioMetaData audio = new SafeNativeMethods.XnAudioMetaData();
+		private SafeNativeMethods.XnAudioMetadata audio = new SafeNativeMethods.XnAudioMetadata();
 
-		private class AudioMetaDataMarshaler : Marshaler<SafeNativeMethods.XnAudioMetaData>
+		private class AudioMetadataMarshaler : Marshaler<SafeNativeMethods.XnAudioMetadata>
 		{
-			public AudioMetaDataMarshaler(AudioMetaData obj, bool marshalOut) :
+			public AudioMetadataMarshaler(AudioMetadata obj, bool marshalOut) :
 				base(obj.audio, marshalOut,
 					MarshalInner(obj, marshalOut))
 			{
 			}
 
-			private static IMarshaler MarshalInner(AudioMetaData obj, bool marshalOut)
+			private static IMarshaler MarshalInner(AudioMetadata obj, bool marshalOut)
 			{
-				IMarshaler inner = ((OutputMetaData)obj).GetMarshaler(marshalOut);
+				IMarshaler inner = ((OutputMetadata)obj).GetMarshaler(marshalOut);
 				obj.audio.pOutput = inner.Native;
 				return inner;
 			}

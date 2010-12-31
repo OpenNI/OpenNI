@@ -16,7 +16,7 @@ namespace OpenNI
             this.internalGestureRecognized = new SafeNativeMethods.XnGestureRecognized(this.InternalGestureRecognized);
             this.internalGestureProgress = new SafeNativeMethods.XnGestureProgress(this.InternalGestureProgress);
         }
-        public GestureGenerator(Context context, Query query, EnumerationErrors errors) :
+        public GestureGenerator(Context context, Query query, ErrorCollection errors) :
             this(Create(context, query, errors), false)
         {
         }
@@ -29,7 +29,7 @@ namespace OpenNI
         {
         }
 
-        private static NodeSafeHandle Create(Context context, Query query, EnumerationErrors errors)
+        private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)
         {
             NodeSafeHandle handle;
             Status.ThrowOnFail(SafeNativeMethods.xnCreateGestureGenerator(context.InternalObject,

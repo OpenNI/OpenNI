@@ -14,12 +14,6 @@ namespace OpenNI
 
         }
 
-        public ContextSafeHandle(IntPtr handle)
-            : this()
-        {
-            this.SetHandle(handle);
-        }
-
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {

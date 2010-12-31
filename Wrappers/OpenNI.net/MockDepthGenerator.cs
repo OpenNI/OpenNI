@@ -37,14 +37,14 @@ namespace OpenNI
 			
 		}
 
-		public void SetData(DepthMetaData depthMD, UInt32 frameID, UInt64 timestamp)
+		public void SetData(DepthMetadata depthMetadata, UInt32 frameID, UInt64 timestamp)
 		{
-			SetData(frameID, timestamp, depthMD.DataSize, depthMD.DepthMapPtr);
+			SetData(frameID, timestamp, depthMetadata.DataSize, depthMetadata.DepthMapPtr);
 		}
 
-		public void SetData(DepthMetaData depthMD)
+		public void SetData(DepthMetadata depthMetadata)
 		{
-			SetData(depthMD, depthMD.FrameId, depthMD.Timestamp);
+			SetData(depthMetadata, depthMetadata.FrameId, depthMetadata.Timestamp);
 		}
 
         private static NodeSafeHandle Create(Context context, string name)

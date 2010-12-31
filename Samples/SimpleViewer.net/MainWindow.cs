@@ -68,18 +68,18 @@ namespace SimpleViewer.net
 			base.OnKeyPress(e);
 		}
 
-		private unsafe void CalcHist(DepthMetaData depthMD)
+		private unsafe void CalcHist(DepthMetadata depthMetadata)
 		{
 			// reset
 			for (int i = 0; i < this.histogram.Length; ++i)
 				this.histogram[i] = 0;
 
-			ushort* pDepth = (ushort*)depthMD.DepthMapPtr.ToPointer();
+			ushort* pDepth = (ushort*)depthMetadata.DepthMapPtr.ToPointer();
 
 			int points = 0;
-			for (int y = 0; y < depthMD.YRes; ++y)
+			for (int y = 0; y < depthMetadata.YRes; ++y)
 			{
-				for (int x = 0; x < depthMD.XRes; ++x, ++pDepth)
+				for (int x = 0; x < depthMetadata.XRes; ++x, ++pDepth)
 				{
 					ushort depthVal = *pDepth;
 					if (depthVal != 0)
@@ -106,7 +106,7 @@ namespace SimpleViewer.net
 
 		private unsafe void ReaderThread()
 		{
-			DepthMetaData depthMD = new DepthMetaData();
+			DepthMetadata depthMetadata = new DepthMetadata();
 
 			while (this.shouldRun)
 			{
@@ -118,9 +118,9 @@ namespace SimpleViewer.net
 				{
 				}
 
-				this.depth.GetMetaData(depthMD);
+				this.depth.GetMetadata(depthMetadata);
 
-				CalcHist(depthMD);
+				CalcHist(depthMetadata);
 
 				lock (this)
 				{
@@ -130,10 +130,10 @@ namespace SimpleViewer.net
 					ushort* pDepth = (ushort*)this.depth.GetDepthMapPtr().ToPointer();
 
 					// set pixels
-					for (int y = 0; y < depthMD.YRes; ++y)
+					for (int y = 0; y < depthMetadata.YRes; ++y)
 					{
 						byte* pDest = (byte*)data.Scan0.ToPointer() + y * data.Stride;
-						for (int x = 0; x < depthMD.XRes; ++x, ++pDepth, pDest += 3)
+						for (int x = 0; x < depthMetadata.XRes; ++x, ++pDepth, pDest += 3)
 						{
 							byte pixel = (byte)this.histogram[*pDepth];
 							pDest[0] = 0;

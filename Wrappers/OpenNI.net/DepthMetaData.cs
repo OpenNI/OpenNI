@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public class DepthMetaData : MapMetaData<UInt16>
+	public class DepthMetadata : MapMetadata<UInt16>
 	{
-		public DepthMetaData()
+		public DepthMetadata()
 		{
 		}
 
@@ -18,14 +19,36 @@ namespace OpenNI
 
 		public UInt16 this[int index]
 		{
-			get { return base[index, this.depth.pData]; }
-			set { base[index, this.depth.pData] = value; }
+			get 
+            {
+                Contract.Requires(index >= 0 && index < this.FullXRes * this.FullYRes);
+
+                return base[index, this.depth.pData]; 
+            }
+			set 
+            {
+                Contract.Requires(index >= 0 && index < this.FullXRes * this.FullYRes);
+
+                base[index, this.depth.pData] = value; 
+            }
 		}
 
 		public UInt16 this[int x, int y]
 		{
-			get { return base[x, y, this.depth.pData]; }
-			set { base[x, y, this.depth.pData] = value; }
+			get 
+            {
+                Contract.Requires(x >= 0 && x < this.FullXRes);
+                Contract.Requires(y >= 0 && y < this.FullYRes);
+
+                return base[x, y, this.depth.pData]; 
+            }
+			set 
+            {
+                Contract.Requires(x >= 0 && x < this.FullXRes);
+                Contract.Requires(y >= 0 && y < this.FullYRes);
+
+                base[x, y, this.depth.pData] = value; 
+            }
 		}
 
 		public MapData<UInt16> GetDepthMap()
@@ -40,22 +63,22 @@ namespace OpenNI
 
 		internal new IMarshaler GetMarshaler(bool passOut)
 		{
-			return new DepthMetaDataMarshaler(this, passOut);
+			return new DepthMetadataMarshaler(this, passOut);
 		}
 
-		private SafeNativeMethods.XnDepthMetaData depth = new SafeNativeMethods.XnDepthMetaData();
+		private SafeNativeMethods.XnDepthMetadata depth = new SafeNativeMethods.XnDepthMetadata();
 
-		private class DepthMetaDataMarshaler : Marshaler<SafeNativeMethods.XnDepthMetaData>
+		private class DepthMetadataMarshaler : Marshaler<SafeNativeMethods.XnDepthMetadata>
 		{
-			public DepthMetaDataMarshaler(DepthMetaData obj, bool marshalOut) :
+			public DepthMetadataMarshaler(DepthMetadata obj, bool marshalOut) :
 				base(obj.depth, marshalOut,
 					MarshalInner(obj, marshalOut))
 			{
 			}
 
-			private static IMarshaler MarshalInner(DepthMetaData obj, bool marshalOut)
+			private static IMarshaler MarshalInner(DepthMetadata obj, bool marshalOut)
 			{
-				IMarshaler inner = ((MapMetaData)obj).GetMarshaler(marshalOut);
+				IMarshaler inner = ((MapMetadata)obj).GetMarshaler(marshalOut);
 				obj.depth.pMap = inner.Native;
 				return inner;
 			}

@@ -1,25 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
 namespace OpenNI
 {
-	public class SceneMetaData : MapMetaData<UInt16>
+	public class SceneMetadata : MapMetadata<UInt16>
 	{
-		public SceneMetaData()
+		public SceneMetadata()
 		{
 		}
 
 		public UInt16 this[int index]
 		{
-			get { return base[index, this.scene.pData]; }
-			set { base[index, this.scene.pData] = value; }
+			get 
+            {
+                Contract.Requires(index >= 0 && index < this.FullXRes * this.FullYRes);
+
+                return base[index, this.scene.pData]; 
+            }
+			set 
+            {
+                Contract.Requires(index >= 0 && index < this.FullXRes * this.FullYRes);
+
+                base[index, this.scene.pData] = value; 
+            }
 		}
 
 		public UInt16 this[int x, int y]
 		{
-			get { return base[x, y, this.scene.pData]; }
-			set { base[x, y, this.scene.pData] = value; }
+			get 
+            {
+                Contract.Requires(x >= 0 && x < this.FullXRes);
+                Contract.Requires(y >= 0 && y < this.FullYRes);
+
+                return base[x, y, this.scene.pData]; 
+            }
+			set 
+            {
+                Contract.Requires(x >= 0 && x < this.FullXRes);
+                Contract.Requires(y >= 0 && y < this.FullYRes);
+
+                base[x, y, this.scene.pData] = value; 
+            }
 		}
 
 		public MapData<UInt16> GetSceneMap()
@@ -34,22 +57,22 @@ namespace OpenNI
 
 		internal new IMarshaler GetMarshaler(bool passOut)
 		{
-			return new SceneMetaDataMarshaler(this, passOut);
+			return new SceneMetadataMarshaler(this, passOut);
 		}
 
-		internal SafeNativeMethods.XnSceneMetaData scene = new SafeNativeMethods.XnSceneMetaData();
+		internal SafeNativeMethods.XnSceneMetadata scene = new SafeNativeMethods.XnSceneMetadata();
 
-		private class SceneMetaDataMarshaler : Marshaler<SafeNativeMethods.XnSceneMetaData>
+		private class SceneMetadataMarshaler : Marshaler<SafeNativeMethods.XnSceneMetadata>
 		{
-			public SceneMetaDataMarshaler(SceneMetaData obj, bool marshalOut) :
+			public SceneMetadataMarshaler(SceneMetadata obj, bool marshalOut) :
 				base(obj.scene, marshalOut,
 					MarshalInner(obj, marshalOut))
 			{
 			}
 
-			private static IMarshaler MarshalInner(SceneMetaData obj, bool marshalOut)
+			private static IMarshaler MarshalInner(SceneMetadata obj, bool marshalOut)
 			{
-				IMarshaler inner = ((MapMetaData)obj).GetMarshaler(marshalOut);
+				IMarshaler inner = ((MapMetadata)obj).GetMarshaler(marshalOut);
 				obj.scene.pMap = inner.Native;
 				return inner;
 			}

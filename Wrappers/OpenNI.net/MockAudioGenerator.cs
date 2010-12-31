@@ -37,14 +37,14 @@ namespace OpenNI
 			
 		}
 
-		public void SetData(AudioMetaData audioMD, UInt32 frameID, UInt64 timestamp)
+		public void SetData(AudioMetadata audioMetadata, UInt32 frameID, UInt64 timestamp)
 		{
-			SetData(frameID, timestamp, audioMD.DataSize, audioMD.AudioBufferPtr);
+			SetData(frameID, timestamp, audioMetadata.DataSize, audioMetadata.AudioBufferPtr);
 		}
 
-		public void SetData(AudioMetaData audioMD)
+		public void SetData(AudioMetadata audioMetadata)
 		{
-			SetData(audioMD, audioMD.FrameId, audioMD.Timestamp);
+			SetData(audioMetadata, audioMetadata.FrameId, audioMetadata.Timestamp);
 		}
 
 		private static NodeSafeHandle Create(Context context, string name)
