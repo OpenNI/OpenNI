@@ -29,16 +29,12 @@ namespace OpenNI
 		{
 		}
 
-		public WaveOutputMode[] SupportedWaveOutputModes
+		public WaveOutputMode[] GetSupportedWaveOutputModes()
 		{
-            get
-            {
-                uint count = SafeNativeMethods.xnGetSupportedWaveOutputModesCount(this.InternalObject);
-                WaveOutputMode[] modes = new WaveOutputMode[count];
-                Status.ThrowOnFail(SafeNativeMethods.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count));
-                
-                return modes;
-            }
+            uint count = SafeNativeMethods.xnGetSupportedWaveOutputModesCount(this.InternalObject);
+            WaveOutputMode[] modes = new WaveOutputMode[count];
+            Status.ThrowOnFail(SafeNativeMethods.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count));                
+            return modes;
 		}
 
 		public WaveOutputMode WaveOutputMode
@@ -69,7 +65,7 @@ namespace OpenNI
 		{
 			using (IMarshaler marsh = audioMetadata.GetMarshaler(true))
 			{
-				SafeNativeMethods.xnGetAudioMetadata(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetAudioMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 

@@ -66,9 +66,9 @@ namespace OpenNI
 			return new DepthMetadataMarshaler(this, passOut);
 		}
 
-		private SafeNativeMethods.XnDepthMetadata depth = new SafeNativeMethods.XnDepthMetadata();
+		private SafeNativeMethods.XnDepthMetaData depth = new SafeNativeMethods.XnDepthMetaData();
 
-		private class DepthMetadataMarshaler : Marshaler<SafeNativeMethods.XnDepthMetadata>
+		private class DepthMetadataMarshaler : Marshaler<SafeNativeMethods.XnDepthMetaData>
 		{
 			public DepthMetadataMarshaler(DepthMetadata obj, bool marshalOut) :
 				base(obj.depth, marshalOut,

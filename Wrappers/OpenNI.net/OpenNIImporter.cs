@@ -386,7 +386,7 @@ namespace OpenNI
 	{
 		/** Holds information about a general frame of data. **/
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		public class XnOutputMetadata
+		public class XnOutputMetaData
 		{
 			/** Represents the time in which the data was received. **/
 			public XnUInt64 nTimestamp;
@@ -403,7 +403,7 @@ namespace OpenNI
 
 		/** Holds information about a frame of data that has a map format. **/
 		[StructLayout(LayoutKind.Sequential, Pack=1)]
-		public class XnMapMetadata
+		public class XnMapMetaData
 		{
 			/** A pointer to general information about this frame. **/
 			public IntPtr pOutput;
@@ -426,7 +426,7 @@ namespace OpenNI
 
 		/** Holds information about a frame of depth. **/
 		[StructLayout(LayoutKind.Sequential)]
-		public class XnDepthMetadata
+		public class XnDepthMetaData
 		{
 			/** A pointer to the map meta data of this frame. **/
 			public IntPtr pMap;
@@ -440,7 +440,7 @@ namespace OpenNI
 
 		/** Holds information about an image frame. **/
 		[StructLayout(LayoutKind.Sequential)]
-		public class XnImageMetadata
+		public class XnImageMetaData
 		{
 			/** A pointer to the map meta data of this frame **/
 			public IntPtr pMap;
@@ -451,7 +451,7 @@ namespace OpenNI
 
 		/** Holds information about an IR frame. **/
 		[StructLayout(LayoutKind.Sequential)]
-		public class XnIRMetadata
+		public class XnIRMetaData
 		{
 			/** A pointer to the map meta data of this frame **/
 			public IntPtr pMap;
@@ -461,7 +461,7 @@ namespace OpenNI
 		};
 
 		[StructLayout(LayoutKind.Sequential)]
-		public class XnAudioMetadata
+		public class XnAudioMetaData
 		{
 			/** A pointer to general information about this chunk of audio. **/
 			public IntPtr pOutput;
@@ -474,7 +474,7 @@ namespace OpenNI
 		};
 
 		[StructLayout(LayoutKind.Sequential)]
-		public class XnSceneMetadata
+		public class XnSceneMetaData
 		{
 			/** A pointer to the map meta data of this frame. **/
 			public IntPtr pMap;
@@ -712,17 +712,17 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromMirrorChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnBool xnIsViewpointSupported(NodeSafeHandle hInstance, NodeSafeHandle hOther);
+		public static extern XnBool xnIsViewPointSupported(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnSetViewpoint(NodeSafeHandle hInstance, NodeSafeHandle hOther);
+		public static extern XnStatus xnSetViewPoint(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnResetViewpoint(NodeSafeHandle hInstance);
+		public static extern XnStatus xnResetViewPoint(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnBool xnIsViewpointAs(NodeSafeHandle hInstance, NodeSafeHandle hOther);
+		public static extern XnBool xnIsViewPointAs(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnRegisterToViewpointChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		public static extern XnStatus xnRegisterToViewPointChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnUnregisterFromViewpointChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
+		public static extern void xnUnregisterFromViewPointChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnCanFrameSyncWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -772,7 +772,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetDepthMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnGetDepthMetadata(NodeSafeHandle hInstance, IntPtr pMetadata);
+		public static extern void xnGetDepthMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetSupportedUserPositionsCount(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -806,13 +806,13 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromPixelFormatChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnGetImageMetadata(NodeSafeHandle hInstance, IntPtr pMetadata);
+		public static extern void xnGetImageMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateIRGenerator(ContextSafeHandle pContext, out NodeSafeHandle phIRGenerator, QuerySafeHandle pQuery, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetIRMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnGetIRMetadata(NodeSafeHandle hInstance, IntPtr pMetadata);
+		public static extern void xnGetIRMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnCreateGestureGenerator(ContextSafeHandle pContext, out NodeSafeHandle phGestureGenerator, QuerySafeHandle pQuery, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -844,7 +844,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetFloor(NodeSafeHandle hInstance, ref Plane3D pPlane);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnGetSceneMetadata(NodeSafeHandle hInstance, IntPtr pMetadata);
+		public static extern void xnGetSceneMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnCreateUserGenerator(ContextSafeHandle pContext, out NodeSafeHandle phUserGenerator, QuerySafeHandle pQuery, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -958,7 +958,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromWaveOutputModeChanges(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnGetAudioMetadata(NodeSafeHandle hInstance, IntPtr pMetadata);
+		public static extern void xnGetAudioMetaData(NodeSafeHandle hInstance, IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnMockDepthSetData(NodeSafeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -1152,7 +1152,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnVersionToString(ref Version pVersion, IntPtr csResult, XnUInt32 nSize);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus XnProductionNodeDescriptionToString(ProductionNodeDescription pDescription, IntPtr csResult, XnUInt32 nSize);
+		public static extern XnStatus xnProductionNodeDescriptionToString(ProductionNodeDescription pDescription, IntPtr csResult, XnUInt32 nSize);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern Point3D xnCreatePoint3D(XnFloat x, XnFloat y, XnFloat z);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -1170,47 +1170,47 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnPrintRegisteredLicenses();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr xnAllocateOutputMetadata();
+		public static extern IntPtr xnAllocateOutputMetaData();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnFreeOutputMetadata(IntPtr pMetadata);
+		public static extern void xnFreeOutputMetaData(IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnCopyOutputMetadata(IntPtr pDestination, IntPtr pSource);
+		public static extern XnStatus xnCopyOutputMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr xnAllocateMapMetadata();
+		public static extern IntPtr xnAllocateMapMetaData();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnFreeMapMetadata(IntPtr pMetadata);
+		public static extern void xnFreeMapMetaData(IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnCopyMapMetadata(IntPtr pDestination, IntPtr pSource);
+		public static extern XnStatus xnCopyMapMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr xnAllocateDepthMetadata();
+		public static extern IntPtr xnAllocateDepthMetaData();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnFreeDepthMetadata(IntPtr pMetadata);
+		public static extern void xnFreeDepthMetaData(IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnCopyDepthMetadata(IntPtr pDestination, IntPtr pSource);
+		public static extern XnStatus xnCopyDepthMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr xnAllocateImageMetadata();
+		public static extern IntPtr xnAllocateImageMetaData();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnFreeImageMetadata(IntPtr pMetadata);
+		public static extern void xnFreeImageMetaData(IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnCopyImageMetadata(IntPtr pDestination, IntPtr pSource);
+		public static extern XnStatus xnCopyImageMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr xnAllocateIRMetadata();
+		public static extern IntPtr xnAllocateIRMetaData();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnFreeIRMetadata(IntPtr pMetadata);
+		public static extern void xnFreeIRMetaData(IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnCopyIRMetadata(IntPtr pDestination, IntPtr pSource);
+		public static extern XnStatus xnCopyIRMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr xnAllocateAudioMetadata();
+		public static extern IntPtr xnAllocateAudioMetaData();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnFreeAudioMetadata(IntPtr pMetadata);
+		public static extern void xnFreeAudioMetaData(IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnCopyAudioMetadata(IntPtr pDestination, IntPtr pSource);
+		public static extern XnStatus xnCopyAudioMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr xnAllocateSceneMetadata();
+		public static extern IntPtr xnAllocateSceneMetaData();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnFreeSceneMetadata(IntPtr pMetadata);
+		public static extern void xnFreeSceneMetaData(IntPtr pMetaData);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnCopySceneMetadata(IntPtr pDestination, IntPtr pSource);
+		public static extern XnStatus xnCopySceneMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAutoEnumerateOverSingleInput(ContextSafeHandle pContext, NodeInfoListSafeHandle pList, ProductionNodeDescription pDescription, string strCreationInfo, NodeType InputType, EnumerationErrorsSafeHandle pErrors, QuerySafeHandle pQuery);
 	}

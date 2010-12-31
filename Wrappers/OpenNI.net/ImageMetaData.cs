@@ -41,9 +41,9 @@ namespace OpenNI
 			return new ImageMetadataMarshaler(this, passOut);
 		}
 
-		internal SafeNativeMethods.XnImageMetadata image = new SafeNativeMethods.XnImageMetadata();
+		internal SafeNativeMethods.XnImageMetaData image = new SafeNativeMethods.XnImageMetaData();
 
-		private class ImageMetadataMarshaler : Marshaler<SafeNativeMethods.XnImageMetadata>
+		private class ImageMetadataMarshaler : Marshaler<SafeNativeMethods.XnImageMetaData>
 		{
 			public ImageMetadataMarshaler(ImageMetadata obj, bool marshalOut) :
 				base(obj.image, marshalOut,

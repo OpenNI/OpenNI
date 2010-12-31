@@ -10,28 +10,28 @@ namespace OpenNI
 			base(node)
 		{
 			this.viewpointChangedEvent = new StateChangedEvent(node,
-				SafeNativeMethods.xnRegisterToViewpointChange,
-				SafeNativeMethods.xnUnregisterFromViewpointChange);
+				SafeNativeMethods.xnRegisterToViewPointChange,
+				SafeNativeMethods.xnUnregisterFromViewPointChange);
 		}
 
 		public bool IsViewpointSupported(ProductionNode other)
 		{
-			return SafeNativeMethods.xnIsViewpointSupported(this.InternalObject, other.InternalObject);
+			return SafeNativeMethods.xnIsViewPointSupported(this.InternalObject, other.InternalObject);
 		}
 
 		public void SetViewpoint(ProductionNode other)
 		{
-			Status.ThrowOnFail(SafeNativeMethods.xnSetViewpoint(this.InternalObject, other.InternalObject));
+			Status.ThrowOnFail(SafeNativeMethods.xnSetViewPoint(this.InternalObject, other.InternalObject));
 		}
 
 		public void ResetViewpoint()
 		{
-			Status.ThrowOnFail(SafeNativeMethods.xnResetViewpoint(this.InternalObject));
+			Status.ThrowOnFail(SafeNativeMethods.xnResetViewPoint(this.InternalObject));
 		}
 
 		public bool IsViewpointAs(ProductionNode other)
 		{
-			return SafeNativeMethods.xnIsViewpointAs(this.InternalObject, other.InternalObject);
+			return SafeNativeMethods.xnIsViewPointAs(this.InternalObject, other.InternalObject);
 		}
 
 		public event EventHandler<StateChangedArgs> ViewpointChanged

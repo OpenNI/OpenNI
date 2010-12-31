@@ -92,7 +92,7 @@ namespace OpenNI
 			set { this.map.PixelFormat = value; }
 		}
 
-		private class MapMetadataMarshaler : Marshaler<SafeNativeMethods.XnMapMetadata>
+		private class MapMetadataMarshaler : Marshaler<SafeNativeMethods.XnMapMetaData>
 		{
 			public MapMetadataMarshaler(MapMetadata obj, bool marshalOut) :
 				base(obj.map, marshalOut,
@@ -108,7 +108,7 @@ namespace OpenNI
 			}
 		}
 
-		internal SafeNativeMethods.XnMapMetadata map = new SafeNativeMethods.XnMapMetadata();
+		internal SafeNativeMethods.XnMapMetaData map = new SafeNativeMethods.XnMapMetaData();
 	}
 
 	public abstract class MapMetadata<T> : MapMetadata

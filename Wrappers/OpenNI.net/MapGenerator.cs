@@ -14,15 +14,12 @@ namespace OpenNI
 				SafeNativeMethods.xnUnregisterFromMapOutputModeChange);
 		}
 
-		public MapOutputMode[] SupportedMapOutputModes
+		public MapOutputMode[] GetSupportedMapOutputModes()
 		{
-            get
-            {
-                uint count = SafeNativeMethods.xnGetSupportedMapOutputModesCount(this.InternalObject);
-                MapOutputMode[] supportedModes = new MapOutputMode[count];
-                Status.ThrowOnFail(SafeNativeMethods.xnGetSupportedMapOutputModes(this.InternalObject, supportedModes, ref count));
-                return supportedModes;
-            }
+            uint count = SafeNativeMethods.xnGetSupportedMapOutputModesCount(this.InternalObject);
+            MapOutputMode[] supportedModes = new MapOutputMode[count];
+            Status.ThrowOnFail(SafeNativeMethods.xnGetSupportedMapOutputModes(this.InternalObject, supportedModes, ref count));
+            return supportedModes;
 		}
 
 		public MapOutputMode MapOutputMode

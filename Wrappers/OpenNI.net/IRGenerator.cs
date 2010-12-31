@@ -40,7 +40,7 @@ namespace OpenNI
 		{
 			using (IMarshaler marsh = irMetadata.GetMarshaler(true))
 			{
-				SafeNativeMethods.xnGetIRMetadata(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetIRMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 

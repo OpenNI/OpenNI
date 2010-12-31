@@ -99,7 +99,7 @@ namespace OpenNI
 		{
 			using (IMarshaler marsh = depthMetadata.GetMarshaler(true))
 			{
-				SafeNativeMethods.xnGetDepthMetadata(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetDepthMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 

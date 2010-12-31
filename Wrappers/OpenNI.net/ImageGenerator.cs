@@ -83,7 +83,7 @@ namespace OpenNI
 		{
 			using (IMarshaler marsh = imageMetadata.GetMarshaler(true))
 			{
-				SafeNativeMethods.xnGetImageMetadata(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetImageMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 

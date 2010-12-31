@@ -35,7 +35,7 @@ namespace OpenNI
 			return new OutputMetadataMarshaler(this, passOut);
 		}
 
-		internal class OutputMetadataMarshaler : Marshaler<SafeNativeMethods.XnOutputMetadata>
+		internal class OutputMetadataMarshaler : Marshaler<SafeNativeMethods.XnOutputMetaData>
 		{
 			public OutputMetadataMarshaler(OutputMetadata output, bool marshalOut) :
 				base(output.data, marshalOut)
@@ -43,6 +43,6 @@ namespace OpenNI
 			}
 		}
 
-		internal SafeNativeMethods.XnOutputMetadata data = new SafeNativeMethods.XnOutputMetadata();
+		internal SafeNativeMethods.XnOutputMetaData data = new SafeNativeMethods.XnOutputMetaData();
 	}
 }

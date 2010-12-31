@@ -60,9 +60,9 @@ namespace OpenNI
 			return new SceneMetadataMarshaler(this, passOut);
 		}
 
-		internal SafeNativeMethods.XnSceneMetadata scene = new SafeNativeMethods.XnSceneMetadata();
+		internal SafeNativeMethods.XnSceneMetaData scene = new SafeNativeMethods.XnSceneMetaData();
 
-		private class SceneMetadataMarshaler : Marshaler<SafeNativeMethods.XnSceneMetadata>
+		private class SceneMetadataMarshaler : Marshaler<SafeNativeMethods.XnSceneMetaData>
 		{
 			public SceneMetadataMarshaler(SceneMetadata obj, bool marshalOut) :
 				base(obj.scene, marshalOut,
