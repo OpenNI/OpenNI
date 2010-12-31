@@ -51,24 +51,27 @@ namespace OpenNI
 
         private StateChangedEvent jointConfigurationChangedEvent;
 
-        // EnuemrateActiveJoints
+        // EnumerateActiveJoints
 
-        public void GetSkeletonJoint(UserId user, SkeletonJoint eJoint, SkeletonJointTransformation joint)
+        public SkeletonJointTransformation GetSkeletonJoint(UserId user, SkeletonJoint eJoint)
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonJoint(this.InternalObject, user, eJoint, joint));
-            
+            SkeletonJointTransformation joint = new SkeletonJointTransformation();
+            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonJoint(this.InternalObject, user, eJoint, ref joint));
+            return joint;
         }
 
-        public void GetSkeletonJointPosition(UserId user, SkeletonJoint eJoint, ref SkeletonJointPosition joint)
+        public SkeletonJointPosition GetSkeletonJointPosition(UserId user, SkeletonJoint eJoint)
         {
+            SkeletonJointPosition joint = new SkeletonJointPosition();
             Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonJointPosition(this.InternalObject, user, eJoint, ref joint));
-            
+            return joint;
         }
 
-        public void GetSkeletonJointOrientation(UserId user, SkeletonJoint eJoint, SkeletonJointOrientation joint)
+        public SkeletonJointOrientation GetSkeletonJointOrientation(UserId user, SkeletonJoint eJoint)
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonJointOrientation(this.InternalObject, user, eJoint, joint));
-            
+            SkeletonJointOrientation joint = new SkeletonJointOrientation();
+            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonJointOrientation(this.InternalObject, user, eJoint, ref joint));
+            return joint;
         }
 
         public bool IsTracking(UserId user)

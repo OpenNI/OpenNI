@@ -38,25 +38,26 @@ namespace OpenNI
             return handle;
         }
 
-        public UInt16 GetNumberOfUsers()
+        public UInt16 UserCount
         {
-            return SafeNativeMethods.xnGetNumberOfUsers(this.InternalObject);
+            get
+            {
+                return SafeNativeMethods.xnGetNumberOfUsers(this.InternalObject);
+            }
         }
         
         public UserId[] GetUsers()
         {
-            ushort count = GetNumberOfUsers();
+            ushort count = this.UserCount;
             UserId[] users = new UserId[count];
             Status.ThrowOnFail(SafeNativeMethods.xnGetUsers(this.InternalObject, users, ref count));
-            
             return users;
         }
         
-        public Point3D GetCoM(UserId id)
+        public Point3D GetCenterOfMass(UserId id)
         {
             Point3D com = new Point3D();
             Status.ThrowOnFail(SafeNativeMethods.xnGetUserCoM(this.InternalObject, id, out com));
-            
             return com;
         }
 

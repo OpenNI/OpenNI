@@ -876,11 +876,11 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateActiveJoints(NodeSafeHandle hInstance, SkeletonJoint pJoints, XnUInt16 pnJoints);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnGetSkeletonJoint(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, [Out] SkeletonJointTransformation pJoint);
+        public static extern XnStatus xnGetSkeletonJoint(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointTransformation pJoint);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetSkeletonJointPosition(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointPosition pJoint);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnGetSkeletonJointOrientation(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, [Out] SkeletonJointOrientation pJoint);
+        public static extern XnStatus xnGetSkeletonJointOrientation(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointOrientation pJoint);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsSkeletonTracking(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]

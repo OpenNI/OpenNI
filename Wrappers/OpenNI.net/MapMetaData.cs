@@ -77,7 +77,7 @@ namespace OpenNI
 					case PixelFormat.Grayscale16Bit:
 						return 2;
 					default:
-						throw new NotImplementedException();
+						throw new InvalidOperationException();
 				}
 			}
 		}
@@ -87,9 +87,9 @@ namespace OpenNI
 			return new MapMetadataMarshaler(this, passOut);
 		}
 
-		protected PixelFormat PixelFormatInternal
+		protected void SetPixelFormatInternal(PixelFormat value)
 		{
-			set { this.map.PixelFormat = value; }
+			this.map.PixelFormat = value;
 		}
 
 		private class MapMetadataMarshaler : Marshaler<SafeNativeMethods.XnMapMetaData>

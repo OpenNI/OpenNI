@@ -39,17 +39,22 @@ namespace OpenNI
 			return GetMapData<UInt16>(GetDepthMapPtr());
 		}
 
-		public UInt16 GetDeviceMaxDepth()
+		public UInt16 DeviceMaxDepth
 		{
-			return SafeNativeMethods.xnGetDeviceMaxDepth(this.InternalObject);
+            get
+            {
+                return SafeNativeMethods.xnGetDeviceMaxDepth(this.InternalObject);
+            }
 		}
 
-		public FieldOfView GetFieldOfView()
+		public FieldOfView FieldOfView
 		{
-			FieldOfView fov = new FieldOfView();
-            Status.ThrowOnFail(SafeNativeMethods.xnGetDepthFieldOfView(this.InternalObject, ref fov));
-			
-			return fov;
+            get
+            {
+                FieldOfView fov = new FieldOfView();
+                Status.ThrowOnFail(SafeNativeMethods.xnGetDepthFieldOfView(this.InternalObject, ref fov));
+                return fov;
+            }
 		}
 
 		public event EventHandler<StateChangedArgs> FieldOfViewChanged

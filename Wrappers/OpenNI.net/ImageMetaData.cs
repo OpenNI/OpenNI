@@ -13,7 +13,7 @@ namespace OpenNI
 		public new PixelFormat PixelFormat
 		{
 			get { return ((MapMetadata)this).PixelFormat; }
-			set { this.PixelFormatInternal = value; }
+			set { this.SetPixelFormatInternal(value); }
 		}
 
 		public MapData<RGB24Pixel> GetRgb24ImageMap()

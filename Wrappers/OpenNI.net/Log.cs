@@ -6,7 +6,7 @@ namespace OpenNI
 {
 	public static class Log
 	{
-		public static readonly string MASK_ALL = "ALL";
+		public static readonly string MaskAll = "ALL";
 
 		public static void Init()
 		{

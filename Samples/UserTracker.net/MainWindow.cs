@@ -39,7 +39,7 @@ namespace UserTracker.net
             this.userGenerator.StartGenerating();
 
 
-			this.histogram = new int[this.depth.GetDeviceMaxDepth()];
+			this.histogram = new int[this.depth.DeviceMaxDepth];
 
 			MapOutputMode mapMode = this.depth.MapOutputMode;
 
@@ -176,8 +176,7 @@ namespace UserTracker.net
 
         private void GetJoint(uint user, SkeletonJoint joint)
         {
-            SkeletonJointPosition pos = new SkeletonJointPosition();
-            this.skeletonCapability.GetSkeletonJointPosition(user, joint, ref pos);
+            SkeletonJointPosition pos = this.skeletonCapability.GetSkeletonJointPosition(user, joint);
 			if (pos.Position.Z == 0)
 			{
 				pos.Confidence = 0;
@@ -317,7 +316,7 @@ namespace UserTracker.net
                     {
                         if (this.shouldPrintID)
                         {
-                            Point3D com = this.userGenerator.GetCoM(user);
+                            Point3D com = this.userGenerator.GetCenterOfMass(user);
                             com = this.depth.ConvertRealWorldToProjective(com);
 
                             string label = "";

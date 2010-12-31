@@ -26,14 +26,14 @@ namespace OpenNI
 			Status.ThrowOnFail(SafeNativeMethods.xnSetRecorderDestination(this.InternalObject, medium, dest));
 		}
 
-		public void AddNodeToRecording(ProductionNode node, CodecID codec)
+		public void AddNodeToRecording(ProductionNode node, CodecId codec)
 		{
 			Status.ThrowOnFail(SafeNativeMethods.xnAddNodeToRecording(this.InternalObject, node.InternalObject, codec.InternalValue));
 		}
 
 		public void AddNodeToRecording(ProductionNode node)
 		{
-			AddNodeToRecording(node, CodecID.Null);
+			AddNodeToRecording(node, CodecId.Null);
 		}
 
 		public void RemoveNodeFromRecording(ProductionNode node)

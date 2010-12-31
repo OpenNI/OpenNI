@@ -11,14 +11,14 @@ namespace OpenNI
 		{
 		}
 
-		public Codec(Context context, CodecID codecID, ProductionNode initializer) :
+		public Codec(Context context, CodecId codecID, ProductionNode initializer) :
 			this(Create(context, codecID, initializer), false)
 		{
 		}
 
-		public CodecID GetCodecID()
+		public CodecId GetCodecID()
 		{
-			return new CodecID(SafeNativeMethods.xnGetCodecID(this.InternalObject));
+			return new CodecId(SafeNativeMethods.xnGetCodecID(this.InternalObject));
 		}
 
 		public UInt32 EncodeData(IntPtr source, UInt32 sourceSize, IntPtr dest, UInt32 destSize)
@@ -35,7 +35,7 @@ namespace OpenNI
 			return written;
 		}
 
-		private static NodeSafeHandle Create(Context context, CodecID codecID, ProductionNode initializer)
+		private static NodeSafeHandle Create(Context context, CodecId codecID, ProductionNode initializer)
 		{
             NodeSafeHandle nodeHandle;
             Status.ThrowOnFail(SafeNativeMethods.xnCreateCodec(context.InternalObject, codecID.InternalValue, initializer.InternalObject, out nodeHandle));

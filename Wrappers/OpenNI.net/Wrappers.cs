@@ -126,29 +126,29 @@ namespace OpenNI
 		}
 	}
 
-	public struct CodecID
+	public struct CodecId
 	{
-		public CodecID(UInt32 internalValue)
+		public CodecId(UInt32 internalValue)
 		{
 			this.val = internalValue;
 		}
 
-		public CodecID(byte byte1, byte byte2, byte byte3, byte byte4) :
+		public CodecId(byte byte1, byte byte2, byte byte3, byte byte4) :
 			this((UInt32)(byte1 << 24 | byte2 << 16 | byte3 << 8 | byte4))
 		{
 		}
 
-		public CodecID(char char1, char char2, char char3, char char4) :
+		public CodecId(char char1, char char2, char char3, char char4) :
 			this((byte)char1, (byte)char2, (byte)char3, (byte)char4)
 		{
 		}
 
-		public static readonly CodecID Null = new CodecID(0, 0, 0, 0);
-		public static readonly CodecID Uncompressed = new CodecID('N', 'O', 'N', 'E');
-		public static readonly CodecID Jpeg = new CodecID('J', 'P', 'E', 'G');
-		public static readonly CodecID Z16 = new CodecID('1', '6', 'z', 'P');
-		public static readonly CodecID Z16WithTables = new CodecID('1', '6', 'z', 'T');
-		public static readonly CodecID Z8 = new CodecID('I', 'm', '8', 'z');
+		public static readonly CodecId Null = new CodecId(0, 0, 0, 0);
+		public static readonly CodecId Uncompressed = new CodecId('N', 'O', 'N', 'E');
+		public static readonly CodecId Jpeg = new CodecId('J', 'P', 'E', 'G');
+		public static readonly CodecId Z16 = new CodecId('1', '6', 'z', 'P');
+		public static readonly CodecId Z16WithTables = new CodecId('1', '6', 'z', 'T');
+		public static readonly CodecId Z8 = new CodecId('I', 'm', '8', 'z');
 
 		internal UInt32 InternalValue
 		{
@@ -254,22 +254,22 @@ namespace OpenNI
 
 		#endregion
 
-		protected virtual IntPtr Allocate()
+		protected IntPtr Allocate()
 		{
 			return Marshal.AllocHGlobal(Marshal.SizeOf(this.obj));
 		}
 
-		protected virtual void Free(IntPtr ptr)
+		protected void Free(IntPtr ptr)
 		{
 			Marshal.FreeHGlobal(ptr);
 		}
 
-		protected virtual void ManagedToNative(T source, IntPtr dest)
+		protected void ManagedToNative(T source, IntPtr dest)
 		{
 			Marshal.StructureToPtr(source, dest, false);
 		}
 
-		protected virtual void NativeToManaged(IntPtr source, T dest)
+		protected void NativeToManaged(IntPtr source, T dest)
 		{
 			Marshal.PtrToStructure(source, dest);
 		}

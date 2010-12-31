@@ -41,23 +41,19 @@ namespace OpenNI
 
         public void StopTracking(UserId id)
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnStopTracking(this.InternalObject, id));
-            
+            Status.ThrowOnFail(SafeNativeMethods.xnStopTracking(this.InternalObject, id));        
         }
         public void StopTrackingAll()
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnStopTrackingAll(this.InternalObject));
-            
+            Status.ThrowOnFail(SafeNativeMethods.xnStopTrackingAll(this.InternalObject));          
         }
-        public void StartTracking(ref Point3D position)
+        public void StartTracking(Point3D position)
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnStartTracking(this.InternalObject, ref position));
-            
+            Status.ThrowOnFail(SafeNativeMethods.xnStartTracking(this.InternalObject, ref position));           
         }
         public void SetSmoothing(float factor)
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnSetTrackingSmoothing(this.InternalObject, factor));
-            
+            Status.ThrowOnFail(SafeNativeMethods.xnSetTrackingSmoothing(this.InternalObject, factor));         
         }
 
         #region Hand Created

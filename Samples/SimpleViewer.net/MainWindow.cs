@@ -23,7 +23,7 @@ namespace SimpleViewer.net
 				throw new Exception("Viewer must have a depth node!");
 			}
 
-			this.histogram = new int[this.depth.GetDeviceMaxDepth()];
+			this.histogram = new int[this.depth.DeviceMaxDepth];
 
 			MapOutputMode mapMode = this.depth.MapOutputMode;
 

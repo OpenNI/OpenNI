@@ -37,9 +37,14 @@ namespace OpenNI
             return handle;
         }
 
-        public void GetFloor(ref Plane3D plane)
+        public Plane3D Floor
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnGetFloor(this.InternalObject, ref plane));
+            get
+            {
+                Plane3D plane = new Plane3D();
+                Status.ThrowOnFail(SafeNativeMethods.xnGetFloor(this.InternalObject, ref plane));
+                return plane;
+            }
             
         }
 
