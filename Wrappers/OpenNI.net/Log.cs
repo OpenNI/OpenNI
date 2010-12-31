@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
 namespace OpenNI
@@ -15,6 +16,9 @@ namespace OpenNI
 
 		public static void InitFromXmlFile(string xmlFile)
 		{
+            Contract.Requires(xmlFile != null);
+            Contract.Requires(System.IO.File.Exists(xmlFile));
+
 			Status.ThrowOnFail(SafeNativeMethods.xnLogInitFromXmlFile(xmlFile));
 		}
 
@@ -25,6 +29,8 @@ namespace OpenNI
 
 		public static void SetMaskState(string maskName, bool on)
 		{
+            Contract.Requires(!String.IsNullOrWhiteSpace(maskName));
+
 			Status.ThrowOnFail(SafeNativeMethods.xnLogSetMaskState(maskName, on));
 		}
 
@@ -45,7 +51,9 @@ namespace OpenNI
 
 		public static void SetOutputFolder(string folder)
 		{
-			Status.ThrowOnFail(SafeNativeMethods.xnLogSetOutputFolder(folder));
+            Contract.Requires(!String.IsNullOrWhiteSpace(folder));
+
+            Status.ThrowOnFail(SafeNativeMethods.xnLogSetOutputFolder(folder));
 		}
 	}
 }

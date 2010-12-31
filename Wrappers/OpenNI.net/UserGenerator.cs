@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using UserId = System.UInt32;
 
@@ -75,10 +76,15 @@ namespace OpenNI
 
         public SkeletonCapability GetSkeletonCap()
         {
+            Contract.Ensures(Contract.Result<SkeletonCapability>() != null);
+
             return new SkeletonCapability(this);
         }
+
         public PoseDetectionCapability GetPoseDetectionCap()
         {
+            Contract.Ensures(Contract.Result<PoseDetectionCapability>() != null);
+
             return new PoseDetectionCapability(this);
         }
 

@@ -27,7 +27,7 @@ namespace UserTracker.net
             this.userGenerator = new UserGenerator(this.context);
             this.skeletonCapability = new SkeletonCapability(this.userGenerator);
             this.poseDetectionCapability = new PoseDetectionCapability(this.userGenerator);
-            this.calibPose = this.skeletonCapability.GetCalibrationPose();
+            this.calibPose = this.skeletonCapability.CalibrationPose;
 
             this.userGenerator.UserFound += new EventHandler<UserFoundArgs>(userGenerator_UserFound);
             this.userGenerator.UserLost += new EventHandler<UserLostArgs>(userGenerator_LostUser);

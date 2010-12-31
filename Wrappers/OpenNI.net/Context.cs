@@ -90,12 +90,11 @@ namespace OpenNI
 			
 		}
 
-		public License[] EnumerateLicenses()
+		public License[] GetLicenses()
 		{
 			IntPtr pArray;
 			uint size;
             Status.ThrowOnFail(SafeNativeMethods.xnEnumerateLicenses(this.InternalObject, out pArray, out size));
-			
 
 			License[] result = null;
 
@@ -157,7 +156,7 @@ namespace OpenNI
 			return CreateProductionNodeObject(nodeHandle, nodeInfo.Description.Type);
 		}
 
-		public NodeInfoCollection EnumerateExistingNodes()
+		public NodeInfoCollection GetExistingNodes()
 		{
             Contract.Ensures(Contract.Result<NodeInfoCollection>() != null);
 
@@ -167,7 +166,7 @@ namespace OpenNI
 			return new NodeInfoCollection(pList);
 		}
 
-		public NodeInfoCollection EnumerateExistingNodes(NodeType type)
+		public NodeInfoCollection GetExistingNodes(NodeType type)
 		{
             Contract.Ensures(Contract.Result<NodeInfoCollection>() != null);
 

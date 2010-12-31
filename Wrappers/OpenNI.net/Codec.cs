@@ -11,14 +11,17 @@ namespace OpenNI
 		{
 		}
 
-		public Codec(Context context, CodecId codecID, ProductionNode initializer) :
-			this(Create(context, codecID, initializer), false)
+		public Codec(Context context, CodecId codecId, ProductionNode initializer) :
+			this(Create(context, codecId, initializer), false)
 		{
 		}
 
-		public CodecId GetCodecID()
+		public CodecId CodecId
 		{
-			return new CodecId(SafeNativeMethods.xnGetCodecID(this.InternalObject));
+            get
+            {
+                return new CodecId(SafeNativeMethods.xnGetCodecID(this.InternalObject));
+            }
 		}
 
 		public UInt32 EncodeData(IntPtr source, UInt32 sourceSize, IntPtr dest, UInt32 destSize)

@@ -58,7 +58,7 @@ namespace OpenNI
         private static NodeSafeHandle CreateBasedOn(ImageGenerator basedOn, string name)
 		{
             NodeSafeHandle handle;
-			Status.ThrowOnFail(SafeNativeMethods.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
+			Status.ThrowOnFail(SafeNativeMethods.xnCreateMockNodeBasedOn(basedOn.Context.InternalObject,
                 basedOn.InternalObject, name, out handle));
 			
 			return handle;

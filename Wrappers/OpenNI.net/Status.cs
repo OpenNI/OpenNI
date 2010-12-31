@@ -22,7 +22,7 @@ namespace OpenNI
         private uint status;
 
         /** Definition of the OK error code. */
-        public static readonly Status OK = new Status(0);
+        public static readonly Status Ok = new Status(0);
 
         private Status(uint value)
         {
@@ -53,7 +53,7 @@ namespace OpenNI
         }
 
         [Pure]
-        public bool IsOK
+        public bool IsOk
         {
             get
             {
@@ -63,13 +63,13 @@ namespace OpenNI
 
         internal static void ThrowOnFail(Status status)
         {
-            if (!status.IsOK)
+            if (!status.IsOk)
                 throw new OpenNiException(status);
         }
 
         internal static void ThrowOnFail(Status status, ErrorCollection errors)
         {
-            if (!status.IsOK)
+            if (!status.IsOk)
             {
                 if (errors != null && !errors.IsEmpty)
                 {

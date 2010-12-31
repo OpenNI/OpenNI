@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Diagnostics.Contracts;
 
 namespace OpenNI
 {
@@ -44,6 +45,8 @@ namespace OpenNI
 
 		public CroppingCapability GetCroppingCap()
 		{
+            Contract.Ensures(Contract.Result<CroppingCapability>() != null);
+
 			return new CroppingCapability(this);
 		}
 

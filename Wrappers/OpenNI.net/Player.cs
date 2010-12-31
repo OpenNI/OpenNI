@@ -89,17 +89,22 @@ namespace OpenNI
 			return GetNumFrames(node.Name);
 		}
 
-		public string GetSupportedFormat()
+		public string SupportedFormat
 		{
-			return SafeNativeMethods.xnGetPlayerSupportedFormat(this.InternalObject);
+            get
+            {
+                return SafeNativeMethods.xnGetPlayerSupportedFormat(this.InternalObject);
+            }
 		}
 
-		public NodeInfoCollection EnumerateNodes()
+		public NodeInfoCollection Nodes
 		{
-			NodeInfoListSafeHandle pList;
-			Status.ThrowOnFail(SafeNativeMethods.xnEnumeratePlayerNodes(this.InternalObject, out pList));
-
-			return new NodeInfoCollection(pList);
+            get
+            {
+                NodeInfoListSafeHandle pList;
+                Status.ThrowOnFail(SafeNativeMethods.xnEnumeratePlayerNodes(this.InternalObject, out pList));
+                return new NodeInfoCollection(pList);
+            }
 		}
 
 		public bool IsEndOfFile

@@ -15,9 +15,12 @@ namespace OpenNI
             this.internalPoseEnded = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseEnded);
         }
 
-        public UInt32 GetNumberOfPoses()
+        public UInt32 PoseCount
         {
-            return SafeNativeMethods.xnGetNumberOfPoses(this.InternalObject);
+            get
+            {
+                return SafeNativeMethods.xnGetNumberOfPoses(this.InternalObject);
+            }
         }
 
 		public string[] GetAllAvailablePoses()
@@ -55,9 +58,9 @@ namespace OpenNI
 			return poses;
 		}
 
-		public void StartPoseDetection(string pose, UserId user)
+		public void StartPoseDetection(string poseName, UserId user)
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnStartPoseDetection(this.InternalObject, pose, user));
+            Status.ThrowOnFail(SafeNativeMethods.xnStartPoseDetection(this.InternalObject, poseName, user));
             
         }
         public void StopPoseDetection(UserId user)
@@ -65,7 +68,7 @@ namespace OpenNI
             SafeNativeMethods.xnStopPoseDetection(this.InternalObject, user);
         }
 
-        #region Pose Detected
+        #region PoseName Detected
         private event EventHandler<PoseDetectionArgs> poseDetectedEvent;
         public event EventHandler<PoseDetectionArgs> PoseDetected
         {
@@ -88,17 +91,17 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalPoseDetected(NodeSafeHandle hNode, string pose, UserId id, IntPtr pCookie)
+        private void InternalPoseDetected(NodeSafeHandle hNode, string poseName, UserId id, IntPtr pCookie)
         {
             var handler = this.poseDetectedEvent;
             if (handler != null)
-                handler(this, new PoseDetectionArgs(pose, id, pCookie));
+                handler(this, new PoseDetectionArgs(poseName, id, pCookie));
         }
         private SafeNativeMethods.XnPoseDetectionCallback internalPoseDetected;
         private IntPtr poseDetectedHandle;
         #endregion
 
-        #region Pose Ended
+        #region PoseName Ended
         private event EventHandler<PoseDetectionArgs> poseEndedEvent;
         public event EventHandler<PoseDetectionArgs> PoseEnded
         {
@@ -121,11 +124,11 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalPoseEnded(NodeSafeHandle hNode, string pose, UserId id, IntPtr pCookie)
+        private void InternalPoseEnded(NodeSafeHandle hNode, string poseName, UserId id, IntPtr pCookie)
         {
             var handler = this.poseEndedEvent;
             if (handler != null)
-                handler(this, new PoseDetectionArgs(pose, id, pCookie));
+                handler(this, new PoseDetectionArgs(poseName, id, pCookie));
         }
         private SafeNativeMethods.XnPoseDetectionCallback internalPoseEnded;
         private IntPtr poseEndedHandle;
@@ -143,9 +146,9 @@ namespace OpenNI
         /// Initializes a new instance of the PoseDetectedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public PoseDetectionArgs(string pose, UserId userId, IntPtr cookie)
+        public PoseDetectionArgs(string poseName, UserId userId, IntPtr cookie)
         {
-            this.Pose = pose;
+            this.PoseName = poseName;
             this.UserId = userId;
             this.Cookie = cookie;
         }
@@ -153,7 +156,7 @@ namespace OpenNI
         /// <summary>
         /// Gets the pose detected.
         /// </summary>
-        public string Pose { get; private set; }
+        public string PoseName { get; private set; }
 
         /// <summary>
         /// Gets the id of the user that entered the pose or left it. 

@@ -14,9 +14,12 @@ namespace OpenNI
 				SafeNativeMethods.xnUnregisterFromUserPositionChange);
 		}
 
-		public uint GetSupportedPositionsCount()
+		public uint SupportedPositionsCount
 		{
-			return SafeNativeMethods.xnGetSupportedUserPositionsCount(this.InternalObject);
+            get
+            {
+                return SafeNativeMethods.xnGetSupportedUserPositionsCount(this.InternalObject);
+            }
 		}
 
 		public void SetPosition(uint index, BoundingBox3D pos)

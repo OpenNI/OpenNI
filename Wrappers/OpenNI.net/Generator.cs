@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 
 namespace OpenNI
@@ -95,16 +96,22 @@ namespace OpenNI
 
 		public MirrorCapability GetMirrorCap()
 		{
+            Contract.Ensures(Contract.Result<MirrorCapability>() != null);
+
 			return new MirrorCapability(this);
 		}
 
 		public AlternativeViewpointCapability GetAlternativeViewpointCap()
 		{
+            Contract.Ensures(Contract.Result<AlternativeViewpointCapability>() != null);
+
 			return new AlternativeViewpointCapability(this);
 		}
 
 		public FrameSyncCapability GetFrameSyncCap()
 		{
+            Contract.Ensures(Contract.Result<FrameSyncCapability>() != null);
+
 			return new FrameSyncCapability(this);
 		}
 

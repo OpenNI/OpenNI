@@ -72,7 +72,7 @@ namespace OpenNI
 		Player = 8,
 		
 		/// <summary>
-        /// A gesture generator
+        /// A gestureName generator
 		/// </summary>
 		Gesture = 9,
 		
@@ -163,19 +163,29 @@ namespace OpenNI
 	/// </summary>
 	public enum SkeletonProfile
 	{
-		/** No joints at all **/
+		/// <summary>
+        /// No joints at all.
+		/// </summary>
 		None		= 1,
 
-		/** All joints **/
+		/// <summary>
+        /// All joints.
+		/// </summary>
 		All			= 2,
 		
-		/** All the joints in the upper body (torso and upwards) **/
+		/// <summary>
+        /// All the joints in the upper body (torso and upwards).
+		/// </summary>
 		Upper		= 3,
 		
-		/** All the joints in the lower body (torso and downwards) **/
+		/// <summary>
+        /// All the joints in the lower body (torso and downwards).
+		/// </summary>
 		Lower		= 4,
 		
-		/** The head and the hands **/
+		/// <summary>
+        /// The head and the hands.
+		/// </summary>
 		HeadAndHands	= 5,
 	};
 
@@ -185,11 +195,23 @@ namespace OpenNI
 		File = 0,
 	};
 
+    /// <summary>
+    /// Specifies the origin of the seek operation.
+    /// </summary>
 	public enum PlayerSeekOrigin
 	{
+        /// <summary>
+        /// Seek relative to the beggining of the recording.
+        /// </summary>
 		Set = 0,
-		Curr = 1,
-		End = 2,
+        /// <summary>
+        /// Seek relative to the current position of the player.
+        /// </summary>
+		Current = 1,
+        /// <summary>
+        /// Seek relative to the end of the recording.
+        /// </summary>
+        End = 2,
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -205,16 +227,31 @@ namespace OpenNI
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Cropping
 	{
-		/** TRUE if cropping is turned on, FALSE otherwise. */
+		/// <summary>
+		/// Gets or sets if cropping is enabled.
+		/// </summary>
+        /// <value>true if cropping is turned on; false otherwise.</value>
 		public XnBool Enabled;
-		/** Offset in the X-axis, in pixels. */
+
+		/// <summary>
+        /// Gets or sets offset in the X-axis, in pixels.
+		/// </summary>
 		public XnUInt16 XOffset;
-		/** Offset in the Y-axis, in pixels. */
-		public XnUInt16 YOffset;
-		/** Number of pixels in the X-axis. */
-		public XnUInt16 XSize;
-		/** Number of pixels in the Y-axis. */
-		public XnUInt16 YSize;
+
+        /// <summary>
+        /// Gets or sets offset in the Y-axis, in pixels.
+        /// </summary>
+        public XnUInt16 YOffset;
+
+        /// <summary>
+        /// Gets or sets number of pixels in the X-axis.
+        /// </summary>
+        public XnUInt16 XSize;
+
+        /// <summary>
+        /// Gets or sets number of pixels in the Y-axis.
+        /// </summary>
+        public XnUInt16 YSize;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -229,13 +266,18 @@ namespace OpenNI
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
-    [DebuggerDisplay("Horizontal = {HFOV}, Vertical = {VFOV}")]
+    [DebuggerDisplay("Horizontal = {Horizontal}, Vertical = {Vertical}")]
     public struct FieldOfView
 	{
-		/** Horizontal Field Of View, in radians. */
-		public XnDouble HFOV;
-		/** Horizontal Field Of View, in radians. */
-		public XnDouble VFOV;
+        /// <summary>
+        /// Gets or sets the horizontal Field Of View, in radians.
+        /// </summary>
+        public XnDouble Horizontal;
+
+        /// <summary>
+        /// Gets or sets the vertical Field Of View, in radians.
+        /// </summary>
+        public XnDouble Vertical;
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -349,35 +391,35 @@ namespace OpenNI
 		public XnUInt32 Y;
 	};
 
-	internal class Defs
+	internal static class Constants
 	{
-		public const int XN_MAX_NAME_LENGTH = 80;
-		public const int XN_MAX_LICENSE_LENGTH = 255;
+		public const int MaxNameLength = 80;
+		public const int MaxLicenseLength = 255;
 	}
 	
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 	public class ProductionNodeDescription
 	{
 		/** Type of the production node. */
 		public NodeType Type;
 		/** Vendor name */
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_NAME_LENGTH)]
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Constants.MaxNameLength)]
 		public string Vendor;
 		/** Generator name. Should be unique under Type and Vendor. */
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_NAME_LENGTH)]
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Constants.MaxNameLength)]
 		public string Name;
 		/** Current version */
 		Version Version;
 	};
 
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 	public class License
 	{
 		/** Vendor name **/
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_NAME_LENGTH)]
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Constants.MaxNameLength)]
 		public string Vendor;
 		/** License key **/
-		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_LICENSE_LENGTH)]
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Constants.MaxLicenseLength)]
 		public string Key;
 	};
 
@@ -543,8 +585,9 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopGeneratingAll(ContextSafeHandle pContext);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnSetGlobalMirror(ContextSafeHandle pContext, XnBool bMirror);
+		public static extern XnStatus xnSetGlobalMirror(ContextSafeHandle pContext, [MarshalAs(UnmanagedType.Bool)]XnBool bMirror);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnGetGlobalMirror(ContextSafeHandle pContext);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetGlobalErrorState(ContextSafeHandle pContext);
@@ -567,6 +610,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnEnumerationErrorsIterator xnEnumerationErrorsGetNext(XnEnumerationErrorsIterator it);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnEnumerationErrorsIteratorIsValid(XnEnumerationErrorsIterator it);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern ProductionNodeDescription xnEnumerationErrorsGetCurrentDescription(XnEnumerationErrorsIterator it);
@@ -599,20 +643,21 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogClose();
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnLogSetMaskState(string csMask, XnBool bEnabled);
+        public static extern XnStatus xnLogSetMaskState(string csMask, [MarshalAs(UnmanagedType.Bool)]XnBool bEnabled);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnDumpSetMaskState(string csMask, XnBool bEnabled);
+        public static extern XnStatus xnDumpSetMaskState(string csMask, [MarshalAs(UnmanagedType.Bool)]XnBool bEnabled);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogSetSeverityFilter(LogSeverity nMinSeverity);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnLogSetConsoleOutput(XnBool bConsoleOutput);
+        public static extern XnStatus xnLogSetConsoleOutput([MarshalAs(UnmanagedType.Bool)]XnBool bConsoleOutput);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnLogSetFileOutput(XnBool bFileOutput);
+        public static extern XnStatus xnLogSetFileOutput([MarshalAs(UnmanagedType.Bool)]XnBool bFileOutput);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnLogSetLineInfo(XnBool bLineInfo);
+        public static extern XnStatus xnLogSetLineInfo([MarshalAs(UnmanagedType.Bool)]XnBool bLineInfo);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogSetOutputFolder(string strOutputFolder);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnLogIsEnabled(string csLogMask, LogSeverity nSeverity);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnLogWrite(string csLogMask, LogSeverity nSeverity, string csFile, XnUInt32 nLine, string csFormat);
@@ -621,6 +666,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnLogWriteBinaryData(string csLogMask, LogSeverity nSeverity, string csFile, XnUInt32 nLine, IntPtr pBinData, XnUInt32 nDataSize, string csFormat);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnLogIsDumpMaskEnabled(string csDumpMask);
 /*		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnDumpInit(XnDump pDump, string csDumpMask, string csHeader, string csFileNameFormat);
@@ -642,6 +688,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern ContextSafeHandle xnGetContextFromNodeHandle(NodeSafeHandle hNode);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsCapabilitySupported(NodeSafeHandle hInstance, string strCapabilityName);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetIntProperty(NodeSafeHandle hInstance, string strName, XnUInt64 nValue);
@@ -680,6 +727,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStartGenerating(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsGenerating(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopGenerating(NodeSafeHandle hInstance);
@@ -692,10 +740,12 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromNewDataAvailable(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsNewDataAvailable(NodeSafeHandle hInstance, out XnUInt64 pnTimestamp);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnWaitAndUpdateData(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsDataNew(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetDataSize(NodeSafeHandle hInstance);
@@ -704,32 +754,37 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetFrameID(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnSetMirror(NodeSafeHandle hInstance, XnBool bMirror);
+        public static extern XnStatus xnSetMirror(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.Bool)]XnBool bMirror);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsMirrored(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToMirrorChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromMirrorChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsViewPointSupported(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetViewPoint(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnResetViewPoint(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsViewPointAs(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToViewPointChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromViewPointChange(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnCanFrameSyncWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnFrameSyncWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopFrameSyncWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsFrameSyncedWith(NodeSafeHandle hInstance, NodeSafeHandle hOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToFrameSyncChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
@@ -796,6 +851,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetImageMap(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsPixelFormatSupported(NodeSafeHandle hInstance, PixelFormat Format);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetPixelFormat(NodeSafeHandle hInstance, PixelFormat Format);
@@ -826,8 +882,10 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnEnumerateAllGestures(NodeSafeHandle hInstance,  [Out] IntPtr[] pstrGestures, XnUInt32 nNameLength, ref XnUInt16 nGestures);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsGestureAvailable(NodeSafeHandle hInstance, string strGesture);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsGestureProgressSupported(NodeSafeHandle hInstance, string strGesture);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterGestureCallbacks(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureRecognized RecognizedCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureProgress ProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
@@ -860,14 +918,17 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterUserCallbacks(NodeSafeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsJointAvailable(NodeSafeHandle hInstance, SkeletonJoint eJoint);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsProfileAvailable(NodeSafeHandle hInstance, SkeletonProfile eProfile);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetSkeletonProfile(NodeSafeHandle hInstance, SkeletonProfile eProfile);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnSetJointActive(NodeSafeHandle hInstance, SkeletonJoint eJoint, XnBool bState);
+        public static extern XnStatus xnSetJointActive(NodeSafeHandle hInstance, SkeletonJoint eJoint, [MarshalAs(UnmanagedType.Bool)]XnBool bState);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsJointActive(NodeSafeHandle hInstance, SkeletonJoint eJoint);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToJointConfigurationChange(NodeSafeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
@@ -882,13 +943,16 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnGetSkeletonJointOrientation(NodeSafeHandle hInstance, XnUserID user, SkeletonJoint eJoint, ref SkeletonJointOrientation pJoint);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsSkeletonTracking(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsSkeletonCalibrated(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsSkeletonCalibrating(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnRequestSkeletonCalibration(NodeSafeHandle hInstance, XnUserID user, XnBool bForce);
+        public static extern XnStatus xnRequestSkeletonCalibration(NodeSafeHandle hInstance, XnUserID user, [MarshalAs(UnmanagedType.Bool)]XnBool bForce);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAbortSkeletonCalibration(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -898,6 +962,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnClearSkeletonCalibrationData(NodeSafeHandle hInstance, XnUInt32 nSlot);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsSkeletonCalibrationData(NodeSafeHandle hInstance, XnUInt32 nSlot);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStartSkeletonTracking(NodeSafeHandle hInstance, XnUserID user);
@@ -906,6 +971,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnResetSkeleton(NodeSafeHandle hInstance, XnUserID user);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnNeedPoseForSkeletonCalibration(NodeSafeHandle hInstance);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetSkeletonCalibrationPose(NodeSafeHandle hInstance, StringBuilder sb);
@@ -990,7 +1056,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreatePlayer(ContextSafeHandle pContext, string strFormatName, out NodeSafeHandle phPlayer);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnSetPlayerRepeat(NodeSafeHandle hPlayer, XnBool bRepeat);
+        public static extern XnStatus xnSetPlayerRepeat(NodeSafeHandle hPlayer, [MarshalAs(UnmanagedType.Bool)]XnBool bRepeat);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetPlayerSource(NodeSafeHandle hPlayer, RecordMedium sourceType, string strSource);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -1012,6 +1078,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumeratePlayerNodes(NodeSafeHandle hPlayer, out NodeInfoListSafeHandle ppList);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsPlayerAtEOF(NodeSafeHandle hPlayer);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToEndOfFileReached(NodeSafeHandle hPlayer, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
@@ -1052,12 +1119,14 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListAppend(NodeInfoListSafeHandle pList, NodeInfoListSafeHandle pOther);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnNodeInfoListIsEmpty(NodeInfoListSafeHandle pList);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetFirst(NodeInfoListSafeHandle pList);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetLast(NodeInfoListSafeHandle pList);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnNodeInfoListIteratorIsValid(XnNodeInfoListIterator it);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern NodeInfoSafeHandle xnNodeInfoListGetCurrent(XnNodeInfoListIterator it);
@@ -1065,20 +1134,21 @@ namespace OpenNI
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetNext(XnNodeInfoListIterator it);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetPrevious(XnNodeInfoListIterator it);
-/*		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnProfilingInit(XnUInt32 nProfilingInterval);
-		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnProfilingInitFromINI(string cpINIFileName, string cpSectionName);
-		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnProfilingShutdown();
-		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnBool xnProfilingIsActive();
-		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnProfilingSectionStart(char csSectionName, XnBool bMT, XnProfilingHandle pHandle);
-		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnProfilingSectionEnd(XnProfilingHandle pHandle);
-*/
-		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        /*		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+                public static extern XnStatus xnProfilingInit(XnUInt32 nProfilingInterval);
+                [DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+                public static extern XnStatus xnProfilingInitFromINI(string cpINIFileName, string cpSectionName);
+                [DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+                public static extern XnStatus xnProfilingShutdown();
+                [DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+                [return: MarshalAs(UnmanagedType.Bool)]
+                public static extern XnBool xnProfilingIsActive();
+                [DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+                public static extern XnStatus xnProfilingSectionStart(char csSectionName, [MarshalAs(UnmanagedType.Bool)]XnBool bMT, XnProfilingHandle pHandle);
+                [DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+                public static extern XnStatus xnProfilingSectionEnd(XnProfilingHandle pHandle);
+        */
+        [DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnNodeQueryAllocate(out QuerySafeHandle ppQuery);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnNodeQueryFree(QuerySafeHandle pQuery);
@@ -1097,7 +1167,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetSupportedMinUserPositions(QuerySafeHandle pQuery, XnUInt32 nCount);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnNodeQuerySetExistingNodeOnly(QuerySafeHandle pQuery, XnBool bExistingNode);
+        public static extern XnStatus xnNodeQuerySetExistingNodeOnly(QuerySafeHandle pQuery, [MarshalAs(UnmanagedType.Bool)]XnBool bExistingNode);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQueryAddNeededNode(QuerySafeHandle pQuery, string strInstanceName);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -1132,6 +1202,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnProductionNodeTypeFromString(string strType, NodeType pType);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.Bool)]
 		public static extern XnBool xnIsTypeGenerator(NodeType type);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern string xnPixelFormatToString(PixelFormat format);

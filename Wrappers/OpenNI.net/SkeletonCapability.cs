@@ -138,17 +138,24 @@ namespace OpenNI
             
         }
 
-        public bool NeedPoseForCalibration()
+        public bool NeedPoseForCalibration
         {
-            return SafeNativeMethods.xnNeedPoseForSkeletonCalibration(this.InternalObject);
+            get
+            {
+                return SafeNativeMethods.xnNeedPoseForSkeletonCalibration(this.InternalObject);
+            }
         }
-        public string GetCalibrationPose()
+
+        public string CalibrationPose
         {
-            StringBuilder sb = new StringBuilder(1024);
-            Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonCalibrationPose(this.InternalObject, sb));
-            
-            return sb.ToString();
+            get
+            {
+                StringBuilder sb = new StringBuilder(1024);
+                Status.ThrowOnFail(SafeNativeMethods.xnGetSkeletonCalibrationPose(this.InternalObject, sb));
+                return sb.ToString();
+            }
         }
+
         public void SetSmoothing(float factor)
         {
             Status.ThrowOnFail(SafeNativeMethods.xnSetSkeletonSmoothing(this.InternalObject, factor));
