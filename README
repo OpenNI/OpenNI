@@ -1,16 +1,26 @@
 OpenNI (Unstable branch)
 ------------------------
 Website: www.openni.org
+Forum: http://groups.google.com/group/openni-dev
+Wiki: Coming soon!
 
-A binary installer is avaiable at:
+A binary installer is available at:
 http://openni.org/sites/default/files/unstable/OPENNI-Win32-1.0.0.24-Unstable.exe
 
-Changes:
-* Added preliminary support for multi-sensor usage.
-* Shared memory bug fix: creating shared memory failed if the name contained slashes.
+Please use this with the unstable sensor located at:
+https://github.com/PrimeSense/Sensor/tree/unstable
+
+Unstable branch new features:
+* Added support for multiple sensors.
 * Added a brand new .NET wrapper and .NET samples.
 * Added a new "PlaybackSpeed" functionality to the Player.
 * ONI files seek optimization: added a data index for each node in ONI files. Seeking can be now done a lot faster!
+
+Unstable branch fixes:
+* Linux: xnOSCreateProcess() would cause zombie processes.
+* When using WaitXUpdateAll, the MetaData of a non-updated node would not change its IsDataNew flag.
+* C++ wrappers: RegisterToGestureChange would register to pixel format change.
+* Shared memory: creating shared memory failed if the name contained slashes.
 
 Release Notes:
 --------------

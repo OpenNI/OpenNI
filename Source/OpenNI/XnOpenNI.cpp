@@ -1065,22 +1065,27 @@ XnStatus xnCreateMetaData(XnInternalNodeData* pNodeData)
 	case XN_NODE_TYPE_DEPTH:
 		pNodeData->pMetaData.Depth = xnAllocateDepthMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Depth);
+		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Depth->pMap->pOutput->bIsNew;
 		break;
 	case XN_NODE_TYPE_IMAGE:
 		pNodeData->pMetaData.Image = xnAllocateImageMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Image);
+		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Image->pMap->pOutput->bIsNew;
 		break;
 	case XN_NODE_TYPE_IR:
 		pNodeData->pMetaData.IR = xnAllocateIRMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.IR);
+		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.IR->pMap->pOutput->bIsNew;
 		break;
 	case XN_NODE_TYPE_AUDIO:
 		pNodeData->pMetaData.Audio = xnAllocateAudioMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Audio);
+		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Audio->pOutput->bIsNew;
 		break;
 	case XN_NODE_TYPE_SCENE:
 		pNodeData->pMetaData.Scene = xnAllocateSceneMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Scene);
+		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Scene->pMap->pOutput->bIsNew;
 		break;
 	case XN_NODE_TYPE_DEVICE:
 	case XN_NODE_TYPE_USER:
@@ -1739,7 +1744,14 @@ inline void xnResetNewDataFlag(XnContext* pContext)
 
 	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
 	{
-		it.Value()->bIsNewData = FALSE;
+		XnNodeHandle hNode = it.Value();
+		// update node
+		hNode->bIsNewData = FALSE;
+		// update meta data object
+		if (hNode->pbMetaDataIsNewFlag != NULL)
+		{
+			*hNode->pbMetaDataIsNewFlag = FALSE;
+		}
 	}
 }
 

@@ -66,13 +66,13 @@ XN_C_API XnStatus xnOSCreateProcess(const XnChar* strExecutable, XnUInt32 nArgs,
 	}
 	astrArgs[nArgs+1] = NULL;
 	
-	pid_t pid = fork();
-	if (pid == -1) // fail
+	pid_t child_pid = fork();
+	if (child_pid == -1) // fail
 	{
 		xnLogWarning(XN_MASK_OS, "Failed to start process! fork() error code is %d.", errno);
 		return XN_STATUS_OS_PROCESS_CREATION_FAILED;
 	}
-	else if (pid == 0) // new process
+	else if (child_pid == 0) // child process
 	{
 		// fork again
 		// we want our process to be totally detached from creator process. To do so, we fork() twice, so that the creator process
@@ -82,7 +82,7 @@ XN_C_API XnStatus xnOSCreateProcess(const XnChar* strExecutable, XnUInt32 nArgs,
 		{
 			exit(XN_STATUS_OS_PROCESS_CREATION_FAILED);
 		}
-		else if (grandchild_pid == 0) // new process
+		else if (grandchild_pid == 0) // grandchild process
 		{
 			// close standard streams (this is a background process)
 			close(STDIN_FILENO);
@@ -99,23 +99,23 @@ XN_C_API XnStatus xnOSCreateProcess(const XnChar* strExecutable, XnUInt32 nArgs,
 				return XN_STATUS_OS_PROCESS_CREATION_FAILED;
 			}
 		}
-		else
+		else // child process
 		{
 			_exit(XN_STATUS_OK);
 		}
-
+	}
+	else // parent process
+	{
 		// wait for the child process (the one creating the grandchild process), and make sure it succeeded)
 		int status = 0;
-		waitpid(grandchild_pid, &status, 0);
+		waitpid(child_pid, &status, 0);
 		if (status != 0)
 		{
 			return XN_STATUS_OS_PROCESS_CREATION_FAILED;
 		}
-	}
-	else
-	{
-		// parent process
-		*pProcID = pid;
+
+		// we have no way to get the grandchild pid
+		*pProcID = 0;
 	}
 	
 	return (XN_STATUS_OK);

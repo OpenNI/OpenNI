@@ -113,6 +113,7 @@ struct XnInternalNodeData
 		XnSceneMetaData* Scene;
 		void* General;
 	} pMetaData;
+	XnBool* pbMetaDataIsNewFlag;
 	xn::NodePrivateData* pPrivateData;
 	XnBool bWasDataRead; // Changes to TRUE on the first UpdateData() called.
 };
