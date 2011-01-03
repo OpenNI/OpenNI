@@ -4,12 +4,6 @@ Website: www.openni.org
 Forum: http://groups.google.com/group/openni-dev
 Wiki: Coming soon!
 
-A binary installer is available at:
-http://openni.org/sites/default/files/unstable/OPENNI-Win32-1.0.0.24-Unstable.exe
-
-Please use this with the unstable sensor located at:
-https://github.com/PrimeSense/Sensor/tree/unstable
-
 Unstable branch new features:
 * Added support for multiple sensors.
 * Added a brand new .NET wrapper and .NET samples.
@@ -25,6 +19,18 @@ Unstable branch fixes:
 * Shared memory: creating shared memory failed if the name contained slashes.
 * Xml query for max version checked the min version by mistake.
 
+Binaries are available at:
+Windows:
+http://openni.org/sites/default/files/unstable/OpenNI-Bin-Win32-v1.0.0.25.exe
+Ubuntu 10.10 x86:
+http://openni.org/sites/default/files/unstable/OpenNI-Bin-Linux32-v1.0.0.25.tar.bz2
+Ubuntu 10.10 x64:
+http://openni.org/sites/default/files/unstable/OpenNI-Bin-Linux64-v1.0.0.25.tar.bz2
+MacOSX 10.6:
+http://openni.org/sites/default/files/unstable/OpenNI-Bin-MacOSX-v1.0.0.25.tar.bz2
+
+Please use this with the sensor unstable branch located at:
+https://github.com/PrimeSense/Sensor/tree/unstable
 
 Release Notes:
 --------------
