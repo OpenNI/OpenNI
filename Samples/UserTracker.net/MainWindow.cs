@@ -25,8 +25,8 @@ namespace UserTracker.net
 			}
 
             this.userGenerator = new UserGenerator(this.context);
-            this.skeletonCapability = new SkeletonCapability(this.userGenerator);
-            this.poseDetectionCapability = new PoseDetectionCapability(this.userGenerator);
+            this.skeletonCapability = this.userGenerator.GetSkeletonCap();
+            this.poseDetectionCapability = this.userGenerator.GetPoseDetectionCap();
             this.calibPose = this.skeletonCapability.CalibrationPose;
 
             this.userGenerator.UserFound += new EventHandler<UserFoundArgs>(userGenerator_UserFound);
@@ -37,7 +37,6 @@ namespace UserTracker.net
             this.skeletonCapability.SetSkeletonProfile(SkeletonProfile.All);
             this.joints = new Dictionary<uint,Dictionary<SkeletonJoint,SkeletonJointPosition>>();
             this.userGenerator.StartGenerating();
-
 
 			this.histogram = new int[this.depth.DeviceMaxDepth];
 
@@ -347,16 +346,16 @@ namespace UserTracker.net
 
 		private readonly string SAMPLE_XML_FILE = @"../../../../Data/SamplesConfig.xml";
 
-		private Context context;
-		private DepthGenerator depth;
-        private UserGenerator userGenerator;
-        private SkeletonCapability skeletonCapability;
-        private PoseDetectionCapability poseDetectionCapability;
+		private readonly Context context;
+        private readonly DepthGenerator depth;
+        private readonly UserGenerator userGenerator;
+        private readonly SkeletonCapability skeletonCapability;
+        private readonly PoseDetectionCapability poseDetectionCapability;
         private string calibPose;
-		private Thread readerThread;
+        private readonly Thread readerThread;
 		private bool shouldRun;
-		private Bitmap bitmap;
-		private int[] histogram;
+        private readonly Bitmap bitmap;
+        private readonly int[] histogram;
 
         private Dictionary<uint, Dictionary<SkeletonJoint, SkeletonJointPosition>> joints;
 

@@ -151,11 +151,11 @@ namespace SimpleViewer.net
 
 		private readonly string SAMPLE_XML_FILE = @"../../../../Data/SamplesConfig.xml";
 
-		private Context context;
-		private DepthGenerator depth;
-		private Thread readerThread;
+        private readonly Context context;
+        private readonly DepthGenerator depth;
+        private readonly Thread readerThread;
 		private bool shouldRun;
-		private Bitmap bitmap;
-		private int[] histogram;
+        private readonly Bitmap bitmap;
+        private readonly int[] histogram;
 	}
 }
