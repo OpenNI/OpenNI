@@ -79,7 +79,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalHandCreate(NodeSafeHandle hNode, UserId id, ref Point3D position, float fTime, IntPtr pCookie)
+        private void InternalHandCreate(IntPtr hNode, UserId id, ref Point3D position, float fTime, IntPtr pCookie)
         {
             var handler = this.handCreatedEvent;
             if (handler != null)
@@ -112,7 +112,7 @@ namespace OpenNI
                 }
             } 
         }
-        private void InternalHandUpdate(NodeSafeHandle hNode, UserId id, ref Point3D position, float fTime, IntPtr pCookie)
+        private void InternalHandUpdate(IntPtr hNode, UserId id, ref Point3D position, float fTime, IntPtr pCookie)
         {
             var handler = this.handUpdatedEvent;
             if (handler != null)
@@ -145,7 +145,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalHandDestroy(NodeSafeHandle hNode, UserId id, float fTime, IntPtr pCookie)
+        private void InternalHandDestroy(IntPtr hNode, UserId id, float fTime, IntPtr pCookie)
         {
             var handler = this.handDestroyedEvent;
             if (handler != null)

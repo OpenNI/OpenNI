@@ -171,7 +171,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalGestureRecognized(NodeSafeHandle hNode, string gestureName, ref Point3D idPosition, ref Point3D endPosition, IntPtr pCookie)
+        private void InternalGestureRecognized(IntPtr hNode, string gestureName, ref Point3D idPosition, ref Point3D endPosition, IntPtr pCookie)
         {
             var handler = this.gestureRecognizedEvent;
             if (handler != null)
@@ -204,7 +204,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalGestureProgress(NodeSafeHandle hNode, string gestureName, ref Point3D position, float progress, IntPtr pCookie)
+        private void InternalGestureProgress(IntPtr hNode, string gestureName, ref Point3D position, float progress, IntPtr pCookie)
         {
             var handler = this.gestureProgressEvent;
             if (handler != null)

@@ -91,7 +91,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalPoseDetected(NodeSafeHandle hNode, string poseName, UserId id, IntPtr pCookie)
+        private void InternalPoseDetected(IntPtr hNode, string poseName, UserId id, IntPtr pCookie)
         {
             var handler = this.poseDetectedEvent;
             if (handler != null)
@@ -124,7 +124,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalPoseEnded(NodeSafeHandle hNode, string poseName, UserId id, IntPtr pCookie)
+        private void InternalPoseEnded(IntPtr hNode, string poseName, UserId id, IntPtr pCookie)
         {
             var handler = this.poseEndedEvent;
             if (handler != null)

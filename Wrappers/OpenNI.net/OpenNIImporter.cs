@@ -526,17 +526,17 @@ namespace OpenNI
 		};
 
 		public delegate void XnErrorStateChangedHandler(XnStatus errorState, IntPtr pCookie);
-		public delegate void XnStateChangedHandler(NodeSafeHandle hNode, IntPtr pCookie);
-		public delegate void XnGestureRecognized(NodeSafeHandle hNode, string strGesture, ref Point3D pIDPosition, ref Point3D pEndPosition, IntPtr pCookie);
-		public delegate void XnGestureProgress(NodeSafeHandle hNode, string strGesture, ref Point3D pPosition, XnFloat fProgress, IntPtr pCookie);
-		public delegate void XnCalibrationStart(NodeSafeHandle hNode, XnUserID user, IntPtr pCookie);
-		public delegate void XnCalibrationEnd(NodeSafeHandle hNode, XnUserID user, XnBool bSuccess, IntPtr pCookie);
-		public delegate void XnPoseDetectionCallback(NodeSafeHandle hNode, string strPose, XnUserID user, IntPtr pCookie);
+        public delegate void XnStateChangedHandler(IntPtr hNode, IntPtr pCookie);
+        public delegate void XnGestureRecognized(IntPtr hNode, string strGesture, ref Point3D pIDPosition, ref Point3D pEndPosition, IntPtr pCookie);
+        public delegate void XnGestureProgress(IntPtr hNode, string strGesture, ref Point3D pPosition, XnFloat fProgress, IntPtr pCookie);
+        public delegate void XnCalibrationStart(IntPtr hNode, XnUserID user, IntPtr pCookie);
+        public delegate void XnCalibrationEnd(IntPtr hNode, XnUserID user, XnBool bSuccess, IntPtr pCookie);
+        public delegate void XnPoseDetectionCallback(IntPtr hNode, string strPose, XnUserID user, IntPtr pCookie);
 
-		public delegate void XnUserHandler(NodeSafeHandle hNode, XnUserID user, IntPtr pCookie);
-		public delegate void XnHandCreate(NodeSafeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
-		public delegate void XnHandUpdate(NodeSafeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
-		public delegate void XnHandDestroy(NodeSafeHandle hNode, XnUserID user, XnFloat fTime, IntPtr pCookie);
+		public delegate void XnUserHandler(IntPtr hNode, XnUserID user, IntPtr pCookie);
+        public delegate void XnHandCreate(IntPtr hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
+        public delegate void XnHandUpdate(IntPtr hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
+        public delegate void XnHandDestroy(IntPtr hNode, XnUserID user, XnFloat fTime, IntPtr pCookie);
 
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnInit(out ContextSafeHandle pContext);

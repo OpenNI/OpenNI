@@ -111,7 +111,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalNewUser(NodeSafeHandle hNode, UserId id, IntPtr pCookie)
+        private void InternalNewUser(IntPtr hNode, UserId id, IntPtr pCookie)
         {
             var handler = this.userFoundEvent;
             if (handler != null)
@@ -144,7 +144,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalLostUser(NodeSafeHandle hNode, UserId id, IntPtr pCookie)
+        private void InternalLostUser(IntPtr hNode, UserId id, IntPtr pCookie)
         {
             var handler = this.userLostEvent;
             if (handler != null)

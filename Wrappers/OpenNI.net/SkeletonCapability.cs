@@ -185,7 +185,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalCalibrationStart(NodeSafeHandle hNode, UserId id, IntPtr cookie)
+        private void InternalCalibrationStart(IntPtr hNode, UserId id, IntPtr cookie)
         {
             var handler = this.calibrationStartedEvent;
             if (handler != null)
@@ -218,7 +218,7 @@ namespace OpenNI
                 }
             }
         }
-        private void InternalCalibrationEnd(NodeSafeHandle hNode, UserId id, bool success, IntPtr cookie)
+        private void InternalCalibrationEnd(IntPtr hNode, UserId id, bool success, IntPtr cookie)
         {
             var handler = this.calibrationEndedEvent;
             if (handler != null)

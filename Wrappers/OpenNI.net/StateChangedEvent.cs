@@ -39,7 +39,7 @@ namespace OpenNI
 			}
 		}
 
-        private void InternalHandler(NodeSafeHandle hNode, IntPtr pCookie)
+        private void InternalHandler(IntPtr hNode, IntPtr pCookie)
 		{
             var handler = this.internalEvent;
 			if (handler != null)
