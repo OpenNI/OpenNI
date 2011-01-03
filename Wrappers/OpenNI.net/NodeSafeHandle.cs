@@ -17,7 +17,7 @@ namespace OpenNI
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
-            SafeNativeMethods.xnProductionNodeRelease(this);
+            SafeNativeMethods.xnProductionNodeRelease(this.handle);
 
             return true;
         }

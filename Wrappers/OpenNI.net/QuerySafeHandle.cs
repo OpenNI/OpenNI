@@ -17,7 +17,7 @@ namespace OpenNI
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         protected override bool ReleaseHandle()
         {
-            SafeNativeMethods.xnNodeQueryFree(this);
+            SafeNativeMethods.xnNodeQueryFree(this.handle);
 
             return true;
         }

@@ -72,7 +72,7 @@ namespace OpenNI
 		Player = 8,
 		
 		/// <summary>
-        /// A gestureName generator
+        /// A gesture generator
 		/// </summary>
 		Gesture = 9,
 		
@@ -549,7 +549,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnContextOpenFileRecording(ContextSafeHandle pContext, string strFileName);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnShutdown(ContextSafeHandle pContext);
+		public static extern void xnShutdown(IntPtr pContext);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateProductionTrees(ContextSafeHandle pContext, NodeType Type, QuerySafeHandle pQuery, out NodeInfoListSafeHandle ppTreesList, EnumerationErrorsSafeHandle pErrors);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -563,7 +563,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnProductionNodeAddRef(NodeSafeHandle hNode);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnProductionNodeRelease(NodeSafeHandle hNode);
+		public static extern void xnProductionNodeRelease(IntPtr hNode);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateExistingNodes(ContextSafeHandle pContext, out NodeInfoListSafeHandle ppList);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -598,7 +598,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnEnumerationErrorsAllocate(out EnumerationErrorsSafeHandle ppErrors);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnEnumerationErrorsFree(EnumerationErrorsSafeHandle pErrors);
+		public static extern void xnEnumerationErrorsFree(IntPtr pErrors);
 //		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 //		public static extern XnStatus xnEnumerationErrorsAdd(EnumerationErrorsSafeHandle pErrors, ProductionNodeDescription pDesc, XnStatus nError);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -1105,7 +1105,7 @@ namespace OpenNI
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListAllocate(out NodeInfoListSafeHandle ppList);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnNodeInfoListFree(NodeInfoListSafeHandle pList);
+		public static extern void xnNodeInfoListFree(IntPtr pList);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListAdd(NodeInfoListSafeHandle pList, ProductionNodeDescription pDescription, string strCreationInfo, NodeInfoListSafeHandle pNeededNodes);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
@@ -1151,7 +1151,7 @@ namespace OpenNI
         [DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnNodeQueryAllocate(out QuerySafeHandle ppQuery);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void xnNodeQueryFree(QuerySafeHandle pQuery);
+		public static extern void xnNodeQueryFree(IntPtr pQuery);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetVendor(QuerySafeHandle pQuery, string strVendor);
 		[DllImport("OpenNI", CallingConvention = CallingConvention.Cdecl)]
