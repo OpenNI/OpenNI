@@ -46,7 +46,11 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
-#include <GL/glut.h>
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#include <GLUT/glut.h>
+#else
+	#include <GL/glut.h>
+#endif
 
 #define GL_WIN_SIZE_X 720
 #define GL_WIN_SIZE_Y 480

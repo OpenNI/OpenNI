@@ -28,7 +28,11 @@
 //---------------------------------------------------------------------------
 #include <XnOS.h>
 #include <errno.h>
-#include <wait.h>
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#include <sys/wait.h>
+#else
+	#include <wait.h>
+#endif
 #include <XnLog.h>
 
 //---------------------------------------------------------------------------

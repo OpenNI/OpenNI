@@ -5,7 +5,11 @@ INSTALL_BIN=/usr/bin
 INSTALL_INC=/usr/include/ni
 INSTALL_VAR=/var/lib/ni
 
-MODULES="libnimMockNodes.so libnimCodecs.so libnimRecorder.so"
+if [ "`uname -s`" == "Darwin" ]; then
+	MODULES="libnimMockNodes.dylib libnimCodecs.dylib libnimRecorder.dylib"
+else
+	MODULES="libnimMockNodes.so libnimCodecs.so libnimRecorder.so"
+fi
 
 SCRIPT_DIR=`pwd`/`dirname $0`
 

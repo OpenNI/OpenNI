@@ -123,6 +123,8 @@ SCRIPT_DIR = os.getcwd()
 WORK_DIR = os.getcwd() + "/"
 os.chdir(SCRIPT_DIR)
 PROJECT_NAME = "OpenNI"
+ostype = os.popen('uname -s').read().rstrip()
+machinetype = os.popen('uname -m').read().rstrip()
 
 #-------------Log--------------------------------------------------------------#
 
@@ -152,10 +154,10 @@ print "* Taking version..."
 logger.info("Taking version...")
 
 version_file = open("../../../Include/XnVersion.h").read()
-major = re.search(r"define XN_MAJOR_VERSION (.*)", version_file).groups()[0]
-minor = re.search(r"define XN_MINOR_VERSION (.*)", version_file).groups()[0]
-maintenance = re.search(r"define XN_MAINTENANCE_VERSION (.*)", version_file).groups()[0]
-build = re.search(r"define XN_BUILD_VERSION (.*)", version_file).groups()[0]
+major = re.search(r"define XN_MAJOR_VERSION (\d+)", version_file).groups()[0]
+minor = re.search(r"define XN_MINOR_VERSION (\d+)", version_file).groups()[0]
+maintenance = re.search(r"define XN_MAINTENANCE_VERSION (\d+)", version_file).groups()[0]
+build = re.search(r"define XN_BUILD_VERSION (\d+)", version_file).groups()[0]
 
 version = major + "." + minor + "." + maintenance + "." + build
 print "version is", version
@@ -192,7 +194,6 @@ result = os.system("doxygen Doxyfile > "+ SCRIPT_DIR + "/Output/EngineDoxy.txt")
 if result != 0:
     print "Creating documentation failed!"
     logger.critical("DoxyGen Failed!")
-    finish_script(1)
 
 # remove unneeded files
 os.system("rm -rf html/*.map html/*.md5 html/*.hhc html/*.hhk html/*.hhp")
@@ -229,10 +230,15 @@ shutil.copy("../../GPL.txt", "Redist")
 shutil.copy("../../LGPL.txt", "Redist")
 
 #lib
-shutil.copy("Bin/Release/libnimCodecs.so", "Redist/Lib")
-shutil.copy("Bin/Release/libnimMockNodes.so", "Redist/Lib")
-shutil.copy("Bin/Release/libnimRecorder.so", "Redist/Lib")
-shutil.copy("Bin/Release/libOpenNI.so", "Redist/Lib")
+if ostype == "Darwin":
+    LIBS_TYPE = ".dylib"
+else:
+    LIBS_TYPE = ".so"
+
+shutil.copy("Bin/Release/libnimCodecs"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libnimMockNodes"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libnimRecorder"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libOpenNI"+LIBS_TYPE, "Redist/Lib")
 
 #bin
 shutil.copy("Bin/Release/niReg", "Redist/Bin")
@@ -247,6 +253,8 @@ for includeFile in os.listdir("../../Include"):
         shutil.copy("../../Include/" + includeFile, "Redist/Include")
 
 shutil.copytree("../../Include/Linux-x86", "Redist/Include/Linux-x86")
+shutil.copytree("../../Include/Linux-Arm", "Redist/Include/Linux-Arm")
+shutil.copytree("../../Include/MacOSX", "Redist/Include/MacOSX")
 shutil.copy("Build/CommonMakefile", "Redist/Include")
 
 # samples
@@ -362,7 +370,17 @@ logger.info("Creating tar...")
 
 os.chdir("Redist")
 os.makedirs(SCRIPT_DIR+"/Final")
-result = os.system("tar -cjf " +SCRIPT_DIR+"/Final/OpenNI.v" + version + ".tar.bz2 *")
+
+if ostype == "Darwin":
+    TAR_TARGET = "MacOSX"
+elif machinetype == "i686":
+    TAR_TARGET = "Linux32"
+elif machinetype == "x86_64":
+    TAR_TARGET = "Linux64"
+else:
+    TAR_TARGET = "Linux"
+
+result = os.system("tar -cjf " +SCRIPT_DIR+"/Final/OpenNI-Bin-" + TAR_TARGET + "-v" + version + ".tar.bz2 *")
 
 if result != 0:
     print "Tar failed!!"

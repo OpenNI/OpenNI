@@ -37,6 +37,7 @@
 #define XN_PLATFORM_FILES_ONLY 6
 #define XN_PLATFORM_ARC 6
 #define XN_PLATFORM_LINUX_ARM 7
+#define XN_PLATFORM_MACOSX 8
 
 #define XN_PLATFORM_IS_LITTLE_ENDIAN 1
 #define XN_PLATFORM_IS_BIG_ENDIAN    2
@@ -66,6 +67,8 @@
 	#include "Linux-x86/XnPlatformLinux-x86.h"
 #elif (linux && __arm__)
 	#include "Linux-Arm/XnPlatformLinux-Arm.h"
+#elif (__APPLE__)
+	#include "MacOSX/XnPlatformMacOSX.h"
 #else
 	#error OpenNI Platform Abstraction Layer - Unsupported Platform!
 #endif

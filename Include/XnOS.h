@@ -44,10 +44,12 @@
 //---------------------------------------------------------------------------
 // OS Identifier 
 //---------------------------------------------------------------------------
-#if defined(_WIN32)
+#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include "Win32/XnOSWin32.h"
-#elif defined(linux)
+#elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#include "Linux-x86/XnOSLinux-x86.h"
+#else
+	#error OpenNI OS Abstraction Layer - Unsupported Platform!
 #endif
 
 //---------------------------------------------------------------------------
@@ -511,6 +513,7 @@ XN_C_API XnStatus xnOSStartTimer(XnOSTimer* pTimer);
 XN_C_API XnStatus xnOSStartHighResTimer(XnOSTimer* pTimer);
 XN_C_API XnStatus xnOSQueryTimer(XnOSTimer Timer, XnUInt64* pnTimeSinceStart);
 XN_C_API XnStatus xnOSStopTimer(XnOSTimer* pTimer);
+XN_C_API XnStatus xnOSGetMonoTime(struct timespec* pTime);
 
 // Threads
 typedef enum XnThreadPriority

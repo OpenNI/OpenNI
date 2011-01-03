@@ -47,6 +47,7 @@ enum _XN_EVENT_SEM_TYPE
 //---------------------------------------------------------------------------
 // Types
 //---------------------------------------------------------------------------
+#ifndef XN_PLATFORM_HAS_BUILTIN_SEMUN
 union semun {
                int              val;    /* Value for SETVAL */
                struct semid_ds *buf;    /* Buffer for IPC_STAT, IPC_SET */
@@ -54,7 +55,7 @@ union semun {
                struct seminfo  *__buf;  /* Buffer for IPC_INFO
                                            (Linux-specific) */
            };
-
+#endif
 
 //---------------------------------------------------------------------------
 // Code
@@ -385,7 +386,11 @@ XN_C_API XnStatus xnOSWaitEvent(const XN_EVENT_HANDLE EventHandle, XnUInt32 nMil
 		
 		if (XN_WAIT_INFINITE != nMilliseconds)
 		{
+#ifndef XN_PLATFORM_HAS_NO_TIMED_OPS
 			if (0 != semtimedop(EventHandle->NamedSem, op, nOpsCount, &time))
+#else
+			if (0 != semop(EventHandle->NamedSem, op, nOpsCount))	
+#endif
 			{
 				if(EAGAIN == errno)
 				{
@@ -408,7 +413,7 @@ XN_C_API XnStatus xnOSWaitEvent(const XN_EVENT_HANDLE EventHandle, XnUInt32 nMil
 		if (nMilliseconds != XN_WAIT_INFINITE)
 		{
 			// calculate timeout absolute time. First we take current time
-			if (0 != clock_gettime(CLOCK_REALTIME, &time))
+			if (XN_STATUS_OK != xnOSGetMonoTime(&time))
 			{
 				return (XN_STATUS_OS_EVENT_WAIT_FAILED);
 			}

@@ -28,7 +28,11 @@
 // --------------------------------
 #include <XnPlatform.h>
 #include "Menu.h"
-#include <GL/glut.h>
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#include <GLUT/glut.h>
+#else
+	#include <GL/glut.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 
