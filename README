@@ -26,7 +26,7 @@ Ubuntu 10.10 x86:
 http://openni.org/sites/default/files/unstable/OpenNI-Bin-Linux32-v1.0.0.25.tar.bz2
 Ubuntu 10.10 x64:
 http://openni.org/sites/default/files/unstable/OpenNI-Bin-Linux64-v1.0.0.25.tar.bz2
-MacOSX 10.6:
+MacOSX 10.6 (i386 & x86_64 universal):
 http://openni.org/sites/default/files/unstable/OpenNI-Bin-MacOSX-v1.0.0.25.tar.bz2
 
 Please use this with the sensor unstable branch located at:
@@ -37,7 +37,7 @@ Release Notes:
 * At the moment, the default is to compile the code with SSE3 support (this is also true for the supplied binaries). 
   If you have a CPU without such support, please remove the sse compiler flags from the make files.
   (A good hint for this error is that you encounter an "illegal instructions" messages)
-* MacOSX: Only OSX 10.6 (Snow Leopard) with a 64-bit Intel based CPU is currently supported.
+* MacOSX: Only OSX 10.6 (Snow Leopard) with an Intel based CPU is currently supported.
 
   
 Build Notes:
@@ -157,7 +157,9 @@ MacOSX:
 		   sudo port install libtool
 		4) LibUSB 1.0.8 (The patched development tree)
 		   Installed vis MacPorts:
-		   sudo port install libusb-devel
+		   sudo port install libusb-devel +universal
+		   Note: Do not forget the +universal, it's very important!!
+		         If you're previously already installed libusb-devel then use "sudo port uninstall libusb-devel" and reinstall it again with the +universal flag.
 
 	Optional Requirements (To build the documentation):
 		1) Doxygen

@@ -51,6 +51,9 @@ OSTYPE := $(shell uname -s)
 # change c struct alignment options to be compatable with Win32
 ifneq ("$(OSTYPE)","Darwin")
 	CFLAGS += -malign-double
+else
+	CFLAGS += -arch i386 -arch x86_64
+	LDFLAGS += -arch i386 -arch x86_64
 endif
 
 # tell compiler to use the target system root
@@ -163,8 +166,13 @@ else
 define CREATE_SRC_TARGETS
 # create a target for the object file (the CXX command creates both an .o file
 # and a .d file)
+ifneq ("$(OSTYPE)","Darwin")
 $(call SRC_TO_OBJ,$1) : $1 | $(INT_DIR)
 	$(CXX) -MD -MP -MT "$(call SRC_TO_DEP,$1) $$@" -c $(CFLAGS) -o $$@ $$<
+else
+$(call SRC_TO_OBJ,$1) : $1 | $(INT_DIR)
+	$(CXX) -c $(CFLAGS) -o $$@ $$<	
+endif
 endef
 endif
 
