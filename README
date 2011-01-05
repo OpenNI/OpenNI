@@ -6,7 +6,8 @@ Wiki: Coming soon!
 
 Unstable branch new features:
 * Added support for multiple sensors.
-* Added a brand new .NET wrapper and .NET samples.
+* Added a brand new .NET wrapper and .NET samples (with full support for Mono as well).
+  OpenNI.net is now also installed to the GAC.
 * Added a new "PlaybackSpeed" functionality to the Player.
 * ONI files seek optimization: added a data index for each node in ONI files. Seeking can be now done a lot faster!
 * Added MacOSX platform support.
@@ -21,13 +22,13 @@ Unstable branch fixes:
 
 Binaries are available at:
 Windows:
-http://openni.org/sites/default/files/unstable/OpenNI-Bin-Win32-v1.0.0.25.exe
+Coming soon... (switching to new web site...)
 Ubuntu 10.10 x86:
-http://openni.org/sites/default/files/unstable/OpenNI-Bin-Linux32-v1.0.0.25.tar.bz2
+Coming soon... (switching to new web site...)
 Ubuntu 10.10 x64:
-http://openni.org/sites/default/files/unstable/OpenNI-Bin-Linux64-v1.0.0.25.tar.bz2
+Coming soon... (switching to new web site...)
 MacOSX 10.6 (i386 & x86_64 universal):
-http://openni.org/sites/default/files/unstable/OpenNI-Bin-MacOSX-v1.0.0.25.tar.bz2
+Coming soon... (switching to new web site...)
 
 Please use this with the sensor unstable branch located at:
 https://github.com/PrimeSense/Sensor/tree/unstable

@@ -6,6 +6,6 @@ SRC_FILES = \
 	../../../../../Samples/SimpleRead.net/*.cs \
 	../../Res/AssemblyInfo-OpenNI.cs
 	
-USED_LIBS = OpenNI
+USED_LIBS = OpenNI.net
 
 include ../../CommonMakefile

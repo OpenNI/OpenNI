@@ -8,7 +8,7 @@ namespace SimpleRead.net
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static void Run()
 		{
 			string SAMPLE_XML_FILE = @"../../../../Data/SamplesConfig.xml";
 
@@ -34,6 +34,18 @@ namespace SimpleRead.net
 				depth.GetMetaData(depthMD);
 
 				Console.WriteLine("Frame {0} Middle point is: {1}.", depthMD.FrameID, depthMD[(int)mapMode.nXRes/2, (int)mapMode.nYRes/2]);
+			}
+		}
+
+		static void Main(string[] args)
+		{
+			try
+			{
+				Run();
+			}
+			catch (System.Exception ex)
+			{
+				Console.WriteLine("Error: {0}", ex.Message);
 			}
 		}
 	}

@@ -89,7 +89,7 @@ def fix_file(arg,dirname,fname):
     "Fixes paths for all the files in fname"
     for filename in fname:
         filePath = dirname + "/" + filename
-        ext = ['cpp','h','.ini']
+        ext = ['cpp','h','.ini','cs']
         if filename == "Makefile" or filename.partition(".")[2] in ext:
             #print "Fixing: " + filePath
             tempName=filePath+'~~~'
@@ -241,9 +241,14 @@ shutil.copy("Bin/Release/libnimRecorder"+LIBS_TYPE, "Redist/Lib")
 shutil.copy("Bin/Release/libOpenNI"+LIBS_TYPE, "Redist/Lib")
 
 #bin
+MonoDetected = 0
 shutil.copy("Bin/Release/niReg", "Redist/Bin")
 shutil.copy("Bin/Release/niLicense", "Redist/Bin")
-
+if (os.path.exists("/usr/bin/gmcs")):
+	shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Bin")
+	shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Debug")
+	shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Release")
+        MonoDetected = 1
 #docs
 shutil.copytree("../../Source/DoxyGen/html", "Redist/Documentation/html")
 
@@ -261,9 +266,10 @@ shutil.copy("Build/CommonMakefile", "Redist/Include")
 samples_list = os.listdir("../../Samples")
 if '.svn' in samples_list:
     samples_list.remove('.svn')
-samples_list.remove("SimpleRead.net")
-samples_list.remove("SimpleViewer.net")
-samples_list.remove("UserTracker.net")
+    if (MonoDetected == 0):
+        samples_list.remove("SimpleRead.net")
+        samples_list.remove("SimpleViewer.net")
+        samples_list.remove("UserTracker.net")
 print "Samples:", samples_list
 
 for sample in samples_list:
@@ -301,11 +307,21 @@ print "* Creating Makefile..."
 logger.info("Creating Makefile...")
 
 MAKEFILE = open("Redist/Samples/Build/Makefile", 'w')
-MAKEFILE.write(".PHONY: all\n")
-MAKEFILE.write("all: ")
+MAKEFILE.write(".PHONY: all\n\n")
+MAKEFILE.write("NETPROJ = \n")
+
+MAKEFILE.write("ifneq \"$(realpath /usr/bin/gmcs)\" \"\"\n");
 for sample in samples_list:
-    MAKEFILE.write(sample + " ")
-MAKEFILE.write("\n")
+    if sample.find(".net") >0:
+        MAKEFILE.write("\tNETPROJ += " + sample + "\n")
+MAKEFILE.write("endif\n\n");
+
+MAKEFILE.write("all: $(NETPROJ) ")
+for sample in samples_list:
+    if sample.find(".net") == -1:
+        MAKEFILE.write(sample + " ")
+MAKEFILE.write("\n\n")
+
 
 for sample in samples_list:
     MAKEFILE.write("\n")
