@@ -2981,12 +2981,12 @@ namespace xn
 			xnOSFree(pGestureCookie);
 		}
 
-		/** @copybrief xnRegisterToPixelFormatChange
-		 * For full details and usage, see @ref xnRegisterToPixelFormatChange
+		/** @copybrief xnRegisterToGestureChange
+		 * For full details and usage, see @ref xnRegisterToGestureChange
 		 */
 		inline XnStatus RegisterToGestureChange(StateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 		{
-			return _RegisterToStateChange(xnRegisterToPixelFormatChange, m_hNode, handler, pCookie, hCallback);
+			return _RegisterToStateChange(xnRegisterToGestureChange, m_hNode, handler, pCookie, hCallback);
 		}
 
 		/** @copybrief xnUnregisterFromGestureChange

@@ -29,7 +29,11 @@
 // NOTE: you must define XN_OS_IMPL before including xnOS.h, otherwise, when mem profiling this file will not compile.
 #define XN_OS_IMPL
 #include <XnOS.h>
-#include <malloc.h>
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#include <sys/malloc.h>
+#else
+	#include <malloc.h>
+#endif
 #include <XnLog.h>
 
 //---------------------------------------------------------------------------

@@ -93,7 +93,7 @@ XnStatus xnUSBPlatformSpecificInit()
 		return (XN_STATUS_USB_INIT_FAILED);
 	}
 	
-	libusb_set_debug(g_InitData.pContext, 3);
+	//libusb_set_debug(g_InitData.pContext, 3);
 	
 	xnLogInfo(XN_MASK_USB, "USB is initialized.");
 	return (XN_STATUS_OK);	

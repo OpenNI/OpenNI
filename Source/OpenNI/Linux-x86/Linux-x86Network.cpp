@@ -408,7 +408,14 @@ XN_C_API XnStatus xnOSSendNetworkBuffer(XN_SOCKET_HANDLE Socket, const XnChar* c
 	// Send the data over our UDP socket to the server and make sure the wanted number of bytes were actually sent
 	// Linux note: we use MSG_NOSIGNAL so that we won't get SIGPIPE if socket is closed on the other side. instead,
 	// we'll get EPIPE.
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	int on = 1;
+	setsockopt(Socket->Socket, SOL_SOCKET, SO_NOSIGPIPE, (char*)&on, sizeof(on));	
+	nRetVal = send(Socket->Socket, cpBuffer, nBufferSize, NULL); 
+#else
 	nRetVal = send(Socket->Socket, cpBuffer, nBufferSize, MSG_NOSIGNAL);
+#endif
+
 	if (nRetVal != nBufferSize)
 	{
 		return (XN_STATUS_OS_NETWORK_SEND_FAILED);

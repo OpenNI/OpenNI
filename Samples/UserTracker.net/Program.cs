@@ -16,7 +16,14 @@ namespace UserTracker.net
 		{
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new MainWindow());
+			try
+			{
+				Application.Run(new MainWindow());
+			}
+			catch (System.Exception ex)
+			{
+				MessageBox.Show("Error: " + ex.Message, "UserTracker", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 		}
 	}
 }

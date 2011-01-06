@@ -14,10 +14,8 @@
     <FileAlignment>512</FileAlignment>
     <StartupObject>
     </StartupObject>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>OpenNI.snk</AssemblyOriginatorKeyFile>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -99,6 +97,11 @@
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
     <DocumentationFile>..\..\..\Bin\Release\OpenNI.Net.xml</DocumentationFile>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\AlternativeViewPointCapability.cs">
       <Link>Capabilities\AlternativeViewPointCapability.cs</Link>
@@ -267,9 +270,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="OpenNI.snk" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Folder Include="Properties\" />
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>

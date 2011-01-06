@@ -101,7 +101,7 @@ XN_C_API XnStatus xnOSStartTimer(XnOSTimer* pTimer)
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(pTimer);
 	
-	if (0 != clock_gettime(CLOCK_REALTIME, &pTimer->tStartTime))
+	if (XN_STATUS_OK != xnOSGetMonoTime(&pTimer->tStartTime))
 	{
 		return XN_STATUS_OS_TIMER_QUERY_FAILED;
 	}
@@ -130,7 +130,7 @@ XN_C_API XnStatus xnOSQueryTimer(XnOSTimer Timer, XnUInt64* pnTimeSinceStart)
 
 	struct timespec now;
 	
-	if (0 != clock_gettime(CLOCK_REALTIME, &now))
+	if (XN_STATUS_OK != xnOSGetMonoTime(&now))
 	{
 		return XN_STATUS_OS_TIMER_QUERY_FAILED;
 	}
@@ -150,3 +150,20 @@ XN_C_API XnStatus xnOSStopTimer(XnOSTimer* pTimer)
 	// All is good...
 	return (XN_STATUS_OK);
 }
+
+XN_C_API XnStatus xnOSGetMonoTime(struct timespec* pTime)
+{
+#ifndef XN_PLATFORM_HAS_NO_CLOCK_GETTIME
+	if (0 != clock_gettime(CLOCK_REALTIME, pTime))
+	{
+		return (XN_STATUS_OS_EVENT_WAIT_FAILED);
+	}
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	pTime->tv_sec = tv.tv_sec;
+	pTime->tv_nsec = tv.tv_usec * 1000;  
+#endif
+	return (XN_STATUS_OK);
+}
+

@@ -89,7 +89,7 @@ def fix_file(arg,dirname,fname):
     "Fixes paths for all the files in fname"
     for filename in fname:
         filePath = dirname + "/" + filename
-        ext = ['cpp','h','.ini']
+        ext = ['cpp','h','.ini','cs']
         if filename == "Makefile" or filename.partition(".")[2] in ext:
             #print "Fixing: " + filePath
             tempName=filePath+'~~~'
@@ -123,6 +123,8 @@ SCRIPT_DIR = os.getcwd()
 WORK_DIR = os.getcwd() + "/"
 os.chdir(SCRIPT_DIR)
 PROJECT_NAME = "OpenNI"
+ostype = os.popen('uname -s').read().rstrip()
+machinetype = os.popen('uname -m').read().rstrip()
 
 #-------------Log--------------------------------------------------------------#
 
@@ -152,10 +154,10 @@ print "* Taking version..."
 logger.info("Taking version...")
 
 version_file = open("../../../Include/XnVersion.h").read()
-major = re.search(r"define XN_MAJOR_VERSION (.*)", version_file).groups()[0]
-minor = re.search(r"define XN_MINOR_VERSION (.*)", version_file).groups()[0]
-maintenance = re.search(r"define XN_MAINTENANCE_VERSION (.*)", version_file).groups()[0]
-build = re.search(r"define XN_BUILD_VERSION (.*)", version_file).groups()[0]
+major = re.search(r"define XN_MAJOR_VERSION (\d+)", version_file).groups()[0]
+minor = re.search(r"define XN_MINOR_VERSION (\d+)", version_file).groups()[0]
+maintenance = re.search(r"define XN_MAINTENANCE_VERSION (\d+)", version_file).groups()[0]
+build = re.search(r"define XN_BUILD_VERSION (\d+)", version_file).groups()[0]
 
 version = major + "." + minor + "." + maintenance + "." + build
 print "version is", version
@@ -192,7 +194,6 @@ result = os.system("doxygen Doxyfile > "+ SCRIPT_DIR + "/Output/EngineDoxy.txt")
 if result != 0:
     print "Creating documentation failed!"
     logger.critical("DoxyGen Failed!")
-    finish_script(1)
 
 # remove unneeded files
 os.system("rm -rf html/*.map html/*.md5 html/*.hhc html/*.hhk html/*.hhp")
@@ -229,15 +230,25 @@ shutil.copy("../../GPL.txt", "Redist")
 shutil.copy("../../LGPL.txt", "Redist")
 
 #lib
-shutil.copy("Bin/Release/libnimCodecs.so", "Redist/Lib")
-shutil.copy("Bin/Release/libnimMockNodes.so", "Redist/Lib")
-shutil.copy("Bin/Release/libnimRecorder.so", "Redist/Lib")
-shutil.copy("Bin/Release/libOpenNI.so", "Redist/Lib")
+if ostype == "Darwin":
+    LIBS_TYPE = ".dylib"
+else:
+    LIBS_TYPE = ".so"
+
+shutil.copy("Bin/Release/libnimCodecs"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libnimMockNodes"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libnimRecorder"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libOpenNI"+LIBS_TYPE, "Redist/Lib")
 
 #bin
+MonoDetected = 0
 shutil.copy("Bin/Release/niReg", "Redist/Bin")
 shutil.copy("Bin/Release/niLicense", "Redist/Bin")
-
+if (os.path.exists("/usr/bin/gmcs")):
+	shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Bin")
+	shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Debug")
+	shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Release")
+        MonoDetected = 1
 #docs
 shutil.copytree("../../Source/DoxyGen/html", "Redist/Documentation/html")
 
@@ -247,15 +258,18 @@ for includeFile in os.listdir("../../Include"):
         shutil.copy("../../Include/" + includeFile, "Redist/Include")
 
 shutil.copytree("../../Include/Linux-x86", "Redist/Include/Linux-x86")
+shutil.copytree("../../Include/Linux-Arm", "Redist/Include/Linux-Arm")
+shutil.copytree("../../Include/MacOSX", "Redist/Include/MacOSX")
 shutil.copy("Build/CommonMakefile", "Redist/Include")
 
 # samples
 samples_list = os.listdir("../../Samples")
 if '.svn' in samples_list:
     samples_list.remove('.svn')
-samples_list.remove("SimpleRead.net")
-samples_list.remove("SimpleViewer.net")
-samples_list.remove("UserTracker.net")
+    if (MonoDetected == 0):
+        samples_list.remove("SimpleRead.net")
+        samples_list.remove("SimpleViewer.net")
+        samples_list.remove("UserTracker.net")
 print "Samples:", samples_list
 
 for sample in samples_list:
@@ -293,11 +307,21 @@ print "* Creating Makefile..."
 logger.info("Creating Makefile...")
 
 MAKEFILE = open("Redist/Samples/Build/Makefile", 'w')
-MAKEFILE.write(".PHONY: all\n")
-MAKEFILE.write("all: ")
+MAKEFILE.write(".PHONY: all\n\n")
+MAKEFILE.write("NETPROJ = \n")
+
+MAKEFILE.write("ifneq \"$(realpath /usr/bin/gmcs)\" \"\"\n");
 for sample in samples_list:
-    MAKEFILE.write(sample + " ")
-MAKEFILE.write("\n")
+    if sample.find(".net") >0:
+        MAKEFILE.write("\tNETPROJ += " + sample + "\n")
+MAKEFILE.write("endif\n\n");
+
+MAKEFILE.write("all: $(NETPROJ) ")
+for sample in samples_list:
+    if sample.find(".net") == -1:
+        MAKEFILE.write(sample + " ")
+MAKEFILE.write("\n\n")
+
 
 for sample in samples_list:
     MAKEFILE.write("\n")
@@ -362,7 +386,17 @@ logger.info("Creating tar...")
 
 os.chdir("Redist")
 os.makedirs(SCRIPT_DIR+"/Final")
-result = os.system("tar -cjf " +SCRIPT_DIR+"/Final/OpenNI.v" + version + ".tar.bz2 *")
+
+if ostype == "Darwin":
+    TAR_TARGET = "MacOSX"
+elif machinetype == "i686":
+    TAR_TARGET = "Linux32"
+elif machinetype == "x86_64":
+    TAR_TARGET = "Linux64"
+else:
+    TAR_TARGET = "Linux"
+
+result = os.system("tar -cjf " +SCRIPT_DIR+"/Final/OpenNI-Bin-" + TAR_TARGET + "-v" + version + ".tar.bz2 *")
 
 if result != 0:
     print "Tar failed!!"

@@ -46,8 +46,15 @@ CP = cp
 # expand file list
 SRC_FILES_LIST = $(wildcard $(SRC_FILES))
 
+OSTYPE := $(shell uname -s)
+
 # change c struct alignment options to be compatable with Win32
-CFLAGS += -malign-double
+ifneq ("$(OSTYPE)","Darwin")
+	CFLAGS += -malign-double
+else
+	CFLAGS += -arch i386 -arch x86_64
+	LDFLAGS += -arch i386 -arch x86_64
+endif
 
 # tell compiler to use the target system root
 ifneq ("$(TARGET_SYS_ROOT)","/")
@@ -97,7 +104,13 @@ DEFINES_OPTION = $(foreach def,$(DEFINES),-D$(def))
 ifneq "$(LIB_NAME)" ""
 	OUTPUT_NAME = lib$(LIB_NAME).so
 	CFLAGS += -fPIC -fvisibility=hidden
-	OUTPUT_COMMAND = $(CXX) -o $(OUTPUT_FILE) $(OBJ_FILES) $(LDFLAGS) -shared
+	ifneq ("$(OSTYPE)","Darwin")
+		OUTPUT_NAME = lib$(LIB_NAME).so
+		OUTPUT_COMMAND = $(CXX) -o $(OUTPUT_FILE) $(OBJ_FILES) $(LDFLAGS) -shared
+	else
+		OUTPUT_NAME = lib$(LIB_NAME).dylib
+		OUTPUT_COMMAND = $(CXX) -o $(OUTPUT_FILE) $(OBJ_FILES) $(LDFLAGS) -dynamiclib -headerpad_max_install_names
+	endif
 endif
 ifneq "$(EXE_NAME)" ""
 	OUTPUT_NAME = $(EXE_NAME)
@@ -153,8 +166,13 @@ else
 define CREATE_SRC_TARGETS
 # create a target for the object file (the CXX command creates both an .o file
 # and a .d file)
+ifneq ("$(OSTYPE)","Darwin")
 $(call SRC_TO_OBJ,$1) : $1 | $(INT_DIR)
 	$(CXX) -MD -MP -MT "$(call SRC_TO_DEP,$1) $$@" -c $(CFLAGS) -o $$@ $$<
+else
+$(call SRC_TO_OBJ,$1) : $1 | $(INT_DIR)
+	$(CXX) -c $(CFLAGS) -o $$@ $$<	
+endif
 endef
 endif
 

@@ -310,14 +310,22 @@ XN_C_API XnStatus xnOSLockMutex(const XN_MUTEX_HANDLE MutexHandle, XnUInt32 nMil
 		// lock via the OS
 		if (MutexHandle->bIsNamed)
 		{
+#ifndef XN_PLATFORM_HAS_NO_TIMED_OPS
 			if (0 != semtimedop(MutexHandle->NamedSem, &op, 1, &time))
+#else
+			if (0 != semop(MutexHandle->NamedSem, &op, 1))
+#endif
 			{
 				rc = errno;
 			}
 		}
 		else
 		{
+#ifndef XN_PLATFORM_HAS_NO_TIMED_OPS
 			rc = pthread_mutex_timedlock(&MutexHandle->ThreadMutex, &time);
+#else
+			rc = pthread_mutex_lock(&MutexHandle->ThreadMutex);
+#endif
 		}
 	}
 	

@@ -1,3 +1,5 @@
+OSTYPE := $(shell uname -s)
+
 BIN_DIR = ../../../Bin
 
 INC_DIRS = \
@@ -6,8 +8,15 @@ INC_DIRS = \
 
 SRC_FILES = ../../../../../Samples/NiViewer/*.cpp
 
+ifeq ("$(OSTYPE)","Darwin")
+	LDFLAGS += -framework OpenGL -framework GLUT
+else
+	USED_LIBS += glut
+endif
+
+USED_LIBS += OpenNI
+
 EXE_NAME = NiViewer
-USED_LIBS = OpenNI glut
 
 include ../../CommonMakefile
 

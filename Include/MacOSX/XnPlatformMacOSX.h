@@ -23,40 +23,25 @@
 
 
 
-#ifndef _XN_VERSION_H_
-#define _XN_VERSION_H_
+#ifndef _XN_PLATFORM_MACOSX_H_
+#define _XN_PLATFORM_MACOSX_H_
 
-//---------------------------------------------------------------------------
-// Includes
-//---------------------------------------------------------------------------
-#include "XnPlatform.h"
+// Start with Linux-x86, and override what's different
+#include "../Linux-x86/XnPlatformLinux-x86.h"
 
-//---------------------------------------------------------------------------
-// Defines
-//---------------------------------------------------------------------------
-/** OpenNI major version. */ 
-#define XN_MAJOR_VERSION 1
-/** OpenNI minor version. */ 
-#define XN_MINOR_VERSION 0
-/** OpenNI maintenance version. */ 
-#define XN_MAINTENANCE_VERSION 0
-/** OpenNI build version. */ 
-#define XN_BUILD_VERSION 25
+#include <sys/time.h>
 
-/** OpenNI version (in brief string format): "Major.Minor.Maintenance (Build)" */ 
-#define XN_BRIEF_VERSION_STRING \
-	XN_STRINGIFY(XN_MAJOR_VERSION) "." \
-	XN_STRINGIFY(XN_MINOR_VERSION) "." \
-	XN_STRINGIFY(XN_MAINTENANCE_VERSION) \
-	" (Build " XN_STRINGIFY(XN_BUILD_VERSION) ")"
+#undef XN_PLATFORM
+#undef XN_PLATFORM_STRING
+#define XN_PLATFORM XN_PLATFORM_MACOSX
+#define XN_PLATFORM_STRING "MacOSX"
 
-/** OpenNI version (in numeric format): (OpenNI major version * 100000000 + OpenNI minor version * 1000000 + OpenNI maintenance version * 10000 + OpenNI build version). */
-#define XN_VERSION (XN_MAJOR_VERSION*100000000 + XN_MINOR_VERSION*1000000 + XN_MAINTENANCE_VERSION*10000 + XN_BUILD_VERSION)
+#define XN_PLATFORM_HAS_NO_TIMED_OPS
+#define XN_PLATFORM_HAS_NO_CLOCK_GETTIME
+#define XN_PLATFORM_HAS_NO_SCHED_PARAM
+#define XN_PLATFORM_HAS_BUILTIN_SEMUN
 
-/** OpenNI version (in string format): "Major.Minor.Maintenance.Build-Platform (MMM DD YYYY HH:MM:SS)". */ 
-#define XN_VERSION_STRING \
-		XN_BRIEF_VERSION_STRING  "-" \
-		XN_PLATFORM_STRING " (" XN_TIMESTAMP ")"
-
-#endif //_XN_VERSION_H_
-
+#undef XN_THREAD_STATIC
+#define XN_THREAD_STATIC 
+ 
+#endif //_XN_PLATFORM_MACOSX_H_

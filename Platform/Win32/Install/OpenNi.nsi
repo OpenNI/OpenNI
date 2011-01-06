@@ -24,7 +24,9 @@
 
 ;SetCompress off
 SetCompress auto
-SetCompressor ZLIB
+SetCompressor /FINAL /SOLID lzma
+SetCompressorDictSize 64
+SetDatablockOptimize on
 
 !include "MUI.nsh"
 !include "x64.nsh"
@@ -111,6 +113,9 @@ Section "${OPENNI_NAME}" SecPSSDK
     ExecWait '"$INSTDIR\Driver\dpinst-x86.exe" /sw /el'
   ${EndIf} 
 
+  ; Install OpenNI.net
+  ExecWait 'gacutil -i "$INSTDIR\Bin\OpenNI.net.dll"'
+  
   ; Register the .oni file type
   WriteRegStr HKCR ".oni" "" "NIRecording"
   WriteRegStr HKCR "NIRecording" "" "OpenNI Recording File"
@@ -155,6 +160,9 @@ Section "Uninstall"
   ExecWait '"$INSTDIR\bin\niReg.exe" -u "$INSTDIR\bin\nimRecorder.dll"'
   ; Unregister MockNodes
   ExecWait '"$INSTDIR\bin\niReg.exe" -u "$INSTDIR\bin\nimMockNodes.dll"'
+
+  ; UnInstall OpenNI.net
+  ExecWait 'gacutil -u OpenNI.net'
   
   ; Delete the files
   RMDir /r /REBOOTOK $INSTDIR

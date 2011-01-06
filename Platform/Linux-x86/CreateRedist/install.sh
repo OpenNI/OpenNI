@@ -5,7 +5,11 @@ INSTALL_BIN=/usr/bin
 INSTALL_INC=/usr/include/ni
 INSTALL_VAR=/var/lib/ni
 
-MODULES="libnimMockNodes.so libnimCodecs.so libnimRecorder.so"
+if [ "`uname -s`" == "Darwin" ]; then
+	MODULES="libnimMockNodes.dylib libnimCodecs.dylib libnimRecorder.dylib"
+else
+	MODULES="libnimMockNodes.so libnimCodecs.so libnimRecorder.so"
+fi
 
 SCRIPT_DIR=`pwd`/`dirname $0`
 
@@ -26,14 +30,14 @@ while (( "$#" )); do
 		printf "\t-i\tInstall (default)\n"
 		printf "\t-u\tUninstall\n"
 		exit 1
-		;;		
+		;;
 	esac
 	shift
 done
 
 # create file list
 LIB_FILES=`ls $SCRIPT_DIR/Lib/*`
-BIN_FILES=`ls $SCRIPT_DIR/Bin/*`
+BIN_FILES=`ls $SCRIPT_DIR/Bin/ni*`
 
 if [ "$INSTALL" == "1" ]; then
 
@@ -65,6 +69,12 @@ if [ "$INSTALL" == "1" ]; then
 		printf "OK\n"
 	done
 
+        # mono
+	if [ -f /usr/bin/gmcs ]
+	then
+		gacutil -i Bin/OpenNI.net.dll -package 2.0
+	fi
+
 else
 	# unregister modules
 	for module in $MODULES; do
@@ -92,6 +102,13 @@ else
         rm -f $INSTALL_LIB/`basename $filename`
     done
     printf "OK\n"
+
+	# mono
+	if [ -f /usr/bin/gmcs ]
+	then
+		printf "Removing OpenNI.net: "
+		gacutil -u OpenNI.net
+	fi
 fi
 
 printf "\n*** DONE ***\n\n"

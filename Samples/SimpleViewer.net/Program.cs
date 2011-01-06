@@ -16,7 +16,14 @@ namespace SimpleViewer.net
 		{
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new MainWindow());
+			try
+			{
+				Application.Run(new MainWindow());
+			}
+			catch (System.Exception ex)
+			{
+				MessageBox.Show("Error: " + ex.Message, "SimpleViewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 		}
 	}
 }

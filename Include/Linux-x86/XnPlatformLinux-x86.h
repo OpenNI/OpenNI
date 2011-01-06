@@ -67,7 +67,7 @@ typedef	unsigned char		XnUChar;
 typedef	wchar_t				XnWChar;
 
 /** 8-bit signed integer. */ 
-typedef	char				XnInt8;
+typedef	signed char			XnInt8;
 /** 8-bit unsigned integer. */ 
 typedef	unsigned char		XnUInt8;
 

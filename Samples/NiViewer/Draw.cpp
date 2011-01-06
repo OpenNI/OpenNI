@@ -30,8 +30,13 @@
 #include "Device.h"
 #include "Keyboard.h"
 #include "Capture.h"
-#include <GL/gl.h>
-#include <GL/glut.h>
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#include <GLUT/glut.h>
+	#include <OpenGL/gl.h>
+#else
+	#include <GL/gl.h>
+	#include <GL/glut.h>
+#endif
 #include "Statistics.h"
 #include "MouseInput.h"
 

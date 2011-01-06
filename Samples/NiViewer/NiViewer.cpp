@@ -58,6 +58,10 @@
 	#define GLX_GLXEXT_LEGACY
 #endif
 
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#define MACOS
+#endif
+
 #define GLH_EXT_SINGLE_FILE
 #include <glh/glh_obs.h>
 #include <glh/glh_glut2.h>
@@ -77,7 +81,7 @@ using namespace glh;
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include <conio.h>
 	#include <direct.h>	
-#elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM)
+#elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#define _getch() getchar()
 #endif
 

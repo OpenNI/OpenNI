@@ -114,7 +114,7 @@ XN_C_API XnStatus xnOSWaitForThreadExit(XN_THREAD_HANDLE ThreadHandle, XnUInt32 
 	{
 		// calculate timeout absolute time. First we take current time
 		struct timespec time;
-		if (0 != clock_gettime(CLOCK_REALTIME, &time))
+		if (XN_STATUS_OK != xnOSGetMonoTime(&time))
 		{
 			return (XN_STATUS_OS_EVENT_SET_FAILED);
 		}
@@ -125,7 +125,11 @@ XN_C_API XnStatus xnOSWaitForThreadExit(XN_THREAD_HANDLE ThreadHandle, XnUInt32 
 		
 		// join via the OS
 		void* pReturnValue;
+#ifndef XN_PLATFORM_HAS_NO_TIMED_OPS
 		rc = pthread_timedjoin_np(*ThreadHandle, &pReturnValue, &time);
+#else
+		rc = pthread_join(*ThreadHandle, &pReturnValue);
+#endif
 	}
 	
 	// check for failures
@@ -153,7 +157,9 @@ XN_C_API XnStatus xnOSSetThreadPriority(XN_THREAD_HANDLE ThreadHandle, XnThreadP
 	
 	if (nPriority == XN_PRIORITY_CRITICAL)
 	{
+#ifndef XN_PLATFORM_HAS_NO_SCHED_PARAM
 		param.__sched_priority = 5;
+#endif
 		nPolicy = SCHED_RR;
 	}
 	else

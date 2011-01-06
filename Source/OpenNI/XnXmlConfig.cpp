@@ -586,7 +586,7 @@ XnStatus xnXmlReadQuery(const TiXmlElement* pQueryElem, XnNodeQuery* pQuery)
 		nRetVal = xnReadVersionFromXml(pMaxVersion, &maxVersion);
 		XN_IS_STATUS_OK(nRetVal);
 
-		xnNodeQuerySetMinVersion(pQuery, &maxVersion);
+		xnNodeQuerySetMaxVersion(pQuery, &maxVersion);
 	}
 
 	// Capabilities

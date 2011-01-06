@@ -73,10 +73,12 @@ ALL_BUILD_PROJS = \
 	$(ALL_SAMPLES)
 
 ALL_PROJS = \
-	$(ALL_BUILD_PROJS) \
-	$(ALL_MONO_PROJS) \
-	$(MONO_SAMPLES) \
-	$(MONO_FORMS_SAMPLES)
+	$(ALL_BUILD_PROJS) 
+ifneq "$(realpath /usr/bin/gmcs)" ""
+	ALL_PROJS += $(ALL_MONO_PROJS)
+	ALL_PROJS += $(MONO_SAMPLES)
+	ALL_PROJS += $(MONO_FORMS_SAMPLES)
+endif
 
 ALL_PROJS_CLEAN = $(foreach proj,$(ALL_PROJS),$(proj)-clean)
 
@@ -94,7 +96,7 @@ endef
 .PHONY: all $(ALL_PROJS) $(ALL_PROJS_CLEAN) install uninstall clean 
 
 # make all makefiles
-all: $(ALL_BUILD_PROJS)
+all: $(ALL_PROJS)
 
 core: $(ALL_CORE_PROJS)
 
