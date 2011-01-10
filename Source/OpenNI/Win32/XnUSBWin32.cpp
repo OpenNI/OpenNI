@@ -315,10 +315,12 @@ XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID,
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	// support up to 30 devices
-	const int nMaxDevices = 30;
-	XnUSBConnectionString aNames[nMaxDevices];
+	XnUSBConnectionString cpUSBID;
+	XnUSBConnectionString cpUSBPathCmp;
+	XnUSBConnectionString aNames[MAX_POTENTIAL_DEVICES];
 	HDEVINFO hDevInfo = NULL;
 	ULONG nDevices = 0;
+	XnUInt32 nFoundDevices = 0;
 	SP_DEVICE_INTERFACE_DATA devInterfaceData;
 	XnBool bReachedEnd = FALSE;
 
@@ -338,7 +340,7 @@ XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID,
 	// Scan the hardware for any devices that are attached to our driver.
 	devInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
 
-	while (nDevices < nMaxDevices)
+	while (nDevices < MAX_POTENTIAL_DEVICES)
 	{
 		// Get information about the device
 		if (SetupDiEnumDeviceInterfaces(hDevInfo, 0, pInterfaceGuid, nDevices, &devInterfaceData))
@@ -369,8 +371,20 @@ XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID,
 				return XN_STATUS_ERROR;
 			}
 
-			// Construct the device file name
-			StringCchCopy(aNames[nDevices], MAX_DEVICE_STR_LENGTH, pDevInterfaceDetailData->DevicePath);
+			// Make sure we have the right VID/PID
+			cpUSBID[0] = 0;
+			sprintf_s (cpUSBID, "vid_%04x&pid_%04x", nVendorID, nProductID);
+			
+			cpUSBPathCmp[0] = 0;
+			StringCchCopy(cpUSBPathCmp, MAX_DEVICE_STR_LENGTH, pDevInterfaceDetailData->DevicePath);
+
+			if (strstr(_strlwr(cpUSBPathCmp), cpUSBID) != 0)
+			{
+				StringCchCopy(aNames[nFoundDevices], MAX_DEVICE_STR_LENGTH, pDevInterfaceDetailData->DevicePath);
+
+				++nFoundDevices;
+			}
+
 			++nDevices;
 		}
 		else if (ERROR_NO_MORE_ITEMS == GetLastError())
@@ -386,15 +400,15 @@ XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID,
 	if (!bReachedEnd)
 	{
 		// we probably passed our limit
-		XN_LOG_ERROR_RETURN(XN_STATUS_ERROR, XN_MASK_USB, "Found more than %d devices! This is not supported.", nMaxDevices);
+		XN_LOG_ERROR_RETURN(XN_STATUS_ERROR, XN_MASK_USB, "Found more than %d devices! This is not supported.", MAX_POTENTIAL_DEVICES);
 	}
 
 	XnUSBConnectionString* pNames;
-	XN_VALIDATE_CALLOC(pNames, XnUSBConnectionString, nDevices);
-	xnOSMemCopy(pNames, aNames, sizeof(XnUSBConnectionString) * nDevices);
+	XN_VALIDATE_CALLOC(pNames, XnUSBConnectionString, nFoundDevices);
+	xnOSMemCopy(pNames, aNames, sizeof(XnUSBConnectionString) * nFoundDevices);
 
 	*pastrDevicePaths = pNames;
-	*pnCount = nDevices;
+	*pnCount = nFoundDevices;
 
 	// All is good...
 	return (XN_STATUS_OK);
