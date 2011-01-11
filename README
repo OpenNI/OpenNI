@@ -21,17 +21,14 @@ Unstable branch fixes:
 * Xml query for max version checked the min version by mistake.
 
 Binaries are available at:
-Windows:
-Coming soon... (switching to new web site...)
-Ubuntu 10.10 x86:
-Coming soon... (switching to new web site...)
-Ubuntu 10.10 x64:
-Coming soon... (switching to new web site...)
-MacOSX 10.6 (i386 & x86_64 universal):
-Coming soon... (switching to new web site...)
+http://www.openni.org/downloadfiles/openni-binaries/20-latest-unstable
 
 Please use this with the sensor unstable branch located at:
+Source:
 https://github.com/PrimeSense/Sensor/tree/unstable
+Binaries:
+http://www.openni.org/downloadfiles/openni-compliant-hardware/31-latest-unstable
+
 
 Release Notes:
 --------------
