@@ -8,6 +8,7 @@ using OpenNI;
 using System.Threading;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
+using System.Linq;
 
 namespace UserTracker.net
 {
@@ -29,10 +30,52 @@ namespace UserTracker.net
             this.poseDetectionCapability = this.userGenerator.GetPoseDetectionCap();
             this.calibPose = this.skeletonCapability.CalibrationPose;
 
-            this.userGenerator.UserFound += new EventHandler<UserFoundArgs>(userGenerator_UserFound);
-            this.userGenerator.UserLost += new EventHandler<UserLostArgs>(userGenerator_LostUser);
-            this.poseDetectionCapability.PoseDetected += new EventHandler<PoseDetectionArgs>(poseDetectionCapability_PoseDetected);
-            this.skeletonCapability.CalibrationEnded += new EventHandler<CalibrationEndedArgs>(skeletonCapability_CalibrationEnded);
+            //this.userGenerator.UserFound += new EventHandler<UserFoundArgs>(userGenerator_UserFound);
+            //this.userGenerator.UserLost += new EventHandler<UserLostArgs>(userGenerator_LostUser);
+            //this.poseDetectionCapability.PoseDetected += new EventHandler<PoseDetectionArgs>(poseDetectionCapability_PoseDetected);
+            //this.skeletonCapability.CalibrationEnded += new EventHandler<CalibrationEndedArgs>(skeletonCapability_CalibrationEnded);
+
+            // create observables for the events
+            var userFound = Observable.FromEvent<EventHandler<UserFoundArgs>, UserFoundArgs>(d => d.Invoke, h => this.userGenerator.UserFound += h, h => this.userGenerator.UserFound -= h);
+            var userLost = Observable.FromEvent<EventHandler<UserLostArgs>, UserLostArgs>(d => d.Invoke, h => this.userGenerator.UserLost += h, h => this.userGenerator.UserLost -= h);
+            var poseDetected = Observable.FromEvent<EventHandler<PoseDetectionArgs>, PoseDetectionArgs>(d => d.Invoke, h => this.poseDetectionCapability.PoseDetected += h, h => this.poseDetectionCapability.PoseDetected -= h);
+            var calibrationEnded = Observable.FromEvent<EventHandler<CalibrationEndedArgs>, CalibrationEndedArgs>(d => d.Invoke, h => this.skeletonCapability.CalibrationEnded += h, h => this.skeletonCapability.CalibrationEnded -= h);
+
+            // retrieve the event values
+            var userFoundValues = userFound
+                .Select(e => e.EventArgs);
+            var userLostValues = userLost
+                .Select(e => e.EventArgs);
+            var poseDetectedValues = poseDetected
+                .Select(e => e.EventArgs);
+            var calibrationEndedValues = calibrationEnded
+                .Select(e => e.EventArgs);
+
+            // handle the observables
+            userFoundValues.Subscribe(
+                args => this.poseDetectionCapability.StartPoseDetection(this.calibPose, args.UserId));
+            userLostValues.Subscribe(
+                args => this.joints.Remove(args.UserId));
+            poseDetectedValues.Subscribe(
+                delegate(PoseDetectionArgs args)
+                {
+                    this.poseDetectionCapability.StopPoseDetection(args.UserId);
+                    this.skeletonCapability.RequestCalibration(args.UserId, true);
+                });
+            calibrationEndedValues.Subscribe(
+                delegate(CalibrationEndedArgs args)
+                {
+                    if (args.Success)
+                    {
+                        this.skeletonCapability.StartTracking(args.UserId);
+                        this.joints.Add(args.UserId, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
+                    }
+                    else
+                    {
+                        this.poseDetectionCapability.StartPoseDetection(calibPose, args.UserId);
+                    }
+                });
+                
 
             this.skeletonCapability.SetSkeletonProfile(SkeletonProfile.All);
             this.joints = new Dictionary<uint,Dictionary<SkeletonJoint,SkeletonJointPosition>>();
@@ -47,35 +90,6 @@ namespace UserTracker.net
 			this.readerThread = new Thread(ReaderThread);
 			this.readerThread.Start();
 		}
-
-        void skeletonCapability_CalibrationEnded(object sender, CalibrationEndedArgs args)
-        {
-            if (args.Success)
-            {
-                this.skeletonCapability.StartTracking(args.UserId);
-                this.joints.Add(args.UserId, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
-            }
-            else
-            {
-                this.poseDetectionCapability.StartPoseDetection(calibPose, args.UserId);
-            }
-        }
-
-        void poseDetectionCapability_PoseDetected(object sender, PoseDetectionArgs args)
-        {
-            this.poseDetectionCapability.StopPoseDetection(args.UserId);
-            this.skeletonCapability.RequestCalibration(args.UserId, true);
-        }
-
-        void userGenerator_UserFound(object sender, UserFoundArgs args)
-        {
-            this.poseDetectionCapability.StartPoseDetection(this.calibPose, args.UserId);
-        }
-
-        void userGenerator_LostUser(object sender, UserLostArgs args)
-        {
-            this.joints.Remove(args.UserId);
-        }
 
 		protected override void OnPaint(PaintEventArgs e)
 		{
