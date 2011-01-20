@@ -147,11 +147,15 @@ ifeq "$(CFG)" "Release"
 		ifeq ($(SSE_GENERATION), 3)
 			CFLAGS += -msse3
 		else
-			($error "Only SSE2 and SSE3 are supported")
+			$(error "Only SSE2 and SSE3 are supported")
 		endif
 	endif
 	
 	CSFLAGS += -o+
+endif
+
+ifeq ($(DEBUG),1)
+  CFLAGS += -g
 endif
 
 CFLAGS += $(INC_DIRS_OPTION) $(DEFINES_OPTION)
