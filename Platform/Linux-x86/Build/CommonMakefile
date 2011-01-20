@@ -48,6 +48,9 @@ SRC_FILES_LIST = $(wildcard $(SRC_FILES))
 
 OSTYPE := $(shell uname -s)
 
+# add CFLAGS that have been passed in
+CFLAGS += $(CFLAGS_EXT)
+
 # change c struct alignment options to be compatable with Win32
 ifneq ("$(OSTYPE)","Darwin")
 	CFLAGS += -malign-double
