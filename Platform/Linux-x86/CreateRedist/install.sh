@@ -1,9 +1,17 @@
 #!/bin/bash -e
 
-INSTALL_LIB=/usr/lib
-INSTALL_BIN=/usr/bin
-INSTALL_INC=/usr/include/ni
-INSTALL_VAR=/var/lib/ni
+if [ -z "$INSTALL_LIB" ]; then
+  INSTALL_LIB=/usr/lib
+fi
+if [ -z "$INSTALL_BIN" ]; then
+  INSTALL_BIN=/usr/bin
+fi
+if [ -z "$INSTALL_INC" ]; then
+  INSTALL_INC=/usr/include/ni
+fi
+if [ -z "$INSTALL_VAR" ]; then
+  INSTALL_VAR=/var/lib/ni
+fi
 
 if [ "`uname -s`" == "Darwin" ]; then
 	MODULES="libnimMockNodes.dylib libnimCodecs.dylib libnimRecorder.dylib"
@@ -15,6 +23,7 @@ SCRIPT_DIR=`pwd`/`dirname $0`
 
 # read script args
 INSTALL="1"
+REGISTER="1"
 
 while (( "$#" )); do
 	case "$1" in
@@ -24,11 +33,15 @@ while (( "$#" )); do
 	"-u")
 		INSTALL="0"
 		;;
+	"-n")
+		REGISTER="0"
+		;;
 	*)
 		echo "Usage: $0 [options]"
 		echo "Available options:"
 		printf "\t-i\tInstall (default)\n"
 		printf "\t-u\tUninstall\n"
+		printf "\t-n\tDo not (un)register the modules\n"
 		exit 1
 		;;
 	esac
@@ -40,6 +53,11 @@ LIB_FILES=`ls $SCRIPT_DIR/Lib/*`
 BIN_FILES=`ls $SCRIPT_DIR/Bin/ni*`
 
 if [ "$INSTALL" == "1" ]; then
+
+	mkdir -p $INSTALL_LIB
+	mkdir -p $INSTALL_BIN
+	mkdir -p $INSTALL_INC
+	mkdir -p $INSTALL_VAR
 
 	# copy libraries
 	printf "copying shared libraries..."
@@ -62,27 +80,33 @@ if [ "$INSTALL" == "1" ]; then
 	mkdir -p $INSTALL_VAR
     printf "OK\n"
 
-	# register modules
-	for module in $MODULES; do
-		printf "registering module '$module'..."
-		niReg -r $INSTALL_LIB/$module
-		printf "OK\n"
-	done
-
-        # mono
-	if [ -f /usr/bin/gmcs ]
-	then
-		gacutil -i Bin/OpenNI.net.dll -package 2.0
+	if [ "$REGISTER" == "1" ]; then
+		# register modules
+		for module in $MODULES; do
+			printf "registering module '$module'..."
+			niReg -r $INSTALL_LIB/$module
+			printf "OK\n"
+		done
 	fi
 
-else
-	# unregister modules
-	for module in $MODULES; do
-    	printf "unregistering module '$module'..."
-        if niReg -u $INSTALL_LIB/$module; then
-            printf "OK\n"
+	if [ "$REGISTER" == "1" ]; then
+            # mono
+	    if [ -f /usr/bin/gmcs ]
+	    then
+		gacutil -i Bin/OpenNI.net.dll -package 2.0
+	    fi
         fi
-	done
+
+else
+	if [ "$REGISTER" == "1" ]; then
+		# unregister modules
+		for module in $MODULES; do
+    			printf "unregistering module '$module'..."
+        		if niReg -u $INSTALL_LIB/$module; then
+            			printf "OK\n"
+        		fi
+		done
+	fi
 
 	# include files
 	printf "removing include files..."
@@ -103,12 +127,14 @@ else
     done
     printf "OK\n"
 
+    if [ "$REGISTER" == "1" ]; then
 	# mono
 	if [ -f /usr/bin/gmcs ]
 	then
 		printf "Removing OpenNI.net: "
 		gacutil -u OpenNI.net
 	fi
+    fi
 fi
 
 printf "\n*** DONE ***\n\n"
