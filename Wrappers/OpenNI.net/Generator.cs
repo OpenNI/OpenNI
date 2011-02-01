@@ -34,10 +34,9 @@ namespace OpenNI
 			Status.ThrowOnFail(SafeNativeMethods.xnStopGenerating(this.InternalObject));
 		}
 
-		public event EventHandler<StateChangedArgs> GenerationRunningChanged
+		public IObservable<StateChangedArgs> GenerationRunningChanged
 		{
-			add { generationRunningChanged.Event += value; }
-			remove { generationRunningChanged.Event -= value; }
+            get { return this.generationRunningChanged.StateChanged; }
 		}
 
 		public bool IsNewDataAvailable(out UInt64 timestamp)
@@ -51,10 +50,9 @@ namespace OpenNI
 			return SafeNativeMethods.xnIsNewDataAvailable(this.InternalObject, out timestamp);
 		}
 
-		public event EventHandler<StateChangedArgs> NewDataAvailable
+		public IObservable<StateChangedArgs> NewDataAvailable
 		{
-			add { newDataAvailable.Event += value; }
-			remove { newDataAvailable.Event -= value; }
+            get { return this.newDataAvailable.StateChanged; }
 		}
 
 		public void WaitAndUpdateData()

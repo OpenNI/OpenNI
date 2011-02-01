@@ -28,10 +28,9 @@ namespace OpenNI
             }
 		}
 
-		public event EventHandler<StateChangedArgs> CroppingChanged
+		public IObservable<StateChangedArgs> CroppingChanged
 		{
-			add { this.croppingChanged.Event += value; }
-			remove { this.croppingChanged.Event -= value; }
+            get { return this.croppingChanged.StateChanged; }
 		}
 
 		private StateChangedEvent croppingChanged;

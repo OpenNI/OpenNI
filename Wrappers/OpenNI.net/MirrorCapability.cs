@@ -26,10 +26,9 @@ namespace OpenNI
             }
 		}
 
-		public event EventHandler<StateChangedArgs> MirrorChangedEvent
+		public IObservable<StateChangedArgs> MirrorChanged
 		{
-			add { this.mirrorChangedEvent.Event += value; }
-			remove { this.mirrorChangedEvent.Event -= value; }
+            get { return this.mirrorChangedEvent.StateChanged; }
 		}
 
 		private StateChangedEvent mirrorChangedEvent;

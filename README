@@ -55,6 +55,9 @@ Windows:
 		   From: http://sourceforge.net/projects/nsis/files/NSIS%202/2.46/
 		   This is a required patch to fix a critical bug in NSIS with long environment variables.
 		   Simply unpack it into the directory where NSIS is installed and overwrite all files.
+		5) Reactive Extensions for .NET (Rx)
+		   From: http://msdn.microsoft.com/en-us/devlabs/ee794896
+		   This is a required for the .NET wrapper.
 
 	Optional requirements (To build the USB device driver):
 		1) Microsoft WDK

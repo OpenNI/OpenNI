@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using UserId = System.UInt32;
 
@@ -10,9 +11,81 @@ namespace OpenNI
         internal HandsGenerator(NodeSafeHandle nodeHandle, bool addRef)
 			: base(nodeHandle, addRef)
         {
-            this.internalHandCreate = new SafeNativeMethods.XnHandCreate(this.InternalHandCreate);
-            this.internalHandUpdate = new SafeNativeMethods.XnHandUpdate(this.InternalHandUpdate);
-            this.internalHandDestroy = new SafeNativeMethods.XnHandDestroy(this.InternalHandDestroy);
+            this.internalHandCreated = new SafeNativeMethods.XnHandCreate(this.OnHandCreated);
+            this.internalHandUpdate = new SafeNativeMethods.XnHandUpdate(this.OnHandUpdated);
+            this.internalHandDestroy = new SafeNativeMethods.XnHandDestroy(this.OnHandDestroyed);
+
+            // initialize the observables
+
+            this.handCreated = Observable.Create<HandCreatedArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.handCreatedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreated, null, null, IntPtr.Zero, out this.handCreatedHandle));
+                }
+                // add to the observers list
+                this.handCreatedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.handCreatedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.handCreatedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handCreatedHandle);
+                    }
+                };
+            });
+
+            this.handUpdated = Observable.Create<HandUpdatedArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.handUpdatedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out this.handUpdateHandle));
+                }
+                // add to the observers list
+                this.handUpdatedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.handUpdatedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.handUpdatedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
+                    }
+                };
+            });
+
+            this.handDestroyed = Observable.Create<HandDestroyedArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.handDestroyedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out this.handDestroyHandle));
+                }
+                // add to the observers list
+                this.handDestroyedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.handDestroyedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.handDestroyedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle);
+                    }
+                };
+            });
+
         }
 
         public HandsGenerator(Context context, Query query, ErrorCollection errors) :
@@ -57,102 +130,78 @@ namespace OpenNI
         }
 
         #region Hand Created
-        private event EventHandler<HandCreatedArgs> handCreatedEvent;
-        public event EventHandler<HandCreatedArgs> HandCreated
-        {
-            add
-            {
-                if (this.handCreatedEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreate, null, null, IntPtr.Zero, out handCreateHandle));
-                    
-                }
-                this.handCreatedEvent += value;
-            }
-            remove
-            {
-                this.handCreatedEvent -= value;
 
-                if (this.handCreatedEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handCreateHandle);
-                }
+        public IObservable<HandCreatedArgs> HandCreated
+        {
+            get
+            {
+                return this.handCreated;
             }
         }
-        private void InternalHandCreate(IntPtr hNode, UserId id, ref Point3D position, float fTime, IntPtr pCookie)
+
+        private void OnHandCreated(IntPtr nodeHandle, UserId userId, ref Point3D position, float time, IntPtr cookie)
         {
-            var handler = this.handCreatedEvent;
-            if (handler != null)
-                handler(this, new HandCreatedArgs(id, position, fTime, pCookie));
+            foreach (var observer in this.handCreatedObservers)
+            {
+                observer.OnNext(new HandCreatedArgs(userId, position, time, cookie));
+            }
         }
-        private SafeNativeMethods.XnHandCreate internalHandCreate;
-        private IntPtr handCreateHandle;
+
+        private readonly List<IObserver<HandCreatedArgs>> handCreatedObservers = new List<IObserver<HandCreatedArgs>>();
+        private readonly IObservable<HandCreatedArgs> handCreated;
+        private SafeNativeMethods.XnHandCreate internalHandCreated;
+        private IntPtr handCreatedHandle;
+
         #endregion
 
         #region Hand Updated
-        private event EventHandler<HandUpdatedArgs> handUpdatedEvent;
-        public event EventHandler<HandUpdatedArgs> HandUpdated
-        {
-            add
-            {
-                if (this.handUpdatedEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out handUpdateHandle));
-                    
-                }
-                this.handUpdatedEvent += value;
-            }
-            remove
-            {
-                this.handUpdatedEvent -= value;
 
-                if (this.handUpdatedEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
-                }
-            } 
-        }
-        private void InternalHandUpdate(IntPtr hNode, UserId id, ref Point3D position, float fTime, IntPtr pCookie)
+        public IObservable<HandUpdatedArgs> HandUpdated
         {
-            var handler = this.handUpdatedEvent;
-            if (handler != null)
-                handler(this, new HandUpdatedArgs(id, position, fTime, pCookie));
+            get
+            {
+                return this.handUpdated;
+            }
         }
+
+        private void OnHandUpdated(IntPtr nodeHandle, UserId userId, ref Point3D position, float time, IntPtr cookie)
+        {
+            foreach (var observer in this.handUpdatedObservers)
+            {
+                observer.OnNext(new HandUpdatedArgs(userId, position, time, cookie));
+            }
+        }
+
+        private readonly List<IObserver<HandUpdatedArgs>> handUpdatedObservers = new List<IObserver<HandUpdatedArgs>>();
+        private readonly IObservable<HandUpdatedArgs> handUpdated;
         private SafeNativeMethods.XnHandUpdate internalHandUpdate;
         private IntPtr handUpdateHandle;
+
         #endregion
 
-        #region Hand Destroy
-        private event EventHandler<HandDestroyedArgs> handDestroyedEvent;
-        public event EventHandler<HandDestroyedArgs> HandDestroyed
-        {
-            add
-            {
-                if (this.handDestroyedEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out handDestroyHandle));
-                    
-                }
-                this.handDestroyedEvent += value;
-            }
-            remove
-            {
-                this.handDestroyedEvent -= value;
+        #region Hand Destroyed
 
-                if (this.handDestroyedEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle);
-                }
+        public IObservable<HandDestroyedArgs> HandDestroyed
+        {
+            get
+            {
+                return this.handDestroyed;
             }
         }
-        private void InternalHandDestroy(IntPtr hNode, UserId id, float fTime, IntPtr pCookie)
+
+        private void OnHandDestroyed(IntPtr nodeHandle, UserId userId, float time, IntPtr cookie)
         {
-            var handler = this.handDestroyedEvent;
-            if (handler != null)
-                handler(this, new HandDestroyedArgs(id, fTime, pCookie));
+            foreach (var observer in this.handDestroyedObservers)
+            {
+                observer.OnNext(new HandDestroyedArgs(userId, time, cookie));
+            }
         }
+
+        private readonly List<IObserver<HandDestroyedArgs>> handDestroyedObservers = new List<IObserver<HandDestroyedArgs>>();
+        private readonly IObservable<HandDestroyedArgs> handDestroyed;
         private SafeNativeMethods.XnHandDestroy internalHandDestroy;
         private IntPtr handDestroyHandle;
+
         #endregion
 
     }

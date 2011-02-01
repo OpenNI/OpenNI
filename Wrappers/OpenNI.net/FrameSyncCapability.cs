@@ -34,10 +34,9 @@ namespace OpenNI
 			return SafeNativeMethods.xnIsFrameSyncedWith(this.InternalObject, other.InternalObject);
 		}
 
-		public event EventHandler<StateChangedArgs> FrameSyncChanged
+		public IObservable<StateChangedArgs> FrameSyncChanged
 		{
-			add { this.frameSyncChangedEvent.Event += value; }
-			remove { this.frameSyncChangedEvent.Event -= value; }
+            get { return this.frameSyncChangedEvent.StateChanged; }
 		}
 
 		private StateChangedEvent frameSyncChangedEvent;

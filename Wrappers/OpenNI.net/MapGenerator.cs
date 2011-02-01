@@ -37,10 +37,9 @@ namespace OpenNI
             }
 		}
 
-		public event EventHandler<StateChangedArgs> MapOutputModeChanged
+		public IObservable<StateChangedArgs> MapOutputModeChanged
 		{
-			add { this.mapOutputModeChanged.Event += value; }
-			remove { this.mapOutputModeChanged.Event -= value; }
+            get { return this.mapOutputModeChanged.StateChanged; }
 		}
 
 		public CroppingCapability GetCroppingCap()

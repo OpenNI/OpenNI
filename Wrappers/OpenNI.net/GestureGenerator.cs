@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace OpenNI
@@ -9,21 +10,73 @@ namespace OpenNI
         internal GestureGenerator(NodeSafeHandle nodeHandle, bool addRef)
             : base(nodeHandle, addRef)
         {
+            this.internalGestureRecognized = new SafeNativeMethods.XnGestureRecognized(this.OnGestureRecognized);
+            this.internalGestureProgressed = new SafeNativeMethods.XnGestureProgress(this.OnGestureProgressed);
+
+            // initialize the observables
+
             this.gestureChanged = new StateChangedEvent(this,
                 SafeNativeMethods.xnRegisterToGestureChange,
                 SafeNativeMethods.xnUnregisterFromGestureChange);
 
-            this.internalGestureRecognized = new SafeNativeMethods.XnGestureRecognized(this.InternalGestureRecognized);
-            this.internalGestureProgress = new SafeNativeMethods.XnGestureProgress(this.InternalGestureProgress);
+            this.gestureRecognized = Observable.Create<GestureRecognizedArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.gestureRecognizedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, this.internalGestureRecognized, null, IntPtr.Zero, out this.gestureRecognizedHandle));
+                }
+                // add to the observers list
+                this.gestureRecognizedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.gestureRecognizedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.gestureRecognizedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureRecognizedHandle);
+                    }
+                };
+            });
+
+            this.gestureProgressed = Observable.Create<GestureProgressedArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.gestureProgressedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, null, this.internalGestureProgressed, IntPtr.Zero, out this.gestureProgressedHandle));
+                }
+                // add to the observers list
+                this.gestureProgressedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.gestureProgressedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.gestureProgressedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureProgressedHandle);
+                    }
+                };
+            });
+
         }
+
         public GestureGenerator(Context context, Query query, ErrorCollection errors) :
             this(Create(context, query, errors), false)
         {
         }
+
         public GestureGenerator(Context context, Query query)
             : this(context, query, null)
         {
         }
+
         public GestureGenerator(Context context)
             : this(context, null, null)
         {
@@ -40,21 +93,21 @@ namespace OpenNI
             return handle;
         }
 
-        public void AddGesture(string gestureName, BoundingBox3D area)
+        public void AddGesture(string gesture, BoundingBox3D area)
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnAddGesture(InternalObject, gestureName, ref area));
+            Status.ThrowOnFail(SafeNativeMethods.xnAddGesture(InternalObject, gesture, ref area));
             
         }
 
-		public void AddGesture(string gestureName)
+		public void AddGesture(string gesture)
 		{
-            Status.ThrowOnFail(SafeNativeMethods.xnAddGesture(InternalObject, gestureName, IntPtr.Zero));
+            Status.ThrowOnFail(SafeNativeMethods.xnAddGesture(InternalObject, gesture, IntPtr.Zero));
 			
 		}
 
-		public void RemoveGesture(string gestureName)
+		public void RemoveGesture(string gesture)
         {
-            Status.ThrowOnFail(SafeNativeMethods.xnRemoveGesture(InternalObject, gestureName));
+            Status.ThrowOnFail(SafeNativeMethods.xnRemoveGesture(InternalObject, gesture));
             
         }
 
@@ -127,96 +180,80 @@ namespace OpenNI
             return poses;
         }
 
-        public bool IsGestureAvailable(string gestureName)
+        public bool IsGestureAvailable(string gesture)
         {
-            return SafeNativeMethods.xnIsGestureAvailable(InternalObject, gestureName);
+            return SafeNativeMethods.xnIsGestureAvailable(InternalObject, gesture);
         }
-        public bool IsGestureProgressSupported(string gestureName)
+
+        public bool IsGestureProgressSupported(string gesture)
         {
-            return SafeNativeMethods.xnIsGestureProgressSupported(InternalObject, gestureName);
+            return SafeNativeMethods.xnIsGestureProgressSupported(InternalObject, gesture);
         }
-        public event EventHandler<StateChangedArgs> GestureChanged
+
+        #region Gesture Changed
+
+        public IObservable<StateChangedArgs> GestureChanged
         {
-            add
-            {
-                gestureChanged.Event += value;
-            }
-            remove
-            {
-                gestureChanged.Event -= value;
-            }
+            get { return this.gestureChanged.StateChanged; }
         }
+
         private StateChangedEvent gestureChanged;
 
-        #region GestureName Recognized
-        private event EventHandler<GestureRecognizedArgs> gestureRecognizedEvent;
-        public event EventHandler<GestureRecognizedArgs> GestureRecognized
-        {
-            add
-            {
-                if (this.gestureRecognizedEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, this.internalGestureRecognized, null, IntPtr.Zero, out gestureRecognizedHandle));
-                    
-                }
-                this.gestureRecognizedEvent += value;
-            }
-            remove
-            {
-                this.gestureRecognizedEvent -= value;
-
-                if (this.gestureRecognizedEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureRecognizedHandle);
-                }
-            }
-        }
-        private void InternalGestureRecognized(IntPtr hNode, string gestureName, ref Point3D idPosition, ref Point3D endPosition, IntPtr pCookie)
-        {
-            var handler = this.gestureRecognizedEvent;
-            if (handler != null)
-                handler(this, new GestureRecognizedArgs(gestureName, idPosition, endPosition, pCookie));
-        }
-        private SafeNativeMethods.XnGestureRecognized internalGestureRecognized;
-        private IntPtr gestureRecognizedHandle;
         #endregion
 
-        #region GestureName Progress
-        private event EventHandler<GestureProgressArgs> gestureProgressEvent;
-        public event EventHandler<GestureProgressArgs> GestureProgress
-        {
-            add
-            {
-                if (this.gestureProgressEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, null, this.internalGestureProgress, IntPtr.Zero, out gestureProgressHandle));
-                    
-                }
-                this.gestureProgressEvent += value;
-            }
-            remove
-            {
-                this.gestureProgressEvent -= value;
+        #region Gesture Recognized
 
-                if (this.gestureProgressEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureProgressHandle);
-                }
+        public IObservable<GestureRecognizedArgs> GestureRecognized
+        {
+            get
+            {
+                return this.gestureRecognized;
             }
         }
-        private void InternalGestureProgress(IntPtr hNode, string gestureName, ref Point3D position, float progress, IntPtr pCookie)
+
+        private void OnGestureRecognized(IntPtr nodeHandle, string gesture, ref Point3D identifiedPosition, ref Point3D endPosition, IntPtr cookie)
         {
-            var handler = this.gestureProgressEvent;
-            if (handler != null)
-                handler(this, new GestureProgressArgs(gestureName, position, progress, pCookie));
+            foreach (var observer in this.gestureRecognizedObservers)
+	        {
+                observer.OnNext(new GestureRecognizedArgs(gesture, identifiedPosition, endPosition, cookie));
+	        }
         }
-        private SafeNativeMethods.XnGestureProgress internalGestureProgress;
-        private IntPtr gestureProgressHandle;
+
+        private readonly List<IObserver<GestureRecognizedArgs>> gestureRecognizedObservers = new List<IObserver<GestureRecognizedArgs>>();
+        private readonly IObservable<GestureRecognizedArgs> gestureRecognized;
+        private SafeNativeMethods.XnGestureRecognized internalGestureRecognized;
+        private IntPtr gestureRecognizedHandle;
+
+        #endregion
+
+        #region Gesture Progress
+
+        public IObservable<GestureProgressedArgs> GestureProgressed
+        {
+            get
+            {
+                return this.gestureProgressed;
+            }
+        }
+
+        private void OnGestureProgressed(IntPtr nodeHandle, string gesture, ref Point3D position, float progress, IntPtr cookie)
+        {
+            foreach (var observer in this.gestureProgressedObservers)
+            {
+                observer.OnNext(new GestureProgressedArgs(gesture, position, progress, cookie));
+            }
+        }
+
+        private readonly List<IObserver<GestureProgressedArgs>> gestureProgressedObservers = new List<IObserver<GestureProgressedArgs>>();
+        private readonly IObservable<GestureProgressedArgs> gestureProgressed;
+        private SafeNativeMethods.XnGestureProgress internalGestureProgressed;
+        private IntPtr gestureProgressedHandle;
+
         #endregion
     }
 
     /// <summary>
-    /// Provides data for gestureName recognized event.
+    /// Provides data for gesture recognized event.
     /// </summary>
     public class GestureRecognizedArgs
         : EventArgs
@@ -225,26 +262,26 @@ namespace OpenNI
         /// Initializes a new instance of the GestureRecognizedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public GestureRecognizedArgs(string gestureName, Point3D identifiedPosition, Point3D endPosition, IntPtr cookie)
+        public GestureRecognizedArgs(string gesture, Point3D identifiedPosition, Point3D endPosition, IntPtr cookie)
         {
-            this.GestureName = gestureName;
+            this.GestureName = gesture;
             this.IdentifiedPosition = identifiedPosition;
             this.EndPosition = endPosition;
             this.Cookie = cookie;
         }
 
         /// <summary>
-        /// The gestureName that was recognized.
+        /// The gesture that was recognized.
         /// </summary>
         public string GestureName { get; private set; }
 
         /// <summary>
-        /// The position in which the gestureName was identified.
+        /// The position in which the gesture was identified.
         /// </summary>
         public Point3D IdentifiedPosition { get; private set; }
 
         /// <summary>
-        /// The position of the hand that performed the gestureName at the end of the gestureName.
+        /// The position of the hand that performed the gesture at the end of the gesture.
         /// </summary>
         public Point3D EndPosition { get; private set; }
 
@@ -255,35 +292,35 @@ namespace OpenNI
     }
 
     /// <summary>
-    /// Provides data for gestureName progressed event.
+    /// Provides data for gesture progressed event.
     /// </summary>
-    public class GestureProgressArgs
+    public class GestureProgressedArgs
         : EventArgs
     {
         /// <summary>
-        /// Initializes a new instance of the GestureProgressArgs class.
+        /// Initializes a new instance of the GestureProgressedArgs class.
         /// </summary>
         /// <param name="cookie">The object that contains data about the Capability.</param>
-        public GestureProgressArgs(string gestureName, Point3D position, float progress, IntPtr cookie)
+        public GestureProgressedArgs(string gesture, Point3D position, float progress, IntPtr cookie)
         {
-            this.GestureName = gestureName;
+            this.GestureName = gesture;
             this.Position = position;
             this.Progress = progress;
             this.Cookie = cookie;
         }
 
         /// <summary>
-        /// The gestureName that is on its way to being recognized. 
+        /// The gesture that is on its way to being recognized. 
         /// </summary>
         public string GestureName { get; private set; }
 
         /// <summary>
-        /// The current position of the hand that is performing the gestureName. 
+        /// The current position of the hand that is performing the gesture. 
         /// </summary>
         public Point3D Position { get; private set; }
 
         /// <summary>
-        /// The percentage of the gestureName that was already performed.
+        /// The percentage of the gesture that was already performed.
         /// </summary>
         public float Progress { get; private set; }
 

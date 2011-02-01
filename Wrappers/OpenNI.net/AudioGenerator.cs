@@ -79,10 +79,9 @@ namespace OpenNI
             }
 		}
 
-		public event EventHandler<StateChangedArgs> WaveOutputModeChanged
+		public IObservable<StateChangedArgs> WaveOutputModeChanged
 		{
-			add { this.outputModeChanged.Event += value; }
-			remove { this.outputModeChanged.Event -= value; }
+            get { return this.outputModeChanged.StateChanged; }
 		}
 
 		private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)

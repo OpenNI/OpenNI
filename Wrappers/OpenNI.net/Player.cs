@@ -115,10 +115,9 @@ namespace OpenNI
             }
 		}
 
-		public event EventHandler<StateChangedArgs> EndOfFileReached
+		public IObservable<StateChangedArgs> EndOfFileReached
 		{
-			add { this.endOfFileReachedEvent.Event += value; }
-			remove { this.endOfFileReachedEvent.Event -= value; }
+            get { return this.endOfFileReachedEvent.StateChanged; }
 		}
 
 		public double GetPlaybackSpeed

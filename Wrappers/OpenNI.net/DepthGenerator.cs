@@ -57,10 +57,9 @@ namespace OpenNI
             }
 		}
 
-		public event EventHandler<StateChangedArgs> FieldOfViewChanged
+		public IObservable<StateChangedArgs> FieldOfViewChanged
 		{
-			add { this.fovChanged.Event += value; }
-			remove { this.fovChanged.Event -= value; }
+            get { return this.fovChanged.StateChanged; }
 		}
 
 		public Point3D[] ConvertProjectiveToRealWorld(Point3D[] projectivePoints)

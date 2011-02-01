@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using UserId = System.UInt32;
 
 namespace OpenNI
@@ -11,12 +12,62 @@ namespace OpenNI
         public SkeletonCapability(ProductionNode node)
             : base(node)
         {
+            this.internalCalibrationStarted = new SafeNativeMethods.XnCalibrationStart(this.OnCalibrationStarted);
+            this.internalCalibrationEnd = new SafeNativeMethods.XnCalibrationEnd(this.OnCalibrationEnded);
+
+            // initialize the observables
+
             this.jointConfigurationChangedEvent = new StateChangedEvent(node,
                 SafeNativeMethods.xnRegisterToJointConfigurationChange,
                 SafeNativeMethods.xnUnregisterFromJointConfigurationChange);
 
-            this.internalCalibrationStart = new SafeNativeMethods.XnCalibrationStart(this.InternalCalibrationStart);
-            this.internalCalibrationEnd = new SafeNativeMethods.XnCalibrationEnd(this.InternalCalibrationEnd);
+            this.calibrationStarted = Observable.Create<CalibrationStartedArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.calibrationStartedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStarted, null, IntPtr.Zero, out calibrationStartedHandle));
+                }
+                // add to the observers list
+                this.calibrationStartedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.calibrationStartedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.calibrationStartedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationStartedHandle);
+                    }
+                };
+            });
+
+            this.calibrationEnded = Observable.Create<CalibrationEndedArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.calibrationEndedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, null, internalCalibrationEnd, IntPtr.Zero, out this.calibrationEndHandle));
+                }
+                // add to the observers list
+                this.calibrationEndedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.calibrationEndedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.calibrationEndedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationEndHandle);
+                    }
+                };
+            });
+
+
         }
 
         public bool IsJointAvailable(SkeletonJoint joint)
@@ -43,10 +94,9 @@ namespace OpenNI
             return SafeNativeMethods.xnIsJointActive(this.InternalObject, joint);
         }
 
-        public event EventHandler<StateChangedArgs> JointConfigurationChangedEvent
+        public IObservable<StateChangedArgs> JointConfigurationChangedEvent
         {
-            add { this.jointConfigurationChangedEvent.Event += value; }
-            remove { this.jointConfigurationChangedEvent.Event -= value; }
+            get { return this.jointConfigurationChangedEvent.StateChanged; }
         }
 
         private StateChangedEvent jointConfigurationChangedEvent;
@@ -162,70 +212,48 @@ namespace OpenNI
             
         }
 
-        #region Calibration Start
-        private event EventHandler<CalibrationStartedArgs> calibrationStartedEvent;
-        public event EventHandler<CalibrationStartedArgs> CalibrationStarted
-        {
-            add
-            {
-                if (this.calibrationStartedEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStart, null, IntPtr.Zero, out calibrationStartHandle));
-                    
-                }
-                this.calibrationStartedEvent += value;
-            }
-            remove
-            {
-                this.calibrationStartedEvent -= value;
+        #region Calibration Started
 
-                if (this.calibrationStartedEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationStartHandle);
-                }
+        public IObservable<CalibrationStartedArgs> CalibrationStarted
+        {
+            get
+            {
+                return this.calibrationStarted;
             }
         }
-        private void InternalCalibrationStart(IntPtr hNode, UserId id, IntPtr cookie)
+
+        private void OnCalibrationStarted(IntPtr nodeHandle, UserId userId, IntPtr cookie)
         {
-            var handler = this.calibrationStartedEvent;
-            if (handler != null)
-                handler(this, new CalibrationStartedArgs(id, cookie));
+            this.calibrationStartedObservers.ForEach(observer => observer.OnNext(new CalibrationStartedArgs(userId, cookie)));
         }
-        private SafeNativeMethods.XnCalibrationStart internalCalibrationStart;
-        private IntPtr calibrationStartHandle;
+
+        private readonly List<IObserver<CalibrationStartedArgs>> calibrationStartedObservers = new List<IObserver<CalibrationStartedArgs>>();
+        private readonly IObservable<CalibrationStartedArgs> calibrationStarted;
+        private SafeNativeMethods.XnCalibrationStart internalCalibrationStarted;
+        private IntPtr calibrationStartedHandle;
+
         #endregion
 
         #region Calibration End
-        private event EventHandler<CalibrationEndedArgs> calibrationEndedEvent;
-        public event EventHandler<CalibrationEndedArgs> CalibrationEnded
-        {
-            add
-            {
-                if (this.calibrationEndedEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, null, internalCalibrationEnd, IntPtr.Zero, out calibrationEndHandle));
-                    
-                }
-                this.calibrationEndedEvent += value;
-            }
-            remove
-            {
-                this.calibrationEndedEvent -= value;
 
-                if (this.calibrationEndedEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationEndHandle);
-                }
+        public IObservable<CalibrationEndedArgs> CalibrationEnded
+        {
+            get
+            {
+                return this.calibrationEnded;
             }
         }
-        private void InternalCalibrationEnd(IntPtr hNode, UserId id, bool success, IntPtr cookie)
+
+        private void OnCalibrationEnded(IntPtr nodeHandle, UserId userId, bool success, IntPtr cookie)
         {
-            var handler = this.calibrationEndedEvent;
-            if (handler != null)
-                handler(this, new CalibrationEndedArgs(id, success, cookie));
+            this.calibrationEndedObservers.ForEach(observer => observer.OnNext(new CalibrationEndedArgs(userId, success, cookie)));
         }
+
+        private readonly List<IObserver<CalibrationEndedArgs>> calibrationEndedObservers = new List<IObserver<CalibrationEndedArgs>>();
+        private readonly IObservable<CalibrationEndedArgs> calibrationEnded;
         private SafeNativeMethods.XnCalibrationEnd internalCalibrationEnd;
         private IntPtr calibrationEndHandle;
+
         #endregion
     }
 

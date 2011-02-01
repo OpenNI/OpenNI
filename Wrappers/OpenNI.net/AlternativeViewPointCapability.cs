@@ -34,10 +34,9 @@ namespace OpenNI
 			return SafeNativeMethods.xnIsViewPointAs(this.InternalObject, other.InternalObject);
 		}
 
-		public event EventHandler<StateChangedArgs> ViewpointChanged
+		public IObservable<StateChangedArgs> ViewpointChanged
 		{
-			add { this.viewpointChangedEvent.Event += value; }
-			remove { this.viewpointChangedEvent.Event -= value; }
+            get { return this.viewpointChangedEvent.StateChanged; }
 		}
 
 		private StateChangedEvent viewpointChangedEvent;

@@ -97,10 +97,9 @@ namespace OpenNI
             }
 		}
 
-		public event EventHandler<StateChangedArgs> PixelFormatChanged
+		public IObservable<StateChangedArgs> PixelFormatChanged
 		{
-			add { this.pixelFormatChanged.Event += value; }
-			remove { this.pixelFormatChanged.Event -= value; }
+            get { return this.pixelFormatChanged.StateChanged; }
 		}
 
 		private static NodeSafeHandle Create(Context context, Query query, ErrorCollection errors)

@@ -160,12 +160,12 @@ namespace OpenNI
 
 	public abstract class NodeWrapper : ObjectWrapper, IEquatable<NodeWrapper>
 	{
-		internal NodeWrapper(NodeSafeHandle hNode, bool addRef)
-			: base(hNode)
+		internal NodeWrapper(NodeSafeHandle nodeHandle, bool addRef)
+			: base(nodeHandle)
 		{
 			if (addRef)
 			{
-				SafeNativeMethods.xnProductionNodeAddRef(hNode);
+				SafeNativeMethods.xnProductionNodeAddRef(nodeHandle);
 			}
 		}
 

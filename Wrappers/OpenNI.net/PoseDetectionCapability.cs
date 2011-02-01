@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
-using UserId = System.UInt32;
 using System.Text;
+using UserId = System.UInt32;
 
 namespace OpenNI
 {
@@ -11,8 +12,57 @@ namespace OpenNI
         public PoseDetectionCapability(ProductionNode node)
             : base(node)
         {
-            this.internalPoseDetected = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseDetected);
-            this.internalPoseEnded = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseEnded);
+            this.internalPoseDetected = new SafeNativeMethods.XnPoseDetectionCallback(this.OnPoseDetected);
+            this.internalPoseEnded = new SafeNativeMethods.XnPoseDetectionCallback(this.OnPoseEnded);
+
+            // initialize the observables
+
+            this.poseDetected = Observable.Create<PoseDetectionArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.poseDetectedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, this.internalPoseDetected, null, IntPtr.Zero, out this.poseDetectedHandle));
+                }
+                // add to the observers list
+                this.poseDetectedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.poseDetectedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.poseDetectedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseDetectedHandle);
+                    }
+                };
+            });
+
+            this.poseEnded = Observable.Create<PoseDetectionArgs>(observer =>
+            {
+                // register the callback if required
+                if (this.poseEndedObservers.Count == 0)
+                {
+                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, null, OnPoseEnded, IntPtr.Zero, out this.poseEndedHandle));
+                }
+                // add to the observers list
+                this.poseEndedObservers.Add(observer);
+
+                // return the unregister method
+                return () =>
+                {
+                    // remove form the observers list
+                    this.poseEndedObservers.Remove(observer);
+                    // unregister the callback if possible
+                    if (this.poseEndedObservers.Count == 0)
+                    {
+                        SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseEndedHandle);
+                    }
+                };
+            });
+
         }
 
         public UInt32 PoseCount
@@ -68,70 +118,48 @@ namespace OpenNI
             SafeNativeMethods.xnStopPoseDetection(this.InternalObject, user);
         }
 
-        #region PoseName Detected
-        private event EventHandler<PoseDetectionArgs> poseDetectedEvent;
-        public event EventHandler<PoseDetectionArgs> PoseDetected
-        {
-            add
-            {
-                if (this.poseDetectedEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, internalPoseDetected, null, IntPtr.Zero, out poseDetectedHandle));
-                    
-                }
-                this.poseDetectedEvent += value;
-            }
-            remove
-            {
-                this.poseDetectedEvent -= value;
+        #region Pose Detected
 
-                if (this.poseDetectedEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseDetectedHandle);
-                }
+        public IObservable<PoseDetectionArgs> PoseDetected
+        {
+            get
+            {
+                return this.poseDetected;
             }
         }
-        private void InternalPoseDetected(IntPtr hNode, string poseName, UserId id, IntPtr pCookie)
+
+        private void OnPoseDetected(IntPtr nodeHandle, string poseName, UserId userId, IntPtr cookie)
         {
-            var handler = this.poseDetectedEvent;
-            if (handler != null)
-                handler(this, new PoseDetectionArgs(poseName, id, pCookie));
+            this.poseDetectedObservers.ForEach(observer => observer.OnNext(new PoseDetectionArgs(poseName, userId, cookie)));
         }
+
+        private readonly List<IObserver<PoseDetectionArgs>> poseDetectedObservers = new List<IObserver<PoseDetectionArgs>>();
+        private readonly IObservable<PoseDetectionArgs> poseDetected;
         private SafeNativeMethods.XnPoseDetectionCallback internalPoseDetected;
         private IntPtr poseDetectedHandle;
+
         #endregion
 
-        #region PoseName Ended
-        private event EventHandler<PoseDetectionArgs> poseEndedEvent;
-        public event EventHandler<PoseDetectionArgs> PoseEnded
-        {
-            add
-            {
-                if (this.poseEndedEvent == null)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, null, InternalPoseEnded, IntPtr.Zero, out poseEndedHandle));
-                    
-                }
-                this.poseEndedEvent += value;
-            }
-            remove
-            {
-                this.poseEndedEvent -= value;
+        #region Pose Ended
 
-                if (this.poseEndedEvent == null)
-                {
-                    SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseEndedHandle);
-                }
+        public IObservable<PoseDetectionArgs> PoseEnded
+        {
+            get
+            {
+                return this.poseEnded;
             }
         }
-        private void InternalPoseEnded(IntPtr hNode, string poseName, UserId id, IntPtr pCookie)
+
+        private void OnPoseEnded(IntPtr nodeHandle, string poseName, UserId userId, IntPtr cookie)
         {
-            var handler = this.poseEndedEvent;
-            if (handler != null)
-                handler(this, new PoseDetectionArgs(poseName, id, pCookie));
+            this.poseEndedObservers.ForEach(observer => observer.OnNext(new PoseDetectionArgs(poseName, userId, cookie)));
         }
+
+        private readonly List<IObserver<PoseDetectionArgs>> poseEndedObservers = new List<IObserver<PoseDetectionArgs>>();
+        private readonly IObservable<PoseDetectionArgs> poseEnded;
         private SafeNativeMethods.XnPoseDetectionCallback internalPoseEnded;
         private IntPtr poseEndedHandle;
+
         #endregion
 
     }
