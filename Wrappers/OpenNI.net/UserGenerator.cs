@@ -12,56 +12,17 @@ namespace OpenNI
         internal UserGenerator(NodeSafeHandle nodeHandle, bool addRef) : 
 			base(nodeHandle, addRef)
         {
-            this.internalNewUser = new SafeNativeMethods.XnUserHandler(this.OnNewUser);
-            this.internalLostUser = new SafeNativeMethods.XnUserHandler(this.OnLostUser);
-
             // initialize the observables
 
-            this.userFound = Observable.Create<UserFoundArgs>(observer =>
-                {
-                    // register the callback if required
-                    if (this.userFoundObservers.Count == 0)
-                    {
-                        Status.ThrowOnFail(SafeNativeMethods.xnRegisterUserCallbacks(this.InternalObject, this.internalNewUser, null, IntPtr.Zero, out this.newUserHandle));
-                    }
-                    // add to the observers list
-                    this.userFoundObservers.Add(observer);
+            this.userFound = new CallbackSubject<UserFoundArgs>(
+                () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterUserCallbacks(this.InternalObject, this.OnNewUser, null, IntPtr.Zero, out this.newUserHandle)),
+                () => SafeNativeMethods.xnUnregisterUserCallbacks(this.InternalObject, this.newUserHandle)
+            );
 
-                    // return the unregister method
-                    return () =>
-                        {
-                            // remove form the observers list
-                            this.userFoundObservers.Remove(observer);
-                            // unregister the callback if possible
-                            if (this.userFoundObservers.Count == 0)
-                            {
-                                SafeNativeMethods.xnUnregisterUserCallbacks(this.InternalObject, this.newUserHandle);
-                            }
-                        };
-                });
-
-            this.userLost = Observable.Create<UserLostArgs>(observer =>
-            {
-                // register the callback if required
-                if (this.userLostObservers.Count == 0)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterUserCallbacks(this.InternalObject, null, this.internalLostUser, IntPtr.Zero, out this.lostUserHandle));
-                }
-                // add to the observers list
-                this.userLostObservers.Add(observer);
-
-                // return the unregister method
-                return () =>
-                {
-                    // remove form the observers list
-                    this.userLostObservers.Remove(observer);
-                    // unregister the callback if possible
-                    if (this.userLostObservers.Count == 0)
-                    {
-                        SafeNativeMethods.xnUnregisterUserCallbacks(this.InternalObject, this.lostUserHandle);
-                    }
-                };
-            });
+            this.userLost = new CallbackSubject<UserLostArgs>(
+                () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterUserCallbacks(this.InternalObject, null, this.OnLostUser, IntPtr.Zero, out this.lostUserHandle)),
+                () => SafeNativeMethods.xnUnregisterUserCallbacks(this.InternalObject, this.lostUserHandle)
+            );
         }
 
         public UserGenerator(Context context, Query query, ErrorCollection errors) :
@@ -149,12 +110,10 @@ namespace OpenNI
 
         private void OnNewUser(IntPtr nodeHandle, UserId userId, IntPtr cookie)
         {
-            this.userFoundObservers.ForEach(observer => observer.OnNext(new UserFoundArgs(userId, cookie)));
+            this.userFound.OnNext(new UserFoundArgs(userId, cookie));
         }
 
-        private readonly List<IObserver<UserFoundArgs>> userFoundObservers = new List<IObserver<UserFoundArgs>>();
-        private readonly IObservable<UserFoundArgs> userFound;
-        private SafeNativeMethods.XnUserHandler internalNewUser;
+        private readonly CallbackSubject<UserFoundArgs> userFound;
         private IntPtr newUserHandle;
 
         #endregion
@@ -171,12 +130,10 @@ namespace OpenNI
 
         private void OnLostUser(IntPtr nodeHandle, UserId userId, IntPtr cookie)
         {
-            this.userLostObservers.ForEach(observer => observer.OnNext(new UserLostArgs(userId, cookie)));
+            this.userLost.OnNext(new UserLostArgs(userId, cookie));
         }
 
-        private readonly List<IObserver<UserLostArgs>> userLostObservers = new List<IObserver<UserLostArgs>>();
-        private readonly IObservable<UserLostArgs> userLost;
-        private SafeNativeMethods.XnUserHandler internalLostUser;
+        private readonly CallbackSubject<UserLostArgs> userLost;
         private IntPtr lostUserHandle;
 
         #endregion
@@ -196,7 +153,7 @@ namespace OpenNI
         public UserFoundArgs(UserId userId, IntPtr cookie)
         {
             this.UserId = userId;
-           this.Cookie = cookie;
+            this.Cookie = cookie;
         }
 
         /// <summary>

@@ -122,6 +122,9 @@
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\AudioMetaData.cs">
       <Link>MetaData\AudioMetaData.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\CallbackSubject.cs">
+      <Link>CallbackSubject.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Codec.cs">
       <Link>Nodes\Codec.cs</Link>
     </Compile>

@@ -10,60 +10,21 @@ namespace OpenNI
         internal GestureGenerator(NodeSafeHandle nodeHandle, bool addRef)
             : base(nodeHandle, addRef)
         {
-            this.internalGestureRecognized = new SafeNativeMethods.XnGestureRecognized(this.OnGestureRecognized);
-            this.internalGestureProgressed = new SafeNativeMethods.XnGestureProgress(this.OnGestureProgressed);
-
             // initialize the observables
 
             this.gestureChanged = new StateChangedEvent(this,
                 SafeNativeMethods.xnRegisterToGestureChange,
                 SafeNativeMethods.xnUnregisterFromGestureChange);
 
-            this.gestureRecognized = Observable.Create<GestureRecognizedArgs>(observer =>
-            {
-                // register the callback if required
-                if (this.gestureRecognizedObservers.Count == 0)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, this.internalGestureRecognized, null, IntPtr.Zero, out this.gestureRecognizedHandle));
-                }
-                // add to the observers list
-                this.gestureRecognizedObservers.Add(observer);
+            this.gestureRecognized = new CallbackSubject<GestureRecognizedArgs>(
+                    () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, this.OnGestureRecognized, null, IntPtr.Zero, out this.gestureRecognizedHandle)),
+                    () => SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureRecognizedHandle)
+                );
 
-                // return the unregister method
-                return () =>
-                {
-                    // remove form the observers list
-                    this.gestureRecognizedObservers.Remove(observer);
-                    // unregister the callback if possible
-                    if (this.gestureRecognizedObservers.Count == 0)
-                    {
-                        SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureRecognizedHandle);
-                    }
-                };
-            });
-
-            this.gestureProgressed = Observable.Create<GestureProgressedArgs>(observer =>
-            {
-                // register the callback if required
-                if (this.gestureProgressedObservers.Count == 0)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, null, this.internalGestureProgressed, IntPtr.Zero, out this.gestureProgressedHandle));
-                }
-                // add to the observers list
-                this.gestureProgressedObservers.Add(observer);
-
-                // return the unregister method
-                return () =>
-                {
-                    // remove form the observers list
-                    this.gestureProgressedObservers.Remove(observer);
-                    // unregister the callback if possible
-                    if (this.gestureProgressedObservers.Count == 0)
-                    {
-                        SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureProgressedHandle);
-                    }
-                };
-            });
+            this.gestureProgressed = new CallbackSubject<GestureProgressedArgs>(
+                    () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterGestureCallbacks(this.InternalObject, null, this.OnGestureProgressed, IntPtr.Zero, out this.gestureProgressedHandle)),
+                    () => SafeNativeMethods.xnUnregisterGestureCallbacks(this.InternalObject, this.gestureProgressedHandle)
+                );
 
         }
 
@@ -213,15 +174,10 @@ namespace OpenNI
 
         private void OnGestureRecognized(IntPtr nodeHandle, string gesture, ref Point3D identifiedPosition, ref Point3D endPosition, IntPtr cookie)
         {
-            foreach (var observer in this.gestureRecognizedObservers)
-	        {
-                observer.OnNext(new GestureRecognizedArgs(gesture, identifiedPosition, endPosition, cookie));
-	        }
+            this.gestureRecognized.OnNext(new GestureRecognizedArgs(gesture, identifiedPosition, endPosition, cookie));
         }
 
-        private readonly List<IObserver<GestureRecognizedArgs>> gestureRecognizedObservers = new List<IObserver<GestureRecognizedArgs>>();
-        private readonly IObservable<GestureRecognizedArgs> gestureRecognized;
-        private SafeNativeMethods.XnGestureRecognized internalGestureRecognized;
+        private readonly CallbackSubject<GestureRecognizedArgs> gestureRecognized;
         private IntPtr gestureRecognizedHandle;
 
         #endregion
@@ -238,15 +194,10 @@ namespace OpenNI
 
         private void OnGestureProgressed(IntPtr nodeHandle, string gesture, ref Point3D position, float progress, IntPtr cookie)
         {
-            foreach (var observer in this.gestureProgressedObservers)
-            {
-                observer.OnNext(new GestureProgressedArgs(gesture, position, progress, cookie));
-            }
+            this.gestureProgressed.OnNext(new GestureProgressedArgs(gesture, position, progress, cookie));
         }
 
-        private readonly List<IObserver<GestureProgressedArgs>> gestureProgressedObservers = new List<IObserver<GestureProgressedArgs>>();
-        private readonly IObservable<GestureProgressedArgs> gestureProgressed;
-        private SafeNativeMethods.XnGestureProgress internalGestureProgressed;
+        private readonly CallbackSubject<GestureProgressedArgs> gestureProgressed;
         private IntPtr gestureProgressedHandle;
 
         #endregion

@@ -12,61 +12,21 @@ namespace OpenNI
         public SkeletonCapability(ProductionNode node)
             : base(node)
         {
-            this.internalCalibrationStarted = new SafeNativeMethods.XnCalibrationStart(this.OnCalibrationStarted);
-            this.internalCalibrationEnd = new SafeNativeMethods.XnCalibrationEnd(this.OnCalibrationEnded);
-
             // initialize the observables
 
             this.jointConfigurationChangedEvent = new StateChangedEvent(node,
                 SafeNativeMethods.xnRegisterToJointConfigurationChange,
                 SafeNativeMethods.xnUnregisterFromJointConfigurationChange);
 
-            this.calibrationStarted = Observable.Create<CalibrationStartedArgs>(observer =>
-            {
-                // register the callback if required
-                if (this.calibrationStartedObservers.Count == 0)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStarted, null, IntPtr.Zero, out calibrationStartedHandle));
-                }
-                // add to the observers list
-                this.calibrationStartedObservers.Add(observer);
+            this.calibrationStarted = new CallbackSubject<CalibrationStartedArgs>(
+                () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, this.OnCalibrationStarted, null, IntPtr.Zero, out calibrationStartedHandle)),
+                () => SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationStartedHandle)
+            );
 
-                // return the unregister method
-                return () =>
-                {
-                    // remove form the observers list
-                    this.calibrationStartedObservers.Remove(observer);
-                    // unregister the callback if possible
-                    if (this.calibrationStartedObservers.Count == 0)
-                    {
-                        SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationStartedHandle);
-                    }
-                };
-            });
-
-            this.calibrationEnded = Observable.Create<CalibrationEndedArgs>(observer =>
-            {
-                // register the callback if required
-                if (this.calibrationEndedObservers.Count == 0)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, null, internalCalibrationEnd, IntPtr.Zero, out this.calibrationEndHandle));
-                }
-                // add to the observers list
-                this.calibrationEndedObservers.Add(observer);
-
-                // return the unregister method
-                return () =>
-                {
-                    // remove form the observers list
-                    this.calibrationEndedObservers.Remove(observer);
-                    // unregister the callback if possible
-                    if (this.calibrationEndedObservers.Count == 0)
-                    {
-                        SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationEndHandle);
-                    }
-                };
-            });
-
+            this.calibrationEnded = new CallbackSubject<CalibrationEndedArgs>(
+                () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, null, this.OnCalibrationEnded, IntPtr.Zero, out this.calibrationEndHandle)),
+                () => SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationEndHandle)
+            );
 
         }
 
@@ -224,12 +184,10 @@ namespace OpenNI
 
         private void OnCalibrationStarted(IntPtr nodeHandle, UserId userId, IntPtr cookie)
         {
-            this.calibrationStartedObservers.ForEach(observer => observer.OnNext(new CalibrationStartedArgs(userId, cookie)));
+            this.calibrationStarted.OnNext(new CalibrationStartedArgs(userId, cookie));
         }
 
-        private readonly List<IObserver<CalibrationStartedArgs>> calibrationStartedObservers = new List<IObserver<CalibrationStartedArgs>>();
-        private readonly IObservable<CalibrationStartedArgs> calibrationStarted;
-        private SafeNativeMethods.XnCalibrationStart internalCalibrationStarted;
+        private readonly CallbackSubject<CalibrationStartedArgs> calibrationStarted;
         private IntPtr calibrationStartedHandle;
 
         #endregion
@@ -246,12 +204,10 @@ namespace OpenNI
 
         private void OnCalibrationEnded(IntPtr nodeHandle, UserId userId, bool success, IntPtr cookie)
         {
-            this.calibrationEndedObservers.ForEach(observer => observer.OnNext(new CalibrationEndedArgs(userId, success, cookie)));
+            this.calibrationEnded.OnNext(new CalibrationEndedArgs(userId, success, cookie));
         }
 
-        private readonly List<IObserver<CalibrationEndedArgs>> calibrationEndedObservers = new List<IObserver<CalibrationEndedArgs>>();
-        private readonly IObservable<CalibrationEndedArgs> calibrationEnded;
-        private SafeNativeMethods.XnCalibrationEnd internalCalibrationEnd;
+        private readonly CallbackSubject<CalibrationEndedArgs> calibrationEnded;
         private IntPtr calibrationEndHandle;
 
         #endregion

@@ -11,80 +11,22 @@ namespace OpenNI
         internal HandsGenerator(NodeSafeHandle nodeHandle, bool addRef)
 			: base(nodeHandle, addRef)
         {
-            this.internalHandCreated = new SafeNativeMethods.XnHandCreate(this.OnHandCreated);
-            this.internalHandUpdate = new SafeNativeMethods.XnHandUpdate(this.OnHandUpdated);
-            this.internalHandDestroy = new SafeNativeMethods.XnHandDestroy(this.OnHandDestroyed);
-
             // initialize the observables
 
-            this.handCreated = Observable.Create<HandCreatedArgs>(observer =>
-            {
-                // register the callback if required
-                if (this.handCreatedObservers.Count == 0)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreated, null, null, IntPtr.Zero, out this.handCreatedHandle));
-                }
-                // add to the observers list
-                this.handCreatedObservers.Add(observer);
+            this.handCreated = new CallbackSubject<HandCreatedArgs>(
+                () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, this.OnHandCreated, null, null, IntPtr.Zero, out this.handCreatedHandle)),
+                () => SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handCreatedHandle)
+            );
 
-                // return the unregister method
-                return () =>
-                {
-                    // remove form the observers list
-                    this.handCreatedObservers.Remove(observer);
-                    // unregister the callback if possible
-                    if (this.handCreatedObservers.Count == 0)
-                    {
-                        SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handCreatedHandle);
-                    }
-                };
-            });
+            this.handUpdated = new CallbackSubject<HandUpdatedArgs>(
+                () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, this.OnHandUpdated, null, IntPtr.Zero, out this.handUpdateHandle)),
+                () => SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle)
+            );
 
-            this.handUpdated = Observable.Create<HandUpdatedArgs>(observer =>
-            {
-                // register the callback if required
-                if (this.handUpdatedObservers.Count == 0)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out this.handUpdateHandle));
-                }
-                // add to the observers list
-                this.handUpdatedObservers.Add(observer);
-
-                // return the unregister method
-                return () =>
-                {
-                    // remove form the observers list
-                    this.handUpdatedObservers.Remove(observer);
-                    // unregister the callback if possible
-                    if (this.handUpdatedObservers.Count == 0)
-                    {
-                        SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
-                    }
-                };
-            });
-
-            this.handDestroyed = Observable.Create<HandDestroyedArgs>(observer =>
-            {
-                // register the callback if required
-                if (this.handDestroyedObservers.Count == 0)
-                {
-                    Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out this.handDestroyHandle));
-                }
-                // add to the observers list
-                this.handDestroyedObservers.Add(observer);
-
-                // return the unregister method
-                return () =>
-                {
-                    // remove form the observers list
-                    this.handDestroyedObservers.Remove(observer);
-                    // unregister the callback if possible
-                    if (this.handDestroyedObservers.Count == 0)
-                    {
-                        SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle);
-                    }
-                };
-            });
+            this.handDestroyed = new CallbackSubject<HandDestroyedArgs>(
+                () => Status.ThrowOnFail(SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, null, this.OnHandDestroyed, IntPtr.Zero, out this.handDestroyHandle)),
+                () => SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle)
+            );
 
         }
 
@@ -141,15 +83,10 @@ namespace OpenNI
 
         private void OnHandCreated(IntPtr nodeHandle, UserId userId, ref Point3D position, float time, IntPtr cookie)
         {
-            foreach (var observer in this.handCreatedObservers)
-            {
-                observer.OnNext(new HandCreatedArgs(userId, position, time, cookie));
-            }
+            this.handCreated.OnNext(new HandCreatedArgs(userId, position, time, cookie));
         }
 
-        private readonly List<IObserver<HandCreatedArgs>> handCreatedObservers = new List<IObserver<HandCreatedArgs>>();
-        private readonly IObservable<HandCreatedArgs> handCreated;
-        private SafeNativeMethods.XnHandCreate internalHandCreated;
+        private readonly CallbackSubject<HandCreatedArgs> handCreated;
         private IntPtr handCreatedHandle;
 
         #endregion
@@ -166,15 +103,10 @@ namespace OpenNI
 
         private void OnHandUpdated(IntPtr nodeHandle, UserId userId, ref Point3D position, float time, IntPtr cookie)
         {
-            foreach (var observer in this.handUpdatedObservers)
-            {
-                observer.OnNext(new HandUpdatedArgs(userId, position, time, cookie));
-            }
+            this.handUpdated.OnNext(new HandUpdatedArgs(userId, position, time, cookie));
         }
 
-        private readonly List<IObserver<HandUpdatedArgs>> handUpdatedObservers = new List<IObserver<HandUpdatedArgs>>();
-        private readonly IObservable<HandUpdatedArgs> handUpdated;
-        private SafeNativeMethods.XnHandUpdate internalHandUpdate;
+        private readonly CallbackSubject<HandUpdatedArgs> handUpdated;
         private IntPtr handUpdateHandle;
 
         #endregion
@@ -191,15 +123,10 @@ namespace OpenNI
 
         private void OnHandDestroyed(IntPtr nodeHandle, UserId userId, float time, IntPtr cookie)
         {
-            foreach (var observer in this.handDestroyedObservers)
-            {
-                observer.OnNext(new HandDestroyedArgs(userId, time, cookie));
-            }
+            this.handDestroyed.OnNext(new HandDestroyedArgs(userId, time, cookie));
         }
 
-        private readonly List<IObserver<HandDestroyedArgs>> handDestroyedObservers = new List<IObserver<HandDestroyedArgs>>();
-        private readonly IObservable<HandDestroyedArgs> handDestroyed;
-        private SafeNativeMethods.XnHandDestroy internalHandDestroy;
+        private readonly CallbackSubject<HandDestroyedArgs> handDestroyed;
         private IntPtr handDestroyHandle;
 
         #endregion
