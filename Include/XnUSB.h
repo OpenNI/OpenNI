@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef _XN_USB_H_
 #define _XN_USB_H_
 
@@ -65,6 +61,8 @@ typedef enum {
 struct XnUSBDeviceHandle;
 struct XnUSBEndPointHandle;
 
+typedef XnChar XnUSBConnectionString[XN_FILE_MAX_PATH];
+
 typedef XnUSBDeviceHandle*  XN_USB_DEV_HANDLE;
 typedef XnUSBEndPointHandle* XN_USB_EP_HANDLE;
 
@@ -77,9 +75,13 @@ typedef XnBool (XN_CALLBACK_TYPE* XnUSBEventCallbackFunctionPtr)(XnUSBEventType 
 XN_C_API XnStatus xnUSBInit();
 XN_C_API XnStatus xnUSBShutdown();
 
-XN_C_API XnStatus xnUSBIsDevicePresent(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, XnBool* pbDevicePresent);
+XN_C_API XnStatus XN_API_DEPRECATED("Use xnUSBEnumerateDevices() instead") xnUSBIsDevicePresent(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, XnBool* pbDevicePresent);
 
-XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr);
+XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID, const XnUSBConnectionString** pastrDevicePaths, XnUInt32* pnCount);
+XN_C_API void xnUSBFreeDevicesList(const XnUSBConnectionString* astrDevicePaths);
+
+XN_C_API XnStatus XN_API_DEPRECATED("Use xnUSBOpenDeviceByPath() instead") xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr);
+XN_C_API XnStatus xnUSBOpenDeviceByPath(const XnUSBConnectionString strDevicePath, XN_USB_DEV_HANDLE* pDevHandlePtr);
 XN_C_API XnStatus xnUSBCloseDevice(XN_USB_DEV_HANDLE pDevHandle);
 
 XN_C_API XnStatus xnUSBGetDeviceSpeed(XN_USB_DEV_HANDLE pDevHandle, XnUSBDeviceSpeed* pDevSpeed);

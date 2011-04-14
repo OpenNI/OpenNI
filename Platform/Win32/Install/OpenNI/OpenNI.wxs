@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Add xmlns:util namespace definition to be able to use stuff from WixUtilExtension dll-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" >
+  <!-- This is how we include wxi files -->
+  <?include $(sys.CURRENTDIR)Includes\OpenNIVariables.wxi ?>
+ 
+  <Product Id="*" Name="$(var.ProductFullName)" Language="!(loc.LANG)" 
+           Version="$(var.VersionNumber)" Manufacturer="!(loc.ManufacturerName)" UpgradeCode="$(var.UpgradeCode)">
+    <!-- Define the minimum supported installer version (3.0) and that the install should be done for the whole machine not just the current user -->
+    <Package InstallerVersion="300" Compressed="yes" InstallScope="perMachine" Platform="$(var.Platform)" InstallPrivileges="elevated"  />
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" CompressionLevel="high"/>   
+
+    <MajorUpgrade Schedule="afterInstallInitialize" AllowSameVersionUpgrades="yes" IgnoreRemoveFailure="yes"
+      DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+  
+    
+    <!-- Reference the global NETFRAMEWORK20 property to check if it exists -->
+    <PropertyRef Id="NETFRAMEWORK20"/>
+    <PropertyRef Id="NETFRAMEWORK30"/>
+    <PropertyRef Id="NETFRAMEWORK35"/>
+    <PropertyRef Id="NETFRAMEWORK40FULL"/>
+    <PropertyRef Id="NETFRAMEWORK40CLIENT"/>
+    
+    <!--     
+    Startup conditions that checks if .Net Framework 2.0 is installed or if 
+    we're running the OS higher than Windows XP SP2.
+    If not the installation is aborted.
+    By doing the (Installed OR ...) property means that this condition will only 
+    be evaluated if the app is being installed and not on uninstall or changing
+    -->
+    <Condition Message="!(loc.DotNetFrameworkNeeded)">
+      <![CDATA[Installed OR NETFRAMEWORK20 OR NETFRAMEWORK30 OR NETFRAMEWORK35 OR NETFRAMEWORK40FULL OR NETFRAMEWORK40CLIENT]]>
+    </Condition>
+    <Condition Message="!(loc.AppNotSupported)">
+      <![CDATA[Installed OR ((VersionNT >= 501 AND ServicePackLevel >= 2) OR (VersionNT >= 502))]]>
+    </Condition>
+         
+    <UIRef Id="CostumeInstallUI" /> 
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />   
+    
+    <!-- Set the icon to show next to the program name in Add/Remove programs -->
+    <Icon Id="OpenNIIcon.ico" SourceFile="$(var.ResourcesDir)\mainicon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="OpenNIIcon.ico" />
+    
+    <!--WixVariable Id="WixUIDialogBmp" Value="$(var.ResourcesDir)\Header.bmp"/-->
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.ResourcesDir)\OpenNIHeader.bmp" />      
+
+    <!-- the default directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="$(var.PlatformProgramFilesFolder)">
+        <Directory Id="INSTALLLOCATION" Name="!(loc.ProductName)">
+          <Directory Id="INSTALLLOCATIONTools" Name="Tools"/>
+          <Directory Id="INSTALLLOCATIONDriver" Name="Driver"/>
+          <Directory Id="INSTALLLOCATIONBin" Name="Bin$(var.PlatformSuffix)">
+            <Directory Id="INSTALLLOCATIONBinLog" Name="Log"/>  
+          </Directory>
+          <Directory Id="INSTALLLOCATIONData" Name="Data"/>
+          <Directory Id="INSTALLLOCATIONSAMPLES" Name="Samples">
+            <Directory Id="INSTALLLOCATIONSAMPLESBIN" Name="Bin$(var.PlatformSuffix)">
+              <Directory Id="INSTALLLOCATIONSAMPLESBINRELEASE" Name="Release">
+                <Directory Id="INSTALLLOCATIONSAMPLESBINRELEASELOG" Name="Log"/>
+              </Directory>
+              <Directory Id="INSTALLLOCATIONSAMPLESBINDEBUG" Name="Debug">
+                <Directory Id="INSTALLLOCATIONSAMPLESBINDEBUGLOG" Name="Log"/>
+              </Directory>            
+            </Directory>
+          </Directory>
+        </Directory>    
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductShortName)" >
+          <?if $(var.BinaryOnlyRedist)="False"?>
+          <Directory Id="DocumentationShortcutFolder" Name="Documentation"/>
+          <Directory Id="SamplesShortcutFolder" Name="Samples"/>
+          <?endif?>
+        </Directory>
+      </Directory>
+
+
+    </Directory>
+
+    <DirectoryRef Id="INSTALLLOCATIONBinLog">
+      <Component Id="RemoveLogDir" Guid="45BC94F5-FA27-4d42-AFD8-E18B65F9A52D" KeyPath="yes">        
+        <RemoveFile Id="RemoveLogFiles" On="uninstall" Name="*.*" />
+        <RemoveFolder Id="RemoveLogDir" On="uninstall"/>
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="3B13870F-0D69-401C-8B5C-862E13874449" >
+        <Shortcut Id="UninstallProduct"
+                Name="Uninstall OpenNI"
+                Target="[SystemFolder]msiexec.exe"
+                Arguments="/x [ProductCode]"/>
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <?if $(var.BinaryOnlyRedist)="False"?>
+      <DirectoryRef Id="INSTALLLOCATIONSAMPLESBINRELEASELOG">
+        <Component Id="RemoveReleaseLogDir" Guid="7934C4DA-4CE1-41bb-8EE8-B974706B1C22" KeyPath="yes">
+          <RemoveFile Id="RemoveReleaseLogFiles" On="uninstall" Name="*.*" />
+          <RemoveFolder Id="RemoveReleaseLogDir" On="uninstall"/>
+        </Component>
+      </DirectoryRef>
+
+      <DirectoryRef Id="INSTALLLOCATIONSAMPLESBINDEBUGLOG">
+        <Component Id="RemoveDebugLogDir" Guid="0AC4A0E8-CDE7-43c4-BDFA-FE0176AFFE21" KeyPath="yes">
+          <RemoveFile Id="RemoveDebugLogFiles" On="uninstall" Name="*.*" />
+          <RemoveFolder Id="RemoveDebugLogDir" On="uninstall"/>
+        </Component>
+      </DirectoryRef>
+         
+      <DirectoryRef Id="DocumentationShortcutFolder">
+        <Component Id="DocumentationShortcut" Guid="2B5269BD-5CEA-4072-8E11-B4AA98AD382D" >
+          <Shortcut Id="APIRefMenuShortcut"
+             Name="API Reference $(var.VersionNumber)"
+             Description="API Reference $(var.VersionNumber)"
+             Target="[INSTALLLOCATION]Documentation\OpenNI.chm"
+             WorkingDirectory="INSTALLLOCATION"/>          
+          <RemoveFolder Id="DocumentationShortcutFolder" On="uninstall"/>
+          <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+        </Component>                 
+      </DirectoryRef>
+
+       <DirectoryRef Id="SamplesShortcutFolder">
+        <Component Id="SamplesShortcut" Guid="2C2BA43F-A81B-4BD1-9D93-170C4E833E96" >
+          <Shortcut Id="NiSimpleReadMenuShortcut"
+              Name="NiSimpleRead$(var.PlatformSuffix)"
+              Description="NiSimpleRead$(var.PlatformSuffix)"
+              Target="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiSimpleRead$(var.PlatformSuffix).exe"
+              WorkingDirectory="INSTALLLOCATIONSAMPLESBINRELEASE"/>
+          <Shortcut Id="NiSimpleViewerMenuShortcut"
+            Name="NiViewer$(var.PlatformSuffix)"
+            Description="NiViewer$(var.PlatformSuffix)"
+            Target="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiViewer$(var.PlatformSuffix).exe"
+            WorkingDirectory="INSTALLLOCATIONSAMPLESBINRELEASE"/>                  
+          <Shortcut Id="SampleDirMenuShortcut"
+             Name="Samples Directory $(var.PlatformSuffix)"
+             Description="Samples Directory"
+             Target="[INSTALLLOCATION]Samples\"
+             WorkingDirectory="INSTALLLOCATION"/>
+          <RemoveFolder Id="SamplesShortcutFolder" On="uninstall"/>
+          <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+        </Component>
+      </DirectoryRef>
+    <?endif?>
+    
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="RegistryEntries" Guid="D48D0BF7-6004-4403-B390-54C46454C394"  >
+        <RegistryKey Root="HKLM" Key="Software\OpenNI" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]" />
+          <RegistryValue Type="string" Name="Version" Value="$(var.VersionNumber)"/>
+        </RegistryKey>
+
+        <RegistryKey Root="HKCR" Key=".oni" Action="createAndRemoveOnUninstall" >
+          <RegistryValue Type="string" Value="NIRecording"/>
+        </RegistryKey>
+
+        <RegistryKey Root="HKCR" Key="NIRecording" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string"  Value="OpenNI Recording File"/>
+        </RegistryKey>
+
+        <RegistryKey Root="HKCR" Key="NIRecording\DefaultIcon" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string"  Value="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiViewer$(var.PlatformSuffix).exe,0"/>
+        </RegistryKey>
+
+        <RegistryKey Root="HKCR" Key="NIRecording\shell\open\command" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiViewer$(var.PlatformSuffix).exe %1"/>
+        </RegistryKey>
+
+      </Component>
+    </DirectoryRef>
+
+    <!-- Install OpenNI.net-->
+    <DirectoryRef Id="TARGETDIR" >
+      <Component Id="OpneNINET" Guid="60718C69-87CB-45C0-A8A0-1B60E072D20A" DiskId="1">
+        <File Id="OpneNINET" Name="OpenNI.net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\OpenNI.net.dll" />        
+      </Component>
+    </DirectoryRef>
+   
+    
+    
+    <DirectoryRef Id="TARGETDIR" >
+      <Component Id="EnviromentVars" Guid="9270882A-E2CA-4F91-BB6B-87F483A0D3D0" DiskId="1">
+
+        <Environment Id="OPENNIINSTALLPATH"
+                            Action="set"
+                            Part="all"
+                            Name="OPEN_NI_INSTALL_PATH$(var.PlatformSuffix)"
+                            Permanent="no"
+                            System="yes"
+                            Value="[INSTALLLOCATION]"/>
+
+        <Environment Id="OPENNIBIN"
+                            Action="set"
+                            Part="all"
+                            Name="OPEN_NI_BIN$(var.PlatformSuffix)"
+                            Permanent="no"
+                            System="yes"
+                            Value="[INSTALLLOCATION]bin$(var.PlatformSuffix)"/>
+
+        <Environment Id="OPENNIINCLUDE"
+                            Action="set"
+                            Part="all"
+                            Name="OPEN_NI_INCLUDE"
+                            Permanent="no"
+                            System="yes"
+                            Value="[INSTALLLOCATION]Include"/>
+
+        <Environment Id="OPENNILIB"
+                            Action="set"
+                            Part="all"
+                            Name="OPEN_NI_LIB$(var.PlatformSuffix)"
+                            Permanent="no"
+                            System="yes"
+                            Value="[INSTALLLOCATION]Lib$(var.PlatformSuffix)"/>
+
+        <Environment Id="Path" Action="set" Part="last" Name="Path" Permanent="yes" System="yes" Value="[INSTALLLOCATION]bin$(var.PlatformSuffix)"/>
+                
+      </Component>
+      
+    </DirectoryRef>
+
+    <Property Id="OPENNIVERSION">
+      <RegistrySearch Id="OpenNIVersionReg" Root="HKLM" Key="Software\OPENNI" Name="Version" Type="raw"/>
+    </Property>
+
+    <Condition Message="Please uninstall OpenNI verion [OPENNIVERSION] before proceeding.">NOT OPENNIVERSION OR OPENNIVERSION>"$(var.MinOpenNIVersion)" OR Installed</Condition>
+
+    
+    <!--  Install the visual studio 2008 DLLs-->
+    <DirectoryRef Id="TARGETDIR">
+      <?if $(var.Platform)="32"?>
+        <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86.msm" DiskId="1" Language="0"/>
+      <?else?>
+        <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" Language="0"/>
+      <?endif?>
+    </DirectoryRef>
+    
+    <!-- Install the USB Driver -->
+    <CustomAction Id='drivex86Install' Directory="INSTALLLOCATIONDriver" Return="ignore" Impersonate="no" Execute="deferred"
+                  ExeCommand="&quot;[INSTALLLOCATIONDriver]dpinst-x86.exe&quot; /sw /el" />    
+    <CustomAction Id='driveamd64Install' Directory="INSTALLLOCATIONDriver" Return="ignore" Impersonate="no" Execute="deferred"
+                  ExeCommand="&quot;[INSTALLLOCATIONDriver]dpinst-amd64.exe&quot; /sw /el"/>
+    
+    <!-- Register Recorder     -->
+    <CustomAction Id='RegRecorder' Directory="INSTALLLOCATIONBin" Return="check" Impersonate="no"  Execute="deferred"
+                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; nimRecorder$(var.PlatformSuffix).dll"/>
+    
+    <!-- Register MockNodes-->
+    <CustomAction Id='RegMockNodes' Directory="INSTALLLOCATIONBin" Return="check" Impersonate="no"  Execute="deferred"
+                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; nimMockNodes$(var.PlatformSuffix).dll"/>
+    
+    <!-- Register Codecs-->
+    <CustomAction Id='RegCodecs' Directory="INSTALLLOCATIONBin" Return="check" Impersonate="no" Execute="deferred"
+                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; nimCodecs$(var.PlatformSuffix).dll"/>
+
+    <!-- UnRegister Recorder     -->
+    <CustomAction Id='UnRegRecorder' Directory="INSTALLLOCATIONBin" Return="ignore"  Impersonate="no" Execute="deferred"
+                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; -u nimRecorder$(var.PlatformSuffix).dll" />
+
+    <!-- UnRegister MockNodes-->
+    <CustomAction Id='UnRegMockNodes' Directory="INSTALLLOCATIONBin" Return="ignore"  Impersonate="no" Execute="deferred"
+                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; -u nimMockNodes$(var.PlatformSuffix).dll" />
+
+    <!-- UnRegister Codecs-->
+    <CustomAction Id='UnRegCodecs' Directory="INSTALLLOCATIONBin" Return="ignore"  Impersonate="no" Execute="deferred"
+                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; -u nimCodecs$(var.PlatformSuffix).dll" />
+
+                      
+    <!-- Set Environment for the current process -->
+    <CustomAction Id="SetOpenNIPathData" Property="OpenNIPath" Value="[INSTALLLOCATION]"/>
+    <CustomAction Id="OpenNIPath" Script="vbscript" Execute="deferred" Return="check" Impersonate="no"  Win64="$(var.Win64)">
+      <![CDATA[            
+      set msi = CreateObject("WindowsInstaller.Installer")
+      msi.Environment("OPEN_NI_INSTALL_PATH$(var.PlatformSuffix)") = Session.Property("CustomActionData")      
+      ]]>
+    </CustomAction>
+
+    <!-- Set Environment for the current process  -->
+    <CustomAction Id="SetRemoveOpenNIPathData" Property="RemoveOpenNIPath" Value="[INSTALLLOCATIONBin]|[%Path]"/>
+    <CustomAction Id="RemoveOpenNIPath" Script="vbscript" Execute="deferred" Impersonate="no"  Win64="$(var.Win64)">
+      <![CDATA[
+      strArgs = Session.Property("CustomActionData")      
+      Args = Split( strArgs, "|" )      
+      str = Replace(Args(1),Args(0),"")      
+      set WSHShell = CreateObject("WScript.Shell")
+      WSHShell.Environment.item("PATH") = str
+      ]]>
+    </CustomAction>                    
+    
+    <!-- Set the components defined in our fragment files that will be used for our feature  -->
+    <Feature Id="OpenNIFeature" Title="!(loc.ProductName)" Level="1" >
+      <?if $(var.BinaryOnlyRedist)="False"?>
+        <ComponentGroupRef Id="OpenNIFiles" />              
+        <ComponentRef Id="DocumentationShortcut" />
+        <ComponentRef Id="SamplesShortcut" />
+        <ComponentRef Id="RemoveReleaseLogDir"/>
+        <ComponentRef Id="RemoveDebugLogDir"/>
+      <?else?>        
+        <ComponentGroupRef Id="OpenNIBinaryFiles"/>
+      <?endif?>
+      
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="RegistryEntries" />
+      <ComponentRef Id="OpneNINET"/>
+      <ComponentRef Id="EnviromentVars"/>
+      <ComponentRef Id="RemoveLogDir"/>
+    </Feature>
+
+    <Feature Id="VCRedist" Title="Visual C++ 9.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+      <MergeRef Id="VCRedist"/>
+    </Feature>
+    
+    <WixVariable Id="WixUICostingPopupOptOut" Value="0" />
+    
+    <InstallExecuteSequence>      
+
+      <Custom Action="SetRemoveOpenNIPathData" Before="RemoveOpenNIPath">REMOVE ~= "ALL" </Custom>
+      <Custom Action="RemoveOpenNIPath" Before="InstallFinalize">REMOVE ~= "ALL" </Custom>
+            
+      <Custom Action="SetOpenNIPathData" Before="OpenNIPath"/>
+      <Custom Action="OpenNIPath" Before="PublishProduct"/>
+
+      <Custom Action='RegRecorder' After='OpenNIPath'>NOT Installed </Custom>
+      <Custom Action='RegMockNodes' After='RegRecorder'>NOT Installed </Custom>     
+      <Custom Action='RegCodecs' After='RegMockNodes'>NOT Installed </Custom>
+      <Custom Action='UnRegRecorder' Before='RemoveFiles'> REMOVE ~= "ALL" </Custom>
+      <Custom Action='UnRegMockNodes' Before='RemoveFiles'> REMOVE ~= "ALL" </Custom>
+      <Custom Action='UnRegCodecs' Before='RemoveFiles'> REMOVE ~= "ALL" </Custom>
+      
+      <Custom Action='driveamd64Install' After='PublishProduct'><![CDATA[NOT Installed AND VersionNT64]]></Custom>
+      
+      <Custom Action='drivex86Install' After='PublishProduct'><![CDATA[NOT Installed AND NOT VersionNT64]]></Custom>
+      
+    </InstallExecuteSequence>
+  </Product>
+</Wix>

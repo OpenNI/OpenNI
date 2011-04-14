@@ -1,0 +1,1 @@
+make -f Makefile.4100 TARGET_SYS_ROOT=/home/primesense/IntelCE-20/IntelCE-20.0.11052.243195/build_i686/staging_dir/ CXX=/home/primesense/IntelCE-20/IntelCE-20.0.11052.243195/build_i686/staging_dir/bin/i686-cm-linux-g++  MONO=0 $1

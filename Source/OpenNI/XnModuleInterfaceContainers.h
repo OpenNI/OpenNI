@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_MODULE_INTERFACE_CONTAINERS_H__
 #define __XN_MODULE_INTERFACE_CONTAINERS_H__
 
@@ -31,30 +27,16 @@
 //---------------------------------------------------------------------------
 #include <XnModuleInterface.h>
 #include <XnOS.h>
+#include <XnBitSet.h>
+
+//---------------------------------------------------------------------------
+// Defines
+//---------------------------------------------------------------------------
+#define XN_SPECIAL_BC_BEHAVIOR ((void*)0xbcbcbcbc)
 
 //---------------------------------------------------------------------------
 // Types
 //---------------------------------------------------------------------------
-typedef enum XnHierarchyType
-{
-	XN_HIERARCHY_TYPE_PRODUCTION_NODE = 1 << 0,
-	XN_HIERARCHY_TYPE_DEVICE = 1 << 1,
-	XN_HIERARCHY_TYPE_GENERATOR = 1 << 2,
-	XN_HIERARCHY_TYPE_MAP_GENERATOR = 1 << 3,
-	XN_HIERARCHY_TYPE_DEPTH_GENERATOR = 1 << 4,
-	XN_HIERARCHY_TYPE_IMAGE_GENERATOR = 1 << 5,
-	XN_HIERARCHY_TYPE_IR_GENERATOR = 1 << 6,
-	XN_HIERARCHY_TYPE_USER_GENERATOR = 1 << 7,
-	XN_HIERARCHY_TYPE_GESTURE_GENERATOR = 1 << 8,
-	XN_HIERARCHY_TYPE_SCENE_ANALYZER = 1 << 9,
-	XN_HIERARCHY_TYPE_AUDIO_GENERATOR = 1 << 10,
-	XN_HIERARCHY_TYPE_RECORDER = 1 << 11,
-	XN_HIERARCHY_TYPE_PLAYER = 1 << 12,
-	XN_HIERARCHY_TYPE_HANDS_GENERATOR = 1 << 13,
-	XN_HIERARCHY_TYPE_NODE_NOTIFICATIONS = 1 << 14,
-	XN_HIERARCHY_TYPE_DEPRECATED_PLAYER = 1 << 15,
-	XN_HIERARCHY_TYPE_CODEC = 1 << 16,
-} XnHierarchyType;
 
 class XnProductionNodeInterfaceContainer
 {
@@ -72,13 +54,17 @@ public:
 		xnOSMemSet(&ErrorState, 0, sizeof(ErrorState));
 		ProductionNode.pErrorStateInterface = &ErrorState;
 
-		HierarchyType = XN_HIERARCHY_TYPE_PRODUCTION_NODE;
+		xnOSMemSet(&GeneralInt, 0, sizeof(GeneralInt));
+		ProductionNode.pGeneralIntInterface = &GeneralInt;
+
+		HierarchyType.Set(XN_NODE_TYPE_PRODUCTION_NODE, TRUE);
 	}
 	XnModuleProductionNodeInterface ProductionNode;
 	XnModuleExtendedSerializationInterface ExtendedSerialization;
 	XnModuleLockAwareInterface LockAware;
 	XnModuleErrorStateInterface ErrorState;
-	XnUInt32 HierarchyType;
+	XnModuleGeneralIntInterface GeneralInt;
+	XnBitSet HierarchyType;
 };
 
 class XnDeviceInterfaceContainer : public XnProductionNodeInterfaceContainer
@@ -88,9 +74,14 @@ public:
 	{
 		xnOSMemSet(&Device, 0, sizeof(Device));
 		Device.pProductionNode = &ProductionNode;
-		HierarchyType |= XN_HIERARCHY_TYPE_DEVICE;
+
+		xnOSMemSet(&Identification, 0, sizeof(Identification));
+		Device.pDeviceIdentificationInterface = &Identification;
+
+		HierarchyType.Set(XN_NODE_TYPE_DEVICE, TRUE);
 	}
 	XnModuleDeviceInterface Device;
+	XnModuleDeviceIdentificationInterface Identification;
 };
 
 class XnGeneratorInterfaceContainer : public XnProductionNodeInterfaceContainer
@@ -104,16 +95,13 @@ public:
 		Generator.pMirrorInterface = &Mirror;
 		xnOSMemSet(&AlternativeViewPoint, 0, sizeof(AlternativeViewPoint));
 		Generator.pAlternativeViewPointInterface = &AlternativeViewPoint;
-		xnOSMemSet(&Seeking, 0, sizeof(Seeking));
-		Generator.pSeekingInterface = &Seeking;
 		xnOSMemSet(&FrameSync, 0, sizeof(FrameSync));
 		Generator.pFrameSyncInterface = &FrameSync;
-		HierarchyType |= XN_HIERARCHY_TYPE_GENERATOR;
+		HierarchyType.Set(XN_NODE_TYPE_GENERATOR, TRUE);
 	}
 	XnModuleGeneratorInterface Generator;
 	XnModuleMirrorInterface Mirror;
 	XnModuleAlternativeViewPointInterface AlternativeViewPoint;
-	XnModuleSeekingInterface Seeking;
 	XnModuleFrameSyncInterface FrameSync;
 };
 
@@ -126,7 +114,7 @@ public:
 		recorder.pProductionNode = &ProductionNode;
 		xnOSMemSet(&nodeNotifications, 0, sizeof(nodeNotifications));
 		recorder.pNodeNotifications = &nodeNotifications;
-		HierarchyType |= XN_HIERARCHY_TYPE_RECORDER;
+		HierarchyType.Set(XN_NODE_TYPE_RECORDER, TRUE);
 	}
 	XnModuleRecorderInterface recorder;
 	XnNodeNotifications nodeNotifications;
@@ -140,7 +128,7 @@ public:
 		xnOSMemSet(&Player, 0, sizeof(Player));
 		Player.pProductionNode = &ProductionNode;
 
-		HierarchyType |= XN_HIERARCHY_TYPE_PLAYER;
+		HierarchyType.Set(XN_NODE_TYPE_PLAYER, TRUE);
 	}
 	XnModulePlayerInterface Player;
 };
@@ -152,12 +140,18 @@ public:
 	{
 		xnOSMemSet(&Map, 0, sizeof(Map));
 		Map.pGeneratorInterface = &Generator;
+
 		xnOSMemSet(&Cropping, 0, sizeof(Cropping));
 		Map.pCroppingInterface = &Cropping;
-		HierarchyType |= XN_HIERARCHY_TYPE_MAP_GENERATOR;
+
+		xnOSMemSet(&AntiFlicker, 0, sizeof(AntiFlicker));
+		Map.pAntiFlickerInterface = &AntiFlicker;
+
+		HierarchyType.Set(XN_NODE_TYPE_MAP_GENERATOR, TRUE);
 	}
 	XnModuleMapGeneratorInterface Map;
 	XnModuleCroppingInterface Cropping;
+	XnModuleAntiFlickerInterface AntiFlicker;
 };
 
 class XnDepthGeneratorInterfaceContainer : public XnMapGeneratorInterfaceContainer
@@ -167,9 +161,11 @@ public:
 	{
 		xnOSMemSet(&Depth, 0, sizeof(Depth));
 		Depth.pMapInterface = &Map;
+
 		xnOSMemSet(&UserPosition, 0, sizeof(UserPosition));
 		Depth.pUserPositionInterface = &UserPosition;
-		HierarchyType |= XN_HIERARCHY_TYPE_DEPTH_GENERATOR;
+
+		HierarchyType.Set(XN_NODE_TYPE_DEPTH, TRUE);
 	}
 	XnModuleDepthGeneratorInterface Depth;
 	XnModuleUserPositionCapabilityInterface UserPosition;
@@ -182,7 +178,7 @@ public:
 	{
 		xnOSMemSet(&Image, 0, sizeof(Image));
 		Image.pMapInterface = &Map;
-		HierarchyType |= XN_HIERARCHY_TYPE_IMAGE_GENERATOR;
+		HierarchyType.Set(XN_NODE_TYPE_IMAGE, TRUE);
 	}
 	XnModuleImageGeneratorInterface Image;
 };
@@ -194,7 +190,7 @@ public:
 	{
 		xnOSMemSet(&IR, 0, sizeof(IR));
 		IR.pMapInterface = &Map;
-		HierarchyType |= XN_HIERARCHY_TYPE_IR_GENERATOR;
+		HierarchyType.Set(XN_NODE_TYPE_IR, TRUE);
 	}
 	XnModuleIRGeneratorInterface IR;
 };
@@ -206,7 +202,7 @@ public:
 	{
 		xnOSMemSet(&Gesture, 0, sizeof(Gesture));
 		Gesture.pGeneratorInterface = &Generator;
-		HierarchyType |= XN_HIERARCHY_TYPE_GESTURE_GENERATOR;
+		HierarchyType.Set(XN_NODE_TYPE_GESTURE, TRUE);
 	}
 	XnModuleGestureGeneratorInterface Gesture;
 };
@@ -218,7 +214,7 @@ public:
 	{
 		xnOSMemSet(&Scene, 0, sizeof(Scene));
 		Scene.pMapInterface = &Map;
-		HierarchyType |= XN_HIERARCHY_TYPE_SCENE_ANALYZER;
+		HierarchyType.Set(XN_NODE_TYPE_SCENE, TRUE);
 	}
 	XnModuleSceneAnalyzerInterface Scene;
 };
@@ -233,8 +229,8 @@ public:
 		xnOSMemSet(&Skeleton, 0, sizeof(Skeleton));
 		User.pSkeletonInterface = &Skeleton;
 		xnOSMemSet(&PoseDetection, 0, sizeof(PoseDetection));
-		User.pPoseDetectionInteface = &PoseDetection;
-		HierarchyType |= XN_HIERARCHY_TYPE_USER_GENERATOR;
+		User.pPoseDetectionInterface = &PoseDetection;
+		HierarchyType.Set(XN_NODE_TYPE_USER, TRUE);
 	}
 	XnModuleUserGeneratorInterface User;
 
@@ -249,7 +245,7 @@ public:
 	{
 		xnOSMemSet(&Hands, 0, sizeof(Hands));
 		Hands.pGeneratorInterface = &Generator;
-		HierarchyType |= XN_HIERARCHY_TYPE_HANDS_GENERATOR;
+		HierarchyType.Set(XN_NODE_TYPE_HANDS, TRUE);
 	}
 	XnModuleHandsGeneratorInterface Hands;
 };
@@ -262,7 +258,7 @@ public:
 		xnOSMemSet(&Audio, 0, sizeof(Audio));
 		Audio.pGeneratorInterface = &Generator;
 
-		HierarchyType |= XN_HIERARCHY_TYPE_AUDIO_GENERATOR;
+		HierarchyType.Set(XN_NODE_TYPE_AUDIO, TRUE);
 	}
 
 	XnModuleAudioGeneratorInterface Audio;
@@ -276,7 +272,7 @@ public:
 		xnOSMemSet(&Codec, 0, sizeof(Codec));
 		Codec.pProductionNode = &ProductionNode;
 
-		HierarchyType |= XN_HIERARCHY_TYPE_CODEC;
+		HierarchyType.Set(XN_NODE_TYPE_CODEC, TRUE);
 	}
 
 	XnModuleCodecInterface Codec;

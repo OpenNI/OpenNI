@@ -51,7 +51,7 @@ xcopy /E /I /Y sys\ps*.pdb ..\PDBs
 @echo *** Signing the amd64 version... ***
 @echo ************************************
 set PATH=%DDKPATH%\bin\x86;%PATH%
-IF EXIST ..\sign\myprivatekey.pvk signtool sign /v /ac ..\Sign\MSCV-VSClass3.cer /s My /n "Prime Sense Ltd."  /t http://timestamp.verisign.com/scripts/timstamp.dll /d "Prime Sensor Device Driver v3.0 - %DATE% %TIME% on %COMPUTERNAME%" /du http://www.primesense.com/ ..\BinVSDbg\amd64\psdrv3.sys
+IF EXIST ..\sign\myprivatekey.pvk signtool sign /v /ac ..\Sign\MSCV-VSClass3.cer /s My /n "Prime Sense Ltd."  /t http://timestamp.verisign.com/scripts/timstamp.dll /d "PrimeSense Sensor Device Driver v3.0 - %DATE% %TIME% on %COMPUTERNAME%" /du http://www.primesense.com/ ..\BinVSDbg\amd64\psdrv3.sys
 IF EXIST ..\sign\myprivatekey.pvk signtool verify /v /kp ..\BinVSDbg\amd64\psdrv3.sys
 if "%ERRORLEVEL%" == "1" goto ErrorSign
 

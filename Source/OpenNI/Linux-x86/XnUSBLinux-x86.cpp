@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -93,7 +89,7 @@ XnStatus xnUSBPlatformSpecificInit()
 		return (XN_STATUS_USB_INIT_FAILED);
 	}
 	
-	libusb_set_debug(g_InitData.pContext, 3);
+	//libusb_set_debug(g_InitData.pContext, 3);
 	
 	xnLogInfo(XN_MASK_USB, "USB is initialized.");
 	return (XN_STATUS_OK);	
@@ -238,25 +234,91 @@ XN_C_API XnStatus xnUSBIsDevicePresent(XnUInt16 nVendorID, XnUInt16 nProductID, 
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr)
+XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID, const XnUSBConnectionString** pastrDevicePaths, XnUInt32* pnCount)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-		
-	// make sure library was initialized
-	XN_VALIDATE_USB_INIT();
 	
-	// Validate parameters
-	XN_VALIDATE_OUTPUT_PTR(pDevHandlePtr);
-
-	libusb_device* pDevice;
-	nRetVal = FindDevice(nVendorID, nProductID, pExtraParam, &pDevice);
-	XN_IS_STATUS_OK(nRetVal);
+	// get device list
+	libusb_device** ppDevices;
+	ssize_t nDeviceCount = libusb_get_device_list(g_InitData.pContext, &ppDevices);
+	
+	// first enumeration - count
+	XnUInt32 nCount = 0;
+	
+	for (ssize_t i = 0; i < nDeviceCount; ++i)
+	{
+		libusb_device* pDevice = ppDevices[i];
 		
+		// get device descriptor
+		libusb_device_descriptor desc;
+		int rc = libusb_get_device_descriptor(pDevice, &desc);
+		if (rc != 0)
+		{
+			libusb_free_device_list(ppDevices, 1);
+			return (XN_STATUS_USB_ENUMERATE_FAILED);
+		}
+		
+		// check if this is the requested device
+		if (desc.idVendor == nVendorID && desc.idProduct == nProductID)
+		{
+			++nCount;
+		}
+	}
+	
+	// allocate array
+	XnUSBConnectionString* aResult = (XnUSBConnectionString*)xnOSCalloc(nCount, sizeof(XnUSBConnectionString));
+	if (aResult == NULL)
+	{
+		libusb_free_device_list(ppDevices, 1);
+		return XN_STATUS_ALLOC_FAILED;
+	}
+	
+	// second enumeration - fill
+	XnUInt32 nCurrent = 0;
+	for (ssize_t i = 0; i < nDeviceCount; ++i)
+	{
+		libusb_device* pDevice = ppDevices[i];
+		
+		// get device descriptor
+		libusb_device_descriptor desc;
+		int rc = libusb_get_device_descriptor(pDevice, &desc);
+		if (rc != 0)
+		{
+			libusb_free_device_list(ppDevices, 1);
+			return (XN_STATUS_USB_ENUMERATE_FAILED);
+		}
+		
+		// check if this is the requested device
+		if (desc.idVendor == nVendorID && desc.idProduct == nProductID)
+		{
+			sprintf(aResult[nCurrent], "%04hx/%04hx@%hhu/%hhu", nVendorID, nProductID, libusb_get_bus_number(pDevice), libusb_get_device_address(pDevice));
+			nCurrent++;
+		}
+	}
+	
+	*pastrDevicePaths = aResult;
+	*pnCount = nCount;
+		
+	// free the list (also dereference each device)
+	libusb_free_device_list(ppDevices, 1);
+	
+	return XN_STATUS_OK;
+}
+
+XN_C_API void xnUSBFreeDevicesList(const XnUSBConnectionString* astrDevicePaths)
+{
+	xnOSFree(astrDevicePaths);
+}
+
+XN_C_API XnStatus xnUSBOpenDeviceImpl(libusb_device* pDevice, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
 	if (pDevice == NULL)
 	{
 		return (XN_STATUS_USB_DEVICE_NOT_FOUND);
 	}
-	
+
 	// allocate device handle
 	libusb_device_handle* handle;
 	
@@ -307,6 +369,79 @@ XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void*
 	
 	// mark the device is of high-speed
 	pDevHandle->nDevSpeed = XN_USB_DEVICE_HIGH_SPEED;
+	
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+		
+	// make sure library was initialized
+	XN_VALIDATE_USB_INIT();
+	
+	// Validate parameters
+	XN_VALIDATE_OUTPUT_PTR(pDevHandlePtr);
+
+	libusb_device* pDevice;
+	nRetVal = FindDevice(nVendorID, nProductID, pExtraParam, &pDevice);
+	XN_IS_STATUS_OK(nRetVal);
+		
+	nRetVal = xnUSBOpenDeviceImpl(pDevice, pDevHandlePtr);
+	XN_IS_STATUS_OK(nRetVal);
+	
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnUSBOpenDeviceByPath(const XnUSBConnectionString strDevicePath, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	// parse connection string
+	XnUInt16 nVendorID = 0;
+	XnUInt16 nProductID = 0;
+	XnUInt8 nBus = 0;
+	XnUInt8 nAddress = 0;
+	sscanf(strDevicePath, "%hx/%hx@%hhu/%hhu", &nVendorID, &nProductID, &nBus, &nAddress);
+	
+	if (nVendorID == 0 || nProductID == 0 || nBus == 0 || nAddress == 0)
+	{
+		XN_LOG_WARNING_RETURN(XN_STATUS_USB_DEVICE_OPEN_FAILED, "Invalid connection string: %s", strDevicePath);
+	}
+
+	// find device	
+	libusb_device** ppDevices;
+	ssize_t nDeviceCount = libusb_get_device_list(g_InitData.pContext, &ppDevices);
+	
+	libusb_device* pRequestedDevice = NULL;
+	
+	for (ssize_t i = 0; i < nDeviceCount; ++i)
+	{
+		libusb_device* pDevice = ppDevices[i];
+		
+		// get device descriptor
+		libusb_device_descriptor desc;
+		int rc = libusb_get_device_descriptor(pDevice, &desc);
+		if (rc != 0)
+		{
+			libusb_free_device_list(ppDevices, 1);
+			return (XN_STATUS_USB_ENUMERATE_FAILED);
+		}
+		
+		// check if this is the requested device
+		if (desc.idVendor == nVendorID && desc.idProduct == nProductID && libusb_get_bus_number(pDevice) == nBus && libusb_get_device_address(pDevice) == nAddress)
+		{
+			// add a reference to the device (so it won't be destroyed when list is freed)
+			libusb_ref_device(pDevice);
+			pRequestedDevice = pDevice;
+			break;	
+		}
+	}
+
+	libusb_free_device_list(ppDevices, 1);
+	
+	nRetVal = xnUSBOpenDeviceImpl(pRequestedDevice, pDevHandlePtr);
+	XN_IS_STATUS_OK(nRetVal);
 	
 	return (XN_STATUS_OK);
 }
@@ -432,7 +567,25 @@ XN_C_API XnStatus xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndP
 	}
 	
 	libusb_transfer_type transfer_type = (libusb_transfer_type)(pEndpointDesc->bmAttributes & 0x3); // lower 2-bits
+
+    // calculate max packet size
+	// NOTE: we do not use libusb functions (libusb_get_max_packet_size/libusb_get_max_iso_packet_size) because
+	// they hace a bug and does not consider alternative interface
+    XnUInt32 nMaxPacketSize = 0;
 	
+	if (transfer_type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS)
+	{
+		XnUInt32 wMaxPacketSize = pEndpointDesc->wMaxPacketSize;
+		// bits 11 and 12 mark the number of additional transactions, bits 0-10 mark the size
+		XnUInt32 nAdditionalTransactions = wMaxPacketSize >> 11;
+		XnUInt32 nPacketSize = wMaxPacketSize & 0x7FF;
+		nMaxPacketSize = (nAdditionalTransactions + 1) * (nPacketSize);
+	}
+	else
+	{
+		nMaxPacketSize = pEndpointDesc->wMaxPacketSize;
+	}
+
 	// free the configuration descriptor. no need of it anymore
 	libusb_free_config_descriptor(pConfig);
 	pConfig = NULL;
@@ -492,15 +645,7 @@ XN_C_API XnStatus xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndP
 	pHandle->nAddress = nEndPointID;
 	pHandle->nType = nEPType;
 	pHandle->nDirection = nDirType;
-
-	if (transfer_type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS)
-	{
-		pHandle->nMaxPacketSize = libusb_get_max_iso_packet_size(pDevice, nEndPointID);
-	}
-	else
-	{
-		pHandle->nMaxPacketSize = libusb_get_max_packet_size(pDevice, nEndPointID);
-	}
+	pHandle->nMaxPacketSize = nMaxPacketSize;
 
 	return XN_STATUS_OK;
 }
@@ -852,9 +997,11 @@ XN_THREAD_PROC xnUSBReadThreadMain(XN_THREAD_PARAM pThreadParam)
 			libusb_transfer* pTransfer = pBufferInfo->transfer;
 
 			// wait for the next transfer to be completed, and process it
-			nRetVal = xnOSWaitEvent(pBufferInfo->hEvent, pThreadData->nTimeOut);
+			nRetVal = xnOSWaitEvent(pBufferInfo->hEvent, pThreadData->bKillReadThread ? 0 : pThreadData->nTimeOut);
 			if (nRetVal == XN_STATUS_OS_EVENT_TIMEOUT)
 			{
+//				xnLogWarning(XN_MASK_USB, "Endpoint 0x%x, Buffer %d: timeout. cancelling transfer...", pTransfer->endpoint, pBufferInfo->nBufferID);
+				
 				// cancel it
 				int rc = libusb_cancel_transfer(pBufferInfo->transfer);
 				if (rc != 0)
@@ -1002,13 +1149,8 @@ XN_C_API XnStatus xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBuff
 	
 	if (pEPHandle->nType == XN_USB_EP_ISOCHRONOUS)
 	{
-		XnUInt32 wMaxPacketSize = libusb_get_max_packet_size(libusb_get_device(pEPHandle->hDevice), pEPHandle->nAddress);
-		// bits 11 and 12 mark the number of additional transactions, bits 0-10 mark the size
-		XnUInt32 nAdditionalTransactions = wMaxPacketSize >> 11;
-		XnUInt32 nPacketSize = wMaxPacketSize & 0x7FF;
-		nMaxPacketSize = (nAdditionalTransactions + 1) * (nPacketSize);
-		
 		// calculate how many packets can be set in this buffer
+		nMaxPacketSize = pEPHandle->nMaxPacketSize;
 		nNumIsoPackets = nBufferSize / nMaxPacketSize;
 	}
 
@@ -1115,8 +1257,8 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 		}
 */
 
-		// now wait for thread to exit
-		XnStatus nRetVal = xnOSWaitForThreadExit(pThreadData->hReadThread, XN_USB_READ_THREAD_KILL_TIMEOUT);
+		// now wait for thread to exit (we wait the timeout of all buffers + an extra second)
+		XnStatus nRetVal = xnOSWaitForThreadExit(pThreadData->hReadThread, pThreadData->nTimeOut * pThreadData->nNumBuffers + 1000);
 		if (nRetVal != XN_STATUS_OK)
 		{
 			xnOSTerminateThread(&pThreadData->hReadThread);

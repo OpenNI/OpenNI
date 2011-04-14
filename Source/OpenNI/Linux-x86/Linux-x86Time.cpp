@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -101,7 +97,7 @@ XN_C_API XnStatus xnOSStartTimer(XnOSTimer* pTimer)
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(pTimer);
 	
-	if (0 != clock_gettime(CLOCK_REALTIME, &pTimer->tStartTime))
+	if (XN_STATUS_OK != xnOSGetMonoTime(&pTimer->tStartTime))
 	{
 		return XN_STATUS_OS_TIMER_QUERY_FAILED;
 	}
@@ -130,7 +126,7 @@ XN_C_API XnStatus xnOSQueryTimer(XnOSTimer Timer, XnUInt64* pnTimeSinceStart)
 
 	struct timespec now;
 	
-	if (0 != clock_gettime(CLOCK_REALTIME, &now))
+	if (XN_STATUS_OK != xnOSGetMonoTime(&now))
 	{
 		return XN_STATUS_OS_TIMER_QUERY_FAILED;
 	}
@@ -149,4 +145,45 @@ XN_C_API XnStatus xnOSStopTimer(XnOSTimer* pTimer)
 
 	// All is good...
 	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnOSGetMonoTime(struct timespec* pTime)
+{
+#ifndef XN_PLATFORM_HAS_NO_CLOCK_GETTIME
+	if (0 != clock_gettime(CLOCK_REALTIME, pTime))
+	{
+		return (XN_STATUS_OS_EVENT_WAIT_FAILED);
+	}
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	pTime->tv_sec = tv.tv_sec;
+	pTime->tv_nsec = tv.tv_usec * 1000;  
+#endif
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnOSGetTimeout(struct timespec* pTime, XnUInt32 nMilliseconds)
+{
+	pTime->tv_sec = (nMilliseconds / 1000);
+	pTime->tv_nsec = ((nMilliseconds % 1000) * 1000000);
+
+	return XN_STATUS_OK;
+}
+
+XN_C_API XnStatus xnOSGetAbsTimeout(struct timespec* pTime, XnUInt32 nMilliseconds)
+{
+	XnStatus nRetVal = xnOSGetMonoTime(pTime);
+	XN_IS_STATUS_OK(nRetVal);
+	
+	pTime->tv_sec += (nMilliseconds / 1000);
+	pTime->tv_nsec += ((nMilliseconds % 1000) * 1000000);
+
+	if (pTime->tv_nsec >= 1000000000)
+	{
+		pTime->tv_nsec -= 1000000000;
+		pTime->tv_sec++;
+	}
+	
+	return XN_STATUS_OK;
 }

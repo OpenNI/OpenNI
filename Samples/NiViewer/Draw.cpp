@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 // --------------------------------
 // Includes
 // --------------------------------
@@ -30,8 +26,13 @@
 #include "Device.h"
 #include "Keyboard.h"
 #include "Capture.h"
-#include <GL/gl.h>
-#include <GL/glut.h>
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#include <GLUT/glut.h>
+	#include <OpenGL/gl.h>
+#else
+	#include <GL/gl.h>
+	#include <GL/glut.h>
+#endif
 #include "Statistics.h"
 #include "MouseInput.h"
 
@@ -767,17 +768,17 @@ void drawClosedStream(UIntRect* pLocation, const char* csStreamName)
 
 void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
 {
-	if (!isImageOn() && !isIROn())
-	{
-		drawClosedStream(pLocation, "Image");
-		return;
-	}
-
 	if (g_DrawConfig.Streams.bBackground)
 		TextureMapDraw(&g_texBackground, pLocation);
 
 	if (g_DrawConfig.Streams.Image.Coloring == IMAGE_OFF)
 		return;
+
+	if (!isImageOn() && !isIROn())
+	{
+		drawClosedStream(pLocation, "Image");
+		return;
+	}
 
 	const MapMetaData* pImageMD;
 	const XnUInt8* pImage = NULL;
@@ -815,14 +816,24 @@ void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
 		{
 			for (XnUInt16 nX = 0; nX < pImageMD->XRes(); nX++, pTexture+=4)
 			{
-				XnUInt32 nDepthIndex = 0;
+				XnInt32 nDepthIndex = 0;
 
 				if (pDepthMetaData != NULL)
 				{
-					XnUInt32 nDepthX = nX / (XnDouble)pImageMD->XRes() * pDepthMetaData->XRes();
-					XnUInt32 nDepthY = nY / (XnDouble)pImageMD->YRes() * pDepthMetaData->YRes();
+					XnDouble dRealX = (nX + pImageMD->XOffset()) / (XnDouble)pImageMD->FullXRes();
+					XnDouble dRealY = nY / (XnDouble)pImageMD->FullYRes();
 
-					nDepthIndex = nDepthY*pDepthMetaData->XRes() + nDepthX;
+					XnUInt32 nDepthX = dRealX * pDepthMetaData->FullXRes() - pDepthMetaData->XOffset();
+					XnUInt32 nDepthY = dRealY * pDepthMetaData->FullYRes() - pDepthMetaData->YOffset();
+
+					if (nDepthX >= pDepthMetaData->XRes() || nDepthY >= pDepthMetaData->YRes())
+					{
+						nDepthIndex = -1;
+					}
+					else
+					{
+						nDepthIndex = nDepthY*pDepthMetaData->XRes() + nDepthX;
+					}
 				}
 
 				switch (pImageMD->PixelFormat())
@@ -846,7 +857,7 @@ void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
 
 				// decide if pixel should be lit or not
 				if (g_DrawConfig.Streams.Image.Coloring == DEPTH_MASKED_IMAGE &&
-					(pDepthMetaData == NULL || pDepthMetaData->Data()[nDepthIndex] == 0))
+					(pDepthMetaData == NULL || nDepthIndex == -1 || pDepthMetaData->Data()[nDepthIndex] == 0))
 				{
 					pTexture[3] = 0;
 				}
@@ -1158,8 +1169,52 @@ void drawPointerMode(UIntPair* pPointer)
 
 void drawCenteredMessage(void* font, int y, const char* message, float fRed, float fGreen, float fBlue)
 {
-	int nWidth = glutBitmapLength(font, (const unsigned char*)message);
-	int nXLocation = XN_MAX(0, (WIN_SIZE_X - nWidth) / 2);
+	const XnUInt32 nMaxLines = 5;
+	XnChar buf[512];
+	XnChar* aLines[nMaxLines];
+	XnUInt32 anLinesWidths[nMaxLines];
+	XnUInt32 nLine = 0;
+	XnUInt32 nLineLengthChars = 0;
+	XnUInt32 nLineLengthPixels = 0;
+	XnUInt32 nMaxLineLength = 0;
+	
+	aLines[0] = buf;
+	
+	// parse message to lines
+	const char* pChar = message;
+	while (TRUE)
+	{
+		if (*pChar == '\n' || *pChar == '\0')
+		{
+			if (nLineLengthChars > 0)
+			{
+				aLines[nLine][nLineLengthChars++] = '\0';
+				aLines[nLine+1] = &aLines[nLine][nLineLengthChars];
+				anLinesWidths[nLine] = nLineLengthPixels;
+				nLine++;
+				if (nLineLengthPixels > nMaxLineLength)
+				{
+					nMaxLineLength = nLineLengthPixels;
+				}
+				nLineLengthPixels = 0;
+				nLineLengthChars = 0;
+			}
+
+			if (nLine >= nMaxLines || *pChar == '\0')
+			{
+				break;
+			}
+		}
+		else
+		{
+			aLines[nLine][nLineLengthChars++] = *pChar;
+			nLineLengthPixels += glutBitmapWidth(font, *pChar);
+		}
+		pChar++;
+	}
+	
+	XnUInt32 nHeight = 26;
+	int nXLocation = XN_MAX(0, (WIN_SIZE_X - nMaxLineLength) / 2);
 	int nYLocation = y;
 
 	// Draw black background
@@ -1168,18 +1223,21 @@ void drawCenteredMessage(void* font, int y, const char* message, float fRed, flo
 
 	glBegin(GL_QUADS);
 	glColor4f(0, 0, 0, 0.6);
-	glVertex2i(nXLocation - 5, nYLocation - 27);
-	glVertex2i(nXLocation + nWidth + 5, nYLocation - 27);
-	glVertex2i(nXLocation + nWidth + 5, nYLocation + 5);
-	glVertex2i(nXLocation - 5, nYLocation + 5);
+	glVertex2i(nXLocation - 5, nYLocation - nHeight - 5);
+	glVertex2i(nXLocation + nMaxLineLength + 5, nYLocation - nHeight - 5);
+	glVertex2i(nXLocation + nMaxLineLength + 5, nYLocation + nHeight * nLine + 5);
+	glVertex2i(nXLocation - 5, nYLocation + nHeight * nLine + 5);
 	glEnd();
 
 	glDisable(GL_BLEND);
 
 	// show message
 	glColor3f(fRed, fGreen, fBlue);
-	glRasterPos2i(nXLocation, nYLocation);
-	glPrintString(font, message);
+	for (XnUInt32 i = 0; i < nLine; ++i)
+	{
+		glRasterPos2i(nXLocation + (nMaxLineLength - anLinesWidths[i])/2, nYLocation + i * nHeight);
+		glPrintString(font, aLines[i]);
+	}
 }
 
 void drawUserMessage()
@@ -1320,14 +1378,14 @@ void drawHelpScreen()
 	int nXLocation = nXStartLocation;
 	int nYLocation = nYStartLocation;
 	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_PRESETS);
-	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_CAPTURE);
+	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_DISPLAY);
+	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_DEVICE);
 
 	// print right pane
 	nXLocation = WIN_SIZE_X/2;
 	nYLocation = nYStartLocation;
-	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_DISPLAY);
-	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_DEVICE);
 	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_PLAYER);
+	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_CAPTURE);
 	printHelpGroup(nXLocation, &nYLocation, KEYBOARD_GROUP_GENERAL);
 }
 
@@ -1407,6 +1465,23 @@ bool isPointInRect(UIntPair point, UIntRect* pRect)
 {
 	return (point.X >= pRect->uLeft && point.X <= pRect->uRight &&
 		point.Y >= pRect->uBottom && point.Y <= pRect->uTop);
+}
+
+void drawPlaybackSpeed()
+{
+	XnDouble dSpeed = getPlaybackSpeed();
+	if (dSpeed != 1.0)
+	{
+		XnChar strSpeed[30];
+		int len = sprintf(strSpeed, "x%g", dSpeed);
+		int width = 0;
+		for (int i = 0; i < len; ++i)
+			width += glutBitmapWidth(GLUT_BITMAP_TIMES_ROMAN_24, strSpeed[i]);
+
+		glColor3f(0, 1, 0);
+		glRasterPos2i(WIN_SIZE_X - width - 3, 30);
+		glPrintString(GLUT_BITMAP_TIMES_ROMAN_24, strSpeed);
+	}
 }
 
 void drawFrame()
@@ -1499,6 +1574,7 @@ void drawFrame()
 	drawUserInput(!bOverDepth && !bOverImage);
 
 	drawUserMessage();
+	drawPlaybackSpeed();
 
 	if (g_DrawConfig.strErrorState != NULL)
 		drawErrorState();

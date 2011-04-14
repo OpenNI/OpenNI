@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -31,7 +27,7 @@
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
-static const XN_UINT32 XnOSStrCRC32Table[0x100] =
+static const XnUInt32 xnOSStrCRC32Table[0x100] =
 {
 	0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
 	0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
@@ -102,11 +98,11 @@ static const XN_UINT32 XnOSStrCRC32Table[0x100] =
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
-XN_CORE_API XnStatus XnOSStrPrefix(const XN_CHAR* cpPrefixString, XN_CHAR* cpDestString, const XN_UINT32 nDestLength)
+XN_C_API XnStatus xnOSStrPrefix(const XnChar* cpPrefixString, XnChar* cpDestString, const XnUInt32 nDestLength)
 {
 	// Local function variables
-	XN_CHAR* cpTempBuffer = NULL;
-	XN_UINT32 nOutStringLength = 0;
+	XnChar* cpTempBuffer = NULL;
+	XnUInt32 nOutStringLength = 0;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpPrefixString);
@@ -122,7 +118,7 @@ XN_CORE_API XnStatus XnOSStrPrefix(const XN_CHAR* cpPrefixString, XN_CHAR* cpDes
 	}
 
 	// Allocate the temp buffer
-	XN_VALIDATE_CALLOC(cpTempBuffer, XN_CHAR, nOutStringLength + sizeof(XN_CHAR));
+	XN_VALIDATE_CALLOC(cpTempBuffer, XnChar, nOutStringLength + sizeof(XnChar));
 
 	// Prefix the string
 	strncat (cpTempBuffer, cpPrefixString, nOutStringLength);
@@ -138,7 +134,7 @@ XN_CORE_API XnStatus XnOSStrPrefix(const XN_CHAR* cpPrefixString, XN_CHAR* cpDes
 	return (XN_STATUS_OK);
 }
 
-XN_CORE_API XnStatus XnOSStrAppend(XN_CHAR* cpDestString, const XN_CHAR* cpSrcString, const XN_UINT32 nDestLength)
+XN_C_API XnStatus xnOSStrAppend(XnChar* cpDestString, const XnChar* cpSrcString, const XnUInt32 nDestLength)
 {
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpSrcString);
@@ -157,7 +153,7 @@ XN_CORE_API XnStatus XnOSStrAppend(XN_CHAR* cpDestString, const XN_CHAR* cpSrcSt
 	return (XN_STATUS_OK);
 }
 
-XN_CORE_API XnStatus XnOSStrCopy(XN_CHAR* cpDestString, const XN_CHAR* cpSrcString, const XN_UINT32 nDestLength)
+XN_C_API XnStatus xnOSStrCopy(XnChar* cpDestString, const XnChar* cpSrcString, const XnUInt32 nDestLength)
 {
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpSrcString);
@@ -176,7 +172,7 @@ XN_CORE_API XnStatus XnOSStrCopy(XN_CHAR* cpDestString, const XN_CHAR* cpSrcStri
 	return (XN_STATUS_OK);
 }
 
-XN_CORE_API XnStatus XnOSStrNCopy(XN_CHAR* cpDestString, const XN_CHAR* cpSrcString, const XN_UINT32 nCopyLength, const XN_UINT32 nDestLength)
+XN_C_API XnStatus xnOSStrNCopy(XnChar* cpDestString, const XnChar* cpSrcString, const XnUInt32 nCopyLength, const XnUInt32 nDestLength)
 {
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpSrcString);
@@ -195,12 +191,12 @@ XN_CORE_API XnStatus XnOSStrNCopy(XN_CHAR* cpDestString, const XN_CHAR* cpSrcStr
 	return (XN_STATUS_OK);
 }
 
-XN_CORE_API XnStatus XnOSStrCRC32(const XN_CHAR* cpString, XN_UINT32* nCRC32)
+XN_C_API XnStatus xnOSStrCRC32(const XnChar* cpString, XnUInt32* nCRC32)
 {
 	// Local function variables
-	XN_UINT32 nTempCRC32 = 0xffffffff;
-	XN_UINT32 nStrLen = 0;
-	XN_UINT32 nIdx = 0;
+	XnUInt32 nTempCRC32 = 0xffffffff;
+	XnUInt32 nStrLen = 0;
+	XnUInt32 nIdx = 0;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpString);
@@ -212,7 +208,7 @@ XN_CORE_API XnStatus XnOSStrCRC32(const XN_CHAR* cpString, XN_UINT32* nCRC32)
 
 	for (nIdx = 0; nIdx < nStrLen; nIdx++)
 	{
-		nTempCRC32 = (nTempCRC32 >> 8) ^ XnOSStrCRC32Table[(nTempCRC32 & 0xFF) ^ *cpString++];
+		nTempCRC32 = (nTempCRC32 >> 8) ^ xnOSStrCRC32Table[(nTempCRC32 & 0xFF) ^ *cpString++];
 	}
 
 	*nCRC32 = nTempCRC32 ^ 0xffffffff; 
@@ -222,12 +218,12 @@ XN_CORE_API XnStatus XnOSStrCRC32(const XN_CHAR* cpString, XN_UINT32* nCRC32)
 
 }
 
-XN_CORE_API XnStatus XnOSStrNCRC32(XN_UCHAR* cpBuffer, XN_UINT32 nBufferSize, XN_UINT32* nCRC32)
+XN_C_API XnStatus xnOSStrNCRC32(XnUChar* cpBuffer, XnUInt32 nBufferSize, XnUInt32* nCRC32)
 {
 	// Local function variables
-	XN_UINT32 nTempCRC32 = 0xffffffff;
-	XN_UINT32 nStrLen = 0;
-	XN_UINT32 nIdx = 0;
+	XnUInt32 nTempCRC32 = 0xffffffff;
+	XnUInt32 nStrLen = 0;
+	XnUInt32 nIdx = 0;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpBuffer);
@@ -237,7 +233,7 @@ XN_CORE_API XnStatus XnOSStrNCRC32(XN_UCHAR* cpBuffer, XN_UINT32 nBufferSize, XN
 
 	for (nIdx = 0; nIdx < nBufferSize; nIdx++)
 	{
-		nTempCRC32 = (nTempCRC32 >> 8) ^ XnOSStrCRC32Table[(nTempCRC32 & 0xFF) ^ *cpBuffer++];
+		nTempCRC32 = (nTempCRC32 >> 8) ^ xnOSStrCRC32Table[(nTempCRC32 & 0xFF) ^ *cpBuffer++];
 	}
 
 	*nCRC32 = nTempCRC32 ^ 0xffffffff; 
@@ -246,7 +242,7 @@ XN_CORE_API XnStatus XnOSStrNCRC32(XN_UCHAR* cpBuffer, XN_UINT32 nBufferSize, XN
 	return (XN_STATUS_OK);
 }
 
-XN_CORE_API XnStatus XnOSStrFormatV(XN_CHAR* cpDestString, const XN_UINT32 nDestLength, XN_UINT32* pnCharsWritten, const XN_CHAR* cpFormat, va_list args)
+XN_C_API XnStatus xnOSStrFormatV(XnChar* cpDestString, const XnUInt32 nDestLength, XnUInt32* pnCharsWritten, const XnChar* cpFormat, va_list args)
 {
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpDestString);
@@ -255,7 +251,7 @@ XN_CORE_API XnStatus XnOSStrFormatV(XN_CHAR* cpDestString, const XN_UINT32 nDest
 
 	*pnCharsWritten = 0;
 
-	XN_INT32 nRes = vsprintf(cpDestString, cpFormat, args);
+	XnInt32 nRes = vsprintf(cpDestString, cpFormat, args);
 
 	// nRes is the number of bytes written, not including NULL termination
 	if ((nRes == -1) ||	// string was truncated
@@ -271,7 +267,25 @@ XN_CORE_API XnStatus XnOSStrFormatV(XN_CHAR* cpDestString, const XN_UINT32 nDest
 	return (XN_STATUS_OK);
 }
 
-XN_CORE_API void XnOSItoA(XN_INT32 nValue, XN_CHAR* cpStr, XN_INT32 nBase)
+XN_C_API void xnOSItoA(XnInt32 nValue, XnChar* cpStr, XnInt32 nBase)
 {
 	_itoa(nValue, cpStr, nBase);
+}
+
+XN_C_API XnInt32 xnOSStrCmp(const XnChar* cpFirstString, const XnChar* cpSecondString)
+{
+	// Validate the input/output pointers (to make sure none of them is NULL)
+	XN_VALIDATE_INPUT_PTR(cpFirstString);
+	XN_VALIDATE_INPUT_PTR(cpSecondString);
+
+	return strcmp(cpFirstString, cpSecondString);
+}
+
+XN_C_API XnInt32 xnOSStrCaseCmp(const XnChar* cpFirstString, const XnChar* cpSecondString)
+{
+	// Validate the input/output pointers (to make sure none of them is NULL)
+	XN_VALIDATE_INPUT_PTR(cpFirstString);
+	XN_VALIDATE_INPUT_PTR(cpSecondString);
+
+	return _stricmp(cpFirstString, cpSecondString);
 }

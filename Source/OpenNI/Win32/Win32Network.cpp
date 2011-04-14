@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -135,7 +131,7 @@ XN_C_API XnStatus xnOSCreateSocket(const XnOSSocketType SocketType, const XnChar
 	if (Socket->Socket == INVALID_SOCKET)
 	{
 		XN_ALIGNED_FREE_AND_NULL(Socket);
-		return (XN_STATUS_OS_NETWORK_SOCKET_CREATION_FAILED);
+		XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CREATION_FAILED, XN_MASK_OS, "socket() returned WinSock error: %d", WSAGetLastError());
 	}
 
 	// Set the socket server address
@@ -268,7 +264,7 @@ XN_C_API XnStatus xnOSAcceptSocket(XN_SOCKET_HANDLE ListenSocket, XN_SOCKET_HAND
 	// Wait for connection request
 	FD_ZERO(&fdReadHandles);
 	FD_SET(ListenSocket->Socket, &fdReadHandles);
-	nRetVal = select(ListenSocket->Socket + 1, &fdReadHandles, NULL, NULL, pTimeout);
+	nRetVal = select(1 /* ignored */, &fdReadHandles, NULL, NULL, pTimeout);
 	if (nRetVal == 0)
 	{
 		return (XN_STATUS_OS_NETWORK_TIMEOUT);
@@ -320,7 +316,7 @@ XN_C_API XnStatus xnOSConnectSocket(XN_SOCKET_HANDLE Socket, XnUInt32 nMillisecs
 	}
 
 	xnOSMemCopy(&SocketAddress, &Socket->SocketAddress, sizeof(SocketAddress));
-	
+
 	// Make the socket non-blocking temporarily
 	u_long nNonBlockingSocket = 1;
 	u_long nBlockingSocket = 0;
@@ -342,7 +338,7 @@ XN_C_API XnStatus xnOSConnectSocket(XN_SOCKET_HANDLE Socket, XnUInt32 nMillisecs
 	FD_SET(Socket->Socket, &fdWriteHandles);
 	FD_ZERO(&fdExceptHandles);
 	FD_SET(Socket->Socket, &fdExceptHandles);
-	nRetVal = select(Socket->Socket + 1, NULL, &fdWriteHandles, &fdExceptHandles, pTimeout);
+	nRetVal = select(1 /* ignored */, NULL, &fdWriteHandles, &fdExceptHandles, pTimeout);
 	// in any case, make the socket blocking again before we check select()'s success
 	ioctlsocket(Socket->Socket, FIONBIO, &nBlockingSocket);
 
@@ -467,7 +463,7 @@ XN_C_API XnStatus xnOSReceiveNetworkBuffer(XN_SOCKET_HANDLE Socket, XnChar* cpBu
 
 	FD_ZERO(&fdReadHandles);
 	FD_SET(Socket->Socket, &fdReadHandles);
-	nRetVal = select(Socket->Socket + 1, &fdReadHandles, NULL, NULL, pTimeout);
+	nRetVal = select(1 /* ignored */, &fdReadHandles, NULL, NULL, pTimeout);
 	if (nRetVal == 0)
 	{
 		return (XN_STATUS_OS_NETWORK_TIMEOUT);

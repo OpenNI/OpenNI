@@ -1,26 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __DATA_RECORDS_H__
 #define __DATA_RECORDS_H__
 
@@ -44,7 +42,9 @@ enum RecordType
 	RECORD_NODE_STATE_READY			= 0x09,
 	RECORD_NEW_DATA					= 0x0A,
 	RECORD_END						= 0x0B,
-	RECORD_NODE_ADDED				= 0x0C,
+	RECORD_NODE_ADDED_1_0_0_5		= 0x0C,
+	RECORD_NODE_ADDED				= 0x0D,
+	RECORD_SEEK_TABLE               = 0x0E,
 };
 
 enum {INVALID_NODE_ID = -1};
@@ -154,11 +154,11 @@ private:
 	XnCodecID m_compression;
 };
 
-class NodeAddedRecord : public NodeAdded_1_0_0_4_Record
+class NodeAdded_1_0_0_5_Record : public NodeAdded_1_0_0_4_Record
 {
 public:
-	NodeAddedRecord(XnUInt8* pData, XnUInt32 nMaxSize);
-	NodeAddedRecord(const Record& record);
+	NodeAdded_1_0_0_5_Record(XnUInt8* pData, XnUInt32 nMaxSize);
+	NodeAdded_1_0_0_5_Record(const Record& record);
 
 	void SetNumberOfFrames(XnUInt32 nNumberOfFrames);
 	void SetMinTimestamp(XnUInt64 nMinTimestamp);
@@ -172,10 +172,32 @@ public:
 	XnStatus Decode();
 	XnStatus AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCharsWritten);
 
+protected:
+	XnStatus EncodeImpl();
+	XnStatus DecodeImpl();
+
 private:
 	XnUInt32 m_nNumberOfFrames;
 	XnUInt64 m_nMinTimestamp;
 	XnUInt64 m_nMaxTimestamp;
+};
+
+class NodeAddedRecord : public NodeAdded_1_0_0_5_Record
+{
+public:
+	NodeAddedRecord(XnUInt8* pData, XnUInt32 nMaxSize);
+	NodeAddedRecord(const Record& record);
+
+	void SetSeekTablePosition(XnUInt32 nPos);
+
+	XnUInt32 GetSeekTablePosition();
+
+	XnStatus Encode();
+	XnStatus Decode();
+	XnStatus AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCharsWritten);
+
+private:
+	XnUInt32 m_nSeekTablePosition;
 };
 
 class NodeRemovedRecord : public Record
@@ -307,6 +329,24 @@ public:
 private:
 	XnUInt64 m_nTimeStamp;
 	XnUInt32 m_nFrameNumber;
+};
+
+typedef struct
+{
+	XnUInt64 nTimestamp;
+	XnUInt32 nConfigurationID;
+	XnUInt32 nSeekPos;
+} DataIndexEntry;
+
+class DataIndexRecordHeader : public Record
+{
+public:
+	DataIndexRecordHeader(XnUInt8* pData, XnUInt32 nMaxSize);
+	DataIndexRecordHeader(const Record& record);
+
+	XnStatus Encode();
+	XnStatus Decode();
+	XnStatus AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCharsWritten);
 };
 
 class EndRecord : public Record

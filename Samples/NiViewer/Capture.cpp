@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 // --------------------------------
 // Includes
 // --------------------------------
@@ -52,19 +48,33 @@ typedef enum
 	CAPTURING,
 } CapturingState;
 
+typedef enum
+{
+	CAPTURE_DEPTH_NODE,
+	CAPTURE_IMAGE_NODE,
+	CAPTURE_IR_NODE,
+	CAPTURE_AUDIO_NODE,
+	CAPTURE_NODE_COUNT
+} CaptureNodeType;
+
+typedef struct NodeCapturingData
+{
+	XnCodecID captureFormat;
+	XnUInt32 nCapturedFrames;
+	bool bRecording;
+	xn::Generator* pGenerator;
+} NodeCapturingData;
+
 typedef struct CapturingData
 {
-	XnCodecID DepthFormat;
-	XnCodecID ImageFormat;
-	XnCodecID IRFormat;
-	XnCodecID AudioFormat;
-
+	NodeCapturingData nodes[CAPTURE_NODE_COUNT];
 	Recorder* pRecorder;
 	char csFileName[XN_FILE_MAX_PATH];
 	XnUInt32 nStartOn; // time to start, in seconds
+	bool bSkipFirstFrame;
 	CapturingState State;
-	XnUInt32 nCapturedFrames;
 	XnUInt32 nCapturedFrameUniqueID;
+	char csDisplayMessage[500];
 } CapturingData;
 
 // --------------------------------
@@ -77,21 +87,22 @@ NodeCodec g_ImageFormat;
 NodeCodec g_IRFormat;
 NodeCodec g_AudioFormat;
 
-//#define XN_DONT_CAPTURE (MAX_STRINGS-1)
-
-static const XnCodecID CODEC_DONT_CAPTURE = XN_CODEC_ID(0, 0, 0, 0);
+static const XnCodecID CODEC_DONT_CAPTURE = XN_CODEC_NULL;
 
 // --------------------------------
 // Code
 // --------------------------------
-void captureInit(const char* csINIFile)
+void captureInit()
 {
-	
 	// Depth Formats
 	int nIndex = 0;
 
 	g_DepthFormat.pValues[nIndex] = XN_CODEC_16Z_EMB_TABLES;
 	g_DepthFormat.pIndexToName[nIndex] = "PS Compression (16z ET)";
+	nIndex++;
+
+	g_DepthFormat.pValues[nIndex] = XN_CODEC_UNCOMPRESSED;
+	g_DepthFormat.pIndexToName[nIndex] = "Uncompressed";
 	nIndex++;
 
 	g_DepthFormat.pValues[nIndex] = CODEC_DONT_CAPTURE;
@@ -147,34 +158,13 @@ void captureInit(const char* csINIFile)
 	g_Capture.csFileName[0] = 0;
 	g_Capture.State = NOT_CAPTURING;
 	g_Capture.nCapturedFrameUniqueID = 0;
+	g_Capture.csDisplayMessage[0] = '\0';
+	g_Capture.bSkipFirstFrame = false;
 
-	g_Capture.DepthFormat = XN_CODEC_16Z_EMB_TABLES;
-	g_Capture.ImageFormat = XN_CODEC_JPEG;
-	g_Capture.IRFormat = XN_CODEC_UNCOMPRESSED;
-	g_Capture.AudioFormat = CODEC_DONT_CAPTURE;
-
-/*
-	XnUInt32 nValue;
-	if (xnOSReadIntFromINI(csINIFile, "RGBViewer", "DefaultDepthFormat", &nValue) == XN_STATUS_OK)
-	{
-		g_Capture.DepthFormat = (XnCompressionFormats)nValue;
-	}
-
-	if (xnOSReadIntFromINI(csINIFile, "RGBViewer", "DefaultImageFormat", &nValue) == XN_STATUS_OK)
-	{
-		g_Capture.ImageFormat = (XnCompressionFormats)nValue;
-	}
-
-	if (xnOSReadIntFromINI(csINIFile, "RGBViewer", "DefaultIRFormat", &nValue) == XN_STATUS_OK)
-	{
-		g_Capture.IRFormat = (XnCompressionFormats)nValue;
-	}
-
-	if (xnOSReadIntFromINI(csINIFile, "RGBViewer", "DefaultAudioFormat", &nValue) == XN_STATUS_OK)
-	{
-		g_Capture.AudioFormat = (XnCompressionFormats)nValue;
-	}
-	*/
+	g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat = XN_CODEC_16Z_EMB_TABLES;
+	g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat = XN_CODEC_JPEG;
+	g_Capture.nodes[CAPTURE_IR_NODE].captureFormat = XN_CODEC_UNCOMPRESSED;
+	g_Capture.nodes[CAPTURE_AUDIO_NODE].captureFormat = XN_CODEC_UNCOMPRESSED;
 }
 
 bool isCapturing()
@@ -202,44 +192,12 @@ bool captureOpenWriteDevice()
 	nRetVal = g_Context.CreateProductionTree(chosen);
 	START_CAPTURE_CHECK_RC(nRetVal, "Create recorder");
 
-	
-
 	g_Capture.pRecorder = new Recorder;
 	nRetVal = chosen.GetInstance(*g_Capture.pRecorder);
 	START_CAPTURE_CHECK_RC(nRetVal, "Get recorder instance");
 
 	nRetVal = g_Capture.pRecorder->SetDestination(XN_RECORD_MEDIUM_FILE, g_Capture.csFileName);
 	START_CAPTURE_CHECK_RC(nRetVal, "Set output file");
-
-	if (getDevice() != NULL)
-	{
-		nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getDevice(), XN_CODEC_UNCOMPRESSED);
-		START_CAPTURE_CHECK_RC(nRetVal, "add device node");
-	}
-
-	if (isDepthOn() && (g_Capture.DepthFormat != CODEC_DONT_CAPTURE))
-	{
-		nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getDepthGenerator(), g_Capture.DepthFormat);
-		START_CAPTURE_CHECK_RC(nRetVal, "add depth node");
-	}
-
-	if (isImageOn() && (g_Capture.ImageFormat != CODEC_DONT_CAPTURE))
-	{
-		nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getImageGenerator(), g_Capture.ImageFormat);
-		START_CAPTURE_CHECK_RC(nRetVal, "add image node");
-	}
-
-	if (isIROn() && (g_Capture.IRFormat != CODEC_DONT_CAPTURE))
-	{
-		nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getIRGenerator(), g_Capture.IRFormat);
-		START_CAPTURE_CHECK_RC(nRetVal, "add IR stream");
-	}
-
-	if (isAudioOn() && (g_Capture.AudioFormat != CODEC_DONT_CAPTURE))
-	{
-		nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getAudioGenerator(), g_Capture.AudioFormat);
-		START_CAPTURE_CHECK_RC(nRetVal, "add Audio stream");
-	}
 
 	return true;
 }
@@ -277,6 +235,10 @@ void captureBrowse(int)
 	strcpy(g_Capture.csFileName, "./Captured.oni");
 #endif
 
+	// as we waited for user input, it's probably better to discard first frame (especially if an accumulating
+	// stream is on, like audio).
+	g_Capture.bSkipFirstFrame = true;
+
 	captureOpenWriteDevice();
 }
 
@@ -308,7 +270,7 @@ void captureCloseWriteDevice()
 {
 	if (g_Capture.pRecorder != NULL)
 	{
-		g_Capture.pRecorder->Unref();
+		g_Capture.pRecorder->Release();
 		delete g_Capture.pRecorder;
 		g_Capture.pRecorder = NULL;
 	}
@@ -333,24 +295,86 @@ void captureStop(int)
 XnStatus captureFrame()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
+
 	if (g_Capture.State == SHOULD_CAPTURE)
 	{
 		XnUInt64 nNow;
 		xnOSGetTimeStamp(&nNow);
 		nNow /= 1000;
 
+		// check if time has arrived
 		if (nNow >= g_Capture.nStartOn)
 		{
-			g_Capture.nCapturedFrames = 0;
-			g_Capture.State = CAPTURING;
+			// check if we need to discard first frame
+			if (g_Capture.bSkipFirstFrame)
+			{
+				g_Capture.bSkipFirstFrame = false;
+			}
+			else
+			{
+				// start recording
+				for (int i = 0; i < CAPTURE_NODE_COUNT; ++i)
+				{
+					g_Capture.nodes[i].nCapturedFrames = 0;
+					g_Capture.nodes[i].bRecording = false;
+				}
+				g_Capture.State = CAPTURING;
+
+				// add all captured nodes
+				if (getDevice() != NULL)
+				{
+					nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getDevice(), XN_CODEC_UNCOMPRESSED);
+					START_CAPTURE_CHECK_RC(nRetVal, "add device node");
+				}
+
+				if (isDepthOn() && (g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat != CODEC_DONT_CAPTURE))
+				{
+					nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getDepthGenerator(), g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat);
+					START_CAPTURE_CHECK_RC(nRetVal, "add depth node");
+					g_Capture.nodes[CAPTURE_DEPTH_NODE].bRecording = TRUE;
+					g_Capture.nodes[CAPTURE_DEPTH_NODE].pGenerator = getDepthGenerator();
+				}
+
+				if (isImageOn() && (g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat != CODEC_DONT_CAPTURE))
+				{
+					nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getImageGenerator(), g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat);
+					START_CAPTURE_CHECK_RC(nRetVal, "add image node");
+					g_Capture.nodes[CAPTURE_IMAGE_NODE].bRecording = TRUE;
+					g_Capture.nodes[CAPTURE_IMAGE_NODE].pGenerator = getImageGenerator();
+				}
+
+				if (isIROn() && (g_Capture.nodes[CAPTURE_IR_NODE].captureFormat != CODEC_DONT_CAPTURE))
+				{
+					nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getIRGenerator(), g_Capture.nodes[CAPTURE_IR_NODE].captureFormat);
+					START_CAPTURE_CHECK_RC(nRetVal, "add IR stream");
+					g_Capture.nodes[CAPTURE_IR_NODE].bRecording = TRUE;
+					g_Capture.nodes[CAPTURE_IR_NODE].pGenerator = getIRGenerator();
+				}
+
+				if (isAudioOn() && (g_Capture.nodes[CAPTURE_AUDIO_NODE].captureFormat != CODEC_DONT_CAPTURE))
+				{
+					nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getAudioGenerator(), g_Capture.nodes[CAPTURE_AUDIO_NODE].captureFormat);
+					START_CAPTURE_CHECK_RC(nRetVal, "add Audio stream");
+					g_Capture.nodes[CAPTURE_AUDIO_NODE].bRecording = TRUE;
+					g_Capture.nodes[CAPTURE_AUDIO_NODE].pGenerator = getAudioGenerator();
+				}
+			}
 		}
 	}
 
 	if (g_Capture.State == CAPTURING)
 	{
+		// There isn't a real need to call Record() here, as the WaitXUpdateAll() call already makes sure
+		// recording is performed.
 		nRetVal = g_Capture.pRecorder->Record();
 		XN_IS_STATUS_OK(nRetVal);
-		g_Capture.nCapturedFrames++;
+
+		// count recorded frames
+		for (int i = 0; i < CAPTURE_NODE_COUNT; ++i)
+		{
+			if (g_Capture.nodes[i].bRecording && g_Capture.nodes[i].pGenerator->IsDataNew())
+				g_Capture.nodes[i].nCapturedFrames++;
+		}
 	}
 	return XN_STATUS_OK;
 }
@@ -384,22 +408,22 @@ void captureSetFormat(XnCodecID* pMember, XnCodecID newFormat, ProductionNode &n
 
 void captureSetDepthFormat(int format)
 {
-	captureSetFormat(&g_Capture.DepthFormat, format, *getDepthGenerator());
+	captureSetFormat(&g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat, format, *getDepthGenerator());
 }
 
 void captureSetImageFormat(int format)
 {
-	captureSetFormat(&g_Capture.ImageFormat, format, *getImageGenerator());
+	captureSetFormat(&g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat, format, *getImageGenerator());
 }
 
 void captureSetIRFormat(int format)
 {
-	captureSetFormat(&g_Capture.IRFormat, format, *getIRGenerator());
+	captureSetFormat(&g_Capture.nodes[CAPTURE_IR_NODE].captureFormat, format, *getIRGenerator());
 }
 
 void captureSetAudioFormat(int format)
 {
-	captureSetFormat(&g_Capture.AudioFormat, format, *getAudioGenerator());
+	captureSetFormat(&g_Capture.nodes[CAPTURE_AUDIO_NODE].captureFormat, format, *getAudioGenerator());
 }
 
 const char* getCodecName(NodeCodec *pNodeCodec, XnCodecID codecID)
@@ -416,22 +440,22 @@ const char* getCodecName(NodeCodec *pNodeCodec, XnCodecID codecID)
 
 const char* captureGetDepthFormatName()
 {
-	return getCodecName(&g_DepthFormat, g_Capture.DepthFormat);
+	return getCodecName(&g_DepthFormat, g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat);
 }
 
 const char* captureGetImageFormatName()
 {
-	return getCodecName(&g_ImageFormat, g_Capture.ImageFormat);
+	return getCodecName(&g_ImageFormat, g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat);
 }
 
 const char* captureGetIRFormatName()
 {
-	return getCodecName(&g_IRFormat, g_Capture.IRFormat);
+	return getCodecName(&g_IRFormat, g_Capture.nodes[CAPTURE_IR_NODE].captureFormat);
 }
 
 const char* captureGetAudioFormatName()
 {
-	return getCodecName(&g_AudioFormat, g_Capture.AudioFormat);
+	return getCodecName(&g_AudioFormat, g_Capture.nodes[CAPTURE_AUDIO_NODE].captureFormat);
 }
 
 void getCaptureMessage(char* pMessage)
@@ -447,7 +471,16 @@ void getCaptureMessage(char* pMessage)
 		}
 		break;
 	case CAPTURING:
-		sprintf(pMessage, "* Recording! * | Frames: %d | Press any key or use menu to stop...", g_Capture.nCapturedFrames); 
+		{
+			int nChars = sprintf(pMessage, "* Recording! Press any key or use menu to stop *\nRecorded Frames: ");
+			for (int i = 0; i < CAPTURE_NODE_COUNT; ++i)
+			{
+				if (g_Capture.nodes[i].bRecording)
+				{
+					nChars += sprintf(pMessage + nChars, "%s-%d ", g_Capture.nodes[i].pGenerator->GetName(), g_Capture.nodes[i].nCapturedFrames);
+				}
+			}
+		}
 		break;
 	default:
 		pMessage[0] = 0;

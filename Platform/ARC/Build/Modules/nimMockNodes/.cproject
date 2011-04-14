@@ -1,0 +1,1605 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?>
+
+<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="com.arc.cdt.toolchain.ARCCompilerErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="com.arc.cdt.toolchain.ARCLinkerErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="com.arc.cdt.toolchain.ARCAssemblerErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactExtension="o" artifactName="..\..\..\..\Bin\Debug\libnimMockNodes" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" errorParsers="com.arc.cdt.toolchain.ARCCompilerErrorParser;com.arc.cdt.toolchain.ARCLinkerErrorParser;com.arc.cdt.toolchain.ARCAssemblerErrorParser;org.eclipse.cdt.core.MakeErrorParser" id="com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735" name="Debug" parent="com.arc.cdt.toolchain.arc.exeDebugConfig">
+					<folderInfo id="com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735." name="/" resourcePath="">
+						<toolChain id="com.arc.cdt.toolchain.arc.exeToolChainDebug.1336761653" name="ARCompact" superClass="com.arc.cdt.toolchain.arc.exeToolChainDebug">
+							<targetPlatform id="hcTargetPlatform.1586434504" isAbstract="false" name="Generic platform" superClass="hcTargetPlatform"/>
+							<builder buildPath="${workspace_loc:/nimMockNodes/Debug}" id="makeBuilder.1826869321" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="makeBuilder"/>
+							<tool id="arc.exe.debug.exeCompilerDebug.395628273" name="MetaWare ARC C/C++ Compiler" superClass="arc.exe.debug.exeCompilerDebug">
+								<option id="arc.compiler.options.misc.additional.1840735245" name="Additional Compiler Flags" superClass="arc.compiler.options.misc.additional" valueType="stringList">
+									<listOptionValue builtIn="false" value="-Hcpplvl=5"/>
+								</option>
+								<option id="arc.compiler.options.longenums.945383235" name="Always map enum types to full word" superClass="arc.compiler.options.longenums" value="true" valueType="boolean"/>
+								<option id="arc.arc.compiler.options.nosdata.1811387764" name="Small-data section" superClass="arc.arc.compiler.options.nosdata" value="nosdata" valueType="enumerated"/>
+								<option id="arc.compiler.options.include_dirs.526334107" name="Include Directories (one per line)" superClass="arc.compiler.options.include_dirs" valueType="includePath">
+									<listOptionValue builtIn="false" value="../../../../../../Include"/>
+								</option>
+								<option id="arc.compiler.options.target.version.550989418" name="ARC Core Version" superClass="arc.compiler.options.target.version" value="arc.compiler.options.target.arc700" valueType="enumerated"/>
+								<option id="arc.compiler.options.norm.844128805" name="Normalize instruction (-Xnorm)" superClass="arc.compiler.options.norm" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.swap.1678239546" name="Swap instruction (-Xswap)" superClass="arc.compiler.options.swap" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.ea.1295378450" name="Extended arithmetic (-Xea)" superClass="arc.compiler.options.ea" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.timers.timer0.1256787032" name="Use Timer 0 (-Xtimer0)" superClass="arc.compiler.options.timers.timer0" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.timers.timer1.77565538" name="Use timer 1 (-Xtimer1)" superClass="arc.compiler.options.timers.timer1" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.xlib.1629397165" name="Common extensions (-Xlib)" superClass="arc.compiler.options.xlib" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.mpy.1903553682" name="32-bit multiply instruction (-Xmpy)" superClass="arc.compiler.options.mpy" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.mpy16.1035774644" name="16-by-16-bit multiply(-Xmpy16)" superClass="arc.compiler.options.mpy16" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.spfpfast.2081006547" name="Fast Single-precision floating point (-Xspfp_fast)" superClass="arc.compiler.options.spfpfast" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.dpfpfast.1276126458" name="Fast Double-precision floating point (-Xdpfp_fast)" superClass="arc.compiler.options.dpfpfast" value="true" valueType="boolean"/>
+								<option id="arc.arc.compiler.options.model.646125655" name="Memory Model" superClass="arc.arc.compiler.options.model" value="large" valueType="enumerated"/>
+								<inputType id="com.arc.cdt.toolchain.arc.inputTypeCPP.235188371" name="MetaWare C++ Input" superClass="com.arc.cdt.toolchain.arc.inputTypeCPP"/>
+								<inputType id="com.arc.cdt.toolchain.arc.inputTypeC.819298269" name="MetaWare C Input" superClass="com.arc.cdt.toolchain.arc.inputTypeC"/>
+							</tool>
+							<tool id="com.arc.cdt.toolchain.arc.asmDebugExe.586577884" name="ARCompact Assembler" superClass="com.arc.cdt.toolchain.arc.asmDebugExe">
+								<option id="arc.compiler.options.target.asm.version.195169369" name="ARC Core Version" superClass="arc.compiler.options.target.asm.version" value="arc.compiler.options.target.arc700" valueType="enumerated"/>
+								<option id="arc.asm.options.norm.1881818121" name="Normalize instruction (-Xnorm)" superClass="arc.asm.options.norm" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.swap.247450679" name="Swap instruction (-Xswap)" superClass="arc.asm.options.swap" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.ea.1302439597" name="Extended arithmetic (-Xea)" superClass="arc.asm.options.ea" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.bs.883979791" name="Barrel shifter (-Xbs)" superClass="arc.asm.options.bs" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.timers.timer0.1999593700" name="Use Timer 0 (-Xtimer0)" superClass="arc.asm.options.timers.timer0" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.timers.timer1.1227321140" name="Use timer 1 (-Xtimer1)" superClass="arc.asm.options.timers.timer1" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.xlib.366416616" name="Common extensions (-Xlib)" superClass="arc.asm.options.xlib" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.mpy.937711779" name="32-bit multiply instruction (-Xmpy)" superClass="arc.asm.options.mpy" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.mpy16.974345602" name="16-by-16-bit multiply(-Xmpy16)" superClass="arc.asm.options.mpy16" value="true" valueType="boolean"/>
+								<inputType id="com.arc.cdt.toolchain.asminput.458486156" name="Assembler Inputs" superClass="com.arc.cdt.toolchain.asminput"/>
+							</tool>
+							<tool id="com.arc.cdt.toolchain.arc.exeLinkerDebug.557353628" name="MetaWare Linker for ARCompact" superClass="com.arc.cdt.toolchain.arc.exeLinkerDebug">
+								<option id="arc.linker.options.target.version.1870608119" name="Target Runtime Libraries" superClass="arc.linker.options.target.version" value="arc.compiler.options.target.arc700" valueType="enumerated"/>
+								<option id="arc.linker.options.norm.848393396" name="Normalize instruction (-Xnorm)" superClass="arc.linker.options.norm" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.swap.1886109696" name="Swap instruction (-Xswap)" superClass="arc.linker.options.swap" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.ea.1911734984" name="Extended arithmetic (-Xea)" superClass="arc.linker.options.ea" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.bs.272279971" name="Barrel shifter (-Xbs)" superClass="arc.linker.options.bs" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.xlib.772542520" name="Common extensions (-Xlib)" superClass="arc.linker.options.xlib" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.mpy.315986377" name="32-bit multiply instruction (-Xmpy)" superClass="arc.linker.options.mpy" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.mpy16.450455052" name="16-by-16-bit multiply(-Xmpy16)" superClass="arc.linker.options.mpy16" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.spfpfast.179175610" name="Fast Single-precision floating point libraries (-Xspfp_fast)" superClass="arc.linker.options.spfpfast" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.dpfpfast.498366333" name="Fast Double-precision floating point libraries (-Xdpfp_fast)" superClass="arc.linker.options.dpfpfast" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.nocrt.1299877669" name="Link in default startup code (-Hnocrt)" superClass="arc.linker.options.nocrt" value="false" valueType="boolean"/>
+								<option id="arc.linker.options.nolib.1263445170" name="Link in standard C/C++ library (-Hnolib)" superClass="arc.linker.options.nolib" value="false" valueType="boolean"/>
+								<option id="arc.link.options.ldflags.1160482100" name="Additional options for linking (one per line)" superClass="arc.link.options.ldflags" valueType="stringList">
+									<listOptionValue builtIn="false" value="-r"/>
+								</option>
+							</tool>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="scannerConfiguration">
+				<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+				<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="false" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="false" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="false" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="false" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="makefileGenerator">
+						<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<scannerConfigBuildInfo instanceId="com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735;com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735.;arc.exe.debug.exeCompilerDebug.395628273;com.arc.cdt.toolchain.arc.inputTypeC.819298269">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile"/>
+					<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="makefileGenerator">
+							<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+				</scannerConfigBuildInfo>
+				<scannerConfigBuildInfo instanceId="com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894;com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894.;arc.cdt.toolchain.arc.exeCompilerRelease.675969785;com.arc.cdt.toolchain.arc.inputTypeC.485860517">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile"/>
+					<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="makefileGenerator">
+							<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+				</scannerConfigBuildInfo>
+				<scannerConfigBuildInfo instanceId="com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894;com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894.;arc.cdt.toolchain.arc.exeCompilerRelease.675969785;com.arc.cdt.toolchain.arc.inputTypeCPP.720410568">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile"/>
+					<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="makefileGenerator">
+							<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+				</scannerConfigBuildInfo>
+				<scannerConfigBuildInfo instanceId="com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735;com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735.;arc.exe.debug.exeCompilerDebug.395628273;com.arc.cdt.toolchain.arc.inputTypeCPP.235188371">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile"/>
+					<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="makefileGenerator">
+							<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+				</scannerConfigBuildInfo>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
+			<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+		</cconfiguration>
+		<cconfiguration id="com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="com.arc.cdt.toolchain.ARCCompilerErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="com.arc.cdt.toolchain.ARCLinkerErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="com.arc.cdt.toolchain.ARCAssemblerErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactExtension="o" artifactName="..\..\..\..\Bin\Release\libnimMockNodes" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" errorParsers="com.arc.cdt.toolchain.ARCCompilerErrorParser;com.arc.cdt.toolchain.ARCLinkerErrorParser;com.arc.cdt.toolchain.ARCAssemblerErrorParser;org.eclipse.cdt.core.MakeErrorParser" id="com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894" name="Release" parent="com.arc.cdt.toolchain.arc.exeReleaseConfig">
+					<folderInfo id="com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894." name="/" resourcePath="">
+						<toolChain id="com.arc.cdt.toolchain.arc.exeReleaseToolChain.817838312" name="ARCompact" superClass="com.arc.cdt.toolchain.arc.exeReleaseToolChain">
+							<targetPlatform id="hcTargetPlatform.1447300792" isAbstract="false" name="Generic platform" superClass="hcTargetPlatform"/>
+							<builder buildPath="${workspace_loc:/nimMockNodes/Release}" id="makeBuilder.1974009982" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="makeBuilder"/>
+							<tool id="arc.cdt.toolchain.arc.exeCompilerRelease.675969785" name="MetaWare ARC C/C++ Compiler" superClass="arc.cdt.toolchain.arc.exeCompilerRelease">
+								<option id="arc.compiler.options.misc.additional.949407588" name="Additional Compiler Flags" superClass="arc.compiler.options.misc.additional" valueType="stringList">
+									<listOptionValue builtIn="false" value="-Hcpplvl=5"/>
+								</option>
+								<option id="arc.compiler.options.longenums.188886245" name="Always map enum types to full word" superClass="arc.compiler.options.longenums" value="true" valueType="boolean"/>
+								<option id="arc.arc.compiler.options.nosdata.1324383211" name="Small-data section" superClass="arc.arc.compiler.options.nosdata" value="nosdata" valueType="enumerated"/>
+								<option id="arc.compiler.options.include_dirs.16140531" name="Include Directories (one per line)" superClass="arc.compiler.options.include_dirs" valueType="includePath">
+									<listOptionValue builtIn="false" value="../../../../../../Include"/>
+								</option>
+								<option id="arc.compiler.options.target.version.1816680003" name="ARC Core Version" superClass="arc.compiler.options.target.version" value="arc.compiler.options.target.arc700" valueType="enumerated"/>
+								<option id="arc.compiler.options.norm.1470371172" name="Normalize instruction (-Xnorm)" superClass="arc.compiler.options.norm" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.swap.1510569170" name="Swap instruction (-Xswap)" superClass="arc.compiler.options.swap" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.ea.1064589777" name="Extended arithmetic (-Xea)" superClass="arc.compiler.options.ea" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.timers.timer0.458473354" name="Use Timer 0 (-Xtimer0)" superClass="arc.compiler.options.timers.timer0" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.timers.timer1.2126323291" name="Use timer 1 (-Xtimer1)" superClass="arc.compiler.options.timers.timer1" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.xlib.1822945304" name="Common extensions (-Xlib)" superClass="arc.compiler.options.xlib" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.mpy.274716717" name="32-bit multiply instruction (-Xmpy)" superClass="arc.compiler.options.mpy" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.mpy16.1739700989" name="16-by-16-bit multiply(-Xmpy16)" superClass="arc.compiler.options.mpy16" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.spfpfast.1610571745" name="Fast Single-precision floating point (-Xspfp_fast)" superClass="arc.compiler.options.spfpfast" value="true" valueType="boolean"/>
+								<option id="arc.compiler.options.dpfpfast.1407996906" name="Fast Double-precision floating point (-Xdpfp_fast)" superClass="arc.compiler.options.dpfpfast" value="true" valueType="boolean"/>
+								<option id="arc.arc.compiler.options.model.1692633214" name="Memory Model" superClass="arc.arc.compiler.options.model" value="large" valueType="enumerated"/>
+								<option id="arc.compiler.options.defines.905664837" name="Preprocessor Defines (one per line)" superClass="arc.compiler.options.defines" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+								</option>
+								<inputType id="com.arc.cdt.toolchain.arc.inputTypeCPP.720410568" name="MetaWare C++ Input" superClass="com.arc.cdt.toolchain.arc.inputTypeCPP"/>
+								<inputType id="com.arc.cdt.toolchain.arc.inputTypeC.485860517" name="MetaWare C Input" superClass="com.arc.cdt.toolchain.arc.inputTypeC"/>
+							</tool>
+							<tool id="com.arc.cdt.toolchain.arc.asmReleaseExe.1465947975" name="ARCompact Assembler" superClass="com.arc.cdt.toolchain.arc.asmReleaseExe">
+								<option id="arc.compiler.options.target.asm.version.2006633686" name="ARC Core Version" superClass="arc.compiler.options.target.asm.version" value="arc.compiler.options.target.arc700" valueType="enumerated"/>
+								<option id="arc.asm.options.norm.946309773" name="Normalize instruction (-Xnorm)" superClass="arc.asm.options.norm" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.swap.1101836032" name="Swap instruction (-Xswap)" superClass="arc.asm.options.swap" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.ea.289419520" name="Extended arithmetic (-Xea)" superClass="arc.asm.options.ea" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.bs.735301020" name="Barrel shifter (-Xbs)" superClass="arc.asm.options.bs" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.timers.timer0.1062010118" name="Use Timer 0 (-Xtimer0)" superClass="arc.asm.options.timers.timer0" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.timers.timer1.1036456558" name="Use timer 1 (-Xtimer1)" superClass="arc.asm.options.timers.timer1" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.mpy.1634366083" name="32-bit multiply instruction (-Xmpy)" superClass="arc.asm.options.mpy" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.xlib.796270330" name="Common extensions (-Xlib)" superClass="arc.asm.options.xlib" value="true" valueType="boolean"/>
+								<option id="arc.asm.options.mpy16.1871447944" name="16-by-16-bit multiply(-Xmpy16)" superClass="arc.asm.options.mpy16" value="true" valueType="boolean"/>
+								<inputType id="com.arc.cdt.toolchain.asminput.849100516" name="Assembler Inputs" superClass="com.arc.cdt.toolchain.asminput"/>
+							</tool>
+							<tool id="com.arc.cdt.toolchain.arc.exelinkerRelease.1159158619" name="MetaWare Linker for ARCompact" superClass="com.arc.cdt.toolchain.arc.exelinkerRelease">
+								<option id="arc.linker.options.norm.89451625" name="Normalize instruction (-Xnorm)" superClass="arc.linker.options.norm" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.swap.279032702" name="Swap instruction (-Xswap)" superClass="arc.linker.options.swap" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.ea.1010526621" name="Extended arithmetic (-Xea)" superClass="arc.linker.options.ea" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.bs.516646535" name="Barrel shifter (-Xbs)" superClass="arc.linker.options.bs" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.target.version.988684456" name="Target Runtime Libraries" superClass="arc.linker.options.target.version" value="arc.compiler.options.target.arc700" valueType="enumerated"/>
+								<option id="arc.linker.options.xlib.576659674" name="Common extensions (-Xlib)" superClass="arc.linker.options.xlib" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.mpy.1318811792" name="32-bit multiply instruction (-Xmpy)" superClass="arc.linker.options.mpy" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.mpy16.470449260" name="16-by-16-bit multiply(-Xmpy16)" superClass="arc.linker.options.mpy16" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.spfpfast.501972438" name="Fast Single-precision floating point libraries (-Xspfp_fast)" superClass="arc.linker.options.spfpfast" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.dpfpfast.1850280742" name="Fast Double-precision floating point libraries (-Xdpfp_fast)" superClass="arc.linker.options.dpfpfast" value="true" valueType="boolean"/>
+								<option id="arc.linker.options.nocrt.1522659874" name="Link in default startup code (-Hnocrt)" superClass="arc.linker.options.nocrt" value="false" valueType="boolean"/>
+								<option id="arc.linker.options.nolib.908607930" name="Link in standard C/C++ library (-Hnolib)" superClass="arc.linker.options.nolib" value="false" valueType="boolean"/>
+								<option id="arc.link.options.ldflags.661115019" name="Additional options for linking (one per line)" superClass="arc.link.options.ldflags" valueType="stringList">
+									<listOptionValue builtIn="false" value="-r"/>
+								</option>
+							</tool>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="scannerConfiguration">
+				<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+				<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="false" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="false" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="false" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="false" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="HighCSpecsFile">
+						<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="makefileGenerator">
+						<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+					<buildOutputProvider>
+						<openAction enabled="true" filePath=""/>
+						<parser enabled="true"/>
+					</buildOutputProvider>
+					<scannerInfoProvider id="specsFile">
+						<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+						<parser enabled="true"/>
+					</scannerInfoProvider>
+				</profile>
+				<scannerConfigBuildInfo instanceId="com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735;com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735.;arc.exe.debug.exeCompilerDebug.395628273;com.arc.cdt.toolchain.arc.inputTypeC.819298269">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile"/>
+					<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="makefileGenerator">
+							<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+				</scannerConfigBuildInfo>
+				<scannerConfigBuildInfo instanceId="com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894;com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894.;arc.cdt.toolchain.arc.exeCompilerRelease.675969785;com.arc.cdt.toolchain.arc.inputTypeC.485860517">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile"/>
+					<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="makefileGenerator">
+							<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+				</scannerConfigBuildInfo>
+				<scannerConfigBuildInfo instanceId="com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894;com.arc.cdt.toolchain.arc.exeReleaseConfig.1943826894.;arc.cdt.toolchain.arc.exeCompilerRelease.675969785;com.arc.cdt.toolchain.arc.inputTypeCPP.720410568">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile"/>
+					<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="makefileGenerator">
+							<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+				</scannerConfigBuildInfo>
+				<scannerConfigBuildInfo instanceId="com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735;com.arc.cdt.toolchain.arc.exeDebugConfig.1255074735.;arc.exe.debug.exeCompilerDebug.395628273;com.arc.cdt.toolchain.arc.inputTypeCPP.235188371">
+					<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile"/>
+					<profile id="com.arc.cdt.toolchain.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arc4.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-a4 -Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="mcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.arm.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcarm" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.vc.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="false" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcvc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="com.arc.cdt.toolchain.win32.ScannerConfigurationDiscoveryProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="HighCSpecsFile">
+							<runAction arguments="-Hbatchnotmp -Hnoobj ${plugin_state_location}/${specs_file}" command="hcn386" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="makefileGenerator">
+							<runAction arguments="-E -P -v -dD" command="" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/${specs_file}" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp" command="g++" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.c" command="gcc" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfile">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/${specs_file}&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'g++ -E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+					<profile id="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC">
+						<buildOutputProvider>
+							<openAction enabled="true" filePath=""/>
+							<parser enabled="true"/>
+						</buildOutputProvider>
+						<scannerInfoProvider id="specsFile">
+							<runAction arguments="-c 'gcc -E -P -v -dD &quot;${plugin_state_location}/specs.c&quot;'" command="sh" useDefault="true"/>
+							<parser enabled="true"/>
+						</scannerInfoProvider>
+					</profile>
+				</scannerConfigBuildInfo>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+			<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="nimMockNodes.com.arc.cdt.toolchain.arc.exeProject.589404355" name="Executable" projectType="com.arc.cdt.toolchain.arc.exeProject"/>
+	</storageModule>
+</cproject>

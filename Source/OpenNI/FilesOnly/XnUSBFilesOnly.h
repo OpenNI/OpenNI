@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef _XN_USBWIN32_H_
 #define _XN_USBWIN32_H_
 
@@ -50,37 +46,37 @@
 //---------------------------------------------------------------------------
 typedef struct XnUSBDeviceHandle
 {
-	XN_BOOL bValid;
+	XnBool bValid;
 
-	XN_CHAR cpDeviceName[MAX_DEVICE_STR_LENGTH]; 
+	XnChar cpDeviceName[MAX_DEVICE_STR_LENGTH]; 
 	HANDLE hUSBDevHandle;
 
-	XN_UINT8 nAltInterface;
+	XnUInt8 nAltInterface;
 
 	XnUSBDeviceSpeed nDevSpeed;
 } XnUSBDevHandle;
 
 typedef struct XnUSBBuffersInfo
 {
-	XN_UCHAR* pBuffer;
+	XnUChar* pBuffer;
 } XnUSBBuffersInfo;
 
 typedef struct XnUSBReadThreadData
 {
-	XN_BOOL bInUse;
+	XnBool bInUse;
 
 	XN_USB_EP_HANDLE pEPHandle;
 
-	XN_UINT32 nBufferSize;
-	XN_UINT32 nNumBuffers;
+	XnUInt32 nBufferSize;
+	XnUInt32 nNumBuffers;
 
-	XN_UINT32 nTimeOut;
+	XnUInt32 nTimeOut;
 
 	XnUSBReadCallbackFunctionPtr pCallbackFunction;
 	PVOID pCallbackData;
 
 	XN_THREAD_HANDLE  hReadThread;
-	XN_BOOL			  bKillReadThread;
+	XnBool			  bKillReadThread;
 
 	XnUSBBuffersInfo* pBuffersInfo;
 	OVERLAPPED* pOvlpIO;
@@ -88,17 +84,17 @@ typedef struct XnUSBReadThreadData
 
 typedef struct XnUSBEndPointHandle
 {
-	XN_BOOL bValid;
+	XnBool bValid;
 
 	HANDLE hEPHandle;
 	HANDLE hEPHandleOvlp;
 
-	XN_UINT32 nTimeOut;
+	XnUInt32 nTimeOut;
 
 	OVERLAPPED ovlpIO;
 	XnUSBReadThreadData ThreadData;
 
-	XN_UINT16 nEndPointID;
+	XnUInt16 nEndPointID;
 	XnUSBEndPointType  nEPType;
 	XnUSBDirectionType nEPDir;
 } XnUSBEPHandle;

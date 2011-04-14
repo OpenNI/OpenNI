@@ -1,32 +1,31 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 // --------------------------------
 // Includes
 // --------------------------------
 #include "Device.h"
 #include "Draw.h"
+#include <math.h>
+#include <XnLog.h>
 
 // --------------------------------
 // Defines
@@ -41,11 +40,11 @@ Context g_Context;
 DeviceStringProperty g_PrimaryStream;
 DeviceParameter g_Registration;
 DeviceParameter g_Resolution;
-bool g_bIsDepthOn = true;
-bool g_bIsImageOn = true;
-bool g_bIsIROn = true;
-bool g_bIsAudioOn = true;
-bool g_bIsPlayerOn = true;
+bool g_bIsDepthOn = false;
+bool g_bIsImageOn = false;
+bool g_bIsIROn = false;
+bool g_bIsAudioOn = false;
+bool g_bIsPlayerOn = false;
 
 Device g_Device;
 DepthGenerator g_Depth;
@@ -126,6 +125,7 @@ void openCommon()
 	g_bIsImageOn = false;
 	g_bIsIROn = false;
 	g_bIsAudioOn = false;
+	g_bIsPlayerOn = false;
 
 	NodeInfoList list;
 	nRetVal = g_Context.EnumerateExistingNodes(list);
@@ -185,6 +185,85 @@ XnStatus openDeviceFromXml(const char* csXmlFile, EnumerationErrors& errors)
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	nRetVal = g_Context.InitFromXmlFile(csXmlFile, &errors);
+	XN_IS_STATUS_OK(nRetVal);
+
+	openCommon();
+
+	return (XN_STATUS_OK);
+}
+
+XnStatus openDeviceFromXmlWithChoice(const char* csXmlFile, EnumerationErrors& errors)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	xnLogInitFromXmlFile(csXmlFile);
+
+	nRetVal = g_Context.Init();
+	XN_IS_STATUS_OK(nRetVal);
+
+	// find devices
+	NodeInfoList list;
+	nRetVal = g_Context.EnumerateProductionTrees(XN_NODE_TYPE_DEVICE, NULL, list, &errors);
+	XN_IS_STATUS_OK(nRetVal);
+
+	printf("The following devices were found:\n");
+	int i = 1;
+	for (NodeInfoList::Iterator it = list.Begin(); it != list.End(); ++it, ++i)
+	{
+		NodeInfo deviceNodeInfo = *it;
+
+		Device deviceNode;
+		deviceNodeInfo.GetInstance(deviceNode);
+		XnBool bExists = deviceNode.IsValid();
+		if (!bExists)
+		{
+			g_Context.CreateProductionTree(deviceNodeInfo);
+			deviceNodeInfo.GetInstance(deviceNode);
+			// this might fail.
+		}
+
+		if (deviceNode.IsValid() && deviceNode.IsCapabilitySupported(XN_CAPABILITY_DEVICE_IDENTIFICATION))
+		{
+			const XnUInt32 nStringBufferSize = 200;
+			XnChar strDeviceName[nStringBufferSize];
+			XnChar strSerialNumber[nStringBufferSize];
+
+			XnUInt32 nLength = nStringBufferSize;
+			deviceNode.GetIdentificationCap().GetDeviceName(strDeviceName, nLength);
+			nLength = nStringBufferSize;
+			deviceNode.GetIdentificationCap().GetSerialNumber(strSerialNumber, nLength);
+			printf("[%d] %s (%s)\n", i, strDeviceName, strSerialNumber);
+		}
+		else
+		{
+			printf("[%d] %s\n", i, deviceNodeInfo.GetCreationInfo());
+		}
+
+		// release the device if we created it
+		if (!bExists && deviceNode.IsValid())
+		{
+			deviceNode.Release();
+		}
+	}
+	printf("\n");
+	printf("Choose device to open (1): ");
+
+	int chosen = 1;
+	scanf("%d", &chosen);
+
+	// create it
+	NodeInfoList::Iterator it = list.Begin();
+	for (i = 1; i < chosen; ++i)
+	{
+		it++;
+	}
+
+	NodeInfo deviceNode = *it;
+	nRetVal = g_Context.CreateProductionTree(deviceNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	// now run the rest of the XML
+	nRetVal = g_Context.RunXmlScriptFromFile(csXmlFile, &errors);
 	XN_IS_STATUS_OK(nRetVal);
 
 	openCommon();
@@ -527,6 +606,35 @@ void setStreamCropping(MapGenerator* pGenerator, XnCropping* pCropping)
 	{
 		displayMessage("Failed to set cropping: %s", xnGetStatusString(nRetVal));
 		return;
+	}
+}
+
+void setPlaybackSpeed(int ratioDiff)
+{
+	if (g_Player.IsValid())
+	{
+		XnDouble dNewSpeed = g_Player.GetPlaybackSpeed() * pow(2.0, (XnDouble)ratioDiff);
+		XnStatus nRetVal = g_Player.SetPlaybackSpeed(dNewSpeed);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			displayMessage("Failed to set playback speed: %s", xnGetStatusString(nRetVal));
+		}
+	}
+	else
+	{
+		displayMessage("Can't set playback speed - input is not a recording!");
+	}
+}
+
+XnDouble getPlaybackSpeed()
+{
+	if (g_Player.IsValid())
+	{
+		return g_Player.GetPlaybackSpeed();
+	}
+	else
+	{
+		return 1.0;
 	}
 }
 

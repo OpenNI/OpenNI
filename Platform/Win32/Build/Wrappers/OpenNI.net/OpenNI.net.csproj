@@ -1,0 +1,220 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{2FE4F6DE-12C8-41EE-9588-EB91CB6112FE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>OpenNI</RootNamespace>
+    <AssemblyName>OpenNI.Net</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkSubset>
+    </TargetFrameworkSubset>
+    <StartupObject>
+    </StartupObject>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>OpenNI.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\Bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>..\..\..\Bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\Bin64\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;Win_x64</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>..\..\..\Bin64\Release\</OutputPath>
+    <DefineConstants>TRACE;Win_x64</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\AlternativeViewPointCapability.cs">
+      <Link>Capabilities\AlternativeViewPointCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\AntiFlickerCapability.cs">
+      <Link>Capabilities\AntiFlickerCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\AssemblyInfo.cs">
+      <Link>AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\AudioGenerator.cs">
+      <Link>Nodes\AudioGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\AudioMetaData.cs">
+      <Link>MetaData\AudioMetaData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Codec.cs">
+      <Link>Nodes\Codec.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Context.cs">
+      <Link>Context.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\CroppingCapability.cs">
+      <Link>Capabilities\CroppingCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\DepthGenerator.cs">
+      <Link>Nodes\DepthGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\DepthMetaData.cs">
+      <Link>MetaData\DepthMetaData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Device.cs">
+      <Link>Nodes\Device.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\EnumerationErrors.cs">
+      <Link>EnumerationErrors.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\FrameSyncCapability.cs">
+      <Link>Capabilities\FrameSyncCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\GeneralIntCapability.cs">
+      <Link>Capabilities\GeneralIntCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Generator.cs">
+      <Link>Nodes\Generator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\GestureGenerator.cs">
+      <Link>Nodes\GestureGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\HandsGenerator.cs">
+      <Link>Nodes\HandsGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\ImageGenerator.cs">
+      <Link>Nodes\ImageGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\ImageMetaData.cs">
+      <Link>MetaData\ImageMetaData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\IMapData.cs">
+      <Link>Data\IMapData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\IRGenerator.cs">
+      <Link>Nodes\IRGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\IRMetaData.cs">
+      <Link>MetaData\IRMetaData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Log.cs">
+      <Link>Log.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\MapData.cs">
+      <Link>Data\MapData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\MapGenerator.cs">
+      <Link>Nodes\MapGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\MapMetaData.cs">
+      <Link>MetaData\MapMetaData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\MirrorCapability.cs">
+      <Link>Capabilities\MirrorCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\MockAudioGenerator.cs">
+      <Link>Nodes\MockAudioGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\MockDepthGenerator.cs">
+      <Link>Nodes\MockDepthGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\MockImageGenerator.cs">
+      <Link>Nodes\MockImageGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\MockIRGenerator.cs">
+      <Link>Nodes\MockIRGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\NodeInfo.cs">
+      <Link>NodeInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\NodeInfoList.cs">
+      <Link>NodeInfoList.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\OpenNIImporter.cs">
+      <Link>OpenNIImporter.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\OutputMetaData.cs">
+      <Link>MetaData\OutputMetaData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Player.cs">
+      <Link>Nodes\Player.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\PoseDetectionCapability.cs">
+      <Link>Capabilities\PoseDetectionCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\ProductionNode.cs">
+      <Link>Nodes\ProductionNode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Query.cs">
+      <Link>Query.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Recorder.cs">
+      <Link>Nodes\Recorder.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\SceneAnalyzer.cs">
+      <Link>Nodes\SceneAnalyzer.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\SceneMetaData.cs">
+      <Link>MetaData\SceneMetaData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\SkeletonCapability.cs">
+      <Link>Capabilities\SkeletonCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\StateChangedEvent.cs">
+      <Link>StateChangedEvent.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\UserGenerator.cs">
+      <Link>Nodes\UserGenerator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\UserPositionCapability.cs">
+      <Link>Capabilities\UserPositionCapability.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Wrappers.cs">
+      <Link>Wrappers.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Res\AssemblyInfo-OpenNI.cs">
+      <Link>AssemblyInfo-OpenNI.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="OpenNI.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

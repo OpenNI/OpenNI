@@ -1,31 +1,30 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #include "XnNodeWatcher.h"
 #include "XnPropNames.h"
 #include "XnInternalTypes.h"
 #include "xnInternalFuncs.h"
 #include "XnLog.h"
+#include "XnTypeManager.h"
 
 namespace xn
 {
@@ -36,47 +35,86 @@ XnStatus CreateNodeWatcher(ProductionNode &node,
 						   XnNodeNotifications &notifications, 
 						   NodeWatcher*& pNodeWatcher)
 {
+	XnStatus nRetVal = XN_STATUS_OK;
+	
 	pNodeWatcher = NULL;
-	switch (type)
+
+	const XnBitSet* pHierarchy;
+	nRetVal = TypeManager::GetInstance().GetTypeHierarchy(type, pHierarchy);
+	XN_IS_STATUS_OK(nRetVal);
+
+	// start with concrete types
+	if (pHierarchy->IsSet(XN_NODE_TYPE_DEVICE))
 	{
-		case XN_NODE_TYPE_DEVICE:
-			XN_VALIDATE_NEW(pNodeWatcher, DeviceWatcher, (Device&)node, notifications, pCookie);
-			break;
-		case XN_NODE_TYPE_DEPTH:
-			XN_VALIDATE_NEW(pNodeWatcher, DepthWatcher, (DepthGenerator&)node, notifications, pCookie);
-			break;
-		case XN_NODE_TYPE_IMAGE:  
-			XN_VALIDATE_NEW(pNodeWatcher, ImageWatcher, (ImageGenerator&)node, notifications, pCookie);
-			break;
-		case XN_NODE_TYPE_AUDIO:  
-			XN_VALIDATE_NEW(pNodeWatcher, AudioWatcher, (AudioGenerator&)node, notifications, pCookie);
-			break;
-		case XN_NODE_TYPE_IR:  
-			XN_VALIDATE_NEW(pNodeWatcher, IRWatcher, (IRGenerator&)node, notifications, pCookie);
-			break;
-		case XN_NODE_TYPE_USER:  
-			//TODO: implement UserWatcher
-			return XN_STATUS_NOT_IMPLEMENTED;
-		case XN_NODE_TYPE_RECORDER:
-			xnLogWarning(XN_MASK_OPEN_NI, "Cannot Record a Recorder");
-			XN_ASSERT(FALSE);
-			return XN_STATUS_INVALID_OPERATION;
-		case XN_NODE_TYPE_PLAYER:  
-			//TODO: implement PlayerWatcher
-			return XN_STATUS_NOT_IMPLEMENTED;
-		case XN_NODE_TYPE_GESTURE:  
-			//TODO: Finish GestureWatcher implementation
-			return XN_STATUS_NOT_IMPLEMENTED;
-		case XN_NODE_TYPE_SCENE:  
-			//TODO: Implement scene watcher
-			return XN_STATUS_NOT_IMPLEMENTED;
-		case XN_NODE_TYPE_HANDS:  
-			//TODO: Implement hands watcher
-			return XN_STATUS_NOT_IMPLEMENTED;
-		default:
-			xnLogWarning(XN_MASK_OPEN_NI, "Got unknown type: %d", type);
-			XN_ASSERT(FALSE);
-			return XN_STATUS_UNKNOWN_GENERATOR_TYPE;
+		XN_VALIDATE_NEW(pNodeWatcher, DeviceWatcher, (Device&)node, notifications, pCookie);
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
+	{
+		XN_VALIDATE_NEW(pNodeWatcher, DepthWatcher, (DepthGenerator&)node, notifications, pCookie);
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_IMAGE))
+	{
+		XN_VALIDATE_NEW(pNodeWatcher, ImageWatcher, (ImageGenerator&)node, notifications, pCookie);
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_IR))
+	{
+		XN_VALIDATE_NEW(pNodeWatcher, IRWatcher, (IRGenerator&)node, notifications, pCookie);
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_GESTURE))
+	{
+		//TODO: Finish GestureWatcher implementation
+		return XN_STATUS_NOT_IMPLEMENTED;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_USER))
+	{
+		//TODO: implement UserWatcher
+		return XN_STATUS_NOT_IMPLEMENTED;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_HANDS))
+	{
+		//TODO: Implement hands watcher
+		return XN_STATUS_NOT_IMPLEMENTED;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_SCENE))
+	{
+		//TODO: Implement scene watcher
+		return XN_STATUS_NOT_IMPLEMENTED;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_AUDIO))
+	{
+		XN_VALIDATE_NEW(pNodeWatcher, AudioWatcher, (AudioGenerator&)node, notifications, pCookie);
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_RECORDER))
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Cannot Record a Recorder");
+		XN_ASSERT(FALSE);
+		return XN_STATUS_INVALID_OPERATION;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_PLAYER))
+	{
+		//TODO: implement PlayerWatcher
+		return XN_STATUS_NOT_IMPLEMENTED;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_CODEC))
+	{
+		//TODO: implement CodecWatcher
+		return XN_STATUS_NOT_IMPLEMENTED;
+	}
+
+	// and now, some abstract types
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_MAP_GENERATOR))
+	{
+		XN_VALIDATE_NEW(pNodeWatcher, MapWatcher, (MapGenerator&)node, notifications, pCookie);
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_GENERATOR))
+	{
+		XN_VALIDATE_NEW(pNodeWatcher, GeneratorWatcher, (Generator&)node, notifications, pCookie);
+	}
+	else
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Got unknown type: %d", type);
+		XN_ASSERT(FALSE);
+		return XN_STATUS_UNKNOWN_GENERATOR_TYPE;
 	}
 
 	return XN_STATUS_OK;
@@ -246,6 +284,11 @@ XnStatus GeneratorWatcher::NotifyStateImpl()
 	return XN_STATUS_OK;
 }
 
+const void* GeneratorWatcher::GetCurrentData()
+{
+	return m_generator.GetData();
+}
+
 XnStatus GeneratorWatcher::Watch()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -270,6 +313,11 @@ XnStatus GeneratorWatcher::Watch()
 		}
 	}
 	return XN_STATUS_OK;
+}
+
+XnUInt64 GeneratorWatcher::GetTimestamp()
+{
+	return m_generator.GetTimestamp();
 }
 
 void XN_CALLBACK_TYPE GeneratorWatcher::HandleGenerationRunningChange(ProductionNode& node, void* pCookie)
@@ -501,11 +549,6 @@ XnStatus ImageWatcher::NotifyStateImpl()
 	return XN_STATUS_OK;
 }
 
-const void* ImageWatcher::GetCurrentData()
-{
-	return m_imageGenerator.GetImageMap();
-}
-
 XnStatus ImageWatcher::NotifySupportedPixelFormats()
 {
 	XnSupportedPixelFormats supportedPixelFormats;
@@ -514,6 +557,7 @@ XnStatus ImageWatcher::NotifySupportedPixelFormats()
 	supportedPixelFormats.m_bYUV422 = m_imageGenerator.IsPixelFormatSupported(XN_PIXEL_FORMAT_YUV422);
 	supportedPixelFormats.m_bGrayscale8Bit = m_imageGenerator.IsPixelFormatSupported(XN_PIXEL_FORMAT_GRAYSCALE_8_BIT);
 	supportedPixelFormats.m_bGrayscale16Bit = m_imageGenerator.IsPixelFormatSupported(XN_PIXEL_FORMAT_GRAYSCALE_16_BIT);
+	supportedPixelFormats.m_bMJPEG = m_imageGenerator.IsPixelFormatSupported(XN_PIXEL_FORMAT_MJPEG);
 
 	XnStatus nRetVal = NotifyGeneralPropChanged(XN_PROP_SUPPORTED_PIXEL_FORMATS, sizeof(supportedPixelFormats), &supportedPixelFormats);
 	XN_IS_STATUS_OK(nRetVal);
@@ -540,11 +584,6 @@ IRWatcher::IRWatcher(const IRGenerator &irGenerator,
 	m_irGenerator(irGenerator),
 	MapWatcher(irGenerator, notifications, pCookie)
 {
-}
-
-const void* IRWatcher::GetCurrentData()
-{
-	return m_irGenerator.GetIRMap();
 }
 
 /****************/
@@ -624,11 +663,6 @@ XnStatus DepthWatcher::NotifyStateImpl()
 	}
 
 	return XN_STATUS_OK;
-}
-
-const void* DepthWatcher::GetCurrentData()
-{
-	return m_depthGenerator.GetDepthMap();
 }
 
 XnStatus DepthWatcher::NotifyFieldOfView()
@@ -759,11 +793,6 @@ XnStatus AudioWatcher::NotifyStateImpl()
 	return XN_STATUS_OK;
 }
 
-const void* AudioWatcher::GetCurrentData()
-{
-	return m_audioGenerator.GetAudioBuffer();
-}
-
 XnStatus AudioWatcher::NotifyOutputMode()
 {
 	XnWaveOutputMode outputMode;
@@ -782,7 +811,7 @@ XnStatus AudioWatcher::NotifySupportedOutputModes()
 		return XN_STATUS_ERROR;
 	}
 
-	XnStatus nRetVal = NotifyIntPropChanged(XN_PROP_SUPPORTED_USER_POSITIONS_COUNT, nModes);
+	XnStatus nRetVal = NotifyIntPropChanged(XN_PROP_WAVE_SUPPORTED_OUTPUT_MODES_COUNT, nModes);
 	XN_IS_STATUS_OK(nRetVal);
 	XnWaveOutputMode *pSupportedModes = XN_NEW_ARR(XnWaveOutputMode, nModes);
 	XN_VALIDATE_ALLOC_PTR(pSupportedModes);
@@ -793,7 +822,7 @@ XnStatus AudioWatcher::NotifySupportedOutputModes()
 		return nRetVal;
 	}
 
-	nRetVal = NotifyGeneralPropChanged(XN_PROP_WAVE_SUPPORTED_OUTPUT_MODES_COUNT, nModes, pSupportedModes);
+	nRetVal = NotifyGeneralPropChanged(XN_PROP_WAVE_SUPPORTED_OUTPUT_MODES, nModes * sizeof(XnWaveOutputMode), pSupportedModes);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		XN_DELETE_ARR(pSupportedModes);
@@ -851,12 +880,6 @@ void GestureWatcher::Unregister()
 XnStatus GestureWatcher::NotifyStateImpl()
 {
 	return XN_STATUS_OK;
-}
-
-const void* GestureWatcher::GetCurrentData()
-{
-	//TODO
-	return NULL;
 }
 
 void XN_CALLBACK_TYPE GestureWatcher::HandleGestureRecognized(GestureGenerator& generator, 

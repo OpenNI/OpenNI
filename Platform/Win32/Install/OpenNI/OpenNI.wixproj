@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.5</ProductVersion>
+    <ProjectGuid>{176c8226-7bfb-433b-931c-7b6c539cdb37}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>OpenNI</OutputName>
+    <OutputType>Package</OutputType>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <Name>OpenNI</Name>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug;OpenNIFilesDir=..\..\..\..\Redist</DefineConstants>
+    <Cultures>
+    </Cultures>
+    <WixVariables>
+    </WixVariables>
+    <CompilerAdditionalOptions>-arch x86</CompilerAdditionalOptions>
+    <SuppressPdbOutput>True</SuppressPdbOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug;OpenNIFilesDir=..\..\..\..\Redist</DefineConstants>
+    <Cultures />
+    <SuppressPdbOutput>True</SuppressPdbOutput>
+    <CompilerAdditionalOptions>-arch x86</CompilerAdditionalOptions>
+    <WixVariables>
+    </WixVariables>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DefineConstants>Debug;OpenNIFilesDir=..\..\..\..\..\Redist</DefineConstants>
+    <Cultures>
+    </Cultures>
+    <WixVariables>
+    </WixVariables>
+    <CompilerAdditionalOptions>-arch x64</CompilerAdditionalOptions>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <SuppressPdbOutput>True</SuppressPdbOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DefineConstants>Debug;OpenNIFilesDir=..\..\..\..\..\Redist</DefineConstants>
+    <Cultures>
+    </Cultures>
+    <SuppressPdbOutput>True</SuppressPdbOutput>
+    <CompilerAdditionalOptions>-arch x64</CompilerAdditionalOptions>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <WixVariables>
+    </WixVariables>
+  </PropertyGroup>
+  <!--ItemGroup>    
+    <BootstrapperFile Include="Microsoft.Windows.Installer.3.1">
+      <ProductName>Windows Installer 3.1</ProductName>
+    </BootstrapperFile>
+  </ItemGroup-->
+  <ItemGroup>
+    <Compile Include="Fragments\BinariesFragment.wxs" />
+    <Compile Include="Fragments\FilesFragment.wxs" />
+    <Compile Include="OpenNI.wxs" />
+    <Compile Include="UI\CustomeInstallUI.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Includes" />
+    <Folder Include="Fragments" />
+    <Folder Include="Lang" />
+    <Folder Include="Lang\en-us" />
+    <Folder Include="UI" />
+    <Folder Include="Resources" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Includes\OpenNIVariables.wxi" />
+    <Content Include="Resources\mainicon.ico" />
+    <Content Include="Resources\Microsoft_VC90_CRT_x86.msm" />
+    <Content Include="Resources\NIHeader.bmp" />
+    <Content Include="Resources\OpenNIHeader.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixNetFxExtension">
+      <HintPath>$(WixExtDir)\WixNetFxExtension.dll</HintPath>
+      <Name>WixNetFxExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Lang\en-us\Loc_en-us.wxl" />
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+  <PropertyGroup>
+    <PreBuildEvent>"$(WIX)bin\heat.exe" dir "..\..\..\..\Redist" -cg OpenNIFiles -ag -scom -sreg -sfrag -srd -dr INSTALLLOCATION -var var.OpenNIFilesDir -out "$(ProjectDir)Fragments\FilesFragment.wxs"</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>"$(WIX)bin\setupbld.exe" -out OpenNI_setup.exe -msu "!(TargetPath)" -setup "$(ProjectDir)setup.exe" -title "OpenNI setup"</PostBuildEvent>
+  </PropertyGroup>
+  <!--
+	To modify your build process, add your task inside one of the targets below and uncomment it.
+	Other similar extension points exist, see Wix.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+  <ItemGroup>
+    <BootstrapperFile Include="Microsoft.Visual.C++.9.0.x86">
+      <ProductName>Visual C++ Runtime Libraries (x86)</ProductName>
+    </BootstrapperFile>
+  </ItemGroup>
+  <Target Name="AfterBuild">
+    <GenerateBootstrapper ApplicationFile="$(TargetFileName)" ApplicationName="OpenNI" BootstrapperItems="@(BootstrapperFile)" ComponentsLocation="Relative" CopyComponents="True" OutputPath="$(OutputPath)\" Path="C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bootstrapper" />
+  </Target>
+  
+  <Target Name="AfterBuild">
+    <GenerateBootstrapper ApplicationFile="$(TargetFileName)"
+                          ApplicationName="OpenNI"
+                          BootstrapperItems="@(BootstrapperFile)"
+                          BootstrapperComponentFiles="OpenNI.msi"
+                          ComponentsLocation="Relative"
+                          CopyComponents="True"
+                          OutputPath="$(OutputPath)"
+                          Path="C:\Program Files\Microsoft SDKs\Windows\v6.0A\Bootstrapper\"
+                          
+                          />
+  </Target>  -->
+</Project>

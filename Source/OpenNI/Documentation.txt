@@ -295,8 +295,8 @@ additional licenses in run-time to the context using the @ref xnAddLicense() fun
 
 OpenNI uses reference counting for nodes. This is needed because several nodes might depend on the same
 node. When a node is created, it has a reference count of 1, and the node handle is returned to the
-creator. The creator can increase the ref count by calling @ref xnRefProductionNode() or @ref xn::ProductionNode::Ref().
-Once someone holding a node does not need it anymore, it may call @ref xnUnrefProductionNode() or @ref xn::ProductionNode::Unref().
+creator. The creator can increase the ref count by calling @ref xnProductionNodeAddRef() or @ref xn::ProductionNode::AddRef().
+Once someone holding a node does not need it anymore, it may call @ref xnProductionNodeRelease() or @ref xn::ProductionNode::Release().
 If a node's reference count reaches 0, the node will be removed from context and destroyed.
 
 <table>
@@ -1035,6 +1035,14 @@ The "ProductionNodes" element may contain an element called "Recording" telling 
 For now, OpenNI supports file recordings using the "file" attribute:
 @code
 <Recording file="c:\myfile.oni" />
+@endcode
+
+You can also set the playback speed using the "playbackSpeed" attribute if you wish to fast forward, or to slow
+down the playback. Note that the special value 0.0 can be used to cause playing to be as fast as possible (no delay
+between frames).
+For example, to open a file and play it as twice as fast:
+@code
+<Recording file="c:\myfile.oni" playbackSpeed="2.0"/>
 @endcode
 
 @subsection xmlnode Nodes

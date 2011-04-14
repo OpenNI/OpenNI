@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -586,7 +582,7 @@ XnStatus xnXmlReadQuery(const TiXmlElement* pQueryElem, XnNodeQuery* pQuery)
 		nRetVal = xnReadVersionFromXml(pMaxVersion, &maxVersion);
 		XN_IS_STATUS_OK(nRetVal);
 
-		xnNodeQuerySetMinVersion(pQuery, &maxVersion);
+		xnNodeQuerySetMaxVersion(pQuery, &maxVersion);
 	}
 
 	// Capabilities
@@ -686,6 +682,28 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 
 		nRetVal = xnContextOpenFileRecording(pContext, strFileName);
 		XN_IS_STATUS_OK(nRetVal);
+
+		XnNodeHandle hPlayer;
+		nRetVal = xnFindExistingNodeByType(pContext, XN_NODE_TYPE_PLAYER, &hPlayer);
+		XN_IS_STATUS_OK(nRetVal);
+
+		XnDouble dSpeed = 1.0;
+		if (NULL != pRecording->Attribute("playbackSpeed", &dSpeed))
+		{
+			nRetVal = xnSetPlaybackSpeed(hPlayer, dSpeed);
+			XN_IS_STATUS_OK(nRetVal);
+		}
+
+		const XnChar* REPEAT = "repeat";
+		if (NULL != pRecording->Attribute(REPEAT))
+		{
+			XnBool bRepeat;
+			nRetVal = xnXmlReadBoolAttribute(pRecording, REPEAT, &bRepeat);
+			XN_IS_STATUS_OK(nRetVal);
+
+			nRetVal = xnSetPlayerRepeat(hPlayer, bRepeat);
+			XN_IS_STATUS_OK(nRetVal);
+		}
 	}
 
 	const XnChar* strNodeTagName = "Node";
@@ -707,7 +725,15 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 		nRetVal = xnXmlReadStringAttribute(pNode, "type", &strType);
 		XN_IS_STATUS_OK(nRetVal);
 
-		xnLogVerbose(XN_MASK_OPEN_NI, "Requested to create a node of type %s...", strType);
+		// check stopOnError status
+		XnBool bStopOnError = TRUE;
+		if (NULL != pNode->Attribute("stopOnError"))
+		{
+			nRetVal = xnXmlReadBoolAttribute(pNode, "stopOnError", &bStopOnError);
+			XN_IS_STATUS_OK(nRetVal);
+		}
+
+		xnLogVerbose(XN_MASK_OPEN_NI, "Requested to create a node of type %s%s...", strType, bStopOnError ? "" : " (StopOnError=FALSE)");
 
 		XnProductionNodeType Type;
 		nRetVal = xnProductionNodeTypeFromString(strType, &Type);
@@ -728,6 +754,12 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 		// enumerate
 		XnNodeInfoList* pTrees;
 		nRetVal = xnEnumerateProductionTrees(pContext, Type, pQuery, &pTrees, pErrors);
+		if (nRetVal == XN_STATUS_NO_NODE_PRESENT && !bStopOnError)
+		{
+			// go to next one
+			pNode = pNode->NextSiblingElement(strNodeTagName);
+			continue;
+		}
 		XN_IS_STATUS_OK(nRetVal);
 
 		if (pQuery != NULL)
@@ -805,15 +837,11 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnChar* strFileName, XnEnumerationErrors* pErrors)
+XnStatus RunXmlScriptImpl(XnContext* pContext, TiXmlDocument* pDoc, XnEnumerationErrors* pErrors)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-
-	TiXmlDocument doc;
-	nRetVal = xnXmlLoadDocument(doc, strFileName);
-	XN_IS_STATUS_OK(nRetVal);
-
-	TiXmlElement* pRootElem = doc.RootElement();
+	
+	TiXmlElement* pRootElem = pDoc->RootElement();
 	if (pRootElem != NULL)
 	{
 		nRetVal = xnLoadLicensesFromXml(pContext, pRootElem);
@@ -822,7 +850,32 @@ XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnCha
 		nRetVal = xnConfigureCreateNodes(pContext, pRootElem, pErrors);
 		XN_IS_STATUS_OK(nRetVal);
 	}
-
+	
 	return (XN_STATUS_OK);
 }
 
+XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnChar* strFileName, XnEnumerationErrors* pErrors)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	TiXmlDocument doc;
+	nRetVal = xnXmlLoadDocument(doc, strFileName);
+	XN_IS_STATUS_OK(nRetVal);
+
+	return RunXmlScriptImpl(pContext, &doc, pErrors);
+}
+
+XN_C_API XnStatus xnContextRunXmlScript(XnContext* pContext, const XnChar* xmlScript, XnEnumerationErrors* pErrors)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	TiXmlDocument doc;
+	if (!doc.Parse(xmlScript))
+	{
+		XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI,
+			"Failed loading xml: %s [row %d, column %d]",
+			doc.ErrorDesc(), doc.ErrorRow(), doc.ErrorCol());
+	}
+
+	return RunXmlScriptImpl(pContext, &doc, pErrors);
+}

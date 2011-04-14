@@ -1,24 +1,24 @@
-#/****************************************************************************
-#*                                                                           *
-#*  OpenNI 1.0 Alpha                                                         *
-#*  Copyright (C) 2010 PrimeSense Ltd.                                       *
-#*                                                                           *
-#*  This file is part of OpenNI.                                             *
-#*                                                                           *
-#*  OpenNI is free software: you can redistribute it and/or modify           *
-#*  it under the terms of the GNU Lesser General Public License as published *
-#*  by the Free Software Foundation, either version 3 of the License, or     *
-#*  (at your option) any later version.                                      *
-#*                                                                           *
-#*  OpenNI is distributed in the hope that it will be useful,                *
-#*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-#*  GNU Lesser General Public License for more details.                      *
-#*                                                                           *
-#*  You should have received a copy of the GNU Lesser General Public License *
-#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-#*                                                                           *
-#****************************************************************************/
+#/***************************************************************************
+#*                                                                          *
+#*  OpenNI 1.1 Alpha                                                        *
+#*  Copyright (C) 2011 PrimeSense Ltd.                                      *
+#*                                                                          *
+#*  This file is part of OpenNI.                                            *
+#*                                                                          *
+#*  OpenNI is free software: you can redistribute it and/or modify          *
+#*  it under the terms of the GNU Lesser General Public License as published*
+#*  by the Free Software Foundation, either version 3 of the License, or    *
+#*  (at your option) any later version.                                     *
+#*                                                                          *
+#*  OpenNI is distributed in the hope that it will be useful,               *
+#*  but WITHOUT ANY WARRANTY; without even the implied warranty of          *
+#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
+#*  GNU Lesser General Public License for more details.                     *
+#*                                                                          *
+#*  You should have received a copy of the GNU Lesser General Public License*
+#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
+#*                                                                          *
+#***************************************************************************/
 #
 
 
@@ -29,6 +29,7 @@ import logging
 import glob
 import os
 import re
+import sys
 import shutil
 
 #-------------Functions--------------------------------------------------------#
@@ -89,7 +90,7 @@ def fix_file(arg,dirname,fname):
     "Fixes paths for all the files in fname"
     for filename in fname:
         filePath = dirname + "/" + filename
-        ext = ['cpp','h','.ini']
+        ext = ['cpp','h','.ini','cs']
         if filename == "Makefile" or filename.partition(".")[2] in ext:
             #print "Fixing: " + filePath
             tempName=filePath+'~~~'
@@ -98,9 +99,10 @@ def fix_file(arg,dirname,fname):
             for s in input:
                 olds = s
                 s = re.sub(r"../../../Bin",r"../Bin",s)
-                s = re.sub(r"../../../../../Include",r"/usr/include/ni ../../Include",s)
+                s = re.sub(r"../../../../../Include",r"../../Include /usr/include/ni",s)
                 s = re.sub(r"../../../../../Samples/.*/",r"",s)
                 s = re.sub(r"../../../../Data/SamplesConfig.xml",r"../../Config/SamplesConfig.xml",s)
+                s = re.sub(r"../../Res/",r"../Res/",s)
                 s = re.sub(r"include ../../CommonMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonMakefile",s)
 
                 output.write(s)
@@ -114,6 +116,11 @@ def fix_file(arg,dirname,fname):
             os.remove(filePath)
             os.rename(tempName,filePath)
 
+use_4100=0
+if len(sys.argv) == 2:
+	if sys.argv[1] == '4100':
+		use_4100=1
+
 #------------Constants and globals---------------------------------------------#
 DateTimeSTR = strftime("%Y-%m-%d %H:%M:%S")
 DateSTR = strftime("%Y-%m-%d")
@@ -122,6 +129,8 @@ SCRIPT_DIR = os.getcwd()
 WORK_DIR = os.getcwd() + "/"
 os.chdir(SCRIPT_DIR)
 PROJECT_NAME = "OpenNI"
+ostype = os.popen('uname -s').read().rstrip()
+machinetype = os.popen('uname -m').read().rstrip()
 
 #-------------Log--------------------------------------------------------------#
 
@@ -151,10 +160,10 @@ print "* Taking version..."
 logger.info("Taking version...")
 
 version_file = open("../../../Include/XnVersion.h").read()
-major = re.search(r"define XN_MAJOR_VERSION (.*)", version_file).groups()[0]
-minor = re.search(r"define XN_MINOR_VERSION (.*)", version_file).groups()[0]
-maintenance = re.search(r"define XN_MAINTENANCE_VERSION (.*)", version_file).groups()[0]
-build = re.search(r"define XN_BUILD_VERSION (.*)", version_file).groups()[0]
+major = re.search(r"define XN_MAJOR_VERSION (\d+)", version_file).groups()[0]
+minor = re.search(r"define XN_MINOR_VERSION (\d+)", version_file).groups()[0]
+maintenance = re.search(r"define XN_MAINTENANCE_VERSION (\d+)", version_file).groups()[0]
+build = re.search(r"define XN_BUILD_VERSION (\d+)", version_file).groups()[0]
 
 version = major + "." + minor + "." + maintenance + "." + build
 print "version is", version
@@ -164,7 +173,13 @@ print "* Building OpenNI..."
 logger.info("Building OpenNI...")
 
 # Build
-result = os.system("make -C ../Build > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + ".txt")
+result = os.system("gacutil -u OpenNI.net > " + SCRIPT_DIR + "/Output/gacutil.txt")
+if use_4100 == 1:
+#	result = os.system("cd ../Build; ./Make.4100 clean > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + "_clean.txt; cd ../CreateRedist")
+	result = os.system("cd ../Build; ./Make.4100 > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + ".txt; cd ../CreateRedist")
+else:
+	result = os.system("make clean -C ../Build > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + "_clean.txt")
+	result = os.system("make -C ../Build > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + ".txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/Build" + PROJECT_NAME + ".txt").readlines()
@@ -191,7 +206,6 @@ result = os.system("doxygen Doxyfile > "+ SCRIPT_DIR + "/Output/EngineDoxy.txt")
 if result != 0:
     print "Creating documentation failed!"
     logger.critical("DoxyGen Failed!")
-    finish_script(1)
 
 # remove unneeded files
 os.system("rm -rf html/*.map html/*.md5 html/*.hhc html/*.hhk html/*.hhp")
@@ -217,6 +231,7 @@ os.makedirs("Redist/Samples/Bin/Debug")
 os.makedirs("Redist/Samples/Bin/Release")
 os.makedirs("Redist/Samples/Build")
 os.makedirs("Redist/Samples/Config")
+os.makedirs("Redist/Samples/Res")
 
 #-------------Copy files to redist---------------------------------------------#
 print "* Copying files to redist dir..."
@@ -227,14 +242,26 @@ shutil.copy("../../GPL.txt", "Redist")
 shutil.copy("../../LGPL.txt", "Redist")
 
 #lib
-shutil.copy("Bin/Release/libnimCodecs.so", "Redist/Lib")
-shutil.copy("Bin/Release/libnimMockNodes.so", "Redist/Lib")
-shutil.copy("Bin/Release/libnimRecorder.so", "Redist/Lib")
-shutil.copy("Bin/Release/libOpenNI.so", "Redist/Lib")
+if ostype == "Darwin":
+    LIBS_TYPE = ".dylib"
+else:
+    LIBS_TYPE = ".so"
+
+shutil.copy("Bin/Release/libnimCodecs"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libnimMockNodes"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libnimRecorder"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libOpenNI"+LIBS_TYPE, "Redist/Lib")
 
 #bin
+MonoDetected = 0
 shutil.copy("Bin/Release/niReg", "Redist/Bin")
 shutil.copy("Bin/Release/niLicense", "Redist/Bin")
+if use_4100 != 1:
+	if (os.path.exists("/usr/bin/gmcs")):
+	    shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Bin")
+	    shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Debug")
+	    shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Release")
+	    MonoDetected = 1
 
 #docs
 shutil.copytree("../../Source/DoxyGen/html", "Redist/Documentation/html")
@@ -245,12 +272,24 @@ for includeFile in os.listdir("../../Include"):
         shutil.copy("../../Include/" + includeFile, "Redist/Include")
 
 shutil.copytree("../../Include/Linux-x86", "Redist/Include/Linux-x86")
+shutil.copytree("../../Include/Linux-Arm", "Redist/Include/Linux-Arm")
+shutil.copytree("../../Include/MacOSX", "Redist/Include/MacOSX")
 shutil.copy("Build/CommonMakefile", "Redist/Include")
 
 # samples
-samples_list = os.listdir("../../Samples")
+samples_list = os.listdir("Build/Samples")
 if '.svn' in samples_list:
     samples_list.remove('.svn')
+
+if use_4100 == 1:
+    samples_list.remove('NiViewer')
+    samples_list.remove('NiSimpleViewer')
+
+if (MonoDetected == 0):
+    samples_list.remove("SimpleRead.net")
+    samples_list.remove("SimpleViewer.net")
+    samples_list.remove("UserTracker.net")
+
 print "Samples:", samples_list
 
 for sample in samples_list:
@@ -259,6 +298,13 @@ for sample in samples_list:
 
 #data
 shutil.copy("../../Data/SamplesConfig.xml", "Redist/Samples/Config/SamplesConfig.xml")
+
+#res
+res_files = os.listdir("Build/Res")
+if '.svn' in res_files:
+    res_files.remove('.svn')
+for res_file in res_files:
+    shutil.copy("Build/Res/" + res_file, "Redist/Samples/Res")
 
 # remove all .svn files
 os.system("find Redist/. | grep .svn | xargs rm -rf")
@@ -281,17 +327,31 @@ print "* Creating Makefile..."
 logger.info("Creating Makefile...")
 
 MAKEFILE = open("Redist/Samples/Build/Makefile", 'w')
-MAKEFILE.write(".PHONY: all\n")
-MAKEFILE.write("all: ")
+MAKEFILE.write(".PHONY: all\n\n")
+MAKEFILE.write("NETPROJ = \n")
+
+MAKEFILE.write("ifneq \"$(realpath /usr/bin/gmcs)\" \"\"\n");
 for sample in samples_list:
-    MAKEFILE.write(sample + " ")
-MAKEFILE.write("\n")
+    if sample.find(".net") >0:
+        MAKEFILE.write("\tNETPROJ += " + sample + "\n")
+MAKEFILE.write("endif\n\n");
+
+MAKEFILE.write("all: $(NETPROJ) ")
+for sample in samples_list:
+    if sample.find(".net") == -1:
+        MAKEFILE.write(sample + " ")
+MAKEFILE.write("\n\n")
+
+
+use_gles=""
+if use_4100 == 1:
+	use_gles=" GLES=1 "
 
 for sample in samples_list:
     MAKEFILE.write("\n")
     MAKEFILE.write(".PHONY: "+sample+"\n")
     MAKEFILE.write(sample+":\n")
-    MAKEFILE.write("\t$(MAKE) -C ../"+sample+"\n")
+    MAKEFILE.write("\t$(MAKE) " + use_gles + " -C ../"+sample+"\n")
 # Close files
 MAKEFILE.close()
 
@@ -306,7 +366,11 @@ print "* Building Samples in release configuration......"
 logger.info("Building Samples in release configuration...")
 
 # Build project solution
-result = os.system("make -C Redist/Samples/Build > "+SCRIPT_DIR+"/Output/BuildSmpRelease.txt")
+additional=""
+if use_4100 == 1:
+	additional = "TARGET_SYS_ROOT=/home/primesense/IntelCE-20/IntelCE-20.0.11052.243195/build_i686/staging_dir/ CXX=/home/primesense/IntelCE-20/IntelCE-20.0.11052.243195/build_i686/staging_dir/bin/i686-cm-linux-g++"
+
+result = os.system("make -C Redist/Samples/Build " + additional + " > "+SCRIPT_DIR+"/Output/BuildSmpRelease.txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/BuildSmpRelease.txt").readlines()
@@ -324,7 +388,7 @@ print "* Building Samples in debug configuration......"
 logger.info("Building Samples in debug configuration...")
 
 # Build project solution
-result = os.system("make CFG=Debug -C Redist/Samples/Build > "+SCRIPT_DIR+"/Output/BuildSmpDebug.txt")
+result = os.system("make CFG=Debug -C Redist/Samples/Build " + additional + " > "+SCRIPT_DIR+"/Output/BuildSmpDebug.txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/BuildSmpDebug.txt").readlines()
@@ -350,7 +414,19 @@ logger.info("Creating tar...")
 
 os.chdir("Redist")
 os.makedirs(SCRIPT_DIR+"/Final")
-result = os.system("tar -cjf " +SCRIPT_DIR+"/Final/OpenNI.v" + version + ".tar.bz2 *")
+
+if ostype == "Darwin":
+    TAR_TARGET = "MacOSX"
+elif use_4100 == 1:
+    TAR_TARGET = "CE4100"
+elif machinetype == "i686":
+    TAR_TARGET = "Linux32"
+elif machinetype == "x86_64":
+    TAR_TARGET = "Linux64"
+else:
+    TAR_TARGET = "Linux"
+
+result = os.system("tar -cjf " +SCRIPT_DIR+"/Final/OpenNI-Bin-" + TAR_TARGET + "-v" + version + ".tar.bz2 *")
 
 if result != 0:
     print "Tar failed!!"

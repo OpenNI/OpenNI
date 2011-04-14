@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_CONTEXT_H__
 #define __XN_CONTEXT_H__
 
@@ -246,7 +242,15 @@ XN_C_API XnStatus xnCreateMockNodeBasedOn(
  *
  * @param	hNode	[in]	A handle to the node.
  */
-XN_C_API XnStatus xnRefProductionNode(XnNodeHandle hNode);
+XN_C_API XnStatus xnProductionNodeAddRef(XnNodeHandle hNode);
+
+/**
+ * References a production node, increasing its reference count by 1.
+ * Note: this function is deprecated. Please use @ref xnProductionNodeAddRef() instead.
+ *
+ * @param	hNode	[in]	A handle to the node.
+ */
+XN_C_API XnStatus XN_API_DEPRECATED("Please use xnProductionNodeAddRef() instead.") xnRefProductionNode(XnNodeHandle hNode);
 
 /**
  * @brief Unreference a production node, decreasing its reference count by 1. If the reference count reaches zero,
@@ -254,7 +258,16 @@ XN_C_API XnStatus xnRefProductionNode(XnNodeHandle hNode);
  *
  * @param	hNode	[in]	A handle to the node.
  */
-XN_C_API void xnUnrefProductionNode(XnNodeHandle hNode);
+XN_C_API void xnProductionNodeRelease(XnNodeHandle hNode);
+
+/**
+ * Unreference a production node, decreasing its reference count by 1. If the reference count reaches zero,
+ * the node will be destroyed.
+ * Note: this function is deprecated. Please use @ref xnProductionNodeAddRef() instead.
+ *
+ * @param	hNode	[in]	A handle to the node.
+ */
+XN_C_API void XN_API_DEPRECATED("Please use xnProductionNodeRelease() instead.") xnUnrefProductionNode(XnNodeHandle hNode);
 
 /**
  * @brief Gets a list of all existing node in the context. Each node that was returned increases its ref count.

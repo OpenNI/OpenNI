@@ -1,36 +1,60 @@
-OpenNI
-------
+OpenNI (Version 1.1.0.38 Stable version - Apr 11th 2010)
+--------------------------------------------------------
+
 Website: www.openni.org
+Forum: http://groups.google.com/group/openni-dev
+Wiki: Coming soon!
+
+Binaries are available at:
+http://www.openni.org/downloadfiles/openni-binaries/20-latest-unstable
+
+Please use this with the sensor unstable branch located at:
+Source:
+https://github.com/PrimeSense/Sensor/tree/unstable
+Binaries:
+http://www.openni.org/downloadfiles/openni-compliant-hardware/31-latest-unstable
+
 
 Release Notes:
 --------------
 * At the moment, the default is to compile the code with SSE3 support (this is also true for the supplied binaries). 
   If you have a CPU without such support, please remove the sse compiler flags from the make files.
   (A good hint for this error is that you encounter an "illegal instructions" messages)
-
-For the latest unstable build please check out:
-https://github.com/OpenNI/OpenNI/tree/unstable
+* MacOSX: Only OSX 10.6 (Snow Leopard) with an Intel based CPU is currently supported.
+* MacOSX: Drawing the depth/image maps via the mono .NET wrapper can be slow and will cause the FPS to drop.
   
 Build Notes:
 ------------
 Windows:
 	Requirements:
 		1) Microsoft Visual Studio 2008/2010
-		2) Python 2.x/3.x (must be at least 2.6 and above)
-		3) PyWin32 
-		4) NSIS 2.46
-		5) NSIS-2.46-strlen_8192.zip patch (An important patch to fix problems with adding strings to the path. you can find it in the Platform\Win32\Build\Prerequisites\ directory)
-		6) Doxygen & GraphViz (to create docs...)
-		7) Microsoft WDK - Optional! Only needed to build the usb driver. The package already includes a precompiled and digitally signed 32/64 bit driver.
+		   From: http://msdn.microsoft.com/en-us/vstudio/bb984878.aspx
+		2) Python 2.6+/3.x
+		   From: http://www.python.org/download/
+		3) PyWin32
+		   From: http://sourceforge.net/projects/pywin32/files/pywin32/
+		   Please make sure you download the version that matches your exact python version.
+		4) WIX 3.5
+		   From: http://wix.codeplex.com/releases/view/60102
+
+	Optional requirements (To build the USB device driver):
+		1) Microsoft WDK
+		   From: http://www.microsoft.com/whdc/devtools/wdk/wdkpkg.mspx	   
+		   
+		The package already includes a precompiled and digitally signed 32/64 bit driver.
 	
-	Building the USB driver (Optional):
-	Simply go into the directory "OpenNI\Platform\Win32\Driver\Build" and run the "BuildAll.bat" script.
-	For your development convenience, you can also use the solution: "Platform\Win32\Driver\Build\psdrv3.sln" but official driver builds should only be made with the batch file above, that uses the proper DDK environment.
-	Note: The driver build tool requires a system environment variable called "DDKPATH" that points to the WDK installation dir (for example: "c:\WinDDK\7100.0.0"). To add an environment variable please follow these steps: Control Panel -> System -> Advanced -> Environment Variables -> New (at the "System Variables" tab).
-		
+	Optional Requirements (To build the documentation):
+		1) Doxygen
+		   From: http://www.stack.nl/~dimitri/doxygen/download.html#latestsrc
+		2) GraphViz
+		   From: http://www.graphviz.org/Download_windows.php
+	
 	Building OpenNI:
-		1) Go to the directory: "Platform\Win32\CreateRedist". Run the script: "RedistMaker.bat" This will compile and prepare the redist exe files that includes everything.
-		2) Install the exe you've just made which is located in Platform\Win32\CreateRedist\Final\OPENNI-Win32-1.0.0.exe 
+		1) Go to the directory: "Platform\Win32\CreateRedist".
+		   x86 32-bit - Run the script: "RedistMaker.bat".
+		   x64 64-bit - Run the script: "RedistMaker.bat y 64 y".
+		   This will compile and prepare the redist exe files that includes everything.
+		2) Install the exe you've just made which is located in Platform\Win32\CreateRedist\Final\OPENNI-WinXX-1.X.X.X.exe 
 		   The installer will also create the necessary environment variables (OPEN_NI_xxx), add the DLLs to the system path and register the internal modules with NiReg.
 		   
 		The visual studio solution is located in: Platform\Win32\Build\OpenNI.sln.
@@ -38,28 +62,123 @@ Windows:
 		When doing development it is recommended that you change the environment variables to point to your development directory instead of the default C:\Program Files\OpenNI.
 		(This can save you lots back and forth file copying...)
 
-	Important: Please note that even though the directory is called Win32, you can also use it to compile it for 64-bit targets (AMD64/x64).
+		Important: Please note that even though the directory is called Win32, you can also use it to compile it for 64-bit targets (Win64/AMD64/x64).
+	
+	Building the USB driver (Optional):
+		Simply go into the directory "OpenNI\Platform\Win32\Driver\Build" and run the "BuildAll.bat" script.
+		For your development convenience, you can also use the solution: "Platform\Win32\Driver\Build\psdrv3.sln" but official driver builds should only be made with the batch file above, that uses the proper DDK environment.
+		Note: The driver build tool requires a system environment variable called "DDKPATH" that points to the WDK installation dir (for example: "c:\WinDDK\7100.0.0"). To add an environment variable please follow these steps: Control Panel -> System -> Advanced -> Environment Variables -> New (at the "System Variables" tab).	
 	   
 Linux:
 	Requirements:
 		1) GCC 4.x
-		2) Python 2.6/2.7/3.0/3.1
-		3) libusb 1.0.8 (libusb-1.0-0-dev)
-		4) freeglut3 (freeglut3-dev)
-		5) Doxygen & GraphViz (to create docs...)
+		   From: http://gcc.gnu.org/releases.html
+		   Or via apt:
+		   sudo apt-get install g++
+		2) Python 2.6+/3.x
+		   From: http://www.python.org/download/
+		   Or via apt:
+		   sudo apt-get install python
+		3) LibUSB 1.0.8 
+		   From: http://sourceforge.net/projects/libusb/
+		   Or via apt:
+		   sudo apt-get install libusb-1.0-0-dev
+		4) FreeGLUT3
+		   From: http://freeglut.sourceforge.net/index.php#download
+		   Or via apt:
+		   sudo apt-get install freeglut3-dev
+		   
+	Optional Requirements (To build the documentation):
+		1) Doxygen
+		   From: http://www.stack.nl/~dimitri/doxygen/download.html#latestsrc
+		   Or via apt:
+		   sudo apt-get install doxygen
+		2) GraphViz
+		   From: http://www.graphviz.org/Download_linux_ubuntu.php
+		   Or via apt:
+		   sudo apt-get install graphviz
 
+	Optional Requirements (To build the Mono wrapper):
+		1) Mono
+		   From: http://www.go-mono.com/mono-downloads/download.html
+		   Or via apt:
+		   sudo apt-get install mono-complete
+		   
 	Building OpenNI:
-		1) Go into the directory: "Platform/Linux-x86/CreateRedist". Run the script: "RedistMaker". This will compile everything and create a redist package in the "Platform/Linux-x86/Redist" directory.
-		2) Go into the directory: "Platform/Linux-x86/Redist". Run the script: "sudo ./install.sh" (needs to run as root)
-		
-		The install script copies key files to the following location:
-			Libs into: /usr/lib
-			Bins into: /usr/bin
-			Includes into: /usr/include/ni
-			Config files: /var/lib/ni
+		1) Go into the directory: "Platform/Linux-x86/CreateRedist".
+		   Run the script: "./RedistMaker".
+		   This will compile everything and create a redist package in the "Platform/Linux-x86/Redist" directory.
+		   It will also create a distribution in the "Platform/Linux-x86/CreateRedist/Final" directory.
+		2) Go into the directory: "Platform/Linux-x86/Redist".
+		   Run the script: "sudo ./install.sh" (needs to run as root)
+
+  		   The install script copies key files to the following location:
+		       Libs into: /usr/lib
+		       Bins into: /usr/bin
+		       Includes into: /usr/include/ni
+		       Config files into: /var/lib/ni
 			
-		To build the package manually, you can run make in the "Platform\Linux-x86\Build" directory.
-		(You can also find a SlickEdit project there...)
+		To build the package manually, you can run "make" in the "Platform\Linux-x86\Build" directory.
+		If you wish to build the Mono wrappers, also run "make mono_wrapper" and "make mono_samples".
 		
-	Important: Please note that even though the directory is called Linux-x86, you can also use it to compile it for 64-bit targets and pretty much any other linux based environment.
+		Important: Please note that even though the directory is called Linux-x86, you can also use it to compile it for 64-bit targets and pretty much any other linux based environment.
 	
+MacOSX:
+	Requirements:
+		1) Xcode 3.2.6
+		   From: http://developer.apple.com/devcenter/mac/index.action
+		   http://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg
+		   Please note that you need to register as a mac developer (It's free!).
+		2) LibUSB 1.0.8 (The patched development tree)
+		   This can be installed by two ways:		   
+		   A) MacPorts:      
+		      From: http://www.macports.org/install.php
+		      http://distfiles.macports.org/MacPorts/MacPorts-1.9.2-10.6-SnowLeopard.dmg			  
+			  * You will also need to install LibTool:
+			      sudo port install libtool			  
+			  * And finally, LibUSB itself:
+			      sudo port install libusb-devel +universal
+		      Note: Do not forget the +universal, it's very important!!
+		            If you're previously already installed libusb-devel then use "sudo port uninstall libusb-devel" and reinstall it again with the +universal flag.
+					
+		   B) Compile the source & install LibUSB yourself:
+			  * Change the working directory to the prerequisites directory: "cd Platform\Linux-x86\Build\Prerequisites"
+			  * Extract the tar file by running: "tar -xvjf libusb-1.0.8-osx.tar.bz2"
+			  * Change the working directory to the libusb directory: "cd libusb"
+			  * Run the following commands to build and install libusb:
+			      /autogen.sh
+			      ./configure LDFLAGS='-framework IOKit -framework CoreFoundation -arch i386 -arch x86_64 ' CFLAGS='-arch i386 -arch x86_64' --disable-dependency-tracking --prefix=/opt/local
+			      make
+			      sudo make install
+				 
+	Optional Requirements (To build the documentation):
+		1) Doxygen
+		   Installed vis MacPorts:
+		   sudo port install doxygen
+		2) GraphViz
+		   Installed vis MacPorts:
+		   sudo port install graphviz
+
+	Optional Requirements (To build the Mono wrapper):
+		1) Mono
+		   From: http://www.go-mono.com/mono-downloads/download.html
+		   http://ftp.novell.com/pub/mono/archive/2.8.1/macos-10-x86/4/MonoFramework-2.8.1_4.macos10.novell.x86.dmg
+		   Installed vis MacPorts:
+		   sudo port install mono
+		   
+	Building OpenNI:
+		1) Go into the directory: "Platform/Linux-x86/CreateRedist".
+		   Run the script: "./RedistMaker".
+		   This will compile everything and create a redist package in the "Platform/Linux-x86/Redist" directory.
+		   It will also create a distribution in the "Platform/Linux-x86/CreateRedist/Final" directory.
+		2) Go into the directory: "Platform/Linux-x86/Redist".
+		   Run the script: "sudo ./install.sh" (needs to run as root)
+
+  		   The install script copies key files to the following location:
+		       Libs into: /usr/lib
+		       Bins into: /usr/bin
+		       Includes into: /usr/include/ni
+		       Config files into: /var/lib/ni
+			
+		To build the package manually, you can run "make" in the "Platform\Linux-x86\Build" directory.
+		If you wish to build the Mono wrappers, also run "make mono_wrapper" and "make mono_samples".

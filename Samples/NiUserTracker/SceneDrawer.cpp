@@ -1,34 +1,38 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
 #include "SceneDrawer.h"
 
-#include <GL/glut.h>
+#ifndef USE_GLES
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#include <GLUT/glut.h>
+#else
+	#include <GL/glut.h>
+#endif
+#else
+	#include "opengles.h"
+#endif
 
 extern xn::UserGenerator g_UserGenerator;
 extern xn::DepthGenerator g_DepthGenerator;
@@ -104,7 +108,7 @@ XnFloat Colors[][3] =
 	{1,1,1}
 };
 XnUInt32 nColors = 10;
-
+#ifndef USE_GLES
 void glPrintString(void *font, char *str)
 {
 	int i,l = strlen(str);
@@ -114,7 +118,7 @@ void glPrintString(void *font, char *str)
 		glutBitmapCharacter(font,*str++);
 	}
 }
-
+#endif
 void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 {
 	if (!g_UserGenerator.GetSkeletonCap().IsTracking(player))
@@ -137,8 +141,15 @@ void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 	pt[1] = joint2.position;
 
 	g_DepthGenerator.ConvertRealWorldToProjective(2, pt, pt);
+#ifndef USE_GLES
 	glVertex3i(pt[0].X, pt[0].Y, 0);
 	glVertex3i(pt[1].X, pt[1].Y, 0);
+#else
+	GLfloat verts[4] = {pt[0].X, pt[0].Y, pt[1].X, pt[1].Y};
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 2);
+	glFlush();
+#endif
 }
 
 
@@ -285,6 +296,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 	g_UserGenerator.GetUsers(aUsers, nUsers);
 	for (int i = 0; i < nUsers; ++i)
 	{
+#ifndef USE_GLES
 		if (g_bPrintID)
 		{
 			XnPoint3D com;
@@ -319,10 +331,12 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			glRasterPos2i(com.X, com.Y);
 			glPrintString(GLUT_BITMAP_HELVETICA_18, strLabel);
 		}
-
+#endif
 		if (g_bDrawSkeleton && g_UserGenerator.GetSkeletonCap().IsTracking(aUsers[i]))
 		{
+#ifndef USE_GLES
 			glBegin(GL_LINES);
+#endif
 			glColor4f(1-Colors[aUsers[i]%nColors][0], 1-Colors[aUsers[i]%nColors][1], 1-Colors[aUsers[i]%nColors][2], 1);
 			DrawLimb(aUsers[i], XN_SKEL_HEAD, XN_SKEL_NECK);
 
@@ -346,8 +360,9 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			DrawLimb(aUsers[i], XN_SKEL_RIGHT_KNEE, XN_SKEL_RIGHT_FOOT);
 
 			DrawLimb(aUsers[i], XN_SKEL_LEFT_HIP, XN_SKEL_RIGHT_HIP);
-
+#ifndef USE_GLES
 			glEnd();
+#endif
 		}
 	}
 }

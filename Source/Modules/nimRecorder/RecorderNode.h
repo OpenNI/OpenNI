@@ -1,31 +1,30 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __RECORDER_NODE_H__
 #define __RECORDER_NODE_H__
 
 #include <XnModuleCppInterface.h>
 #include <XnStringsHash.h>
+#include <DataRecords.h>
 
 class Record;
 
@@ -63,6 +62,7 @@ private:
 	};
 
 	XN_DECLARE_STRINGS_HASH(RecordedNodePropInfo, RecordedNodePropInfoMap);
+	XN_DECLARE_LIST(DataIndexEntry, DataIndexEntryList)
 
 	struct RecordedNodeInfo
 	{
@@ -81,10 +81,10 @@ private:
 		XnCodecID compression;
 		xn::Codec codec;
 		RecordedNodePropInfoMap propInfoMap;
+		DataIndexEntryList dataIndex;
 	};
 
 	XN_DECLARE_STRINGS_HASH(RecordedNodeInfo, RecordedNodesInfo);
-
 
 	XnStatus OpenStream();
 	XnStatus WriteHeader(XnUInt64 nGlobalMaxTimeStamp, XnUInt32 nMaxNodeID);
@@ -103,17 +103,19 @@ private:
 	RecordedNodeInfo* GetRecordedNodeInfo(const XnChar* strNodeName);
 
 	static const XnUInt32 RECORD_MAX_SIZE;
-	static const XnUInt32 COMPRESSED_DATA_SIZE;
+	static const XnUInt32 PAYLOAD_DATA_SIZE;
 	XnBool m_bOpen;
 	XnUInt8* m_pRecordBuffer;
-	XnUInt8* m_pCompressedData;
+	XnUInt8* m_pPayloadData;
 	void* m_pStreamCookie;
 	XnRecorderOutputStreamInterface* m_pOutputStream;
 
 	RecordedNodesInfo m_recordedNodesInfo;
 	xn::Context m_context;
+	XnUInt64 m_nGlobalStartTimeStamp;
 	XnUInt64 m_nGlobalMaxTimeStamp;
 	XnUInt32 m_nNumNodes;
+	XnUInt32 m_nConfigurationID;
 };
 
 #endif //__RECORDER_NODE_H__

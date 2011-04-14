@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef _XN_LOG_H_
 #define _XN_LOG_H_
 
@@ -264,6 +260,17 @@ inline void xnDumpWriteBuffer(XnDump dump, const void* pBuffer, XnUInt32 nBuffer
 */
 XN_C_API void xnDumpWriteStringImpl(XnDump dump, const XnChar* csFormat, ...);
 
+#define XN_MASK_RETVAL_CHECKS "RetValChecks"
+
+/** Validates return value and writes log message with appropriate status string **/
+#define XN_IS_STATUS_OK_LOG_ERROR(what, nRetVal)													\
+	if (nRetVal != XN_STATUS_OK)																	\
+	{																								\
+		xnLogError(XN_MASK_RETVAL_CHECKS, "Failed to " what ": %s", xnGetStatusString(nRetVal));	\
+		XN_ASSERT(FALSE);																			\
+		return (nRetVal);																			\
+	}
+
 #if XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_WIN32_VAARGS_STYLE
 	#define xnDumpWriteString(dump, csFormat, ...)					\
 		if ((dump).hFile != XN_INVALID_FILE_HANDLE) {					\
@@ -275,12 +282,12 @@ XN_C_API void xnDumpWriteStringImpl(XnDump dump, const XnChar* csFormat, ...);
 			xnDumpWriteStringImpl((dump), csFormat, ##__VA_ARGS__);	\
 		}
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_ARC_VAARGS_STYLE
-	#define xnDumpWriteString(dump, csFormat, args...)				\
+	#define xnDumpWriteString(dump, csFormat...)						\
 		if ((dump).hFile != XN_INVALID_FILE_HANDLE) {					\
-			xnDumpWriteStringImpl((dump), csFormat, args);			\
+			xnDumpWriteStringImpl((dump), csFormat);					\
 		}
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_NO_VAARGS
-	#define xnDumpWriteString(dump, csFormat, arg)					\
+	#define xnDumpWriteString(dump, csFormat, arg)						\
 		if ((dump).hFile != XN_INVALID_FILE_HANDLE) {					\
 			xnDumpWriteStringImpl((dump), csFormat, arg);				\
 		}
@@ -313,24 +320,9 @@ XN_C_API void xnDumpFlush(XnDump dump);
 	#define XN_LOG_WARNING_RETURN(nRetVal, csLogMask, csFormat, ...)						\
 		XN_LOG_RETURN(nRetVal, XN_LOG_WARNING, csLogMask, csFormat, __VA_ARGS__)
 
-	/* Logs a warning and returns nRetVal */
+	/* Logs an error and returns nRetVal */
 	#define XN_LOG_ERROR_RETURN(nRetVal, csLogMask, csFormat, ...)							\
 		XN_LOG_RETURN(nRetVal, XN_LOG_ERROR, csLogMask, csFormat, __VA_ARGS__)
-
-	/* If nRetVal is not ok, writes to the log and returns nRetVal */
-	#define XN_IS_STATUS_OK_LOG(nRetVal, nSeverity, csLogMask, csFormat, ...)					\
-		if (nRetVal != XN_STATUS_OK)															\
-		{																						\
-			XN_LOG_RETURN(nRetVal, nSeverity, csLogMask, csFormat, __VA_ARGS__)					\
-		}																						
-
-	/* If nRetVal is not ok, logs a warning and returns nRetVal */
-	#define XN_IS_STATUS_OK_WARNING(nRetVal, csLogMask, csFormat, ...) \
-		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_WARNING, csLogMask, csFormat, __VA_ARGS__)
-
-	/* If nRetVal is not ok, logs an error and returns nRetVal */
-	#define XN_IS_STATUS_OK_ERROR(nRetVal, csLogMask, csFormat, ...) \
-		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_ERROR, csLogMask, csFormat, __VA_ARGS__)
 
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_GCC_VAARGS_STYLE
 	#define xnLogVerbose(csLogMask, csFormat, ...)	xnLogWrite(csLogMask, XN_LOG_VERBOSE, __FILE__, __LINE__, csFormat, ##__VA_ARGS__)
@@ -353,56 +345,41 @@ XN_C_API void xnDumpFlush(XnDump dump);
 	#define XN_LOG_ERROR_RETURN(nRetVal, csLogMask, csFormat, ...)							\
 		XN_LOG_RETURN(nRetVal, XN_LOG_ERROR, csLogMask, csFormat, ##__VA_ARGS__)
 
-	/* If nRetVal is not ok, writes to the log and returns nRetVal */
-	#define XN_IS_STATUS_OK_LOG(nRetVal, nSeverity, csLogMask, csFormat, ...)					\
-		if (nRetVal != XN_STATUS_OK)															\
-	{																						\
-		XN_LOG_RETURN(nRetVal, nSeverity, csLogMask, csFormat, ##__VA_ARGS__)					\
-	}																						
-
-	/* If nRetVal is not ok, logs a warning and returns nRetVal */
-	#define XN_IS_STATUS_OK_WARNING(nRetVal, csLogMask, csFormat, ...) \
-		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_WARNING, csLogMask, csFormat, ##__VA_ARGS__)
-
-	/* If nRetVal is not ok, logs an error and returns nRetVal */
-	#define XN_IS_STATUS_OK_ERROR(nRetVal, csLogMask, csFormat, ...) \
-		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_ERROR, csLogMask, csFormat, ##__VA_ARGS__)
-
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_ARC_VAARGS_STYLE
-	#define xnLogVerbose(csLogMask, csFormat, args...)	xnLogWrite(csLogMask, XN_LOG_VERBOSE, __FILE__, __LINE__, csFormat, args)
-	#define xnLogInfo(csLogMask, csFormat, args...)		xnLogWrite(csLogMask, XN_LOG_INFO, __FILE__, __LINE__, csFormat, args)
-	#define xnLogWarning(csLogMask, csFormat, args...)	xnLogWrite(csLogMask, XN_LOG_WARNING, __FILE__, __LINE__, csFormat, args)
-	#define xnLogError(csLogMask, csFormat, args...)	xnLogWrite(csLogMask, XN_LOG_ERROR, __FILE__, __LINE__, csFormat, args)
+	#define xnLogVerbose(csLogMask, csFormat...)	xnLogWrite(csLogMask, XN_LOG_VERBOSE, __FILE__, __LINE__, csFormat)
+	#define xnLogInfo(csLogMask, csFormat...)		xnLogWrite(csLogMask, XN_LOG_INFO, __FILE__, __LINE__, csFormat)
+	#define xnLogWarning(csLogMask, csFormat...)	xnLogWrite(csLogMask, XN_LOG_WARNING, __FILE__, __LINE__, csFormat)
+	#define xnLogError(csLogMask, csFormat...)	xnLogWrite(csLogMask, XN_LOG_ERROR, __FILE__, __LINE__, csFormat)
 
 	/* Writes to the log and returns nRetVal */
-	#define XN_LOG_RETURN(nRetVal, nSeverity, csLogMask, csFormat, args...)					\
+	#define XN_LOG_RETURN(nRetVal, nSeverity, csLogMask, csFormat...)					\
 	{																						\
-		xnLogWrite(csLogMask, nSeverity, __FILE__, __LINE__, csFormat, args);				\
+		xnLogWrite(csLogMask, nSeverity, __FILE__, __LINE__, csFormat);				\
 		return (nRetVal);																	\
 	}
 
 	/* Logs a warning and returns nRetVal */
-	#define XN_LOG_WARNING_RETURN(nRetVal, csLogMask, csFormat, args...)					\
-		XN_LOG_RETURN(nRetVal, XN_LOG_WARNING, csLogMask, csFormat, args)
+	#define XN_LOG_WARNING_RETURN(nRetVal, csLogMask, csFormat...)					\
+		XN_LOG_RETURN(nRetVal, XN_LOG_WARNING, csLogMask, csFormat)
 
 	/* Logs a warning and returns nRetVal */
-	#define XN_LOG_ERROR_RETURN(nRetVal, csLogMask, csFormat, args...)						\
-		XN_LOG_RETURN(nRetVal, XN_LOG_ERROR, csLogMask, csFormat, args)
+	#define XN_LOG_ERROR_RETURN(nRetVal, csLogMask, csFormat...)						\
+		XN_LOG_RETURN(nRetVal, XN_LOG_ERROR, csLogMask, csFormat)
 
 	/* If nRetVal is not ok, writes to the log and returns nRetVal */
-	#define XN_IS_STATUS_OK_LOG(nRetVal, nSeverity, csLogMask, csFormat, args...)			\
+	#define XN_IS_STATUS_OK_LOG(nRetVal, nSeverity, csLogMask, csFormat...)			\
 		if (nRetVal != XN_STATUS_OK)														\
 	{																						\
-		XN_LOG_RETURN(nRetVal, nSeverity, csLogMask, csFormat, args)						\
+		XN_LOG_RETURN(nRetVal, nSeverity, csLogMask, csFormat)						\
 	}																						
 
 	/* If nRetVal is not ok, logs a warning and returns nRetVal */
-	#define XN_IS_STATUS_OK_WARNING(nRetVal, csLogMask, csFormat, args...) \
-		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_WARNING, csLogMask, csFormat, args)
+	#define XN_IS_STATUS_OK_WARNING(nRetVal, csLogMask, csFormat...) \
+		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_WARNING, csLogMask, csFormat)
 
 	/* If nRetVal is not ok, logs an error and returns nRetVal */
-	#define XN_IS_STATUS_OK_ERROR(nRetVal, csLogMask, csFormat, args...) \
-		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_ERROR, csLogMask, csFormat, args)
+	#define XN_IS_STATUS_OK_ERROR(nRetVal, csLogMask, csFormat...) \
+		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_ERROR, csLogMask, csFormat)
 
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_NO_VAARGS
 	#define xnLogVerbose(csLogMask, csFormat, args)	xnLogWrite(csLogMask, XN_LOG_VERBOSE, __FILE__, __LINE__, csFormat, args)
@@ -421,24 +398,9 @@ XN_C_API void xnDumpFlush(XnDump dump);
 	#define XN_LOG_WARNING_RETURN(nRetVal, csLogMask, csFormat, args)						\
 		XN_LOG_RETURN(nRetVal, XN_LOG_WARNING, csLogMask, csFormat, args)
 
-	/* Logs a warning and returns nRetVal */
+	/* Logs an error and returns nRetVal */
 	#define XN_LOG_ERROR_RETURN(nRetVal, csLogMask, csFormat, args)							\
 		XN_LOG_RETURN(nRetVal, XN_LOG_ERROR, csLogMask, csFormat, args)
-
-	/* If nRetVal is not ok, writes to the log and returns nRetVal */
-	#define XN_IS_STATUS_OK_LOG(nRetVal, nSeverity, csLogMask, csFormat, args)				\
-		if (nRetVal != XN_STATUS_OK)														\
-		{																					\
-			XN_LOG_RETURN(nRetVal, nSeverity, csLogMask, csFormat, args)					\
-		}																						
-
-	/* If nRetVal is not ok, logs a warning and returns nRetVal */
-	#define XN_IS_STATUS_OK_WARNING(nRetVal, csLogMask, csFormat, args) \
-		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_WARNING, csLogMask, csFormat, args)
-
-	/* If nRetVal is not ok, logs an error and returns nRetVal */
-	#define XN_IS_STATUS_OK_ERROR(nRetVal, csLogMask, csFormat, args) \
-		XN_IS_STATUS_OK_LOG(nRetVal, XN_LOG_ERROR, csLogMask, csFormat, args)
 
 #else
 	#error Xiron Log - Unknown VAARGS type!

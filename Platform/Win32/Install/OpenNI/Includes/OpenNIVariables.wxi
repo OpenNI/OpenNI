@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <!--
+  Versioning. These have to be changed for upgrades.
+  It's not enough to just include newer files.
+  -->
+  <?define MajorVersion=1?>
+  <?define MinorVersion=1?>
+  <?define MaintenanceVersion=0?>
+  <!-- BuildVersion is NOT used by WiX in the upgrade procedure -->
+  <?define BuildVersion=39?>
+  <!-- Full version number to display -->
+  <?define VersionNumber="$(var.MajorVersion).$(var.MinorVersion).$(var.MaintenanceVersion).$(var.BuildVersion)"?>
+   
+  <!--
+  Path to the resources directory. resources don't really need to be included
+  in the project structure but I like to include them for for clarity 
+  -->
+  <?define ResourcesDir="$(var.ProjectDir)\Resources" ?>
+
+  <?define MinOpenNIVersion="1.0.0"?>
+  
+  <?define BinaryOnlyRedist=False?>
+   
+  <?if $(var.Platform)="x86"?>
+    <?define PlatformSuffix=""?>    
+    <?define Win64 = "no" ?>  
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+    <?define ProductFullName=!(loc.ProductName) $(var.VersionNumber) !(loc.ProductNameSuffix)?>
+    <?define ProductShortName=!(loc.ProductName)?>
+    <?define UpgradeCode="51069D8C-D05F-4CDB-8991-45AFB800ED31"  ?>
+  <?else?>
+    <?define PlatformSuffix="64"?>    
+    <?define Win64 = "yes" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+    <?define ProductFullName=!(loc.ProductName) $(var.VersionNumber) !(loc.ProductNameSuffix) !(loc.ProductName64Suffix)?>
+    <?define ProductShortName=!(loc.ProductName) !(loc.ProductName64Suffix)?>
+    <?define UpgradeCode="CEEB7CF2-94CC-4060-81AB-91C3AF984330"  ?>
+  <?endif?>
+   
+</Include>

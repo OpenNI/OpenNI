@@ -1,24 +1,24 @@
-#/****************************************************************************
-#*                                                                           *
-#*  OpenNI 1.0 Alpha                                                         *
-#*  Copyright (C) 2010 PrimeSense Ltd.                                       *
-#*                                                                           *
-#*  This file is part of OpenNI.                                             *
-#*                                                                           *
-#*  OpenNI is free software: you can redistribute it and/or modify           *
-#*  it under the terms of the GNU Lesser General Public License as published *
-#*  by the Free Software Foundation, either version 3 of the License, or     *
-#*  (at your option) any later version.                                      *
-#*                                                                           *
-#*  OpenNI is distributed in the hope that it will be useful,                *
-#*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-#*  GNU Lesser General Public License for more details.                      *
-#*                                                                           *
-#*  You should have received a copy of the GNU Lesser General Public License *
-#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-#*                                                                           *
-#****************************************************************************/
+#/***************************************************************************
+#*                                                                          *
+#*  OpenNI 1.1 Alpha                                                        *
+#*  Copyright (C) 2011 PrimeSense Ltd.                                      *
+#*                                                                          *
+#*  This file is part of OpenNI.                                            *
+#*                                                                          *
+#*  OpenNI is free software: you can redistribute it and/or modify          *
+#*  it under the terms of the GNU Lesser General Public License as published*
+#*  by the Free Software Foundation, either version 3 of the License, or    *
+#*  (at your option) any later version.                                     *
+#*                                                                          *
+#*  OpenNI is distributed in the hope that it will be useful,               *
+#*  but WITHOUT ANY WARRANTY; without even the implied warranty of          *
+#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
+#*  GNU Lesser General Public License for more details.                     *
+#*                                                                          *
+#*  You should have received a copy of the GNU Lesser General Public License*
+#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
+#*                                                                          *
+#***************************************************************************/
 #
 
 
@@ -31,25 +31,131 @@ import glob
 import os
 import re
 import sys
+import subprocess
+import shutil
+import stat
+
+#-------------Classes----------------------------------------------------------#
+class SampleData(object):
+    def __init__(self):
+        self.name = ''
+        self.project_dir = ''
+        self.source_dir = ''
+        self.project_guid = ''
+        self.project_file = ''
+        self.is_net = False
+        self.project_name = ''
+        self.redist_dir = ''
+        self.dependencies = []
+
+    def print_():
+        print self.name
+    def __str__(self):
+        return self.name
+    def __eval__(self):
+        return self.name
 
 #-------------Functions--------------------------------------------------------#
+def find_samples():
+    # returns a dictionary of all samples
+    all_samples = dict()
+    samples_list = os.listdir("..\\..\\Samples")
+    if '.svn' in samples_list:
+        samples_list.remove('.svn')
+    print(samples_list)
+    for sample in samples_list:
+        sample_data = SampleData()
+        sample_data.name = sample
+        sample_data.source_dir = "..\\..\\Samples\\" + sample
+        sample_data.project_dir = "Build\\Samples\\" + sample
+
+        vc_proj_name = sample_data.project_dir + "\\" + sample + ".vcproj"
+        cs_proj_name = sample_data.project_dir + "\\" + sample + ".csproj"
+
+        # check if this is a VC project
+        if os.path.exists(vc_proj_name):
+            sample_data.project_file = vc_proj_name
+
+            # open it
+            prj = open(vc_proj_name, 'r')
+            lines = prj.readlines()
+            for line in lines:
+                # Search for name
+                if sample_data.project_name == "":
+                    ProjNametmp = re.search(r"Name=\"(.*)\"",line)
+                    if (ProjNametmp != None):
+                        sample_data.project_name = ProjNametmp.group(1)
+
+                # Search for GUID
+                if sample_data.project_guid == "":
+                    ProjGUIDtmp = re.search(r"ProjectGUID=\"(.*)\"",line)
+                    if (ProjGUIDtmp != None):
+                        sample_data.project_guid = ProjGUIDtmp.group(1)
+
+                ProjNametmp = re.search(r"<AssemblyName>(.*)</AssemblyName>",line)
+                if (ProjNametmp!=None):
+                    if (ProjName==""):
+                        ProjName = ProjNametmp.group(1)
+                        ProjIsNET = 1
+                ProjGUIDtmp = re.search(r"<ProjectGuid>(.*)</ProjectGuid>",line)
+                if (ProjGUIDtmp!=None):
+                    if (ProjGUID==""):
+                        ProjGUID = ProjGUIDtmp.group(1)
+
+            prj.close()
+
+        # or a .NET project
+        elif os.path.exists(cs_proj_name):
+            sample_data.project_file = cs_proj_name
+            sample_data.is_net = True
+            # open it, read GUID
+            prj = open(cs_proj_name, 'r')
+
+            # open it
+            prj = open(cs_proj_name, 'r')
+            lines = prj.readlines()
+            for line in lines:
+                # Search for name
+                if sample_data.project_name == "":
+                    ProjNametmp = re.search(r"<AssemblyName>(.*)</AssemblyName>",line)
+                    if (ProjNametmp != None):
+                        sample_data.project_name = ProjNametmp.group(1)
+
+                # Search for GUID
+                if sample_data.project_guid == "":
+                    ProjGUIDtmp = re.search(r"<ProjectGuid>(.*)</ProjectGuid>",line)
+                    if (ProjGUIDtmp != None):
+                        sample_data.project_guid = ProjGUIDtmp.group(1)
+
+            prj.close()
+
+        else:
+            print('Sample ' + sample + ' does not have a valid project file')
+            logger.critical('Sample ' + sample + ' does not have a valid project file')
+            finish_script(1)
+
+        # check if it has a special configuration
+        redist_file_name = sample_data.source_dir + "\\.redist"
+        if os.path.exists(redist_file_name):
+            redist_file = open(redist_file_name, 'r')
+
+            for line in redist_file.readlines():
+                # seach for dependencies
+                match = re.search("^DEPENDS=(.*)$", line)
+                if match != None:
+                    sample_data.dependencies.append(match.group(1))
+
+            redist_file.close()
+
+        sample_data.redist_dir = "Redist\\Samples\\" + sample_data.name
+        all_samples[sample_data.name] = sample_data
+
+    return all_samples
 
 def finish_script(exit_code):
     os.chdir(SCRIPT_DIR)
     #logging.shutdown()
     exit(exit_code)
-
-def replace_string_in_file(findStr,repStr,filePath):
-    "replaces all findStr by repStr in file filePath"
-    tempName=filePath+'~~~'
-    input = open(filePath)
-    output = open(tempName,'w')
-    for s in input:
-        output.write(s.replace(findStr,repStr))
-    output.close()
-    input.close()
-    os.remove(filePath)
-    os.rename(tempName,filePath)
 
 def regx_replace(findStr,repStr,filePath):
     "replaces all findStr by repStr in file filePath using regualr expression"
@@ -64,70 +170,51 @@ def regx_replace(findStr,repStr,filePath):
     os.remove(filePath)
     os.rename(tempName,filePath)
 
-def check_sample(sample_dir):
-    "Checks if a sample is a tool or should be skipped, returns: 0 - Regular, 1 - Skip, 2 - Tool"
-    rc = 0
-    if os.path.exists(sample_dir + "\\.redist"):
-        redistFile = open(sample_dir + "\\.redist")
-    else:
-        rc=0
-        return rc
-    redist_lines =redistFile.readlines()
-    skip_re = re.compile("^SKIP=([^\|]*\|)*(" + PLATFORM + "|ALL)(\|[^\|]*)*$")
-    tool_re = re.compile("^TOOL=([^\|]*\|)*(" + PLATFORM + "|ALL)(\|[^\|]*)*$")
-    for line in redist_lines:
-        if skip_re.search(line):
-            rc = 1
-            redistFile.close()
-            return rc
-        if tool_re.search(line):
-            rc = 2
-            redistFile.close()
-            return rc
-    redistFile.close()
-    return rc
-
 def fix_file(arg,dirname,fname):
     "Fixes paths for all the files in fname"
     for filename in fname:
         filePath = dirname + "\\" + filename
-        ext = ['icproj','vcproj','cpp','h','ini']
-        if filename.partition(".")[2] in ext:
-            print("Fixing: " + filePath)
-            tempName=filePath+'~~~'
-            input = open(filePath)
-            output = open(tempName,'w')
-            for s in input:
-                olds = s
-                s = re.sub(r"..\\..\\..\\..\\..\\",r"..\\..\\",s)
-                s = re.sub(r"../../../../../",r"../../",s)
-                #s = re.sub(r"../../../Lib/",r"../../Lib/",s)
+        ext = ['icproj','vcproj','csproj','cpp','h','ini','cs']
+        file_ext = os.path.splitext(filename)[1][1:]
+        if file_ext in ext:
+            #print("Fixing: " + filePath)
+            file = open(filePath, "r+")
+            s = file.read()
+            file.seek(0)
+
+            olds = s
+            s = re.sub(r"..\\..\\..\\..\\..\\",r"..\\..\\",s)
+            s = re.sub(r"../../../../../",r"../../",s)
+            s = re.sub(r"..\\\\..\\\\..\\\\..\\\\Data\\",r"..\\\\..\\\\..\\\\Data\\",s)
+            s = re.sub(r"..\\..\\..\\..\\Data\\",r"..\\..\\..\\Data\\",s)
+            s = re.sub("../../../../Data/",r"../../../Data/",s)
+            s = re.sub(r"..\\..\\Res\\",r"..\\Res\\",s)
+            if vc_build_bits=="32":
                 s = re.sub(r"../../../Bin/",r"../Bin/",s)
-                s = re.sub(r"..\\\\..\\\\..\\\\..\\\\Data\\",r"..\\\\..\\\\..\\\\Data\\",s)
-                s = re.sub(r"..\\..\\..\\..\\Data\\",r"..\\..\\..\\Data\\",s)
-                s = re.sub("../../../../Data/",r"../../../Data/",s)
-                s = re.sub(r"..\\..\\Res\\",r"..\\Res\\",s)
-                s = re.sub(r"../../../Lib/\$\(ConfigurationName\)",r"../../Lib/$(ConfigurationName);../../Lib/",s)
+                s = re.sub(r"..\\..\\..\\Bin\\",r"../Bin/",s)
+                s = re.sub(r"../../../Lib/\$\(ConfigurationName\)",r"../../Lib/",s)
+                s = re.sub(r"..\\..\\..\\Lib\\\$\(ConfigurationName\)",r"../../Lib/",s)
+            else:
+                s = re.sub(r"../../../Bin64/",r"../Bin64/",s)
+                s = re.sub(r"..\\..\\..\\Bin64\\",r"../Bin64/",s)
+                s = re.sub(r"../../../Lib64/\$\(ConfigurationName\)",r"../../Lib64/",s)
+                s = re.sub(r"..\\..\\..\\Lib64\\\$\(ConfigurationName\)",r";../../Lib64/",s)
 
-                if (re.search("SccProjectName=\"",s)!=None) | (re.search("SSccAuxPath=\"",s)!=None) | \
-                                             (re.search("SccLocalPath=\"",s)!=None):
-                    s=""
-                output.write(s)
-                
-                if s != olds:
-                    print("Changed : " + olds.strip("\n"))
-                    print("To      : " + s.strip("\n"))
-            output.close()
-            input.close()
-            os.remove(filePath)
-            os.rename(tempName,filePath)
-
-def find_vcproj(arg,dirname,fname):
-    # gives the list of all the vcproj files in fname
-    for filename in fname:
-        if filename.partition(".")[2]=='vcproj':
-            filePath = dirname + "\\" + filename
-            vcproj_list.append(filePath)
+            s = re.sub(r".*SccProjectName=\".*", r"", s);
+            s = re.sub(r".*SSccAuxPath=\".*", r"", s);
+            s = re.sub(r".*SccLocalPath=\".*", r"", s);
+            
+            # fix csproj link problem
+            if file_ext == "csproj":
+                sample_name = os.path.basename(dirname)
+                link_re = r"<Compile Include=\"..\\..\\Samples\\" + sample_name + r"\\.*\">\n"
+                link_re += r"\s*<Link>(.*)</Link>"
+                compiled_re = re.compile(link_re, re.MULTILINE)
+                s = compiled_re.sub("<Compile Include=\"\\1\">", s)
+            
+            file.truncate()
+            file.write(s)
+            file.close()
 
 def get_reg_values(reg_key, value_list):
     # open the reg key
@@ -154,21 +241,61 @@ def get_reg_values(reg_key, value_list):
             pass
     return tuple(values)
 
-#------------Constants and globals---------------------------------------------#
-try:
-	MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\9.0")
-	MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
-	VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]
-	VS_NEED_UPGRADE = 0
-except Exception as e:
-	MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\10.0")
-	MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
-	VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]
-	VS_NEED_UPGRADE = 1
+#------------Check args---------------------------------------------#
 
-NSIS_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\NSIS")
-NSIS_VALUES = [("InstallLocation", win32con.REG_EXPAND_SZ)]
-NSIS_INST_DIR = get_reg_values(NSIS_KEY, NSIS_VALUES)[0]
+if len(sys.argv) not in [4,5]:
+    print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n> [<VCVersion:9/10>]"
+    exit(1)
+
+if sys.argv[1] == 'y':
+    Make_Doxy=1
+elif sys.argv[1] == 'n':
+    Make_Doxy=0
+else:
+    print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>"
+    print "Doxygen param must be y or n!"
+    exit(1)
+
+if sys.argv[2] == '32':
+    vc_build_bits = "32"
+elif sys.argv[2] == '64':
+    vc_build_bits = "64"
+else:
+    print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>"
+    print "BuildTarget param must be 32 or 64!"
+    exit(1)
+
+if sys.argv[3] == 'y':
+    vc_build_type = "/Rebuild"
+elif sys.argv[3] == 'n':
+    vc_build_type = "/Build"
+else:
+    print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>"
+    print "Doxygen param must be y or n!"
+    exit(1)
+
+VC_version = 9
+if len(sys.argv) > 4:
+    if sys.argv[4] == '10':
+        VC_version = 10
+
+try:
+    VS_NEED_UPGRADE = 0
+    MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\9.0")
+    MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
+    VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]
+except Exception as e:
+    VC_version = 10
+
+print ("\n*** Build target is:" + vc_build_bits + " Doxy:" + str(Make_Doxy) + " Rebuild:" + sys.argv[3] + " VC Version:" + str(VC_version) + " ***");	
+	
+#------------Constants and globals---------------------------------------------#
+if VC_version == 10:
+    VS_NEED_UPGRADE = 1
+    MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\10.0")    
+    MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
+    VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]    
+
 DateTimeSTR = strftime("%Y-%m-%d %H:%M:%S")
 DateSTR = strftime("%Y-%m-%d")
 SCRIPT_DIR = os.getcwd()
@@ -184,8 +311,21 @@ PROJECT_SLN = str(CONFIG_XML.getElementsByTagName("PROJECT_SLN")[0].firstChild.d
 SAMPLES_SLN = str(CONFIG_XML.getElementsByTagName("SAMPLES_SLN")[0].firstChild.data)
 PROJECT_NAME = str(CONFIG_XML.getElementsByTagName("PROJECT")[0].firstChild.data)
 ver_regx = re.compile("SDK \d.*\s")
-global vcproj_list
-vcproj_list = []
+global samples_proj_list
+global samples_guid_list
+global samples_guid_list_net
+samples_proj_list = []
+samples_guid_list = []
+samples_guid_list_net = []
+
+if vc_build_bits=="32":
+	bin_dir = "Bin"
+	lib_dir = "Lib"
+	vc_build_platform = "Win32"
+else:
+	bin_dir = "Bin64"
+	lib_dir = "Lib64"
+	vc_build_platform = "x64"
 
 #-------------Log--------------------------------------------------------------#
 if not(os.path.exists(SCRIPT_DIR + "\\Output\\")):
@@ -204,32 +344,33 @@ print("*   PrimeSense OpenNI Redist    *")
 print("*     " + DateTimeSTR + "       *")
 print("*********************************")
 logger.info("PrimeSense OpenNI Redist Started")
-# Create output dir
-
 
 #--------------Build Project---------------------------------------------------#
 print("* Building " + PROJECT_NAME + "...")
 logger.info("Building " + PROJECT_NAME + "...")
-# Set Intel Env
-os.system("set INTEL_LICENSE_FILE=C:\\Program Files\\Common Files\\Intel\\Licenses")
+
 # Build project solution
 os.chdir(WORK_DIR + PROJECT_SLN.rpartition("\\")[0])
 if VS_NEED_UPGRADE == 1:
-	os.system("\""+VS_INST_DIR + "devenv\" " + PROJECT_SLN.rpartition("\\")[2]+\
-	    	     " /upgrade > ..\\CreateRedist\\Output\\Build"+PROJECT_NAME+".txt")
+    os.system("attrib -r * /s")
+    os.system("\""+VS_INST_DIR + "devenv\" " + PROJECT_SLN.rpartition("\\")[2]+\
+                 " /upgrade > ..\\CreateRedist\\Output\\Build"+PROJECT_NAME+".txt")
 
-#print "\""+VS_INST_DIR + "devenv\" " + PROJECT_SLN.rpartition("\\")[2]+" /build release > \""+SCRIPT_DIR+"\\Output\\Build"+PROJECT_NAME+".txt\""
-    
-os.system('\"'+VS_INST_DIR + 'devenv\" ' + PROJECT_SLN.rpartition("\\")[2]+\
-             " /build release > ..\\CreateRedist\\Output\\Build"+PROJECT_NAME+".txt")
+subprocess.call('\"'+VS_INST_DIR + 'devenv\" ' + PROJECT_SLN.rpartition("\\")[2]+\
+             " " + vc_build_type + " \"release|" + vc_build_platform + "\" /out ..\\CreateRedist\\Output\\Build"+PROJECT_NAME+".txt", close_fds=True)
 
 # Get the build output
 lines = open(SCRIPT_DIR+"\\Output\\Build"+PROJECT_NAME+".txt").readlines()
-build_result = lines[-1]
+build_result = lines[-2]
 print(build_result)
 logger.info(build_result)
 # Check for failed build
-failed_builds = int(re.search("(\d*) failed",build_result).group(1))
+
+temp = re.search("(\d*) failed",build_result)
+if temp != None :
+	failed_builds = int(temp.group(1))
+else:
+	failed_builds = 0
 if failed_builds != 0:
     print("Building Failed!!")
     logger.critical("Building Failed!")
@@ -237,23 +378,24 @@ if failed_builds != 0:
 
 
 
-if len(sys.argv) != 2:
-	#--------------Doxygen---------------------------------------------------------#
-	print("* Creating Doxygen...")
-	logger.info("Creating Doxygen...")
-	os.chdir(WORK_DIR + "Source\\Doxygen");
-	# Replacing version number in the doxygen setup file
-	os.system("attrib -r Doxyfile")
-	regx_replace("OpenNI \d*.\d*.\d*\s",PROJECT_NAME +" " + OPENNI_VER + " ",'Doxyfile')
-	if os.path.exists(WORK_DIR + "\\Source\\Doxygen\\html\\"):
-		os.system("rmdir /S /Q html")
-	# Running doxygen
-	os.system("mkdir html")
-	os.system("copy PSSmallLogo.jpg html")
-	os.system("doxygen.exe Doxyfile > ..\\..\\Platform\Win32\\CreateRedist\\Output\\EngineDoxy.txt")
-	os.system("""copy "html\*.chm" ..\..\Documentation""")  
+if Make_Doxy==1:
+    #--------------Doxygen---------------------------------------------------------#
+    print("* Creating Doxygen...")
+    logger.info("Creating Doxygen...")
+    os.chdir(WORK_DIR + "Source\\Doxygen");
+    # Replacing version number in the doxygen setup file
+    res = os.system("attrib -r Doxyfile")
+    print 'removing readonly attribute for Doxyfile: ' + str(res)
+    regx_replace("OpenNI \d*.\d*.\d*\s",PROJECT_NAME +" " + OPENNI_VER + " ",'Doxyfile')
+    if os.path.exists(WORK_DIR + "\\Source\\Doxygen\\html\\"):
+        os.system("rmdir /S /Q html")
+    # Running doxygen
+    os.system("mkdir html")
+    #os.system("copy PSSmallLogo.jpg html") // where is this file ? 
+    os.system("doxygen.exe Doxyfile > ..\\..\\Platform\Win32\\CreateRedist\\Output\\EngineDoxy.txt")
+    os.system("""copy "html\*.chm" ..\..\Documentation""")
 else:
-	print("Skipping Doxygen...")
+    print("Skipping Doxygen...")
 
 #-------------Create Redist Dir------------------------------------------------#
 print("* Creating Redist Dir...")
@@ -263,21 +405,17 @@ os.chdir(WORK_DIR + "\\Platform\\Win32")
 os.system("rmdir /S /Q Redist")
 # Creating new directory tree
 os.system("mkdir Redist")
-os.system("mkdir Redist\\Bin")
-os.system("mkdir Redist\\Lib")
+os.system("mkdir Redist\\" + bin_dir)
+os.system("mkdir Redist\\" + lib_dir)
 os.system("mkdir Redist\\Include")
 os.system("mkdir Redist\\Documentation")
 os.system("mkdir Redist\\Samples")
-os.system("mkdir Redist\\Samples\\Bin")
-os.system("mkdir Redist\\Samples\\Bin\\Debug")
-os.system("mkdir Redist\\Samples\\Bin\\Release")
+os.system("mkdir Redist\\Samples\\" + bin_dir)
+os.system("mkdir Redist\\Samples\\" + bin_dir + "\\Debug")
+os.system("mkdir Redist\\Samples\\" + bin_dir + "\\Release")
 os.system("mkdir Redist\\Samples\\Build")
 os.system("mkdir Redist\\Samples\\Res")
 os.system("mkdir Redist\\Data")
-os.system("mkdir Redist\\Tools")
-#os.system("mkdir Redist\\Wrappers")
-
-#os.system("mkdir Redist\\Driver")
 
 #-------------Copy files to redist---------------------------------------------#
 print("* Copying files to redist dir...")
@@ -288,15 +426,16 @@ os.system ("copy \"..\\..\\GPL.txt\" Redist")
 os.system ("copy \"..\\..\\LGPL.txt\" Redist")
 
 #bin
-os.system ("copy Bin\\Release\\nimCodecs.dll Redist\\Bin")
-os.system ("copy Bin\\Release\\nimMockNodes.dll Redist\\Bin")
-os.system ("copy Bin\\Release\\nimRecorder.dll Redist\\Bin")
-os.system ("copy Bin\\Release\\OpenNI.dll Redist\\Bin")
-os.system ("copy Bin\\Release\\niReg.exe Redist\\Bin")
-os.system ("copy Bin\\Release\\niLicense.exe Redist\\Bin")
+os.system ("copy " + bin_dir + "\\Release\\OpenNI*.dll Redist\\" + bin_dir)
+os.system ("copy " + bin_dir + "\\Release\\OpenNI.net.dll Redist\\" + bin_dir)
+os.system ("copy " + bin_dir + "\\Release\\nimCodecs*.dll Redist\\" + bin_dir)
+os.system ("copy " + bin_dir + "\\Release\\nimMockNodes*.dll Redist\\" + bin_dir)
+os.system ("copy " + bin_dir + "\\Release\\nimRecorder*.dll Redist\\" + bin_dir)
+os.system ("copy " + bin_dir + "\\Release\\niReg*.exe Redist\\" + bin_dir)
+os.system ("copy " + bin_dir + "\\Release\\niLicense*.exe Redist\\" + bin_dir)
 
 #lib
-os.system ("copy Lib\\Release\\*.* Redist\\Lib")
+os.system ("copy " + lib_dir + "\\Release\\*.* Redist\\" + lib_dir)
 
 #docs
 os.system ("copy \"..\\..\\Documentation\\*.pdf\" Redist\\Documentation")
@@ -308,70 +447,28 @@ os.system ("xcopy /S ..\\..\\Include\\* Redist\\Include\\")
 
 #driver
 os.system ("xcopy /S Driver\\Bin\\*.* Redist\\Driver\\")
-#tools
-os.system ("copy Tools\\*.* Redist\\Tools")
 
-samples_list = os.listdir("..\\..\\Samples")
-print(samples_list)
-if '.svn' in samples_list:
-    samples_list.remove('.svn')
-
-
-for sample in samples_list:
-    # Check if the sample is a tool or should'nt be distributed in this conf
-    #if sample.startswith("Sample-") == False:
-        #continue;
-    #rc = check_sample(WORK_DIR + "Samples\\" + sample)
-    # Remove the checking, samples should allways be compiles
-    #rc = 0
-    #if rc==0:
-    os.system ("mkdir Redist\\Samples\\"+sample)
-    #os.system ("xcopy /S Samples\\" + sample + "\\*.h Redist\\Samples\\"+ sample)
-    os.system ("xcopy /S ..\\..\\Samples\\" + sample + " Redist\\Samples\\"+ sample)
-
-    #os.system ("xcopy /S Samples\\" + sample + "\\*.cpp Redist\\Samples\\"+ sample)
-
-    #os.system ("xcopy /S Samples\\"+ sample + "\\*.vcproj Redist\\Samples\\"+ sample + "\\")
-    #os.system ("xcopy /S Samples\\"+ sample + "\\*.lib Redist\\Samples\\"+ sample + "\\")
-
-    os.system ("xcopy /S Build\\Samples\\"+ sample + "\\*.icproj Redist\\Samples\\"+ sample + "\\")
-    os.system ("xcopy /S Build\\Samples\\"+ sample + "\\*.vcproj Redist\\Samples\\"+ sample + "\\")
-
-    #if rc==2:
-    #    system("copy Bin\\Release\\Sample-$Sample.exe Redist\\Samples\\Bin\\Release\\" + sample + ".exe")
-        #break
-
-os.system ("copy Redist\\Samples\\Bin\\Release\\*.* Redist\\Samples\\Bin\\Debug")
+#samples
+os.system ("copy Redist\\Samples\\" + bin_dir + "\\Release\\*.* Redist\\Samples\\" + bin_dir + "\\Debug")
 os.system ("xcopy /S Build\\Res\\*.* Redist\\Samples\\Res\\")
 
 #data
 os.system ("copy ..\\..\\Data\\SamplesConfig.xml Redist\\Data\\SamplesConfig.xml")
 
 # Copy the glut dll to the samples
-os.system ("xcopy /S .\\Bin\\Release\\glut32.dll Redist\\Samples\\Bin\\Release\\")
-os.system ("xcopy /S .\\Bin\\Release\\glut32.dll Redist\\Samples\\Bin\\Debug\\")
+os.system ("xcopy /S .\\" + bin_dir + "\\Release\\glut*.dll Redist\\Samples\\" + bin_dir + "\\Release\\")
+os.system ("xcopy /S .\\" + bin_dir + "\\Release\\glut*.dll Redist\\Samples\\" + bin_dir + "\\Debug\\")
+
+# Copy the OpenNI.net dll to the samples
+os.system ("xcopy /S .\\" + bin_dir + "\\Release\\OpenNI.net.dll Redist\\Samples\\" + bin_dir + "\\Release\\")
+os.system ("xcopy /S .\\" + bin_dir + "\\Release\\OpenNI.net.dll Redist\\Samples\\" + bin_dir + "\\Debug\\")
+
 # Copy the release notes
 os.system ("copy .\\ReleaseNotes.txt Redist\\Documentation\\")
 
-
-#-----Remove Read Only Attrib--------------------------------------------------#
-print("* Removing Read Only Attributes...")
-logger.info("Removing Read Only Attributes...")
-os.system ("attrib -r -h -s /S Redist\\*.*")
-
-
-#--------Fixing Files----------------------------------------------------------#
-print("* Fixing Files...")
-logger.info("Fixing Files...")
-for dirpath, dirnames, filenames in os.walk('Redist\\'):
-    fix_file('', dirpath, dirnames + filenames)
-
-#-------Creating project and solutions-----------------------------------------#
-print("* Creating project and solutions...")
-logger.info("Creating project and solutions...")
-# find vcproj files
-for dirpath, dirnames, filenames in os.walk('Redist\\'):
-    find_vcproj('', dirpath, dirnames + filenames)
+#-------Creating samples-------------------------------------------------------#
+print("* Creating samples...")
+logger.info("Creating samples...")
 
 # open all solution files
 OUTFILESLN2008 = open("Redist\\Samples\\Build\\All_2008.sln",'w')
@@ -380,47 +477,125 @@ OUTFILESLN2008.write("# Visual Studio 2008\n")
 OUTFILESLN2010 = open("Redist\\Samples\\Build\\All_2010.sln",'w')
 OUTFILESLN2010.write("Microsoft Visual Studio Solution File, Format Version 11.00\n")
 OUTFILESLN2010.write("# Visual Studio 2010\n")
-# Do this for each project
-for prj2008_filename in vcproj_list:
-    ProjName = ""
-    ProjGUID = ""
-    print(prj2008_filename)
-    prj2010_filename = prj2008_filename.partition(".")[0] + "_2010.vcproj"
-    prj2008 = open(prj2008_filename,'r')
-    prj2010 = open(prj2010_filename,'w')
-    lines = prj2008.readlines()
-    for line in lines:
-        # Search for name and guid in the project file
-        ProjNametmp = re.search(r"Name=\"(.*)\"",line)
-        ProjGUIDtmp = re.search(r"ProjectGUID=\"(.*)\"",line)
-        if (ProjNametmp!=None):
-            if (ProjName==""):
-                ProjName = ProjNametmp.group(1)
-        if (ProjGUIDtmp!=None):
-            if (ProjGUID==""):
-                ProjGUID = ProjGUIDtmp.group(1)
-        # replace version number for different visual studio versions
-        line = re.sub(r"Version=\"9.00\"","Version=\"9.00\"",line)
-        prj2010.write(line)
-    prj2008.close()
-    prj2010.close()
-    # rename prj file to _2008.vcproj
-    origname = prj2008_filename
-    prj2008_filename = prj2008_filename.partition(".")[0] + "_2008.vcproj"
-    os.rename(origname,prj2008_filename)
+
+all_samples = find_samples()
+
+# add projects
+for sample in all_samples.values():
+    print(sample.name)
+
+    # make dir
+    os.system ("mkdir " + sample.redist_dir)
+    # copy source
+    os.system ("xcopy /S " + sample.source_dir + " " + sample.redist_dir)
+
+    # copy the project file to 2008 and 2010:
+    prj_name_partitioned = os.path.splitext(sample.project_file);
+    prj2008_filename = sample.redist_dir + "\\" + sample.name + "_2008" + prj_name_partitioned[1]
+    prj2010_filename = sample.redist_dir + "\\" + sample.name + "_2010" + prj_name_partitioned[1]
+
+    shutil.copy(sample.project_file, prj2008_filename)
+    shutil.copy(sample.project_file, prj2010_filename)
+
     # create reletive path to samples
     prj2008_path = "..\\" + prj2008_filename.partition("\\")[2].partition("\\")[2]
     prj2010_path = "..\\" + prj2010_filename.partition("\\")[2].partition("\\")[2]
-    # add project to all samples project
+
+    # add project to solution
     OUTFILESLN2008.write("Project(\"{19091980-2008-4CFA-1491-04CC20D8BCF9}\") = \""+\
-                                ProjName+"\", \""+prj2008_path+"\", \""+ProjGUID+"\"\n")
-    OUTFILESLN2008.write("EndProject\n")
+                                sample.project_name + "\", \"" + prj2008_path + "\", \"" + sample.project_guid + "\"\n")
     OUTFILESLN2010.write("Project(\"{19091980-2008-4CFA-1491-04CC20D8BCF9}\") = \""+\
-                                ProjName+"\", \""+prj2010_path+"\", \""+ProjGUID+"\"\n")
-    OUTFILESLN2010.write("EndProject\n")	
+                                sample.project_name + "\", \"" + prj2010_path + "\", \"" + sample.project_guid + "\"\n")
+
+    # write down dependencies
+    if len(sample.dependencies) > 0:
+        OUTFILESLN2008.write("\tProjectSection(ProjectDependencies) = postProject\n")
+        for depend in sample.dependencies:
+            OUTFILESLN2008.write("\t\t" + all_samples[depend].project_guid + " = " + all_samples[depend].project_guid + "\n")
+        OUTFILESLN2008.write("\tEndProjectSection\n")
+        OUTFILESLN2010.write("\tProjectSection(ProjectDependencies) = postProject\n")
+        for depend in sample.dependencies:
+            OUTFILESLN2010.write("\t\t" + all_samples[depend].project_guid + " = " + all_samples[depend].project_guid + "\n")
+        OUTFILESLN2010.write("\tEndProjectSection\n")		
+
+    OUTFILESLN2008.write("EndProject\n")
+    OUTFILESLN2010.write("EndProject\n")
+
 # Close files
+OUTFILESLN2008.write("Global\n")
+OUTFILESLN2008.write("	GlobalSection(SolutionConfigurationPlatforms) = preSolution\n")
+OUTFILESLN2008.write("		Debug|Win32 = Debug|Win32\n")
+OUTFILESLN2008.write("		Debug|x64 = Debug|x64\n")
+OUTFILESLN2008.write("		Release|Win32 = Release|Win32\n")
+OUTFILESLN2008.write("		Release|x64 = Release|x64\n")
+OUTFILESLN2008.write("	EndGlobalSection\n")
+OUTFILESLN2008.write("	GlobalSection(ProjectConfigurationPlatforms) = postSolution\n")
+OUTFILESLN2010.write("Global\n")
+OUTFILESLN2010.write("	GlobalSection(SolutionConfigurationPlatforms) = preSolution\n")
+OUTFILESLN2010.write("		Debug|Win32 = Debug|Win32\n")
+OUTFILESLN2010.write("		Debug|x64 = Debug|x64\n")
+OUTFILESLN2010.write("		Release|Win32 = Release|Win32\n")
+OUTFILESLN2010.write("		Release|x64 = Release|x64\n")
+OUTFILESLN2010.write("	EndGlobalSection\n")
+OUTFILESLN2010.write("	GlobalSection(ProjectConfigurationPlatforms) = postSolution\n")
+
+for sample in all_samples.values():
+    conf_32_name = "Win32"
+    if sample.is_net:
+        conf_32_name = "x86"
+
+    OUTFILESLN2008.write("		" + sample.project_guid + ".Debug|Win32.ActiveCfg = Debug|" + conf_32_name + "\n")
+    OUTFILESLN2008.write("		" + sample.project_guid + ".Debug|Win32.Build.0 = Debug|" + conf_32_name + "\n")
+    OUTFILESLN2008.write("		" + sample.project_guid + ".Debug|x64.ActiveCfg = Debug|x64\n")
+    OUTFILESLN2008.write("		" + sample.project_guid + ".Debug|x64.Build.0 = Debug|x64\n")
+    OUTFILESLN2008.write("		" + sample.project_guid + ".Release|Win32.ActiveCfg = Release|" + conf_32_name + "\n")
+    OUTFILESLN2008.write("		" + sample.project_guid + ".Release|Win32.Build.0 = Release|" + conf_32_name + "\n")
+    OUTFILESLN2008.write("		" + sample.project_guid + ".Release|x64.ActiveCfg = Release|x64\n")
+    OUTFILESLN2008.write("		" + sample.project_guid + ".Release|x64.Build.0 = Release|x64\n")
+    OUTFILESLN2010.write("		" + sample.project_guid + ".Debug|Win32.ActiveCfg = Debug|" + conf_32_name + "\n")
+    OUTFILESLN2010.write("		" + sample.project_guid + ".Debug|Win32.Build.0 = Debug|" + conf_32_name + "\n")
+    OUTFILESLN2010.write("		" + sample.project_guid + ".Debug|x64.ActiveCfg = Debug|x64\n")
+    OUTFILESLN2010.write("		" + sample.project_guid + ".Debug|x64.Build.0 = Debug|x64\n")
+    OUTFILESLN2010.write("		" + sample.project_guid + ".Release|Win32.ActiveCfg = Release|" + conf_32_name + "\n")
+    OUTFILESLN2010.write("		" + sample.project_guid + ".Release|Win32.Build.0 = Release|" + conf_32_name + "\n")
+    OUTFILESLN2010.write("		" + sample.project_guid + ".Release|x64.ActiveCfg = Release|x64\n")
+    OUTFILESLN2010.write("		" + sample.project_guid + ".Release|x64.Build.0 = Release|x64\n")
+
+OUTFILESLN2008.write("	EndGlobalSection\n")
+OUTFILESLN2008.write("	GlobalSection(SolutionProperties) = preSolution\n")
+OUTFILESLN2008.write("		HideSolutionNode = FALSE\n")
+OUTFILESLN2008.write("	EndGlobalSection\n")
+OUTFILESLN2008.write("EndGlobal	\n")
+OUTFILESLN2010.write("	EndGlobalSection\n")
+OUTFILESLN2010.write("	GlobalSection(SolutionProperties) = preSolution\n")
+OUTFILESLN2010.write("		HideSolutionNode = FALSE\n")
+OUTFILESLN2010.write("	EndGlobalSection\n")
+OUTFILESLN2010.write("EndGlobal	\n")
+
 OUTFILESLN2008.close()
 OUTFILESLN2010.close()
+
+#-----Remove Read Only Attrib--------------------------------------------------#
+print("* Removing Read Only Attributes...")
+full_path = os.path.join(os.getcwd(), "Redist")
+logger.info("Removing Read Only Attributes... (%s)" % (full_path))
+#os.system ("attrib -r -h -s /S Redist\\*.*")
+
+def remove_readonly(path):
+	for root, dirs, files in os.walk(path):
+		for fname in files: 
+			full_path = os.path.join(root, fname)
+			os.chmod(full_path ,stat.S_IWRITE)
+			
+remove_readonly(full_path)
+
+
+
+#--------Fixing Files----------------------------------------------------------#
+print("* Fixing Files...")
+logger.info("Fixing Files...")
+for dirpath, dirnames, filenames in os.walk('Redist\\'):
+    fix_file('', dirpath, dirnames + filenames)
 
 #-------------Build Samples---------------------------------------------------#
 print("* Building Samples in release configuration......")
@@ -429,15 +604,15 @@ logger.info("Building Samples in release configuration...")
 os.chdir(WORK_DIR + SAMPLES_SLN.rpartition("\\")[0])
 
 if VS_NEED_UPGRADE == 1:
-	os.system("\""+VS_INST_DIR + "devenv\" " + SAMPLES_SLN.rpartition("\\")[2]+\
-              	         " /upgrade > ..\\..\\..\\CreateRedist\\Output\\EngineSmpRelease.txt")
+    os.system("\""+VS_INST_DIR + "devenv\" " + SAMPLES_SLN.rpartition("\\")[2]+\
+                           " /upgrade > ..\\..\\..\\CreateRedist\\Output\\EngineSmpRelease.txt")
 
-os.system("\""+VS_INST_DIR + "devenv\" " + SAMPLES_SLN.rpartition("\\")[2]+\
-                 " /build release > ..\\..\\..\\CreateRedist\\Output\\EngineSmpRelease.txt")
+subprocess.call("\""+VS_INST_DIR + "devenv\" " + SAMPLES_SLN.rpartition("\\")[2]+\
+                 " " + vc_build_type + " \"release|" + vc_build_platform + "\" /out ..\\..\\..\\CreateRedist\\Output\\EngineSmpRelease.txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"\\Output\\EngineSmpRelease.txt").readlines()
-build_result = lines[-1]
+build_result = lines[-2]
 print(build_result)
 logger.info(build_result)
 # Check for failed build
@@ -453,15 +628,15 @@ logger.info("Building Samples in debug configuration...")
 os.chdir(WORK_DIR + SAMPLES_SLN.rpartition("\\")[0])
 
 if VS_NEED_UPGRADE == 1:
-	os.system("\""+VS_INST_DIR + "devenv\" " + SAMPLES_SLN.rpartition("\\")[2]+\
-        	         " /upgrade > ..\\..\\..\\CreateRedist\\Output\\EngineSmpDebug.txt")
+    os.system("\""+VS_INST_DIR + "devenv\" " + SAMPLES_SLN.rpartition("\\")[2]+\
+                     " /upgrade > ..\\..\\..\\CreateRedist\\Output\\EngineSmpDebug.txt")
 
-os.system("\""+VS_INST_DIR + "devenv\" " + SAMPLES_SLN.rpartition("\\")[2]+\
-                 " /build debug > ..\\..\\..\\CreateRedist\\Output\\EngineSmpDebug.txt")
+subprocess.call("\""+VS_INST_DIR + "devenv\" " + SAMPLES_SLN.rpartition("\\")[2]+\
+                 " " + vc_build_type + " \"debug|" + vc_build_platform + "\" /out ..\\..\\..\\CreateRedist\\Output\\EngineSmpDebug.txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"\\Output\\EngineSmpDebug.txt").readlines()
-build_result = lines[-1]
+build_result = lines[-2]
 print(build_result)
 logger.info(build_result)
 # Check for failed build
@@ -472,24 +647,63 @@ if failed_builds != 0:
 #    finish_script(1)
 
 # --------------------Delete stuff
-os.chdir(WORK_DIR + "\\Platform\\Win32\\Redist\\Samples\\Bin\\Release\\")
+os.chdir(WORK_DIR + "\\Platform\\Win32\\Redist\\Samples\\" + bin_dir +"\\Release\\")
 os.system("del *.pdb")
-os.chdir(WORK_DIR + "\\Platform\\Win32\\Redist\\Samples\\Bin\\Debug\\")
+os.chdir(WORK_DIR + "\\Platform\\Win32\\Redist\\Samples\\" + bin_dir +"\\Debug\\")
 os.system("del *.pdb")
 os.system("del *.ilk")
-os.chdir(WORK_DIR + "\\Platform\\Win32\\Redist\\Lib\\")
+os.chdir(WORK_DIR + "\\Platform\\Win32\\Redist\\" + lib_dir + "\\")
 os.system("del nim*.*")
 
 #-------------Make installer---------------------------------------------------#
 print("* Making Installer...")
 logger.info("Making Installer...")
-os.chdir(WORK_DIR + "Platform\\Win32\\Install\\")
-# Replace version in the NSI script
-os.system("attrib -r OpenNi.nsi")
-regx_replace("OPENNI_VER \"\d*.\d*.\d*\"","OPENNI_VER \"" + OPENNI_VER + "\"",'OpenNi.nsi')
+os.chdir(WORK_DIR + "Platform\\Win32\\Install\\OpenNI\\")
+# Replace version in the WIX
+os.system("attrib -r Includes\\OpenNIVariables.wxi")
+
+print("setting WIX BuildPlatform")
+#regx_replace("BuildPlatform=(.*)", "BuildPlatform=" + str(vc_build_bits) + "?>", "Includes\\OpenNIVariables.wxi")
+
+print("setting WIX BinaryOnlyRedist=True")
+regx_replace("BinaryOnlyRedist=(.*)", "BinaryOnlyRedist=True?>", "Includes\\OpenNIVariables.wxi")
+
 # make installer
-os.system("\""+NSIS_INST_DIR + "\\makensis.exe\" OpenNi.nsi > ..\\CreateRedist\\Output\\OpenNiNSIS.txt")
-os.system("move .\\Output\\*.exe ..\\CreateRedist\\Output")
+wixPath = os.environ.get('WIX')
+if wixPath == None:
+    print '*** no WIX env. var. defined ! use set WIX=C:\Program Files\Windows Installer XML v3.5\ or similar to set the path ***'
+    print 'make installer is SERIOUSLY expected to fail'
+else:
+    print 'WIX='+wixPath
+
+if VS_NEED_UPGRADE == 1:
+	subprocess.call("\"" + VS_INST_DIR + "devenv\" OpenNI.sln /upgrade /out ..\\..\\CreateRedist\\Output\\UpgradeOpenNIWIX.txt", close_fds=True)
+	
+print("calling WIX")
+if vc_build_bits=="32":
+	subprocess.call("\"" + VS_INST_DIR + "devenv\" OpenNI.wixproj /Build \"release|x86"\
+                + "\" /out ..\\..\\CreateRedist\\Output\\BuildOpenNIWIXRedist.txt", close_fds=True)
+else:
+	subprocess.call("\"" + VS_INST_DIR + "devenv\" OpenNI.wixproj /Build \"release|x64"\
+                + "\" /out ..\\..\\CreateRedist\\Output\\BuildOpenNIWIXRedist.txt", close_fds=True)
+
+print("moving Redist Msi")
+os.system("move .\\bin\Release\en-US\\OpenNI.msi ..\\..\\CreateRedist\\Output\\OpenNI-Win" + vc_build_bits + "-" + OPENNI_VER + "-Redist.msi")
+
+print("setting WIX BinaryOnlyRedist=False")
+regx_replace("BinaryOnlyRedist=(.*)", "BinaryOnlyRedist=False?>", "Includes\\OpenNIVariables.wxi")
+
+# make installer
+print("calling WIX")
+if vc_build_bits=="32":
+	subprocess.call("\"" + VS_INST_DIR + "devenv\" OpenNI.wixproj /Build \"release|x86"\
+                + "\" /out ..\\..\\CreateRedist\\Output\\BuildOpenNIWIXDev.txt", close_fds=True)
+else:
+	subprocess.call("\"" + VS_INST_DIR + "devenv\" OpenNI.wixproj /Build \"release|x64"\
+                + "\" /out ..\\..\\CreateRedist\\Output\\BuildOpenNIWIXDev.txt", close_fds=True)
+print("moving Dev Msi")	
+
+os.system("move .\\bin\Release\en-US\\OpenNI.msi ..\\..\\CreateRedist\\Output\\OpenNI-Win" + vc_build_bits + "-" + OPENNI_VER + "-Dev.msi")
 
 #-------------CleanUP----------------------------------------------------------#
 print("* Redist OpenNi Ended.   !!")

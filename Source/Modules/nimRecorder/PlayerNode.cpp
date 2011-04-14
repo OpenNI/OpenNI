@@ -1,26 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #include "PlayerNode.h"
 #include "DataRecords.h"
 #include <XnPropNames.h>
@@ -85,7 +83,8 @@ PlayerNode::PlayerNode(xn::Context &context, const XnChar* strName) :
 	m_nGlobalMaxTimeStamp(0),
 	m_pNodeInfoMap(NULL),
 	m_nMaxNodes(0),
-	m_bEOF(FALSE)
+	m_bEOF(FALSE),
+	m_aSeekTempArray(NULL)
 {
 	xnOSStrCopy(m_strName, strName, sizeof(m_strName));
 }
@@ -120,6 +119,11 @@ XnStatus PlayerNode::Destroy()
 		m_pNodeInfoMap = NULL;
 	}
 
+	if (m_aSeekTempArray != NULL)
+	{
+		xnOSFree(m_aSeekTempArray);
+		m_aSeekTempArray = NULL;
+	}
 
 	XN_DELETE_ARR(m_pRecordBuffer);
 	m_pRecordBuffer = NULL;
@@ -247,6 +251,75 @@ XnStatus PlayerNode::UndoRecord(PlayerNode::RecordUndoInfo& undoInfo, XnUInt32 n
 	return XN_STATUS_OK;
 }
 
+DataIndexEntry* PlayerNode::FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 nTimestamp)
+{
+	XN_ASSERT((nNodeID != INVALID_NODE_ID) && (nNodeID < m_nMaxNodes));
+	PlayerNodeInfo* pPlayerNodeInfo = &m_pNodeInfoMap[nNodeID];
+	
+	// perform binary search. We're looking for the highest timestamp BEFORE searched timestamp
+	int first = 1;
+	int last = pPlayerNodeInfo->nFrames;
+	int mid;
+	XnUInt64 nMidTimestamp;
+
+	while (first <= last)
+	{
+		mid = (first + last) / 2;
+		nMidTimestamp = pPlayerNodeInfo->pDataIndex[mid].nTimestamp;
+
+		if (nMidTimestamp > nTimestamp)
+		{
+			last = mid - 1;
+		}
+		else if (nMidTimestamp < nTimestamp)
+		{
+			first = mid + 1;
+		}
+		else // equals
+		{
+			break;
+		}
+	}
+
+	return &pPlayerNodeInfo->pDataIndex[first-1];
+}
+
+DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnUInt32 nDestFrame)
+{
+	PlayerNodeInfo* pPlayerNodeInfo = &m_pNodeInfoMap[nNodeID];
+	if (pPlayerNodeInfo->pDataIndex == NULL)
+	{
+		return NULL;
+	}
+
+	DataIndexEntry* pCurrentFrame = &pPlayerNodeInfo->pDataIndex[pPlayerNodeInfo->nCurFrame];
+	DataIndexEntry* pDestFrame = &pPlayerNodeInfo->pDataIndex[nDestFrame];
+
+	if (pCurrentFrame->nConfigurationID != pDestFrame->nConfigurationID)
+	{
+		// can't use fast seek. We'll have to do it the old fashion way
+		return NULL;
+	}
+
+	m_aSeekTempArray[nNodeID] = pDestFrame;
+
+	// find corresponding frames of other nodes
+	for (XnUInt32 i = 0; i < m_nMaxNodes; ++i)
+	{
+		if (m_pNodeInfoMap[i].bIsGenerator && i != nNodeID)
+		{
+			m_aSeekTempArray[i] = FindTimestampInDataIndex(i, pDestFrame->nTimestamp);
+			if (m_aSeekTempArray[i] != NULL && m_aSeekTempArray[i]->nConfigurationID != pCurrentFrame->nConfigurationID)
+			{
+				return NULL;
+			}
+		}
+	}
+
+	// if we got here, all nodes are in the same configuration ID, and we can perform fast seek
+	return m_aSeekTempArray;
+}
+
 XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 {
 	XN_ASSERT((nNodeID != INVALID_NODE_ID) && (nNodeID < m_nMaxNodes));
@@ -254,9 +327,6 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 	XN_ASSERT((nDestFrame > 0) && (nDestFrame <= pPlayerNodeInfo->nFrames));
 	XN_VALIDATE_INPUT_PTR(m_pNodeNotifications);
 
-	XnUInt32 nStartPos = TellStream();
-	XnUInt32 nNextFrame = pPlayerNodeInfo->nCurFrame + 1;
-	XnUInt32 nFrames = pPlayerNodeInfo->nFrames;
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	if (nDestFrame == pPlayerNodeInfo->nCurFrame)
@@ -264,109 +334,155 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 		//Just go back to position of current frame
 		nRetVal = SeekStream(XN_OS_SEEK_SET, pPlayerNodeInfo->nLastDataPos);
 		XN_IS_STATUS_OK(nRetVal);
+
+		return XN_STATUS_OK;
 	}
-	else if (nDestFrame < nNextFrame)
+
+	DataIndexEntry** pDataIndex = GetSeekLocationsFromDataIndex(nNodeID, nDestFrame);
+	if (pDataIndex != NULL)
 	{
-		//Seek backwards
-		XnUInt32 nDestRecordPos = pPlayerNodeInfo->newDataUndoInfo.nRecordPos;
-		XnUInt32 nUndoRecordPos = pPlayerNodeInfo->newDataUndoInfo.nUndoRecordPos;
-		NewDataRecordHeader record(m_pRecordBuffer, RECORD_MAX_SIZE);
-		
-		/*Scan back through the frames' undo positions until we get to a frame number that is smaller or equal
-		  to nDestFrame. We put the position of the frame we find in nDestRecordPos. */
-		do
-		{
-			if (nUndoRecordPos == 0)
-			{
-				/* The last frame we encountered doesn't have an undo frame. But this data frame can't be the first,
-				   so the file is corrupt */
-				XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Undo frame not found for frame in position %u", nDestRecordPos);
-			}
-			nRetVal = SeekStream(XN_OS_SEEK_SET, nUndoRecordPos);
-			XN_IS_STATUS_OK(nRetVal);
-			nDestRecordPos = nUndoRecordPos;
-			record.ResetRead();
-			nRetVal = ReadRecordHeader(record);
-			XN_IS_STATUS_OK(nRetVal);
-			if (record.GetType() != RECORD_NEW_DATA)
-			{
-				XN_ASSERT(FALSE);
-				XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Unexpected record type: %u", record.GetType());
-			}
+		XnUInt32 nLastPos = 0;
 
-			if (record.GetNodeID() != nNodeID)
-			{
-				XN_ASSERT(FALSE);
-				XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Unexpected node id: %u", record.GetNodeID());
-			}
-
-			nRetVal = ReadRecordFields(record);
-			XN_IS_STATUS_OK(nRetVal);
-			nRetVal = record.Decode();
-			XN_IS_STATUS_OK(nRetVal);
-			nUndoRecordPos = record.GetUndoRecordPos();
-		} while (record.GetFrameNumber() > nDestFrame);
-
-		//Now handle the frame
-		nRetVal = HandleNewDataRecord(record, FALSE);
-		XnBool bUndone = FALSE;
-
+		// move each node to its relevant data
 		for (XnUInt32 i = 0; i < m_nMaxNodes; i++)
 		{
-			//Rollback all properties to match the state the stream was in at position nDestRecordPos
-			PlayerNodeInfo &pni = m_pNodeInfoMap[i];
-			for (RecordUndoInfoMap::Iterator it = pni.recordUndoInfoMap.begin(); 
-				 it != pni.recordUndoInfoMap.end(); it++)
+			if (m_aSeekTempArray[i] != NULL)
 			{
-				if ((it.Value().nRecordPos > nDestRecordPos) && (it.Value().nRecordPos < nStartPos))
+				// read data
+				nRetVal = SeekStream(XN_OS_SEEK_SET, m_aSeekTempArray[i]->nSeekPos);
+				XN_IS_STATUS_OK(nRetVal);
+				nRetVal = ReadNext();
+				XN_IS_STATUS_OK(nRetVal);
+
+				// check for latest position. This will be directly after the frame we seeked to.
+				XnUInt32 nPos = TellStream();
+				if (nPos > nLastPos)
 				{
-					//This property was set between nDestRecordPos and our start position, so we need to undo it.
-					nRetVal = UndoRecord(it.Value(), nDestRecordPos, bUndone);
-					XN_IS_STATUS_OK(nRetVal);
+					nLastPos = nPos;
 				}
 			}
+		}
 
-			if ((i != nNodeID) && pni.bIsGenerator)
+		// now seek to directly after last position
+		SeekStream(XN_OS_SEEK_SET, nLastPos);
+	}
+	else
+	{
+		// perform old seek
+		XnUInt32 nStartPos = TellStream();
+		XnUInt32 nNextFrame = pPlayerNodeInfo->nCurFrame + 1;
+		XnUInt32 nFrames = pPlayerNodeInfo->nFrames;
+		XnStatus nRetVal = XN_STATUS_OK;
+
+		if (nDestFrame == pPlayerNodeInfo->nCurFrame)
+		{
+			//Just go back to position of current frame
+			nRetVal = SeekStream(XN_OS_SEEK_SET, pPlayerNodeInfo->nLastDataPos);
+			XN_IS_STATUS_OK(nRetVal);
+		}
+		else if (nDestFrame < nNextFrame)
+		{
+			//Seek backwards
+			XnUInt32 nDestRecordPos = pPlayerNodeInfo->newDataUndoInfo.nRecordPos;
+			XnUInt32 nUndoRecordPos = pPlayerNodeInfo->newDataUndoInfo.nUndoRecordPos;
+			NewDataRecordHeader record(m_pRecordBuffer, RECORD_MAX_SIZE);
+			
+			/*Scan back through the frames' undo positions until we get to a frame number that is smaller or equal
+			  to nDestFrame. We put the position of the frame we find in nDestRecordPos. */
+			do
 			{
-				//Undo all other generator nodes' data
-				RecordUndoInfo &undoInfo = pni.newDataUndoInfo;
-				if ((undoInfo.nRecordPos > nDestRecordPos) && (undoInfo.nRecordPos < nStartPos))
+				if (nUndoRecordPos == 0)
 				{
-					nRetVal = UndoRecord(undoInfo, nDestRecordPos, bUndone);
-					XN_IS_STATUS_OK(nRetVal);
-					if (!bUndone)
+					/* The last frame we encountered doesn't have an undo frame. But this data frame can't be the first,
+					   so the file is corrupt */
+					XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Undo frame not found for frame in position %u", nDestRecordPos);
+				}
+				nRetVal = SeekStream(XN_OS_SEEK_SET, nUndoRecordPos);
+				XN_IS_STATUS_OK(nRetVal);
+				nDestRecordPos = nUndoRecordPos;
+				record.ResetRead();
+				nRetVal = ReadRecordHeader(record);
+				XN_IS_STATUS_OK(nRetVal);
+				if (record.GetType() != RECORD_NEW_DATA)
+				{
+					XN_ASSERT(FALSE);
+					XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Unexpected record type: %u", record.GetType());
+				}
+
+				if (record.GetNodeID() != nNodeID)
+				{
+					XN_ASSERT(FALSE);
+					XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Unexpected node id: %u", record.GetNodeID());
+				}
+
+				nRetVal = ReadRecordFields(record);
+				XN_IS_STATUS_OK(nRetVal);
+				nRetVal = record.Decode();
+				XN_IS_STATUS_OK(nRetVal);
+				nUndoRecordPos = record.GetUndoRecordPos();
+			} while (record.GetFrameNumber() > nDestFrame);
+
+			//Now handle the frame
+			nRetVal = HandleNewDataRecord(record, FALSE);
+			XnBool bUndone = FALSE;
+
+			for (XnUInt32 i = 0; i < m_nMaxNodes; i++)
+			{
+				//Rollback all properties to match the state the stream was in at position nDestRecordPos
+				PlayerNodeInfo &pni = m_pNodeInfoMap[i];
+				for (RecordUndoInfoMap::Iterator it = pni.recordUndoInfoMap.begin(); 
+					 it != pni.recordUndoInfoMap.end(); it++)
+				{
+					if ((it.Value().nRecordPos > nDestRecordPos) && (it.Value().nRecordPos < nStartPos))
 					{
-						//We couldn't find a record that can undo this data record
-						pni.nLastDataPos = 0;
-						pni.newDataUndoInfo.Reset();
+						//This property was set between nDestRecordPos and our start position, so we need to undo it.
+						nRetVal = UndoRecord(it.Value(), nDestRecordPos, bUndone);
+						XN_IS_STATUS_OK(nRetVal);
+					}
+				}
+
+				if ((i != nNodeID) && pni.bIsGenerator)
+				{
+					//Undo all other generator nodes' data
+					RecordUndoInfo &undoInfo = pni.newDataUndoInfo;
+					if ((undoInfo.nRecordPos > nDestRecordPos) && (undoInfo.nRecordPos < nStartPos))
+					{
+						nRetVal = UndoRecord(undoInfo, nDestRecordPos, bUndone);
+						XN_IS_STATUS_OK(nRetVal);
+						if (!bUndone)
+						{
+							//We couldn't find a record that can undo this data record
+							pni.nLastDataPos = 0;
+							pni.newDataUndoInfo.Reset();
+						}
 					}
 				}
 			}
-		}
 
-		/*Now, for each node, go to the position of the last encountered data record, and process that record
-		  (including its payload).*/
-		/*TODO: Optimization: remember each node's last data pos, and later, see if it changes. Only process data
-		  frames of nodes whose last data pos actually changed.*/
+			/*Now, for each node, go to the position of the last encountered data record, and process that record
+			  (including its payload).*/
+			/*TODO: Optimization: remember each node's last data pos, and later, see if it changes. Only process data
+			  frames of nodes whose last data pos actually changed.*/
 
-		nRetVal = ProcessEachNodeLastData(nNodeID);
-		XN_IS_STATUS_OK(nRetVal);
-	}
-	else //(nDestFrame >= nNextFrame)
-	{
-		//Skip all frames until we get to our frame number, but handle any properties we run into.
-		while (pPlayerNodeInfo->nCurFrame < nDestFrame)
-		{
-			nRetVal = ProcessRecord(FALSE);
+			nRetVal = ProcessEachNodeLastData(nNodeID);
 			XN_IS_STATUS_OK(nRetVal);
 		}
+		else //(nDestFrame >= nNextFrame)
+		{
+			//Skip all frames until we get to our frame number, but handle any properties we run into.
+			while (pPlayerNodeInfo->nCurFrame < nDestFrame)
+			{
+				nRetVal = ProcessRecord(FALSE);
+				XN_IS_STATUS_OK(nRetVal);
+			}
 
-		/*Now, for each node, go to the position of the last encountered data record, and process that record
-		  (including its payload).*/
-		/*TODO: Optimization: remember each node's last data pos, and later, see if it changes. Only process data
-		  frames of nodes whose last data pos actually changed.*/
-		nRetVal = ProcessEachNodeLastData(nNodeID);
-		XN_IS_STATUS_OK(nRetVal);
+			/*Now, for each node, go to the position of the last encountered data record, and process that record
+			  (including its payload).*/
+			/*TODO: Optimization: remember each node's last data pos, and later, see if it changes. Only process data
+			  frames of nodes whose last data pos actually changed.*/
+			nRetVal = ProcessEachNodeLastData(nNodeID);
+			XN_IS_STATUS_OK(nRetVal);
+		}
 	}
 
 	return XN_STATUS_OK;
@@ -527,8 +643,10 @@ XnStatus PlayerNode::OpenStream()
 	m_nMaxNodes = header.nMaxNodeID + 1;
 	XN_ASSERT(m_nMaxNodes > 0);
 	XN_DELETE_ARR(m_pNodeInfoMap);
+	xnOSFree(m_aSeekTempArray);
 	m_pNodeInfoMap = XN_NEW_ARR(PlayerNodeInfo, m_nMaxNodes);
 	XN_VALIDATE_ALLOC_PTR(m_pNodeInfoMap);
+	XN_VALIDATE_CALLOC(m_aSeekTempArray, DataIndexEntry*, m_nMaxNodes);
 	
 	m_bOpen = TRUE;
 	nRetVal = ProcessUntilFirstData();
@@ -536,6 +654,8 @@ XnStatus PlayerNode::OpenStream()
 	{
 		XN_DELETE_ARR(m_pNodeInfoMap);
 		m_pNodeInfoMap = NULL;
+		xnOSFree(m_aSeekTempArray);
+		m_aSeekTempArray = NULL;
 		return nRetVal;
 	}
 
@@ -640,10 +760,15 @@ XnStatus PlayerNode::HandleRecord(Record &record, XnBool bHandlePayload)
 			return HandleNodeDataBeginRecord(record);
 		case RECORD_NEW_DATA:
 			return HandleNewDataRecord(record, bHandlePayload);
+		case RECORD_SEEK_TABLE:
+			// never process this record (it is processed only during node added)
+			return HandleDataIndexRecord(record, FALSE);
 		case RECORD_END:
 			return HandleEndRecord(record);
 
 		// BC stuff
+		case RECORD_NODE_ADDED_1_0_0_5:
+			return HandleNodeAdded_1_0_0_5_Record(record);
 		case RECORD_NODE_ADDED_1_0_0_4:
 			return HandleNodeAdded_1_0_0_4_Record(record);
 
@@ -714,8 +839,8 @@ XnStatus PlayerNode::HandleNodeAddedImpl(XnUInt32 nNodeID, XnProductionNodeType 
 	if (xnIsTypeGenerator(type))
 	{
 		pPlayerNodeInfo->bIsGenerator = TRUE;
-	pPlayerNodeInfo->nFrames = nNumberOfFrames;
-	pPlayerNodeInfo->nMaxTimeStamp = nMaxTimestamp;
+		pPlayerNodeInfo->nFrames = nNumberOfFrames;
+		pPlayerNodeInfo->nMaxTimeStamp = nMaxTimestamp;
 	}
 
 	//Mark this player node as valid
@@ -805,6 +930,23 @@ XnStatus PlayerNode::HandleNodeAdded_1_0_0_4_Record(NodeAdded_1_0_0_4_Record rec
 	return XN_STATUS_OK;
 }
 
+XnStatus PlayerNode::HandleNodeAdded_1_0_0_5_Record(NodeAdded_1_0_0_5_Record record)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	nRetVal = record.Decode();
+	XN_IS_STATUS_OK(nRetVal);
+
+	DEBUG_LOG_RECORD(record, "NodeAdded1_0_0_5");
+
+	nRetVal = HandleNodeAddedImpl(
+		record.GetNodeID(), record.GetNodeType(), record.GetNodeName(), record.GetCompression(),
+		record.GetNumberOfFrames(), record.GetMinTimestamp(), record.GetMaxTimestamp());
+	XN_IS_STATUS_OK(nRetVal);
+
+	return (XN_STATUS_OK);
+}
+
 XnStatus PlayerNode::HandleNodeAddedRecord(NodeAddedRecord record)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -818,7 +960,27 @@ XnStatus PlayerNode::HandleNodeAddedRecord(NodeAddedRecord record)
 		record.GetNodeID(), record.GetNodeType(), record.GetNodeName(), record.GetCompression(),
 		record.GetNumberOfFrames(), record.GetMinTimestamp(), record.GetMaxTimestamp());
 	XN_IS_STATUS_OK(nRetVal);
-	
+
+	// get seek table (if exists)
+	if (record.GetNumberOfFrames() > 0 && record.GetSeekTablePosition() != 0)
+	{
+		XnUInt32 nCurrPos = TellStream();
+
+		nRetVal = SeekStream(XN_OS_SEEK_SET, record.GetSeekTablePosition());
+		XN_IS_STATUS_OK(nRetVal);
+
+		DataIndexRecordHeader seekTableHeader(m_pRecordBuffer, RECORD_MAX_SIZE);
+		nRetVal = ReadRecord(seekTableHeader);
+		XN_IS_STATUS_OK(nRetVal);
+
+		nRetVal = HandleDataIndexRecord(seekTableHeader, TRUE);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// and seek back
+		nRetVal = SeekStream(XN_OS_SEEK_SET, nCurrPos);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
 	return (XN_STATUS_OK);
 }
 
@@ -1058,8 +1220,13 @@ XnStatus PlayerNode::HandleNodeStateReadyRecord(NodeStateReadyRecord record)
 		return XN_STATUS_CORRUPT_FILE;
 	}
 
-	nRetVal = m_pNodeNotifications->OnNodeStateReady(m_pNotificationsCookie, pPlayerNodeInfo->strName);
-	XN_IS_STATUS_OK(nRetVal);
+	// after wrap-around, if node wasn't destroyed, no need to notify about state ready
+	if (!pPlayerNodeInfo->bStateReady)
+	{
+		nRetVal = m_pNodeNotifications->OnNodeStateReady(m_pNotificationsCookie, pPlayerNodeInfo->strName);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
 	if (pPlayerNodeInfo->bIsGenerator && 
 		(pPlayerNodeInfo->compression != XN_CODEC_NULL) && 
 		!pPlayerNodeInfo->codec.IsValid())
@@ -1078,20 +1245,20 @@ XnStatus PlayerNode::HandleNodeStateReadyRecord(NodeStateReadyRecord record)
 		nRetVal = m_context.GetProductionNodeByName(m_strName, playerNode);
 		if (nRetVal != XN_STATUS_OK)
 		{
-			pPlayerNodeInfo->codec.Unref();
+			pPlayerNodeInfo->codec.Release();
 			return (nRetVal);
 		}
 
 		nRetVal = playerNode.AddNeededNode(pPlayerNodeInfo->codec);
 		if (nRetVal != XN_STATUS_OK)
 		{
-			pPlayerNodeInfo->codec.Unref();
+			pPlayerNodeInfo->codec.Release();
 			return (nRetVal);
 		}
 
 		// at this point, we can unref the codec (it will still have at least one ref, as we added it to needed nodes).
 		xn::Codec codec = pPlayerNodeInfo->codec;
-		codec.Unref();
+		codec.Release();
 	}
 
 	pPlayerNodeInfo->bStateReady = TRUE;
@@ -1209,12 +1376,75 @@ XnStatus PlayerNode::HandleNewDataRecord(NewDataRecordHeader record, XnBool bRea
 	return XN_STATUS_OK;
 }
 
+XnStatus PlayerNode::HandleDataIndexRecord(DataIndexRecordHeader record, XnBool bReadPayload)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XN_VALIDATE_INPUT_PTR(m_pNodeNotifications);
+	nRetVal = record.Decode();
+	XN_IS_STATUS_OK(nRetVal);
+	DEBUG_LOG_RECORD(record, "DataIndex");
+
+	XN_ASSERT(record.GetNodeID() != INVALID_NODE_ID);
+	PlayerNodeInfo* pPlayerNodeInfo = GetPlayerNodeInfo(record.GetNodeID());
+	XN_VALIDATE_PTR(pPlayerNodeInfo, XN_STATUS_CORRUPT_FILE);
+
+	XnUInt32 nRecordTotalSize = record.GetSize() + record.GetPayloadSize();
+	if (nRecordTotalSize > RECORD_MAX_SIZE)
+	{
+		XN_ASSERT(FALSE);
+		XN_LOG_ERROR_RETURN(XN_STATUS_INTERNAL_BUFFER_TOO_SMALL, XN_MASK_OPEN_NI, "Record size %u is larger than player internal buffer", nRecordTotalSize);
+	}
+
+	if (bReadPayload)
+	{
+		// make sure node exists
+		if (!pPlayerNodeInfo->bValid)
+		{
+			XN_ASSERT(FALSE);
+			return XN_STATUS_CORRUPT_FILE;
+		}
+
+		if (record.GetPayloadSize() != (pPlayerNodeInfo->nFrames+1) * sizeof(DataIndexEntry))
+		{
+			XN_ASSERT(FALSE);
+			XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Seek table has %u entries, but node has %u frames!", record.GetPayloadSize() / sizeof(DataIndexEntry), pPlayerNodeInfo->nFrames);
+		}
+
+		// allocate our data index
+		pPlayerNodeInfo->pDataIndex = (DataIndexEntry*)xnOSCalloc(pPlayerNodeInfo->nFrames+1, sizeof(DataIndexEntry));
+		XN_VALIDATE_ALLOC_PTR(pPlayerNodeInfo->pDataIndex);
+
+		//Now read the actual data
+		XnUInt32 nBytesRead = 0;
+		nRetVal = Read(pPlayerNodeInfo->pDataIndex, record.GetPayloadSize(), nBytesRead);
+		XN_IS_STATUS_OK(nRetVal);
+		if (nBytesRead < record.GetPayloadSize())
+		{
+			XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Not enough bytes read");
+		}
+	}
+	else
+	{
+		//Just skip the data
+		nRetVal = SkipRecordPayload(record);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	return XN_STATUS_OK;
+}
+
 XnStatus PlayerNode::HandleEndRecord(EndRecord record)
 {
 	XN_VALIDATE_INPUT_PTR(m_pNodeNotifications);
 	XnStatus nRetVal = record.Decode();
 	XN_IS_STATUS_OK(nRetVal);
 	DEBUG_LOG_RECORD(record, "End");
+
+	if (!m_bDataBegun)
+	{
+		XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "File does not contain any data!");
+	}
 
 	nRetVal = m_eofReachedEvent.Raise();
 	XN_IS_STATUS_OK(nRetVal);
@@ -1341,6 +1571,7 @@ XnStatus PlayerNode::SeekToTimeStampAbsolute(XnUInt64 nDestTimeStamp)
 			}
 
 			case RECORD_NODE_ADDED_1_0_0_4:
+			case RECORD_NODE_ADDED_1_0_0_5:
 			case RECORD_NODE_ADDED:
 			case RECORD_INT_PROPERTY:	
 			case RECORD_REAL_PROPERTY:	
@@ -1430,6 +1661,7 @@ XnStatus PlayerNode::SkipRecordPayload(Record record)
 
 PlayerNode::PlayerNodeInfo::PlayerNodeInfo()
 {
+	pDataIndex = NULL;
 	Reset();
 }
 
@@ -1450,4 +1682,6 @@ void PlayerNode::PlayerNodeInfo::Reset()
 	recordUndoInfoMap.Clear();
 	newDataUndoInfo.Reset();
 	bValid = FALSE;
+	xnOSFree(pDataIndex);
+	pDataIndex = NULL;
 }

@@ -1,26 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #include "DataRecords.h"
 #include <XnLog.h>
 #include <XnOpenNI.h>
@@ -28,7 +26,7 @@
 const RecordingHeader DEFAULT_RECORDING_HEADER = 
 {
 	{'N','I','1','0'}, //Magic
-	{1, 0, 0, 5}, //Version 
+	{1, 0, 0, 6}, //Version 
 	0, //Global max timestamp
 	0 //Max node id
 };
@@ -257,16 +255,17 @@ XnStatus Record::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCharsWritt
 		m_pHeader->m_nPayloadSize, m_pHeader->m_nFieldsSize);
 }
 
-/*******************/
+/****************************/
 /* NodeAdded_1_0_0_4_Record */
-/*******************/
+/****************************/
 NodeAdded_1_0_0_4_Record::NodeAdded_1_0_0_4_Record(XnUInt8* pData, XnUInt32 nMaxSize) :
 	Record(pData, nMaxSize), m_strNodeName(NULL), m_type(XnProductionNodeType(0))
 {
 	xnOSMemSet(&m_compression, 0, sizeof(m_compression));
 }
 
-NodeAdded_1_0_0_4_Record::NodeAdded_1_0_0_4_Record(const Record& record) : Record(record)
+NodeAdded_1_0_0_4_Record::NodeAdded_1_0_0_4_Record(const Record& record) : 
+	Record(record), m_strNodeName(NULL), m_type(XnProductionNodeType(0))
 {
 
 }
@@ -308,6 +307,8 @@ XnStatus NodeAdded_1_0_0_4_Record::Encode()
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = EncodeImpl();
 	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = FinishWrite();
+	XN_IS_STATUS_OK(nRetVal);
 	return XN_STATUS_OK;
 }
 
@@ -317,6 +318,8 @@ XnStatus NodeAdded_1_0_0_4_Record::Decode()
 	nRetVal = StartRead();
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = DecodeImpl();
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = FinishRead();
 	XN_IS_STATUS_OK(nRetVal);
 	return XN_STATUS_OK;
 }
@@ -363,54 +366,77 @@ XnStatus NodeAdded_1_0_0_4_Record::AsString(XnChar* strDest, XnUInt32 nSize, XnU
 	
 	return XN_STATUS_OK;
 }
-/*********************/
-/* NodeAddedRecord */
-/*********************/
-NodeAddedRecord::NodeAddedRecord(XnUInt8* pData, XnUInt32 nMaxSize) :
+/****************************/
+/* NodeAdded_1_0_0_5_Record */
+/****************************/
+NodeAdded_1_0_0_5_Record::NodeAdded_1_0_0_5_Record(XnUInt8* pData, XnUInt32 nMaxSize) :
 	NodeAdded_1_0_0_4_Record(pData, nMaxSize), m_nNumberOfFrames(0), m_nMinTimestamp(0), m_nMaxTimestamp(0)
 {
 }
 
-NodeAddedRecord::NodeAddedRecord(const Record& record) : NodeAdded_1_0_0_4_Record(record)
+NodeAdded_1_0_0_5_Record::NodeAdded_1_0_0_5_Record(const Record& record) : 
+	NodeAdded_1_0_0_4_Record(record), m_nNumberOfFrames(0), m_nMinTimestamp(0), m_nMaxTimestamp(0)
 {
 
 }
 
-void NodeAddedRecord::SetNumberOfFrames(XnUInt32 nNumberOfFrames)
+void NodeAdded_1_0_0_5_Record::SetNumberOfFrames(XnUInt32 nNumberOfFrames)
 {
 	m_nNumberOfFrames = nNumberOfFrames;
 }
 
-void NodeAddedRecord::SetMinTimestamp(XnUInt64 nMinTimestamp)
+void NodeAdded_1_0_0_5_Record::SetMinTimestamp(XnUInt64 nMinTimestamp)
 {
 	m_nMinTimestamp = nMinTimestamp;
 }
 
-void NodeAddedRecord::SetMaxTimestamp(XnUInt64 nMaxTimestamp)
+void NodeAdded_1_0_0_5_Record::SetMaxTimestamp(XnUInt64 nMaxTimestamp)
 {
 	m_nMaxTimestamp = nMaxTimestamp;
 }
 
-XnUInt32 NodeAddedRecord::GetNumberOfFrames() const
+XnUInt32 NodeAdded_1_0_0_5_Record::GetNumberOfFrames() const
 {
 	return m_nNumberOfFrames;
 }
 
-XnUInt64 NodeAddedRecord::GetMinTimestamp() const
+XnUInt64 NodeAdded_1_0_0_5_Record::GetMinTimestamp() const
 {
 	return m_nMinTimestamp;
 }
 
-XnUInt64 NodeAddedRecord::GetMaxTimestamp() const
+XnUInt64 NodeAdded_1_0_0_5_Record::GetMaxTimestamp() const
 {
 	return m_nMaxTimestamp;
 }
 
-XnStatus NodeAddedRecord::Encode()
+XnStatus NodeAdded_1_0_0_5_Record::Encode()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	nRetVal = StartWrite(RECORD_NODE_ADDED);
+	nRetVal = StartWrite(RECORD_NODE_ADDED_1_0_0_5);
 	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = EncodeImpl();
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = FinishWrite();
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;
+}
+
+XnStatus NodeAdded_1_0_0_5_Record::Decode()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	nRetVal = StartRead();
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = DecodeImpl();
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = FinishRead();
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;
+}
+
+XnStatus NodeAdded_1_0_0_5_Record::EncodeImpl()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
 	nRetVal = NodeAdded_1_0_0_4_Record::EncodeImpl();
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = Write(&m_nNumberOfFrames, sizeof(m_nNumberOfFrames));
@@ -418,6 +444,69 @@ XnStatus NodeAddedRecord::Encode()
 	nRetVal = Write(&m_nMinTimestamp, sizeof(m_nMinTimestamp));
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = Write(&m_nMaxTimestamp, sizeof(m_nMaxTimestamp));
+	XN_IS_STATUS_OK(nRetVal);
+	return (XN_STATUS_OK);
+}
+
+XnStatus NodeAdded_1_0_0_5_Record::DecodeImpl()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	nRetVal = NodeAdded_1_0_0_4_Record::DecodeImpl();
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = Read(&m_nNumberOfFrames, sizeof(m_nNumberOfFrames));
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = Read(&m_nMinTimestamp, sizeof(m_nMinTimestamp));
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = Read(&m_nMaxTimestamp, sizeof(m_nMaxTimestamp));
+	XN_IS_STATUS_OK(nRetVal);
+	return (XN_STATUS_OK);
+}
+
+XnStatus NodeAdded_1_0_0_5_Record::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCharsWritten)
+{
+	XnUInt32 nTempCharsWritten = 0;
+	nCharsWritten = 0;
+	XnStatus nRetVal = NodeAdded_1_0_0_4_Record::AsString(strDest, nSize, nTempCharsWritten);
+	XN_IS_STATUS_OK(nRetVal);
+	nCharsWritten += nTempCharsWritten;
+	nRetVal = xnOSStrFormat(strDest + nCharsWritten, nSize - nCharsWritten, &nTempCharsWritten, 
+		" numFrames=%u minTS=%u maxTS=%s", m_nNumberOfFrames, m_nMinTimestamp, m_nMaxTimestamp);
+	XN_IS_STATUS_OK(nRetVal);
+	nCharsWritten += nTempCharsWritten;
+	return XN_STATUS_OK;
+}
+
+/****************************/
+/* NodeAddedRecord          */
+/****************************/
+NodeAddedRecord::NodeAddedRecord(XnUInt8* pData, XnUInt32 nMaxSize) :
+	NodeAdded_1_0_0_5_Record(pData, nMaxSize), m_nSeekTablePosition(0)
+{
+}
+
+NodeAddedRecord::NodeAddedRecord(const Record& record) : 
+	NodeAdded_1_0_0_5_Record(record), m_nSeekTablePosition(0)
+{
+}
+
+void NodeAddedRecord::SetSeekTablePosition(XnUInt32 nPos)
+{
+	m_nSeekTablePosition = nPos;
+}
+
+XnUInt32 NodeAddedRecord::GetSeekTablePosition()
+{
+	return m_nSeekTablePosition;
+}
+
+XnStatus NodeAddedRecord::Encode()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	nRetVal = StartWrite(RECORD_NODE_ADDED);
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = NodeAdded_1_0_0_5_Record::EncodeImpl();
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = Write(&m_nSeekTablePosition, sizeof(m_nSeekTablePosition));
 	XN_IS_STATUS_OK(nRetVal);
 	return XN_STATUS_OK;
 }
@@ -427,13 +516,9 @@ XnStatus NodeAddedRecord::Decode()
 	XnStatus nRetVal = XN_STATUS_OK;
 	nRetVal = StartRead();
 	XN_IS_STATUS_OK(nRetVal);
-	nRetVal = NodeAdded_1_0_0_4_Record::DecodeImpl();
+	nRetVal = NodeAdded_1_0_0_5_Record::DecodeImpl();
 	XN_IS_STATUS_OK(nRetVal);
-	nRetVal = Read(&m_nNumberOfFrames, sizeof(m_nNumberOfFrames));
-	XN_IS_STATUS_OK(nRetVal);
-	nRetVal = Read(&m_nMinTimestamp, sizeof(m_nMinTimestamp));
-	XN_IS_STATUS_OK(nRetVal);
-	nRetVal = Read(&m_nMaxTimestamp, sizeof(m_nMaxTimestamp));
+	nRetVal = Read(&m_nSeekTablePosition, sizeof(m_nSeekTablePosition));
 	XN_IS_STATUS_OK(nRetVal);
 	return XN_STATUS_OK;
 }
@@ -442,11 +527,11 @@ XnStatus NodeAddedRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nC
 {
 	XnUInt32 nTempCharsWritten = 0;
 	nCharsWritten = 0;
-	XnStatus nRetVal = NodeAdded_1_0_0_4_Record::AsString(strDest, nSize, nTempCharsWritten);
+	XnStatus nRetVal = NodeAdded_1_0_0_5_Record::AsString(strDest, nSize, nTempCharsWritten);
 	XN_IS_STATUS_OK(nRetVal);
 	nCharsWritten += nTempCharsWritten;
 	nRetVal = xnOSStrFormat(strDest + nCharsWritten, nSize - nCharsWritten, &nTempCharsWritten, 
-		" numFrames=%u minTS=%u maxTS=%s", m_nNumberOfFrames, m_nMinTimestamp, m_nMaxTimestamp);
+		" seekTablePos=%u", m_nSeekTablePosition);
 	XN_IS_STATUS_OK(nRetVal);
 	nCharsWritten += nTempCharsWritten;
 	return XN_STATUS_OK;
@@ -560,7 +645,7 @@ XnStatus GeneralPropRecord::Decode()
 	//The property data is not copied but just pointed to
 	XnUInt8* pData = const_cast<XnUInt8*>(GetReadPos());
 
-#if (XN_PLATFORM == XN_PLATFORM_LINUX_ARM)
+#if (XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_ARC)
 	// under ARM we have some alignment issues. Move this buffer so it will be aligned.
 	XnUInt32 nAlignFix = XN_DEFAULT_MEM_ALIGN - ((XnUInt32)pData % XN_DEFAULT_MEM_ALIGN);
 	if (nAlignFix != 0)
@@ -876,6 +961,45 @@ XnStatus NewDataRecordHeader::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32
 	nCharsWritten += nTempCharsWritten;
 	nRetVal = xnOSStrFormat(strDest + nCharsWritten, nSize - nCharsWritten, &nTempCharsWritten, 
 		" TS=%llu FN=%u", m_nTimeStamp, m_nFrameNumber);
+	XN_IS_STATUS_OK(nRetVal);
+	nCharsWritten += nTempCharsWritten;
+	return XN_STATUS_OK;
+}
+
+/*******************/
+/* DataIndexRecordHeader */
+/*******************/
+DataIndexRecordHeader::DataIndexRecordHeader(XnUInt8* pData, XnUInt32 nMaxSize) :
+	Record(pData, nMaxSize)
+{
+}
+
+DataIndexRecordHeader::DataIndexRecordHeader(const Record& record) :
+	Record(record)
+{
+}
+
+XnStatus DataIndexRecordHeader::Encode()
+{
+	XnStatus nRetVal = StartWrite(RECORD_SEEK_TABLE);
+	XN_IS_STATUS_OK(nRetVal);
+	//No call to FinishWrite() - this record is not done yet
+	return XN_STATUS_OK;
+}
+
+XnStatus DataIndexRecordHeader::Decode()
+{
+	XnStatus nRetVal = StartRead();
+	XN_IS_STATUS_OK(nRetVal);
+	//No call to FinishRead() - this record is not done yet
+	return XN_STATUS_OK;
+}
+
+XnStatus DataIndexRecordHeader::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCharsWritten)
+{
+	XnUInt32 nTempCharsWritten = 0;
+	nCharsWritten = 0;
+	XnStatus nRetVal = Record::AsString(strDest, nSize, nTempCharsWritten);
 	XN_IS_STATUS_OK(nRetVal);
 	nCharsWritten += nTempCharsWritten;
 	return XN_STATUS_OK;

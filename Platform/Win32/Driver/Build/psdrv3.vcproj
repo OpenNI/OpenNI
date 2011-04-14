@@ -96,7 +96,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/SECTION:INIT,d  /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221 /WX /debugtype:cv,fixup,pdata /osversion:6.1 /functionpadmin:5 /safeseh /pdbcompress /subsystem:native,6.00"
-				AdditionalDependencies="&quot;$(DDKPATH)\lib\wlh\i386\BufferOverflowK.lib&quot; &quot;$(DDKPATH)\lib\wlh\i386\ntoskrnl.lib&quot; &quot;$(DDKPATH)\lib\wlh\i386\hal.lib&quot; &quot;$(DDKPATH)\lib\wlh\i386\wmilib.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\i386\1.9\WdfLdr.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\i386\1.9\WdfDriverEntry.lib&quot; $(NOINHERIT)"
+				AdditionalDependencies="&quot;$(DDKPATH)\lib\win7\i386\BufferOverflowK.lib&quot; &quot;$(DDKPATH)\lib\win7\i386\ntoskrnl.lib&quot; &quot;$(DDKPATH)\lib\win7\i386\hal.lib&quot; &quot;$(DDKPATH)\lib\win7\i386\wmilib.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\i386\1.9\WdfLdr.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\i386\1.9\WdfDriverEntry.lib&quot; $(NOINHERIT)"
 				OutputFile=".\sys\x86\release\psdrv3.sys"
 				Version="6.1"
 				LinkIncremental="1"
@@ -221,8 +221,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/SECTION:INIT,d  /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221,4108,4088,4218,4218,4235 /WX /debugtype:cv,fixup,pdata /osversion:6.1 /functionpadmin:6 /pdbcompress /subsystem:native,6.00 $(DDKPATH)\lib\wlh\amd64\hotpatch.obj"
-				AdditionalDependencies="&quot;$(DDKPATH)\lib\wlh\amd64\BufferOverflowK.lib&quot; &quot;$(DDKPATH)\lib\wlh\amd64\ntoskrnl.lib&quot; &quot;$(DDKPATH)\lib\wlh\amd64\hal.lib&quot; &quot;$(DDKPATH)\lib\wlh\amd64\wmilib.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\amd64\1.9\WdfLdr.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\amd64\1.9\WdfDriverEntry.lib&quot; &quot;$(DDKPATH)\lib\wlh\amd64\usbd.lib&quot; $(NOINHERIT)"
+				AdditionalOptions="/SECTION:INIT,d  /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221,4108,4088,4218,4218,4235 /WX /debugtype:cv,fixup,pdata /osversion:6.1 /functionpadmin:6 /pdbcompress /subsystem:native,6.00 $(DDKPATH)\lib\win7\amd64\hotpatch.obj"
+				AdditionalDependencies="&quot;$(DDKPATH)\lib\win7\amd64\BufferOverflowK.lib&quot; &quot;$(DDKPATH)\lib\win7\amd64\ntoskrnl.lib&quot; &quot;$(DDKPATH)\lib\win7\amd64\hal.lib&quot; &quot;$(DDKPATH)\lib\win7\amd64\wmilib.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\amd64\1.9\WdfLdr.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\amd64\1.9\WdfDriverEntry.lib&quot; &quot;$(DDKPATH)\lib\win7\amd64\usbd.lib&quot; $(NOINHERIT)"
 				OutputFile=".\sys\amd64\release\psdrv3.sys"
 				Version="6.1"
 				LinkIncremental="1"
@@ -347,7 +347,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/SECTION:INIT,d  /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221 /WX /debugtype:cv,fixup,pdata /osversion:6.1 /functionpadmin:5 /safeseh /pdbcompress /subsystem:native,6.00"
-				AdditionalDependencies="&quot;$(DDKPATH)\lib\wlh\i386\BufferOverflowK.lib&quot; &quot;$(DDKPATH)\lib\wlh\i386\ntoskrnl.lib&quot; &quot;$(DDKPATH)\lib\wlh\i386\hal.lib&quot; &quot;$(DDKPATH)\lib\wlh\i386\wmilib.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\i386\1.9\WdfLdr.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\i386\1.9\WdfDriverEntry.lib&quot; $(NOINHERIT)"
+				AdditionalDependencies="&quot;$(DDKPATH)\lib\win7\i386\BufferOverflowK.lib&quot; &quot;$(DDKPATH)\lib\win7\i386\ntoskrnl.lib&quot; &quot;$(DDKPATH)\lib\win7\i386\hal.lib&quot; &quot;$(DDKPATH)\lib\win7\i386\wmilib.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\i386\1.9\WdfLdr.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\i386\1.9\WdfDriverEntry.lib&quot; $(NOINHERIT)"
 				OutputFile=".\sys\x86\debug\psdrv3.sys"
 				Version="6.1"
 				LinkIncremental="1"
@@ -472,8 +472,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/SECTION:INIT,d  /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221,4108,4088,4218,4218,4235 /WX /debugtype:cv,fixup,pdata /osversion:6.1 /functionpadmin:6 /pdbcompress /subsystem:native,6.00 $(DDKPATH)\lib\wlh\amd64\hotpatch.obj"
-				AdditionalDependencies="&quot;$(DDKPATH)\lib\wlh\amd64\BufferOverflowK.lib&quot; &quot;$(DDKPATH)\lib\wlh\amd64\ntoskrnl.lib&quot; &quot;$(DDKPATH)\lib\wlh\amd64\hal.lib&quot; &quot;$(DDKPATH)\lib\wlh\amd64\wmilib.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\amd64\1.9\WdfLdr.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\amd64\1.9\WdfDriverEntry.lib&quot; &quot;$(DDKPATH)\lib\wlh\amd64\usbd.lib&quot; $(NOINHERIT)"
+				AdditionalOptions="/SECTION:INIT,d  /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221,4108,4088,4218,4218,4235 /WX /debugtype:cv,fixup,pdata /osversion:6.1 /functionpadmin:6 /pdbcompress /subsystem:native,6.00 $(DDKPATH)\lib\win7\amd64\hotpatch.obj"
+				AdditionalDependencies="&quot;$(DDKPATH)\lib\win7\amd64\BufferOverflowK.lib&quot; &quot;$(DDKPATH)\lib\win7\amd64\ntoskrnl.lib&quot; &quot;$(DDKPATH)\lib\win7\amd64\hal.lib&quot; &quot;$(DDKPATH)\lib\win7\amd64\wmilib.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\amd64\1.9\WdfLdr.lib&quot; &quot;$(DDKPATH)\lib\wdf\kmdf\amd64\1.9\WdfDriverEntry.lib&quot; &quot;$(DDKPATH)\lib\win7\amd64\usbd.lib&quot; $(NOINHERIT)"
 				OutputFile=".\sys\amd64\debug\psdrv3.sys"
 				Version="6.1"
 				LinkIncremental="1"

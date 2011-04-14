@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_UTILS_H__
 #define __XN_UTILS_H__
 
@@ -37,6 +33,7 @@
 // Includes
 //---------------------------------------------------------------------------
 #include <XnTypes.h>
+#include <XnModuleInterface.h>
 
 //---------------------------------------------------------------------------
 // Functions
@@ -81,7 +78,15 @@ XN_C_API XnStatus xnProductionNodeTypeFromString(const XnChar* strType, XnProduc
  *
  * @param	type	[in]	The type to check
  */
-XN_C_API const XnBool xnIsTypeGenerator(XnProductionNodeType type);
+XN_C_API XnBool xnIsTypeGenerator(XnProductionNodeType type);
+
+/**
+ * @brief Checks if a certain production node type is a derived of another type
+ *
+ * @param	type	[in]	The type to check
+ * @param	base	[in]	The base type to check against
+ */
+XN_C_API XnBool xnIsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base);
 
 /// @}
 
@@ -104,6 +109,13 @@ XN_C_API const XnChar* xnPixelFormatToString(XnPixelFormat format);
  * @param	pFormat	[out]	Pixel format.
  */
 XN_C_API XnStatus xnPixelFormatFromString(const XnChar* strName, XnPixelFormat* pFormat);
+
+/**
+ * Gets the bytes per pixel of a pixel format.
+ *
+ * @param	format	[in]	The pixel format.
+ */
+XN_C_API XnUInt32 xnGetBytesPerPixelForPixelFormat(XnPixelFormat format);
 
 /// @}
 
@@ -380,6 +392,33 @@ XN_C_API XnStatus xnCopySceneMetaData(XnSceneMetaData* pDestination, const XnSce
  * @param	pQuery			[in]	[Optional] A filter to be used for finding the appropriate input.
  */
 XN_C_API XnStatus xnAutoEnumerateOverSingleInput(XnContext* pContext, XnNodeInfoList* pList, XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnProductionNodeType InputType, XnEnumerationErrors* pErrors, XnNodeQuery* pQuery);
+
+/**
+ * Registers an extension node with OpenNI. An extension node is a node of type not defined by OpenNI.
+ *
+ * @param	strTypeName		[in]	Name of this new node type.
+ * @param	baseType		[in]	Type of the direct base for this extension.
+ * @param	pTypeID			[out]	The new ID registered with OpenNI.
+ */
+XN_C_API XnStatus xnRegisterExtensionNode(const XnChar* strTypeName, XnProductionNodeType baseType, XnProductionNodeType* pTypeID);
+
+/**
+ * Gets the module node handle of a node. This is useful for extension implementors.
+ *
+ * @param	hNode			[in]	The node to get its module node handle.
+ */
+XN_C_API XnModuleNodeHandle xnGetModuleNodeHandle(XnNodeHandle hNode);
+
+#if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
+/**
+ * Registers a module to OpenNI in environments where dynamic library loading is not supported.
+ *
+ * @param	pInterface		[in]	The module interface.
+ * @param	strConfigDir	[in]	The module configuration directory.
+ * @param	strName			[in]	Name of this module.
+ */
+XN_C_API XnStatus xnRegisterModuleWithOpenNI(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
+#endif
 
 /// @}
 

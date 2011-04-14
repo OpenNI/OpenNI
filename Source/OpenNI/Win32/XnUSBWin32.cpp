@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -141,7 +137,7 @@ XnStatus xnUSBInitOvlp(XN_USB_EP_HANDLE pEPHandle)
 }
 
 
-HANDLE xnUSBOpenOneDevice(HDEVINFO hDevInfo, PSP_DEVICE_INTERFACE_DATA pDevInterfaceData, PSTR pDevName, XnChar* cpWantedDevPath)
+HANDLE xnUSBOpenOneDevice(HDEVINFO hDevInfo, PSP_DEVICE_INTERFACE_DATA pDevInterfaceData, PSTR pDevName, const XnChar* cpWantedDevPath)
 {
 	// Local variables
 	PSP_DEVICE_INTERFACE_DETAIL_DATA pDevInterfaceDetailData = NULL;
@@ -205,8 +201,15 @@ XnStatus xnUSBSetPipeProperty(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nIndex, XnUIn
 	PipeProp.nIndex = nIndex;
 	PipeProp.nValue = nValue;
 
-	// Do the set pipe property
+	// Set pipe property (regular handle)
 	bResult = DeviceIoControl(pEPHandle->hEPHandle, IOCTL_PSDRV_SET_PIPE_PROPERTY, &PipeProp, sizeof(PSUSBDRV_PIPE_PROPERTY), NULL, NULL, &nRetBytes, NULL);
+	if (bResult == FALSE)
+	{
+		return (XN_STATUS_USB_SET_ENDPOINT_POLICY_FAILED);
+	}
+
+	// Set pipe property (ovlp handle)
+	bResult = DeviceIoControl(pEPHandle->hEPHandleOvlp, IOCTL_PSDRV_SET_PIPE_PROPERTY, &PipeProp, sizeof(PSUSBDRV_PIPE_PROPERTY), NULL, NULL, &nRetBytes, NULL);
 	if (bResult == FALSE)
 	{
 		return (XN_STATUS_USB_SET_ENDPOINT_POLICY_FAILED);
@@ -302,18 +305,128 @@ XN_C_API XnStatus xnUSBIsDevicePresent(XnUInt16 /*nVendorID*/, XnUInt16 /*nProdu
 
 	SetupDiDestroyDeviceInfoList(deviceInfo);
 
-	// Yay! We found atleast one device
+	// Yay! We found at least one device
 	*pbDevicePresent = TRUE;
 
 	// All is good...
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*/, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr)
+XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID, const XnUSBConnectionString** pastrDevicePaths, XnUInt32* pnCount)
 {
 	// Local variables
 	XnStatus nRetVal = XN_STATUS_OK;
-	LPGUID pInterfaceGuid = NULL;
+
+	// support up to 30 devices
+	XnUSBConnectionString cpUSBID;
+	XnUSBConnectionString cpUSBPathCmp;
+	XnUSBConnectionString aNames[MAX_POTENTIAL_DEVICES];
+	HDEVINFO hDevInfo = NULL;
+	ULONG nDevices = 0;
+	XnUInt32 nFoundDevices = 0;
+	SP_DEVICE_INTERFACE_DATA devInterfaceData;
+	XnBool bReachedEnd = FALSE;
+
+	// Validate xnUSB
+	XN_VALIDATE_USB_INIT();
+
+	LPCGUID pInterfaceGuid = &GUID_CLASS_PSDRV_USB;
+
+	// See if the driver is installed
+	hDevInfo = SetupDiGetClassDevs (pInterfaceGuid, NULL, NULL, (DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
+	if (hDevInfo == INVALID_HANDLE_VALUE)
+	{
+		// No devices are present...
+		return (XN_STATUS_USB_DRIVER_NOT_FOUND);
+	}
+
+	// Scan the hardware for any devices that are attached to our driver.
+	devInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+
+	while (nDevices < MAX_POTENTIAL_DEVICES)
+	{
+		// Get information about the device
+		if (SetupDiEnumDeviceInterfaces(hDevInfo, 0, pInterfaceGuid, nDevices, &devInterfaceData))
+		{
+			PSP_DEVICE_INTERFACE_DETAIL_DATA pDevInterfaceDetailData = NULL;
+			ULONG nPredictedLength = 0;
+			ULONG nRequiredLength = 0;
+
+			// Probe how much memory is needed to read the device info
+			SetupDiGetDeviceInterfaceDetail(hDevInfo, &devInterfaceData, NULL, 0, &nRequiredLength, NULL);
+
+			// Allocate memory for the device info
+			nPredictedLength = nRequiredLength;
+
+			pDevInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(nPredictedLength);
+			if(pDevInterfaceDetailData == NULL)
+			{
+				// Not enough memory...
+				return XN_STATUS_ALLOC_FAILED;
+			}
+
+			// Read the device info
+			pDevInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+			if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &devInterfaceData, pDevInterfaceDetailData, nPredictedLength, &nRequiredLength, NULL))
+			{
+				// Something bad has happened...
+				free(pDevInterfaceDetailData);
+				return XN_STATUS_ERROR;
+			}
+
+			// Make sure we have the right VID/PID
+			cpUSBID[0] = 0;
+			sprintf_s (cpUSBID, "vid_%04x&pid_%04x", nVendorID, nProductID);
+			
+			cpUSBPathCmp[0] = 0;
+			StringCchCopy(cpUSBPathCmp, MAX_DEVICE_STR_LENGTH, pDevInterfaceDetailData->DevicePath);
+
+			if (strstr(_strlwr(cpUSBPathCmp), cpUSBID) != 0)
+			{
+				StringCchCopy(aNames[nFoundDevices], MAX_DEVICE_STR_LENGTH, pDevInterfaceDetailData->DevicePath);
+
+				++nFoundDevices;
+			}
+
+			++nDevices;
+		}
+		else if (ERROR_NO_MORE_ITEMS == GetLastError())
+		{
+			// no more devices
+			bReachedEnd = TRUE;
+			break;
+		}
+	}
+
+	SetupDiDestroyDeviceInfoList(hDevInfo);
+
+	if (!bReachedEnd)
+	{
+		// we probably passed our limit
+		XN_LOG_ERROR_RETURN(XN_STATUS_ERROR, XN_MASK_USB, "Found more than %d devices! This is not supported.", MAX_POTENTIAL_DEVICES);
+	}
+
+	XnUSBConnectionString* pNames;
+	XN_VALIDATE_CALLOC(pNames, XnUSBConnectionString, nFoundDevices);
+	xnOSMemCopy(pNames, aNames, sizeof(XnUSBConnectionString) * nFoundDevices);
+
+	*pastrDevicePaths = pNames;
+	*pnCount = nFoundDevices;
+
+	// All is good...
+	return (XN_STATUS_OK);
+}
+
+XN_C_API void xnUSBFreeDevicesList(const XnUSBConnectionString* astrDevicePaths)
+{
+	xnOSFree(astrDevicePaths);
+}
+
+XnStatus xnUSBOpenDeviceImpl(const XnChar* strDevicePath, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	// Local variables
+	XnStatus nRetVal = XN_STATUS_OK;
+	LPCGUID pInterfaceGuid = NULL;
 	XN_USB_DEV_HANDLE pDevHandle = NULL;
 	ULONG nNumberDevices = 0;
 	HDEVINFO hDevInfo = NULL;
@@ -331,7 +444,6 @@ XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*
 	XN_VALIDATE_USB_INIT();
 
 	// Validate the input/output pointers
-	XN_VALIDATE_INPUT_PTR(pExtraParam);
 	XN_VALIDATE_OUTPUT_PTR(pDevHandlePtr);
 
 	// Allocate a new xnUSB Device handle
@@ -339,10 +451,10 @@ XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*
 	pDevHandle = *pDevHandlePtr;
 
 	// Get Device Path
-	pInterfaceGuid = (LPGUID)pExtraParam;
+	pInterfaceGuid = &GUID_CLASS_PSDRV_USB;
 
 	// See if the driver is installed
-	hDevInfo =  SetupDiGetClassDevs ((GUID*)pExtraParam, NULL, NULL, (DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
+	hDevInfo =  SetupDiGetClassDevs (pInterfaceGuid, NULL, NULL, (DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
 	if (hDevInfo == INVALID_HANDLE_VALUE)
 	{
 		// No devices are present...
@@ -400,7 +512,7 @@ XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*
 			if (SetupDiEnumDeviceInterfaces (hDevInfo, 0, pInterfaceGuid, nIdx, &devInterfaceData))
 			{
 				// Try to open this device
-				hSelectedDevice = xnUSBOpenOneDevice(hDevInfo, &devInterfaceData, pDevHandle->cpDeviceName, (XnChar*)pExtraParam2);
+				hSelectedDevice = xnUSBOpenOneDevice(hDevInfo, &devInterfaceData, pDevHandle->cpDeviceName, strDevicePath);
 				if (hSelectedDevice != INVALID_HANDLE_VALUE)
 				{
 					// Success! We have a valid device handle.
@@ -474,6 +586,16 @@ XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*
 
 	// All is good...
 	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*/, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	return xnUSBOpenDeviceImpl((const XnChar*)pExtraParam2, pDevHandlePtr);
+}
+
+XN_C_API XnStatus xnUSBOpenDeviceByPath(const XnUSBConnectionString strDevicePath, XN_USB_DEV_HANDLE* pDevHandlePtr)
+{
+	return xnUSBOpenDeviceImpl(strDevicePath, pDevHandlePtr);
 }
 
 XN_C_API XnStatus xnUSBCloseDevice(XN_USB_DEV_HANDLE pDevHandle)
@@ -938,7 +1060,8 @@ XN_C_API XnStatus xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControl
 			return (XN_STATUS_USB_TRANSFER_TIMEOUT);
 		}
 
-		// Nope, return a generic error
+		// Nope, log and return a generic error
+		xnLogError(XN_MASK_USB, "Got error receiving data: %u", nLastErr);
 		return (XN_STATUS_USB_CONTROL_RECV_FAILED);
 	}
 
@@ -994,6 +1117,10 @@ XN_C_API XnStatus xnUSBReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer
 
 		pEPHandle->nTimeOut = nTimeOut;
 	}
+
+	// Reset the endpoint
+	nRetVal = xnUSBResetEndPoint(pEPHandle);
+	XN_IS_STATUS_OK(nRetVal);
 
 	// Read from the EP
 	bResult = ReadFile(pEPHandle->hEPHandle, pBuffer, nBufferSize, (PULONG)pnBytesReceived, NULL);
@@ -1058,6 +1185,10 @@ XN_C_API XnStatus xnUSBWriteEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffe
 		pEPHandle->nTimeOut = nTimeOut;
 	}
 
+	// Reset the endpoint
+	nRetVal = xnUSBResetEndPoint(pEPHandle);
+	XN_IS_STATUS_OK(nRetVal);
+
 	// Write into the EP
 	bResult = WriteFile(pEPHandle->hEPHandle, pBuffer, nBufferSize,  (PULONG) &nBytesSent, NULL);
 	if (bResult == FALSE)
@@ -1120,6 +1251,10 @@ XN_C_API XnStatus xnUSBQueueReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pB
 
 		pEPHandle->nTimeOut = nTimeOut;
 	}
+
+	// Reset the endpoint
+	nRetVal = xnUSBResetEndPoint(pEPHandle);
+	XN_IS_STATUS_OK(nRetVal);
 
 	// Queue the read via overlapped I/O
 	bResult = ReadFile(pEPHandle->hEPHandleOvlp, pBuffer, nBufferSize, (PULONG)&nBytesRcvd, &pEPHandle->ovlpIO);
@@ -1427,7 +1562,7 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 /*nProductID*/, void* pExtraParam, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData)
+XN_C_API XnStatus xnUSBSetCallbackHandler(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*/, void* /*pExtraParam*/, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData)
 {
 	if (g_xnUsbCallbackWasInit == TRUE)
 	{
@@ -1471,7 +1606,7 @@ XN_C_API XnStatus xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 /*nProduc
 	ZeroMemory( &NotificationFilter, sizeof(NotificationFilter) );
 	NotificationFilter.dbcc_size =  sizeof(DEV_BROADCAST_DEVICEINTERFACE);
 	NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-	NotificationFilter.dbcc_classguid = *((GUID*)pExtraParam);
+	NotificationFilter.dbcc_classguid = GUID_CLASS_PSDRV_USB;
 	RegisterDeviceNotification(g_xnUsbhDevDetectWnd, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
 	g_xnUsbCallbackWasInit = TRUE;
