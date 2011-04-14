@@ -1,6 +1,19 @@
 Detailed Change log:
 --------------------
 
+Version 1.1.0.39 (Unstable version - Apr 11th 2010)
+---------------------------------------------------
+  * Typo fix: ANTI_FILCKER was misspelled (should be ANTI_FLICKER)
+  * Bug Fix #788: NiViewer bug fix: a crash when playback speed is extremely high.
+  * Win32 Redist Bug Fix: csproj files were a bit corrupted, resulting in bad view in visual studio.
+  * Bug Fix: when adding a node to recording, check if it's already added (otherwise a corrupt file is created).
+  * Audio mock node: 
+    1. Use data from file instead of hard-coded one.
+    2. Aggregate data up till next UpdateData().
+  * Audio recording: property names were wrong for supported modes, as well as buffer size.
+  * NiViewer: improve error message when trying to seek in a live source.
+  * .NET wrapper - better reference safety for delegates.
+
 Version 1.1.0.38 (Stable version - Apr 11th 2010)
 -------------------------------------------------
   * Fixed .NET requirements in the Win32 installer.
