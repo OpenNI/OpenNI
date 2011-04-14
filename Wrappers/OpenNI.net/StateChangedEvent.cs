@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
-	public delegate void StateChangedHandler(ProductionNode node);
-
 	internal class StateChangedEvent
 	{
-		public delegate UInt32 RegisterFunc(IntPtr hInstance, OpenNIImporter.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
+		public delegate int RegisterFunc(IntPtr hInstance, SafeNativeMethods.XnStateChangedHandler handler, IntPtr pCookie, out IntPtr phCallback);
 		public delegate void UnregisterFunc(IntPtr hInstance, IntPtr hCallback);
 
 		public StateChangedEvent(ProductionNode node, RegisterFunc reg, UnregisterFunc unreg)
@@ -16,17 +14,17 @@ namespace xn
 			this.node = node;
 			this.reg = reg;
 			this.unreg = unreg;
-			this.internalHandler = new OpenNIImporter.XnStateChangedHandler(InternalHandler);
+			this.internalHandler = new SafeNativeMethods.XnStateChangedHandler(InternalHandler);
 		}
 
-		public event StateChangedHandler Event
+		public event EventHandler Event
 		{
 			add
 			{
 				if (this.internalEvent == null)
 				{
-					UInt32 status = this.reg(this.node.InternalObject, this.internalHandler, IntPtr.Zero, out this.registerHandle);
-					WrapperUtils.CheckStatus(status);
+					int status = this.reg(this.node.InternalObject, this.internalHandler, IntPtr.Zero, out this.registerHandle);
+					WrapperUtils.ThrowOnError(status);
 				}
 
 				this.internalEvent += value;
@@ -44,16 +42,17 @@ namespace xn
 
 		private void InternalHandler(IntPtr hNode, IntPtr pCookie)
 		{
-			if (this.internalEvent != null)
-				this.internalEvent(this.node);
+			EventHandler handlers = this.internalEvent;
+			if (handlers != null)
+				handlers(this.node, EventArgs.Empty);
 		}
 
 		private ProductionNode node;
 		private RegisterFunc reg;
 		private UnregisterFunc unreg;
 		private IntPtr registerHandle;
-		private event StateChangedHandler internalEvent;
-		// must keep a reference to the delegate
-		private OpenNIImporter.XnStateChangedHandler internalHandler;
+		private event EventHandler internalEvent;
+		// must keep a reference to the delegate (unmanaged does not keep reference to it)
+		private SafeNativeMethods.XnStateChangedHandler internalHandler;
 	}
 }

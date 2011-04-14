@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 // Application Usage:
 // 1 - Switch to the depth map view mode.
 // 2 - Switch to the psychedelic depth map view mode. In this mode each centimeter will have a difference color.
@@ -185,6 +181,12 @@ void IdleCallback()
 
 void seek(int nDiff)
 {
+	if (!isPlayerOn())
+	{
+		displayMessage("Seeking is only supported in playback mode!");
+		return;
+	}
+
 	seekFrame(nDiff);
 
 	// now step the last one (that way, if seek is not supported, as in sensor, at least one frame
@@ -567,54 +569,65 @@ int changeDirectory(char* arg0)
 
 int main(int argc, char **argv)
 {
-//	try
+	XnBool bChooseDevice = false;
+	const char* csRecordingName = NULL;
+
+	if (argc > 1)
 	{
-		if (argc == 2)
-		{	
-			// check if running from a different directory. If so, we need to change directory
-			// to the real one, so that path to INI file will be OK.
-			if (0 != changeDirectory(argv[0]))
-			{
-				return(ERR_DEVICE);
-			}
-		}
-
-		// Xiron Init
-		XnStatus rc = XN_STATUS_OK;
-		EnumerationErrors errors;
-
-		if (argc == 2)
-		{	
-			xnLogInitFromXmlFile(SAMPLE_XML_PATH);
-			rc = openDeviceFile(argv[1]);
+		if (strcmp(argv[1], "-devices") == 0)
+		{
+			bChooseDevice = TRUE;
 		}
 		else
 		{
-			rc = openDeviceFromXml(SAMPLE_XML_PATH, errors);
-		}
-
-		if (rc == XN_STATUS_NO_NODE_PRESENT)
-		{
-			XnChar strError[1024];
-			errors.ToString(strError, 1024);
-			printf("%s\n", strError);
-			closeSample(ERR_DEVICE);
-			return (rc);
-		}
-		else if (rc != XN_STATUS_OK)
-		{
-			printf("Open failed: %s\n", xnGetStatusString(rc));
-			closeSample(ERR_DEVICE);
+			csRecordingName = argv[1];
 		}
 	}
-	if (0)//	catch (...)
+
+	if (csRecordingName != NULL)
+	{	
+		// check if running from a different directory. If so, we need to change directory
+		// to the real one, so that path to INI file will be OK (for log initialization, for example)
+		if (0 != changeDirectory(argv[0]))
+		{
+			return(ERR_DEVICE);
+		}
+	}
+
+	// Xiron Init
+	XnStatus rc = XN_STATUS_OK;
+	EnumerationErrors errors;
+
+	if (csRecordingName != NULL)
+	{	
+		xnLogInitFromXmlFile(SAMPLE_XML_PATH);
+		rc = openDeviceFile(argv[1]);
+	}
+	else if (bChooseDevice)
 	{
-		printf ("Unknown error!\n");
+		rc = openDeviceFromXmlWithChoice(SAMPLE_XML_PATH, errors);
+	}
+	else
+	{
+		rc = openDeviceFromXml(SAMPLE_XML_PATH, errors);
+	}
+
+	if (rc == XN_STATUS_NO_NODE_PRESENT)
+	{
+		XnChar strError[1024];
+		errors.ToString(strError, 1024);
+		printf("%s\n", strError);
+		closeSample(ERR_DEVICE);
+		return (rc);
+	}
+	else if (rc != XN_STATUS_OK)
+	{
+		printf("Open failed: %s\n", xnGetStatusString(rc));
 		closeSample(ERR_DEVICE);
 	}
 
 	audioInit();
-	captureInit(SAMPLE_XML_PATH);
+	captureInit();
 	statisticsInit();
 
 	reshaper.zNear = 1;
@@ -676,7 +689,7 @@ int main(int argc, char **argv)
 
 	atexit(onExit);
 	
-	// Per frame code is in display
+	// Per frame code is in drawFrame()
 	glutMainLoop();
 
 	audioShutdown();

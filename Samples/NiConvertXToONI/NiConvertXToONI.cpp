@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -50,12 +46,36 @@ int main(int argc, char* argv[])
 
 	if (argc < 3)
 	{
-		printf("usage: %s <inputFile> <outputFile>\n", argv[0]);
+		printf("usage: %s <inputFile> <outputFile> [nodeType] [startFrame] [endFrame]\n", argv[0]);
 		return -1;
 	}
 
 	const char* strInputFile = argv[1];
 	const char* strOutputFile = argv[2];
+	const char* strNodeType = NULL;
+	XnUInt32 nStartFrame = 1;
+	XnUInt32 nEndFrame = XN_MAX_UINT32;
+	XnProductionNodeType seekNodeType = XN_NODE_TYPE_INVALID;
+
+	if (argc >= 4)
+	{
+		strNodeType = argv[3];
+		nRetVal = xnProductionNodeTypeFromString(strNodeType, &seekNodeType);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			printf("Bad node type specified: %s\n", strNodeType);
+			return nRetVal;
+		}
+
+		if (argc >= 5)
+		{
+			nStartFrame = atoi(argv[4]);
+			if (argc >= 6)
+			{
+				nEndFrame = atoi(argv[5]);
+			}
+		}
+	}
 
 	Context context;
 	nRetVal = context.Init();
@@ -69,11 +89,14 @@ int main(int argc, char* argv[])
 	nRetVal = context.FindExistingNode(XN_NODE_TYPE_PLAYER, player);
 	CHECK_RC(nRetVal, "Get player node");
 
+	nRetVal = player.SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
+	CHECK_RC(nRetVal, "Setting playback speed");
+
 	// get the list of all created nodes
 	NodeInfoList nodes;
 	nRetVal = player.EnumerateNodes(nodes);
 	CHECK_RC(nRetVal, "Enumerate nodes");
-
+	
 	// create recorder
 	Recorder recorder;
 	nRetVal = recorder.Create(context);
@@ -81,6 +104,8 @@ int main(int argc, char* argv[])
 
 	nRetVal = recorder.SetDestination(XN_RECORD_MEDIUM_FILE, strOutputFile);
 	CHECK_RC(nRetVal, "Set recorder destination file");
+
+	ProductionNode seekNode;
 
 	// add all nodes to recorder
 	for (NodeInfoList::Iterator it = nodes.Begin(); it != nodes.End(); ++it)
@@ -97,19 +122,35 @@ int main(int argc, char* argv[])
 		nRetVal = nodeInfo.GetInstance(node);
 		CHECK_RC(nRetVal, "Get instance");
 
-		nRetVal = recorder.AddNodeToRecording(node);
-		CHECK_RC(nRetVal, "Add node to recording");
+		if (seekNodeType == nodeInfo.GetDescription().Type)
+		{
+			seekNode = node;
+			nRetVal = player.SeekToFrame(seekNode.GetName(), nStartFrame, XN_PLAYER_SEEK_SET);
+			CHECK_RC(nRetVal, "Seek player to frame");
+			nRetVal = recorder.AddNodeToRecording(seekNode);
+			CHECK_RC(nRetVal, "Add seek node to recording");
+			break; //Out of for - we found our sought node.
+		}
+		else
+		{
+			nRetVal = recorder.AddNodeToRecording(node);
+			CHECK_RC(nRetVal, "Add node to recording");
+		}
 	}
 
 	nRetVal = player.SetRepeat(FALSE);
 	XN_IS_STATUS_OK(nRetVal);
 
-	int n = 0;
+	int nFrame = 0;
 
 	while ((nRetVal = context.WaitAnyUpdateAll()) != XN_STATUS_EOF)
 	{
 		CHECK_RC(nRetVal, "Read next frame");
-		printf("Recording: %u\r", n++);
+		printf("Recording: %u\r", nFrame++);
+		if (seekNode.IsValid() && (nFrame == nEndFrame))
+		{
+			break;			
+		}
 	}
 
 	context.Shutdown();

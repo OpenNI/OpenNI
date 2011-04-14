@@ -2,26 +2,26 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class OutputMetaData
 	{
-		public UInt64 Timestamp
+		public Int64 Timestamp
 		{
-			get { return this.data.nTimestamp; }
-			set { this.data.nTimestamp = value; }
+			get { return (Int64)this.data.nTimestamp; }
+			set { this.data.nTimestamp = (UInt64)value; }
 		}
 
-		public UInt32 FrameID
+		public int FrameID
 		{
-			get { return this.data.nFrameID; }
-			set { this.data.nFrameID = value; }
+			get { return (int)this.data.nFrameID; }
+			set { this.data.nFrameID = (UInt32)value; }
 		}
 
-		public UInt32 DataSize
+		public int DataSize
 		{
-			get { return this.data.nDataSize; }
-			set { this.data.nDataSize = value; }
+			get { return (int)this.data.nDataSize; }
+			set { this.data.nDataSize = (UInt32)value; }
 		}
 
 		public bool IsDataNew
@@ -35,7 +35,7 @@ namespace xn
 			return new OutputMetaDataMarshaler(this, passOut);
 		}
 
-		internal class OutputMetaDataMarshaler : Marshaler<OpenNIImporter.XnOutputMetaData>
+		internal class OutputMetaDataMarshaler : Marshaler<SafeNativeMethods.XnOutputMetaData>
 		{
 			public OutputMetaDataMarshaler(OutputMetaData output, bool marshalOut) :
 				base(output.data, marshalOut)
@@ -43,6 +43,6 @@ namespace xn
 			}
 		}
 
-		internal OpenNIImporter.XnOutputMetaData data = new OpenNIImporter.XnOutputMetaData();
+		internal SafeNativeMethods.XnOutputMetaData data = new SafeNativeMethods.XnOutputMetaData();
 	}
 }

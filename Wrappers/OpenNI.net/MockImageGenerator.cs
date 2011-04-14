@@ -2,42 +2,42 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class MockImageGenerator : ImageGenerator
 	{
-		internal MockImageGenerator(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal MockImageGenerator(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 		}
 
 		public MockImageGenerator(Context context, string name) :
-			this(Create(context, name), false)
+			this(context, Create(context, name), false)
 		{
 		}
 
 		public MockImageGenerator(Context context) :
-			this(context, null)
+			this(context, (string)null)
 		{
 		}
 
-		public MockImageGenerator(ImageGenerator basedOn, string name) :
-			this(CreateBasedOn(basedOn, name), false)
+		public MockImageGenerator(Context context, ImageGenerator basedOn, string name) :
+			this(context, CreateBasedOn(basedOn, name), false)
 		{
 		}
 
-		public MockImageGenerator(ImageGenerator basedOn) :
-			this(basedOn, null)
+		public MockImageGenerator(Context context, ImageGenerator basedOn) :
+			this(context, basedOn, null)
 		{
 		}
 
-		public void SetData(UInt32 frameID, UInt64 timestamp, UInt32 dataSize, IntPtr buffer)
+		public void SetData(Int32 frameID, Int64 timestamp, Int32 dataSize, IntPtr buffer)
 		{
-			UInt32 status = OpenNIImporter.xnMockImageSetData(this.InternalObject, frameID, timestamp, dataSize, buffer);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnMockImageSetData(this.InternalObject, (UInt32)frameID, (UInt64)timestamp, (UInt32)dataSize, buffer);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public void SetData(ImageMetaData imageMD, UInt32 frameID, UInt64 timestamp)
+		public void SetData(ImageMetaData imageMD, Int32 frameID, Int64 timestamp)
 		{
 			SetData(frameID, timestamp, imageMD.DataSize, imageMD.ImageMapPtr);
 		}
@@ -50,17 +50,17 @@ namespace xn
 		private static IntPtr Create(Context context, string name)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Image, name, out handle);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnCreateMockNode(context.InternalObject, NodeType.Image, name, out handle);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 
 		private static IntPtr CreateBasedOn(ImageGenerator basedOn, string name)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject,
+			int status = SafeNativeMethods.xnCreateMockNodeBasedOn(basedOn.Context.InternalObject,
 				basedOn.InternalObject, name, out handle);
-			WrapperUtils.CheckStatus(status);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 	}

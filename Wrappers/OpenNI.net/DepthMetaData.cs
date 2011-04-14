@@ -2,35 +2,35 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
-	public class DepthMetaData : MapMetaData<UInt16>
+	public class DepthMetaData : UInt16MapMetaData
 	{
 		public DepthMetaData()
 		{
 		}
 
-		public UInt16 ZRes
+		public int ZRes
 		{
 			get { return this.depth.nZRes; }
-			set { this.depth.nZRes = value; }
+			set { this.depth.nZRes = (UInt16)value; }
 		}
 
-		public UInt16 this[int index]
+		public int this[int index]
 		{
-			get { return base[index, this.depth.pData]; }
-			set { base[index, this.depth.pData] = value; }
+			get { return GetAt(this.depth.pData, index); }
+			set { SetAt(this.depth.pData, index, value); }
 		}
 
-		public UInt16 this[int x, int y]
+		public int this[int x, int y]
 		{
-			get { return base[x, y, this.depth.pData]; }
-			set { base[x, y, this.depth.pData] = value; }
+			get { return GetAt(this.depth.pData, x, y); }
+			set { SetAt(this.depth.pData, x, y, value); }
 		}
 
-		public MapData<UInt16> GetDepthMap()
+		public UInt16MapData GetDepthMap()
 		{
-			return new MapData<UInt16>(XRes, YRes, this.depth.pData);
+			return new UInt16MapData(XRes, YRes, this.depth.pData);
 		}
 
 		public IntPtr DepthMapPtr
@@ -43,9 +43,9 @@ namespace xn
 			return new DepthMetaDataMarshaler(this, passOut);
 		}
 
-		private OpenNIImporter.XnDepthMetaData depth = new OpenNIImporter.XnDepthMetaData();
+		private SafeNativeMethods.XnDepthMetaData depth = new SafeNativeMethods.XnDepthMetaData();
 
-		private class DepthMetaDataMarshaler : Marshaler<OpenNIImporter.XnDepthMetaData>
+		private class DepthMetaDataMarshaler : Marshaler<SafeNativeMethods.XnDepthMetaData>
 		{
 			public DepthMetaDataMarshaler(DepthMetaData obj, bool marshalOut) :
 				base(obj.depth, marshalOut,

@@ -2,20 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class AudioGenerator : Generator
 	{
-		internal AudioGenerator(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal AudioGenerator(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 			this.outputModeChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToWaveOutputModeChanges,
-				OpenNIImporter.xnUnregisterFromWaveOutputModeChanges);
+				SafeNativeMethods.xnRegisterToWaveOutputModeChanges,
+				SafeNativeMethods.xnUnregisterFromWaveOutputModeChanges);
 		}
 
 		public AudioGenerator(Context context, Query query, EnumerationErrors errors) :
-			this(Create(context, query, errors), false)
+			this(context, Create(context, query, errors), false)
 		{
 		}
 
@@ -31,37 +31,42 @@ namespace xn
 
 		public WaveOutputMode[] GetSupportedWaveOutputModes()
 		{
-			uint count = OpenNIImporter.xnGetSupportedWaveOutputModesCount(this.InternalObject);
+			uint count = SafeNativeMethods.xnGetSupportedWaveOutputModesCount(this.InternalObject);
 			WaveOutputMode[] modes = new WaveOutputMode[count];
-			UInt32 status = OpenNIImporter.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnGetSupportedWaveOutputModes(this.InternalObject, modes, ref count);
+			WrapperUtils.ThrowOnError(status);
 			return modes;
 		}
 
-		public void SetWaveOutputMode(WaveOutputMode mode)
+		public WaveOutputMode WaveOutputMode
 		{
-			UInt32 status = OpenNIImporter.xnSetWaveOutputMode(this.InternalObject, ref mode);
-			WrapperUtils.CheckStatus(status);
+			get
+			{
+				WaveOutputMode mode = new WaveOutputMode();
+				int status = SafeNativeMethods.xnGetWaveOutputMode(this.InternalObject, ref mode);
+				WrapperUtils.ThrowOnError(status);
+				return mode;
+			}
+			set
+			{
+				int status = SafeNativeMethods.xnSetWaveOutputMode(this.InternalObject, ref value);
+				WrapperUtils.ThrowOnError(status);
+			}
 		}
 
-		public WaveOutputMode GetWaveOutputMode()
+		public IntPtr AudioBufferPtr
 		{
-			WaveOutputMode mode = new WaveOutputMode();
-			UInt32 status = OpenNIImporter.xnGetWaveOutputMode(this.InternalObject, ref mode);
-			WrapperUtils.CheckStatus(status);
-			return mode;
-		}
-
-		public IntPtr GetAudioBufferPtr()
-		{
-			return OpenNIImporter.xnGetAudioBuffer(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetAudioBuffer(this.InternalObject);
+			}
 		}
 
 		public void GetMetaData(AudioMetaData audioMD)
 		{
 			using (IMarshaler marsh = audioMD.GetMarshaler(true))
 			{
-				OpenNIImporter.xnGetAudioMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetAudioMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 
@@ -72,7 +77,7 @@ namespace xn
 			return audioMD;
 		}
 
-		public event StateChangedHandler WaveOutputModeChanged
+		public event EventHandler WaveOutputModeChanged
 		{
 			add { this.outputModeChanged.Event += value; }
 			remove { this.outputModeChanged.Event -= value; }
@@ -81,10 +86,10 @@ namespace xn
 		private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateAudioGenerator(context.InternalObject, out handle,
+			int status = SafeNativeMethods.xnCreateAudioGenerator(context.InternalObject, out handle,
 				query == null ? IntPtr.Zero : query.InternalObject,
 				errors == null ? IntPtr.Zero : errors.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 

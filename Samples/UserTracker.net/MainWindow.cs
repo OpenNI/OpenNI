@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using xn;
+using OpenNI;
 using System.Threading;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
@@ -25,57 +25,57 @@ namespace UserTracker.net
 			}
 
             this.userGenerator = new UserGenerator(this.context);
-            this.skeletonCapbility = new SkeletonCapability(this.userGenerator);
-            this.poseDetectionCapability = new PoseDetectionCapability(this.userGenerator);
-            this.calibPose = this.skeletonCapbility.GetCalibrationPose();
+			this.skeletonCapbility = this.userGenerator.SkeletonCapability;
+			this.poseDetectionCapability = this.userGenerator.PoseDetectionCapability;
+            this.calibPose = this.skeletonCapbility.CalibrationPose;
 
-            this.userGenerator.NewUser += new UserGenerator.NewUserHandler(userGenerator_NewUser);
-            this.userGenerator.LostUser += new UserGenerator.LostUserHandler(userGenerator_LostUser);
-            this.poseDetectionCapability.PoseDetected += new PoseDetectionCapability.PoseDetectedHandler(poseDetectionCapability_PoseDetected);
-            this.skeletonCapbility.CalibrationEnd += new SkeletonCapability.CalibrationEndHandler(skeletonCapbility_CalibrationEnd);
+            this.userGenerator.NewUser += userGenerator_NewUser;
+            this.userGenerator.LostUser += userGenerator_LostUser;
+            this.poseDetectionCapability.PoseDetected += poseDetectionCapability_PoseDetected;
+            this.skeletonCapbility.CalibrationEnd += skeletonCapbility_CalibrationEnd;
 
             this.skeletonCapbility.SetSkeletonProfile(SkeletonProfile.All);
-            this.joints = new Dictionary<uint,Dictionary<SkeletonJoint,SkeletonJointPosition>>();
+            this.joints = new Dictionary<int,Dictionary<SkeletonJoint,SkeletonJointPosition>>();
             this.userGenerator.StartGenerating();
 
 
-			this.histogram = new int[this.depth.GetDeviceMaxDepth()];
+			this.histogram = new int[this.depth.DeviceMaxDepth];
 
-			MapOutputMode mapMode = this.depth.GetMapOutputMode();
+			MapOutputMode mapMode = this.depth.MapOutputMode;
 
-			this.bitmap = new Bitmap((int)mapMode.nXRes, (int)mapMode.nYRes/*, System.Drawing.Imaging.PixelFormat.Format24bppRgb*/);
+			this.bitmap = new Bitmap((int)mapMode.XRes, (int)mapMode.YRes/*, System.Drawing.Imaging.PixelFormat.Format24bppRgb*/);
 			this.shouldRun = true;
 			this.readerThread = new Thread(ReaderThread);
 			this.readerThread.Start();
 		}
 
-        void skeletonCapbility_CalibrationEnd(ProductionNode node, uint id, bool success)
+        void skeletonCapbility_CalibrationEnd(object sender, CalibrationEndEventArgs e)
         {
-            if (success)
+            if (e.Success)
             {
-                this.skeletonCapbility.StartTracking(id);
-                this.joints.Add(id, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
+                this.skeletonCapbility.StartTracking(e.ID);
+                this.joints.Add(e.ID, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
             }
             else
             {
-                this.poseDetectionCapability.StartPoseDetection(calibPose, id);
+                this.poseDetectionCapability.StartPoseDetection(calibPose, e.ID);
             }
         }
 
-        void poseDetectionCapability_PoseDetected(ProductionNode node, string pose, uint id)
+        void poseDetectionCapability_PoseDetected(object sender, PoseDetectedEventArgs e)
         {
-            this.poseDetectionCapability.StopPoseDetection(id);
-            this.skeletonCapbility.RequestCalibration(id, true);
+            this.poseDetectionCapability.StopPoseDetection(e.ID);
+            this.skeletonCapbility.RequestCalibration(e.ID, true);
         }
 
-        void userGenerator_NewUser(ProductionNode node, uint id)
+        void userGenerator_NewUser(object sender, NewUserEventArgs e)
         {
-            this.poseDetectionCapability.StartPoseDetection(this.calibPose, id);
+            this.poseDetectionCapability.StartPoseDetection(this.calibPose, e.ID);
         }
 
-        void userGenerator_LostUser(ProductionNode node, uint id)
+		void userGenerator_LostUser(object sender, UserLostEventArgs e)
         {
-            this.joints.Remove(id);
+            this.joints.Remove(e.ID);
         }
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -174,22 +174,21 @@ namespace UserTracker.net
         private Color[] anticolors = { Color.Green, Color.Orange, Color.Red, Color.Purple, Color.Blue, Color.Yellow, Color.Black };
         private int ncolors = 6;
 
-        private void GetJoint(uint user, SkeletonJoint joint)
+        private void GetJoint(int user, SkeletonJoint joint)
         {
-            SkeletonJointPosition pos = new SkeletonJointPosition();
-            this.skeletonCapbility.GetSkeletonJointPosition(user, joint, ref pos);
-			if (pos.position.Z == 0)
+            SkeletonJointPosition pos = this.skeletonCapbility.GetSkeletonJointPosition(user, joint);
+			if (pos.Position.Z == 0)
 			{
-				pos.fConfidence = 0;
+				pos.Confidence = 0;
 			}
 			else
 			{
-				pos.position = this.depth.ConvertRealWorldToProjective(pos.position);
+				pos.Position = this.depth.ConvertRealWorldToProjective(pos.Position);
 			}
 			this.joints[user][joint] = pos;
         }
 
-        private void GetJoints(uint user)
+        private void GetJoints(int user)
         {
             GetJoint(user, SkeletonJoint.Head);
             GetJoint(user, SkeletonJoint.Neck);
@@ -215,10 +214,10 @@ namespace UserTracker.net
 
         private void DrawLine(Graphics g, Color color, Dictionary<SkeletonJoint, SkeletonJointPosition> dict, SkeletonJoint j1, SkeletonJoint j2)
         {
-			Point3D pos1 = dict[j1].position;
-			Point3D pos2 = dict[j2].position;
+			Point3D pos1 = dict[j1].Position;
+			Point3D pos2 = dict[j2].Position;
 
-			if (dict[j1].fConfidence == 0 || dict[j2].fConfidence == 0)
+			if (dict[j1].Confidence == 0 || dict[j2].Confidence == 0)
 				return;
 
             g.DrawLine(new Pen(color),
@@ -226,7 +225,7 @@ namespace UserTracker.net
                         new Point((int)pos2.X, (int)pos2.Y));
 
         }
-        private void DrawSkeleton(Graphics g, Color color, uint user)
+        private void DrawSkeleton(Graphics g, Color color, int user)
         {
             GetJoints(user);
             Dictionary<SkeletonJoint, SkeletonJointPosition> dict = this.joints[user];
@@ -281,8 +280,8 @@ namespace UserTracker.net
 
                     if (this.shouldDrawPixels)
                     {
-                        ushort* pDepth = (ushort*)this.depth.GetDepthMapPtr().ToPointer();
-                        ushort* pLabels = (ushort*)this.userGenerator.GetUserPixels(0).SceneMapPtr.ToPointer();
+                        ushort* pDepth = (ushort*)this.depth.DepthMapPtr.ToPointer();
+                        ushort* pLabels = (ushort*)this.userGenerator.GetUserPixels(0).LabelMapPtr.ToPointer();
 
                         // set pixels
                         for (int y = 0; y < depthMD.YRes; ++y)
@@ -312,8 +311,8 @@ namespace UserTracker.net
                     this.bitmap.UnlockBits(data);
 
                     Graphics g = Graphics.FromImage(this.bitmap);
-                    uint[] users = this.userGenerator.GetUsers();
-                    foreach (uint user in users)
+                    int[] users = this.userGenerator.GetUsers();
+                    foreach (int user in users)
                     {
                         if (this.shouldPrintID)
                         {
@@ -359,7 +358,7 @@ namespace UserTracker.net
 		private Bitmap bitmap;
 		private int[] histogram;
 
-        private Dictionary<uint, Dictionary<SkeletonJoint, SkeletonJointPosition>> joints;
+        private Dictionary<int, Dictionary<SkeletonJoint, SkeletonJointPosition>> joints;
 
         private bool shouldDrawPixels = true;
         private bool shouldDrawBackground = true;

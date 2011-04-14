@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef _XN_STRINGS_HASH_H
 #define _XN_STRINGS_HASH_H
 
@@ -59,7 +55,7 @@ public:
 	static XnValue CreateValueCopy(const XnChar* const& orig)
 	{
 		// we should copy string, so we can keep the key
-		XnUInt32 nLen = strlen(orig) + 1; // with null termination
+		XnUInt32 nLen = xnOSStrLen(orig) + 1; // with null termination
 		XnChar* pcKey = (XnChar*)xnOSMalloc(nLen);
 		xnOSStrCopy(pcKey, orig, nLen);
 		return (pcKey);
@@ -113,10 +109,18 @@ public:
 * Declares a hash table from strings to @a ValueType that's named @a ClassName and uses default translator
 * to translate values.
 */
+#if XN_PLATFORM == XN_PLATFORM_WIN32
+#define XN_DECLARE_STRINGS_HASH(ValueType, ClassName)				\
+	__pragma(warning(push)) \
+	__pragma(warning(disable: 4127)) \
+	XN_DECLARE_STRINGS_HASH_DECL(, ValueType, ClassName) \
+	__pragma(warning(pop))
+#else
 #define XN_DECLARE_STRINGS_HASH(ValueType, ClassName)				\
 	XN_DECLARE_STRINGS_HASH_DECL(, ValueType, ClassName)
-
+#endif
 
 XN_DECLARE_STRINGS_HASH(XnValue, XnStringsHash)
+
 
 #endif //_XN_STRINGS_HASH_H

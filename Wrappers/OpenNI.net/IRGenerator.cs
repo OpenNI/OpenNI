@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class IRGenerator : MapGenerator
 	{
-		internal IRGenerator(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal IRGenerator(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 		}
 
 		public IRGenerator(Context context, Query query, EnumerationErrors errors) :
-			this(Create(context, query, errors), false)
+			this(context, Create(context, query, errors), false)
 		{
 		}
 
@@ -26,21 +26,25 @@ namespace xn
 		{
 		}
 
-		public IntPtr GetIRMapPtr()
+		public IntPtr IRMapPtr
 		{
-			return OpenNIImporter.xnGetIRMap(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetIRMap(this.InternalObject);
+			}
 		}
 
-		public MapData<UInt16> GetIRMap()
+		public UInt16MapData GetIRMap()
 		{
-			return GetMapData<UInt16>(GetIRMapPtr());
+			MapOutputMode mode = this.MapOutputMode;
+			return new UInt16MapData(mode.XRes, mode.YRes, IRMapPtr);
 		}
 
 		public void GetMetaData(IRMetaData irMD)
 		{
 			using (IMarshaler marsh = irMD.GetMarshaler(true))
 			{
-				OpenNIImporter.xnGetIRMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetIRMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 
@@ -54,10 +58,10 @@ namespace xn
 		private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateIRGenerator(context.InternalObject, out handle,
+			int status = SafeNativeMethods.xnCreateIRGenerator(context.InternalObject, out handle,
 				query == null ? IntPtr.Zero : query.InternalObject,
 				errors == null ? IntPtr.Zero : errors.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 	}

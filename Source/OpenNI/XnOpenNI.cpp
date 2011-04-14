@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -48,6 +44,7 @@
 #include "xnInternalFuncs.h"
 #include <math.h>
 #include <XnPropNames.h>
+#include "XnTypeManager.h"
 
 //---------------------------------------------------------------------------
 // Defines
@@ -69,38 +66,20 @@
 #define XN_VALIDATE_FUNC_PTR(ptr)											\
 	XN_VALIDATE_FUNC_PTR_RET(ptr, XN_STATUS_INVALID_OPERATION)
 
-#define XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, hierarchyType, retVal)						\
-	if ((hInstance->pModuleInstance->pLoaded->pInterface->HierarchyType & hierarchyType) == 0)	\
-	{																							\
-		return retVal;																			\
+#define XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, nodeType, retVal)						\
+	if (!hInstance->typeHierarchy.IsSet(nodeType))	\
+	{																					\
+		return retVal;																	\
 	}
 
-#define XN_VALIDATE_INTERFACE_TYPE(hInstance, hierarchyType)	\
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, hierarchyType, XN_STATUS_INVALID_OPERATION)
+#define XN_VALIDATE_INTERFACE_TYPE(hInstance, nodeType)	\
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, nodeType, XN_STATUS_INVALID_OPERATION)
 
 #define XN_VALIDATE_CHANGES_ALLOWED(hInstance)	\
 	if (!xnAreChangesAllowed(hInstance))		\
 	{											\
 		return (XN_STATUS_NODE_IS_LOCKED);		\
 	}
-
-//---------------------------------------------------------------------------
-// Static Data
-//---------------------------------------------------------------------------
-XN_ENUM_MAP_START(XnProductionNodeType)
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_DEVICE, "Device")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_DEPTH, "Depth")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_IMAGE, "Image")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_AUDIO, "Audio")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_IR, "IR")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_USER, "User")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_HANDS, "Hands")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_GESTURE, "Gesture")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_SCENE, "Scene")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_RECORDER, "Recorder")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_PLAYER, "Player")
-	XN_ENUM_MAP_ENTRY(XN_NODE_TYPE_CODEC, "Codec")
-XN_ENUM_MAP_END()
 
 //---------------------------------------------------------------------------
 // Forward Declarations
@@ -323,15 +302,14 @@ XN_C_API XnStatus xnGetVersion(XnVersion* pVersion)
 
 XN_C_API const XnChar* xnProductionNodeTypeToString(XnProductionNodeType Type)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	const XnChar* strValue;
-	XN_ENUM_TO_STRING(nRetVal, XnProductionNodeType, Type, strValue);
+	const XnChar* strName;
+	XnStatus nRetVal = TypeManager::GetInstance().GetTypeName(Type, &strName);
 	if (nRetVal != XN_STATUS_OK)
 	{
-		strValue = "Unknown";
+		return "Unknown";
 	}
 
-	return strValue;
+	return strName;
 }
 
 XN_C_API XnStatus xnProductionNodeTypeFromString(const XnChar* strType, XnProductionNodeType* pType)
@@ -339,9 +317,7 @@ XN_C_API XnStatus xnProductionNodeTypeFromString(const XnChar* strType, XnProduc
 	XN_VALIDATE_INPUT_PTR(strType);
 	XN_VALIDATE_OUTPUT_PTR(pType);
 
-	XN_ENUM_VALIDATE_FROM_STRING(XnProductionNodeType, strType, *pType);
-
-	return (XN_STATUS_OK);
+	return TypeManager::GetInstance().GetTypeByName(strType, pType);
 }
 
 XN_C_API XnStatus xnAutoEnumerateOverSingleInput(XnContext* pContext, XnNodeInfoList* pList, XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnProductionNodeType InputType, XnEnumerationErrors* pErrors, XnNodeQuery* pQuery)
@@ -484,18 +460,28 @@ typedef struct XnResolutionInfo
 	const XnChar* strName;
 } XnResolutionInfo;
 
+#define _XN_REGISTER_RES(x)	\
+	{ XN_RES_##x, XN_##x##_X_RES, XN_##x##_Y_RES, XN_STRINGIFY(x) },
+
 static XnResolutionInfo g_resInfo[] = 
 {
-	{ XN_RES_QQVGA,	XN_QQVGA_X_RES,		XN_QQVGA_Y_RES,		"QQVGA" },
-	{ XN_RES_CGA,	XN_CGA_X_RES,		XN_CGA_Y_RES,		"CGA" },
-	{ XN_RES_QVGA,	XN_QVGA_X_RES,		XN_QVGA_Y_RES,		"QVGA" },
-	{ XN_RES_VGA,	XN_VGA_X_RES,		XN_VGA_Y_RES,		"VGA" },
-	{ XN_RES_SVGA,	XN_SVGA_X_RES,		XN_SVGA_Y_RES,		"SVGA" },
-	{ XN_RES_XGA,	XN_XGA_X_RES,		XN_XGA_Y_RES,		"XGA" },
-	{ XN_RES_720P,	XN_720P_X_RES,		XN_720P_Y_RES,		"720P" },
-	{ XN_RES_SXGA,	XN_SXGA_X_RES,		XN_SXGA_Y_RES,		"SXGA" },
-	{ XN_RES_UXGA,	XN_UXGA_X_RES,		XN_UXGA_Y_RES,		"UXGA" },
-	{ XN_RES_1080P,	XN_1080P_X_RES,		XN_1080P_Y_RES,		"1080P" },
+	_XN_REGISTER_RES(QQVGA)
+	_XN_REGISTER_RES(CGA)
+	_XN_REGISTER_RES(QVGA)
+	_XN_REGISTER_RES(VGA)
+	_XN_REGISTER_RES(SVGA)
+	_XN_REGISTER_RES(XGA)
+	_XN_REGISTER_RES(720P)
+	_XN_REGISTER_RES(SXGA)
+	_XN_REGISTER_RES(UXGA)
+	_XN_REGISTER_RES(1080P)
+	_XN_REGISTER_RES(QCIF)
+	_XN_REGISTER_RES(240P)
+	_XN_REGISTER_RES(CIF)
+	_XN_REGISTER_RES(WVGA)
+	_XN_REGISTER_RES(480P)
+	_XN_REGISTER_RES(576P)
+	_XN_REGISTER_RES(DV)
 };
 
 XN_C_API XnUInt32 xnResolutionGetXRes(XnResolution resolution)
@@ -591,7 +577,7 @@ void xnMarkFPSFrame(XnContext* pContext, XnFPSData* pFPS)
 		for (XnNodesMap::ConstIterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
 		{
 			XnInternalNodeData* pNode = it.Value();
-			if ((pNode->pModuleInstance->pLoaded->pInterface->HierarchyType & XN_HIERARCHY_TYPE_GENERATOR) != 0)
+			if (pNode->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR))
 			{
 				nSize += sprintf(strFPS + nSize, "%s (I: %5.2f, O: %5.2f) ", pNode->pNodeInfo->strInstanceName, xnFPSCalc(&pNode->genFPS), xnFPSCalc(&pNode->readFPS));
 			}
@@ -607,7 +593,7 @@ void xnMarkFPSFrame(XnContext* pContext, XnFPSData* pFPS)
 // ProductionNode
 //---------------------------------------------------------------------------
 
-XN_C_API XnStatus xnNodeInfoAllocate(const XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnNodeInfoList* pNeededNodes, XnNodeInfo** ppNodeInfo)
+XnStatus xnNodeInfoAllocate(const XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnNodeInfoList* pNeededNodes, XnNodeInfo** ppNodeInfo)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
@@ -649,7 +635,7 @@ XN_C_API XnStatus xnNodeInfoAllocate(const XnProductionNodeDescription* pDescrip
 	return (XN_STATUS_OK);
 }
 
-XN_C_API void xnNodeInfoFree(XnNodeInfo* pNodeInfo)
+void xnNodeInfoFree(XnNodeInfo* pNodeInfo)
 {
 	if (pNodeInfo != NULL)
 	{
@@ -662,6 +648,12 @@ XN_C_API void xnNodeInfoFree(XnNodeInfo* pNodeInfo)
 			if (pNodeInfo->hNode != NULL)
 			{
 				xnProductionNodeRelease(pNodeInfo->hNode);
+			}
+
+			// free additional data
+			if (pNodeInfo->pAdditionalDataFreeFunc != NULL)
+			{
+				pNodeInfo->pAdditionalDataFreeFunc(pNodeInfo->pAdditionalData);
 			}
 
 			// free all needed nodes
@@ -690,6 +682,18 @@ XN_C_API XnStatus xnNodeInfoSetInstanceName(XnNodeInfo* pNodeInfo, const XnChar*
 	return (XN_STATUS_OK);
 }
 
+XnStatus xnNodeInfoSetAdditionalData(XnNodeInfo* pNodeInfo, const void* pAdditionalData, XnFreeHandler pFreeHandler)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XN_VALIDATE_INPUT_PTR(pNodeInfo);
+
+	pNodeInfo->pAdditionalData = pAdditionalData;
+	pNodeInfo->pAdditionalDataFreeFunc = pFreeHandler;
+
+	return XN_STATUS_OK;
+}
+
 XN_C_API const XnProductionNodeDescription* xnNodeInfoGetDescription(XnNodeInfo* pNodeInfo)
 {
 	return &pNodeInfo->Description;
@@ -715,6 +719,11 @@ XN_C_API XnNodeHandle xnNodeInfoGetHandle(XnNodeInfo* pNodeInfo)
 	return pNodeInfo->hNode;
 }
 
+XN_C_API const void* xnNodeInfoGetAdditionalData(XnNodeInfo* pNodeInfo)
+{
+	return pNodeInfo->pAdditionalData;
+}
+
 XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, XnChar* csResult, XnUInt32 nSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -732,7 +741,7 @@ XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, X
 		XN_IS_STATUS_OK(nRetVal);
 
 		XnBool bFirst = TRUE;
-		XnUInt32 nLen;
+		XnSizeT nLen;
 
 		for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pNodeInfo->pNeededTrees); 
 			xnNodeInfoListIteratorIsValid(it);
@@ -812,6 +821,11 @@ XN_C_API XnStatus xnNodeInfoListAddNode(XnNodeInfoList* pList, XnNodeInfo* pNode
 
 XN_C_API XnStatus xnNodeInfoListAdd(XnNodeInfoList* pList, const XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnNodeInfoList* pNeededNodes)
 {
+	return xnNodeInfoListAddEx(pList, pDescription, strCreationInfo, pNeededNodes, NULL, NULL);
+}
+
+XN_C_API XnStatus xnNodeInfoListAddEx(XnNodeInfoList* pList, const XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnNodeInfoList* pNeededNodes, const void* pAdditionalData, XnFreeHandler pFreeHandler)
+{
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	XN_VALIDATE_INPUT_PTR(pList);
@@ -821,6 +835,13 @@ XN_C_API XnStatus xnNodeInfoListAdd(XnNodeInfoList* pList, const XnProductionNod
 	XnNodeInfo* pNode;
 	nRetVal = xnNodeInfoAllocate(pDescription, strCreationInfo, pNeededNodes, &pNode);
 	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnNodeInfoSetAdditionalData(pNode, pAdditionalData, pFreeHandler);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnNodeInfoFree(pNode);
+		return (nRetVal);
+	}
 
 	nRetVal = xnNodeInfoListAddNode(pList, pNode);
 	if (nRetVal != XN_STATUS_OK)
@@ -1059,44 +1080,36 @@ void xnFindValidNameForType(XnContext* pContext, XnProductionNodeType Type, XnCh
 XnStatus xnCreateMetaData(XnInternalNodeData* pNodeData)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
-	switch (pNodeData->pNodeInfo->Description.Type)
+
+	if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
 	{
-	case XN_NODE_TYPE_DEPTH:
 		pNodeData->pMetaData.Depth = xnAllocateDepthMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Depth);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Depth->pMap->pOutput->bIsNew;
-		break;
-	case XN_NODE_TYPE_IMAGE:
+	}
+	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+	{
 		pNodeData->pMetaData.Image = xnAllocateImageMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Image);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Image->pMap->pOutput->bIsNew;
-		break;
-	case XN_NODE_TYPE_IR:
+	}
+	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+	{
 		pNodeData->pMetaData.IR = xnAllocateIRMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.IR);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.IR->pMap->pOutput->bIsNew;
-		break;
-	case XN_NODE_TYPE_AUDIO:
+	}
+	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+	{
 		pNodeData->pMetaData.Audio = xnAllocateAudioMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Audio);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Audio->pOutput->bIsNew;
-		break;
-	case XN_NODE_TYPE_SCENE:
+	}
+	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+	{
 		pNodeData->pMetaData.Scene = xnAllocateSceneMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Scene);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Scene->pMap->pOutput->bIsNew;
-		break;
-	case XN_NODE_TYPE_DEVICE:
-	case XN_NODE_TYPE_USER:
-	case XN_NODE_TYPE_RECORDER:
-	case XN_NODE_TYPE_PLAYER:
-	case XN_NODE_TYPE_GESTURE:
-	case XN_NODE_TYPE_HANDS:
-	case XN_NODE_TYPE_CODEC:
-		break; //Nothing to create
-	default:
-		XN_ASSERT(FALSE);
 	}
 
 	xnUpdateMetaData(pNodeData);
@@ -1108,60 +1121,42 @@ XnStatus xnCreatePrivateData(XnInternalNodeData* pNodeData)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	switch (pNodeData->pNodeInfo->Description.Type)
+	if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_RECORDER))
 	{
-		case XN_NODE_TYPE_RECORDER:
+		xn::RecorderImpl *pRecorderImpl = NULL;
+		XN_VALIDATE_NEW(pRecorderImpl, xn::RecorderImpl);
+		nRetVal = pRecorderImpl->Init(pNodeData);
+		if (nRetVal != XN_STATUS_OK)
 		{
-			xn::RecorderImpl *pRecorderImpl = NULL;
-			XN_VALIDATE_NEW(pRecorderImpl, xn::RecorderImpl);
-			nRetVal = pRecorderImpl->Init(pNodeData);
-			if (nRetVal != XN_STATUS_OK)
-			{
-				XN_DELETE(pRecorderImpl);
-				return nRetVal;
-			}
+			XN_DELETE(pRecorderImpl);
+			return nRetVal;
+		}
 
-			pNodeData->pPrivateData = pRecorderImpl;
-			break;
-		}
-		case XN_NODE_TYPE_PLAYER:
+		pNodeData->pPrivateData = pRecorderImpl;
+	}
+	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_PLAYER))
+	{
+		xn::PlayerImpl *pPlayerImpl = NULL;
+		XN_VALIDATE_NEW(pPlayerImpl, xn::PlayerImpl);
+		nRetVal = pPlayerImpl->Init(pNodeData);
+		if (nRetVal != XN_STATUS_OK)
 		{
-			xn::PlayerImpl *pPlayerImpl = NULL;
-			XN_VALIDATE_NEW(pPlayerImpl, xn::PlayerImpl);
-			nRetVal = pPlayerImpl->Init(pNodeData);
-			if (nRetVal != XN_STATUS_OK)
-			{
-				XN_DELETE(pPlayerImpl);
-				return nRetVal;
-			}
-			pNodeData->pPrivateData = pPlayerImpl;
-			break;
+			XN_DELETE(pPlayerImpl);
+			return nRetVal;
 		}
-		case XN_NODE_TYPE_DEPTH:
-			{
-				xn::DepthPrivateData* pDepthPrivateData = NULL;
-				XN_VALIDATE_NEW(pDepthPrivateData, xn::DepthPrivateData);
-				nRetVal = pDepthPrivateData->Init(pNodeData);
-				if (nRetVal != XN_STATUS_OK)
-				{
-					XN_DELETE(pDepthPrivateData);
-					return nRetVal;
-				}
-				pNodeData->pPrivateData = pDepthPrivateData;
-				break;
-			}
-		case XN_NODE_TYPE_IMAGE:
-		case XN_NODE_TYPE_IR:
-		case XN_NODE_TYPE_AUDIO:
-		case XN_NODE_TYPE_GESTURE:
-		case XN_NODE_TYPE_HANDS:
-		case XN_NODE_TYPE_USER:
-		case XN_NODE_TYPE_SCENE:
-		case XN_NODE_TYPE_DEVICE:
-		case XN_NODE_TYPE_CODEC:
-			break;
-		default:
-			XN_ASSERT(FALSE);
+		pNodeData->pPrivateData = pPlayerImpl;
+	}
+	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+	{
+		xn::DepthPrivateData* pDepthPrivateData = NULL;
+		XN_VALIDATE_NEW(pDepthPrivateData, xn::DepthPrivateData);
+		nRetVal = pDepthPrivateData->Init(pNodeData);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			XN_DELETE(pDepthPrivateData);
+			return nRetVal;
+		}
+		pNodeData->pPrivateData = pDepthPrivateData;
 	}
 
 	return (XN_STATUS_OK);
@@ -1258,7 +1253,9 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 		xnFindValidNameForType(pContext, pTree->Description.Type, pTree->strInstanceName);
 	}
 
-	xnLogInfo(XN_MASK_OPEN_NI, "Creating node '%s' of type %s...", pTree->strInstanceName, xnProductionNodeTypeToString(pTree->Description.Type));
+	XnChar strDescription[500];
+	xnProductionNodeDescriptionToString(&pTree->Description, strDescription, 500);
+	xnLogInfo(XN_MASK_OPEN_NI, "Creating node '%s' of type %s...", pTree->strInstanceName, strDescription);
 
 	XnModuleInstance* pModuleInstance;
 	nRetVal = pContext->pModuleLoader->CreateRootNode(pTree, &pModuleInstance);
@@ -1267,7 +1264,7 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 	// create handle
 	XnInternalNodeData* pNodeData;
 	XN_VALIDATE_CALLOC(pNodeData, XnInternalNodeData, 1);
-	pNodeData->type = pTree->Description.Type;
+	pNodeData->typeHierarchy = pModuleInstance->pLoaded->pInterface->HierarchyType;
 	pNodeData->pNodeInfo = pTree;
 	pNodeData->nRefCount = 1;
 	pNodeData->pModuleInstance = pModuleInstance;
@@ -1312,7 +1309,7 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 		return xnFreeProductionNodeImpl(pNodeData, nRetVal);
 	}
 
-	if ((pNodeData->pModuleInstance->pLoaded->pInterface->HierarchyType & XN_HIERARCHY_TYPE_GENERATOR) != 0)
+	if (pNodeData->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR))
 	{
 		// and try to set its mirror state
 		if (pContext->bGlobalMirrorSet && xnIsCapabilitySupported(pNodeData, XN_CAPABILITY_MIRROR))
@@ -1420,23 +1417,25 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 	{
 		XN_DELETE(hNode->pPrivateData);
 
-		switch (hNode->type)
+		if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
 		{
-			case XN_NODE_TYPE_DEPTH:
-				xnFreeDepthMetaData(hNode->pMetaData.Depth);
-				break;
-			case XN_NODE_TYPE_IMAGE:
-				xnFreeImageMetaData(hNode->pMetaData.Image);
-				break;
-			case XN_NODE_TYPE_IR:
-				xnFreeIRMetaData(hNode->pMetaData.IR);
-				break;
-			case XN_NODE_TYPE_AUDIO:
-				xnFreeAudioMetaData(hNode->pMetaData.Audio);
-				break;
-			case XN_NODE_TYPE_SCENE:
-				xnFreeSceneMetaData(hNode->pMetaData.Scene);
-				break;
+			xnFreeDepthMetaData(hNode->pMetaData.Depth);
+		}
+		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+		{
+			xnFreeImageMetaData(hNode->pMetaData.Image);
+		}
+		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+		{
+			xnFreeIRMetaData(hNode->pMetaData.IR);
+		}
+		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+		{
+			xnFreeAudioMetaData(hNode->pMetaData.Audio);
+		}
+		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+		{
+			xnFreeSceneMetaData(hNode->pMetaData.Scene);
 		}
 
 		// free all registration cookies that were not unregistered
@@ -1670,7 +1669,7 @@ XN_C_API XnStatus xnCreateMockNodeBasedOn(XnContext* pContext,
 	//Copy state from original node to mock node
 	xn::NodeWatcher* pNodeWatcher = NULL;
 	xn::ProductionNode originalNode(hOriginalNode);
-	nRetVal = CreateNodeWatcher(originalNode, type, hMockNode, xn::MockNotifier::GetInstance(), pNodeWatcher);
+	nRetVal = xn::CreateNodeWatcher(originalNode, type, hMockNode, xn::MockNotifier::GetInstance(), pNodeWatcher);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		xnProductionNodeRelease(hMockNode);
@@ -1706,28 +1705,21 @@ XN_C_API const XnChar* xnGetNodeName(XnNodeHandle hNode)
 	return hNode->pNodeInfo->strInstanceName;
 }
 
-XN_C_API const XnBool xnIsTypeGenerator(XnProductionNodeType type)
+XN_C_API XnBool xnIsTypeGenerator(XnProductionNodeType type)
 {
-	switch (type)
-	{
-		case XN_NODE_TYPE_DEPTH:
-		case XN_NODE_TYPE_IMAGE:
-		case XN_NODE_TYPE_AUDIO:
-		case XN_NODE_TYPE_IR:
-		case XN_NODE_TYPE_USER:
-		case XN_NODE_TYPE_GESTURE:
-		case XN_NODE_TYPE_SCENE:
-		case XN_NODE_TYPE_HANDS:
-			return TRUE;
+	return xnIsTypeDerivedFrom(type, XN_NODE_TYPE_GENERATOR);
+}
 
-		case XN_NODE_TYPE_DEVICE:
-		case XN_NODE_TYPE_RECORDER:
-		case XN_NODE_TYPE_PLAYER:
-		case XN_NODE_TYPE_CODEC:
-			return FALSE;
-		default:
-			XN_ASSERT(FALSE);
-			return FALSE;
+XN_C_API XnBool xnIsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base)
+{
+	XnBool bResult = FALSE;
+	if (XN_STATUS_OK == TypeManager::GetInstance().IsTypeDerivedFrom(type, base, &bResult))
+	{
+		return bResult;
+	}
+	else
+	{
+		return FALSE;
 	}
 }
 
@@ -1801,25 +1793,6 @@ void xnUpdateDepthMetaData(XnNodeHandle hNode)
 	pMetaData->pMap->PixelFormat = XN_PIXEL_FORMAT_GRAYSCALE_16_BIT;
 	pMetaData->pData = xnGetDepthMap(hNode);
 	pMetaData->nZRes = xnGetDeviceMaxDepth(hNode) + 1;
-	pMetaData->pMap->pOutput->nDataSize = pMetaData->pMap->Res.X * pMetaData->pMap->Res.Y * sizeof(XnDepthPixel);
-}
-
-XnUInt32 xnGetBytesPerPixel(XnPixelFormat format)
-{
-	switch (format)
-	{
-	case XN_PIXEL_FORMAT_RGB24:
-		return sizeof(XnRGB24Pixel);
-	case XN_PIXEL_FORMAT_YUV422:
-		return sizeof(XnYUV422DoublePixel)/2;
-	case XN_PIXEL_FORMAT_GRAYSCALE_8_BIT:
-		return sizeof(XnGrayscale8Pixel);
-	case XN_PIXEL_FORMAT_GRAYSCALE_16_BIT:
-		return sizeof(XnGrayscale16Pixel);
-	default:
-		XN_ASSERT(FALSE);
-		return 0;
-	}
 }
 
 void xnUpdateImageMetaData(XnNodeHandle hNode)
@@ -1828,7 +1801,6 @@ void xnUpdateImageMetaData(XnNodeHandle hNode)
 	xnUpdateMapMetaData(hNode, pMetaData->pMap);
 	pMetaData->pMap->PixelFormat = xnGetPixelFormat(hNode);
 	pMetaData->pData = xnGetImageMap(hNode);
-	pMetaData->pMap->pOutput->nDataSize = pMetaData->pMap->Res.X * pMetaData->pMap->Res.Y * xnGetBytesPerPixel(pMetaData->pMap->PixelFormat);
 }
 
 void xnUpdateIRMetaData(XnNodeHandle hNode)
@@ -1837,7 +1809,6 @@ void xnUpdateIRMetaData(XnNodeHandle hNode)
 	xnUpdateMapMetaData(hNode, pMetaData->pMap);
 	pMetaData->pMap->PixelFormat = XN_PIXEL_FORMAT_GRAYSCALE_16_BIT;
 	pMetaData->pData = xnGetIRMap(hNode);
-	pMetaData->pMap->pOutput->nDataSize = pMetaData->pMap->Res.X * pMetaData->pMap->Res.Y * sizeof(XnIRPixel);
 }
 
 void xnUpdateAudioMetaData(XnNodeHandle hNode)
@@ -1854,7 +1825,6 @@ void xnUpdateSceneMetaData(XnNodeHandle hNode)
 	xnUpdateMapMetaData(hNode, pMetaData->pMap);
 	pMetaData->pMap->PixelFormat = XN_PIXEL_FORMAT_GRAYSCALE_16_BIT;
 	pMetaData->pData = xnGetLabelMap(hNode);
-	pMetaData->pMap->pOutput->nDataSize = pMetaData->pMap->Res.X * pMetaData->pMap->Res.Y * sizeof(XnLabel);
 }
 
 void xnUpdateMetaData(XnNodeHandle hNode)
@@ -1862,23 +1832,25 @@ void xnUpdateMetaData(XnNodeHandle hNode)
 	XN_ASSERT(hNode != NULL);
 	XN_ASSERT(hNode->pNodeInfo != NULL);
 
-	switch (hNode->pNodeInfo->Description.Type)
+	if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
 	{
-	case XN_NODE_TYPE_DEPTH:
 		xnUpdateDepthMetaData(hNode);
-		break;
-	case XN_NODE_TYPE_IMAGE:
+	}
+	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+	{
 		xnUpdateImageMetaData(hNode);
-		break;
-	case XN_NODE_TYPE_IR:
+	}
+	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+	{
 		xnUpdateIRMetaData(hNode);
-		break;
-	case XN_NODE_TYPE_AUDIO:
+	}
+	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+	{
 		xnUpdateAudioMetaData(hNode);
-		break;
-	case XN_NODE_TYPE_SCENE:
+	}
+	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+	{
 		xnUpdateSceneMetaData(hNode);
-		break;
 	}
 }
 
@@ -1909,7 +1881,7 @@ static XnStatus xnUpdateTreeImpl(XnProductionNodesSet* pUpdatedSet, const XnNode
 		}
 
 		// and now update root (only if it's a generator)
-		if ((pNode->hNode->pModuleInstance->pLoaded->pInterface->HierarchyType & XN_HIERARCHY_TYPE_GENERATOR) != 0)
+		if (pNode->hNode->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR))
 		{
 			// when wait is not requested, we only update nodes that have new data
 			if (xnIsNewDataAvailable(pNode->hNode, NULL))
@@ -1919,7 +1891,7 @@ static XnStatus xnUpdateTreeImpl(XnProductionNodesSet* pUpdatedSet, const XnNode
 			}
 		}
 		// If it's a recorder, record
-		else if ((pNode->hNode->pModuleInstance->pLoaded->pInterface->HierarchyType & XN_HIERARCHY_TYPE_RECORDER) != 0)
+		else if (pNode->hNode->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_RECORDER))
 		{
 			nRetVal = xnRecord(pNode->hNode);
 			XN_IS_STATUS_OK(nRetVal);
@@ -1967,7 +1939,7 @@ XnBool XN_CALLBACK_TYPE xnDidAllNodesAdvanced(void* pConditionData)
 	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
 	{
 		XnInternalNodeData* pData = it.Value();
-		if ((pData->pModuleInstance->pLoaded->pInterface->HierarchyType & XN_HIERARCHY_TYPE_GENERATOR) != 0 &&
+		if (pData->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR) &&
 			!xnDidNodeAdvanced(pData))
 		{
 			return (FALSE);
@@ -1977,7 +1949,7 @@ XnBool XN_CALLBACK_TYPE xnDidAllNodesAdvanced(void* pConditionData)
 	return (TRUE);
 }
 
-XnStatus xnWaitForCondition(XnContext* pContext, XnUInt32 nTimeout, XnConditionFunc pConditionFunc, void* pConditionData)
+XnStatus xnWaitForCondition(XnContext* pContext, XnConditionFunc pConditionFunc, void* pConditionData)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
@@ -2037,7 +2009,7 @@ XN_C_API XnStatus xnWaitAndUpdateAll(XnContext* pContext)
 	XN_VALIDATE_INPUT_PTR(pContext);
 
 	// wait on new data event
-	nRetVal = xnWaitForCondition(pContext, XN_NODE_WAIT_FOR_DATA_TIMEOUT, xnDidAllNodesAdvanced, pContext);
+	nRetVal = xnWaitForCondition(pContext, xnDidAllNodesAdvanced, pContext);
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now update entire tree
@@ -2060,7 +2032,7 @@ XN_C_API XnStatus xnWaitOneUpdateAll(XnContext* pContext, XnNodeHandle hNode)
 	XN_VALIDATE_INPUT_PTR(hNode);
 
 	// wait on new data event
-	nRetVal = xnWaitForCondition(pContext, XN_NODE_WAIT_FOR_DATA_TIMEOUT, xnDidNodeAdvanced, hNode);
+	nRetVal = xnWaitForCondition(pContext, xnDidNodeAdvanced, hNode);
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now update entire tree
@@ -2114,7 +2086,7 @@ XN_C_API XnStatus xnWaitAnyUpdateAll(XnContext* pContext)
 	XN_VALIDATE_INPUT_PTR(pContext);
 	
 	// wait on new data event
-	nRetVal = xnWaitForCondition(pContext, XN_NODE_WAIT_FOR_DATA_TIMEOUT, xnDidAnyNodeAdvanced, pContext);
+	nRetVal = xnWaitForCondition(pContext, xnDidAnyNodeAdvanced, pContext);
 	XN_IS_STATUS_OK(nRetVal);
 
 	// we have new data, now just update all
@@ -2131,7 +2103,7 @@ XN_C_API XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance)
 	XN_VALIDATE_INPUT_PTR(hInstance);
 
 	// wait on new data event
-	nRetVal = xnWaitForCondition(hInstance->pContext, XN_NODE_WAIT_FOR_DATA_TIMEOUT, xnDidNodeAdvanced, hInstance);
+	nRetVal = xnWaitForCondition(hInstance->pContext, xnDidNodeAdvanced, hInstance);
 	XN_IS_STATUS_OK(nRetVal);
 
 	xnResetNewDataFlag(hInstance->pContext);
@@ -2158,7 +2130,7 @@ static XnStatus xnStartGeneratingTreeImpl(XnNodeInfo* pNode)
 	}
 
 	// now start root (if this is a generator)
-	if ((pNode->hNode->pModuleInstance->pLoaded->pInterface->HierarchyType & XN_HIERARCHY_TYPE_GENERATOR) != 0 &&
+	if (pNode->hNode->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR) &&
 		!xnIsGenerating(pNode->hNode))
 	{
 		nRetVal = xnStartGeneratingImpl(pNode->hNode);
@@ -2193,7 +2165,7 @@ XN_C_API XnStatus xnStopGeneratingAll(XnContext* pContext)
 	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
 	{
 		// if this is a generator, stop it
-		if ((it.Value()->pModuleInstance->pLoaded->pInterface->HierarchyType & XN_HIERARCHY_TYPE_GENERATOR) != 0)
+		if (it.Value()->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR))
 		{
 			XnInternalNodeData* pData = it.Value();
 			nRetVal = xnStopGenerating(pData);
@@ -2262,7 +2234,7 @@ XN_C_API void xnUnregisterFromGlobalErrorStateChange(XnContext* pContext, XnCall
 XN_C_API XnStatus xnGetNodeHandleByName(XnContext* pContext, const XnChar* strInstanceName, XnNodeHandle* phNode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	XN_VALIDATE_INPUT_PTR(pContext);
 	XN_VALIDATE_INPUT_PTR(strInstanceName);
 	XN_VALIDATE_OUTPUT_PTR(phNode);
@@ -2352,32 +2324,6 @@ XN_C_API XnStatus xnFindExistingNodeByType(XnContext* pContext, XnProductionNode
 	*phNode = xnNodeInfoGetHandle(pNodeInfo);
 	xnNodeInfoListFree(pList);
 
-	return (XN_STATUS_OK);
-}
-
-/**
- * @brief Registers a new production node implementation on run-time (one that is not 
- * registered under OpenNI repository).
- * This function is meant to be used by node providers.
- *
- * @param	pContext					[in]	OpenNI context.
- * @param	pGetExportedInterfaceFunc	[in]	A pointer to a function which can return the required interface.
- * @param	strConfigDir				[in]	[Optional]. A config directory which will be passed to the create method.
- */
-//This function is here in case we want to expose it through the API at some point in the future.
-static XnStatus xnRegisterProductionNodeForEnumeration(XnContext* pContext, XnModuleGetExportedInterfacePtr pGetExportedInterfaceFunc, const XnChar* strConfigDir)
-{
-	XnStatus nRetVal = XN_STATUS_OK;
-	
-	XN_VALIDATE_INPUT_PTR(pContext);
-	XN_VALIDATE_INPUT_PTR(pGetExportedInterfaceFunc);
-	
-	XnModuleExportedProductionNodeInterface ExportedInterface;
-	pGetExportedInterfaceFunc(&ExportedInterface);
-
-	nRetVal = pContext->pModuleLoader->AddGenerator(&ExportedInterface, strConfigDir);
-	XN_IS_STATUS_OK(nRetVal);
-	
 	return (XN_STATUS_OK);
 }
 
@@ -2509,6 +2455,73 @@ XN_C_API void xnUnregisterFromNodeErrorStateChange(XnNodeHandle hInstance, XnCal
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->ErrorState.UnregisterFromErrorStateChange, );
 	xnUnregisterFromModuleStateChange(pInterface->ErrorState.UnregisterFromErrorStateChange, hModuleNode, hCallback);
+}
+
+//---------------------------------------------------------------------------
+// General Int Capability
+//---------------------------------------------------------------------------
+XN_C_API XnStatus xnGetGeneralIntRange(XnNodeHandle hInstance, const XnChar* strCap, XnInt32* pnMin, XnInt32* pnMax, XnInt32* pnStep, XnInt32* pnDefault, XnBool* pbIsAutoSupported)
+{
+	XnProductionNodeInterfaceContainer* pInterface = hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->GeneralInt.GetRange);
+	return pInterface->GeneralInt.GetRange(hModuleNode, strCap, pnMin, pnMax, pnStep, pnDefault, pbIsAutoSupported);
+}
+
+XN_C_API XnStatus xnGetGeneralIntValue(XnNodeHandle hInstance, const XnChar* strCap, XnInt32* pnValue)
+{
+	XnProductionNodeInterfaceContainer* pInterface = hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->GeneralInt.Get);
+	return pInterface->GeneralInt.Get(hModuleNode, strCap, pnValue);
+}
+
+XN_C_API XnStatus xnSetGeneralIntValue(XnNodeHandle hInstance, const XnChar* strCap, XnInt32 nValue)
+{
+	XnProductionNodeInterfaceContainer* pInterface = hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->GeneralInt.Set);
+	return pInterface->GeneralInt.Set(hModuleNode, strCap, nValue);
+}
+
+XN_C_API XnStatus xnRegisterToGeneralIntValueChange(XnNodeHandle hInstance, const XnChar* strCap, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XnProductionNodeInterfaceContainer* pInterface = hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->GeneralInt.RegisterToValueChange);
+
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XnModuleStateCookie* pModuleCookie = NULL;
+	XN_VALIDATE_CALLOC(pModuleCookie, XnModuleStateCookie, 1);
+	pModuleCookie->hNode = hInstance;
+	pModuleCookie->userHandler = handler;
+	pModuleCookie->pUserCookie = pCookie;
+
+	nRetVal = pInterface->GeneralInt.RegisterToValueChange(hModuleNode, strCap, xnModuleStateChanged, pModuleCookie, &pModuleCookie->hModuleCallback);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pModuleCookie);
+		return (nRetVal);
+	}
+
+	// keep the cookie, so we can free it when node is destroyed
+	hInstance->pRegistrationCookiesHash->Set(pModuleCookie, pModuleCookie);
+
+	*phCallback = pModuleCookie;
+	return (XN_STATUS_OK);
+}
+
+XN_C_API void xnUnregisterFromGeneralIntValueChange(XnNodeHandle hInstance, const XnChar* strCap, XnCallbackHandle hCallback)
+{
+	XnProductionNodeInterfaceContainer* pInterface = hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->GeneralInt.UnregisterFromValueChange, );
+
+	XnModuleStateCookie* pModuleCookie = (XnModuleStateCookie*)hCallback;
+	pModuleCookie->hNode->pRegistrationCookiesHash->Remove(pModuleCookie);
+	pInterface->GeneralInt.UnregisterFromValueChange(hModuleNode, strCap, pModuleCookie->hModuleCallback);
+	xnOSFree(pModuleCookie);
 }
 
 //---------------------------------------------------------------------------
@@ -2788,6 +2801,48 @@ XN_C_API XnStatus xnRemoveNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeede
 	return (XN_STATUS_INVALID_OPERATION);
 }
 
+//---------------------------------------------------------------------------
+// Device
+//---------------------------------------------------------------------------
+
+XN_C_API XnStatus xnCreateDevice(
+	XnContext* pContext,
+	XnNodeHandle* phDevice,
+	XnNodeQuery* pQuery, 
+	XnEnumerationErrors* pErrors)
+{
+	return xnCreateAnyProductionTree(pContext, XN_NODE_TYPE_DEVICE, pQuery, phDevice, pErrors);
+}
+
+//---------------------------------------------------------------------------
+// Device Identification Capability
+//---------------------------------------------------------------------------
+XN_C_API XnStatus xnGetDeviceName(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEVICE);
+	XnDeviceInterfaceContainer* pInterface = (XnDeviceInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->Identification.GetDeviceName);
+	return pInterface->Identification.GetDeviceName(hModuleNode, strBuffer, pnBufferSize);
+}
+
+XN_C_API XnStatus xnGetVendorSpecificData(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEVICE);
+	XnDeviceInterfaceContainer* pInterface = (XnDeviceInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->Identification.GetVendorSpecificData);
+	return pInterface->Identification.GetVendorSpecificData(hModuleNode, strBuffer, pnBufferSize);
+}
+
+XN_C_API XnStatus xnGetSerialNumber(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEVICE);
+	XnDeviceInterfaceContainer* pInterface = (XnDeviceInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->Identification.GetSerialNumber);
+	return pInterface->Identification.GetSerialNumber(hModuleNode, strBuffer, pnBufferSize);
+}
 
 //---------------------------------------------------------------------------
 // Generators
@@ -2802,14 +2857,14 @@ static XnStatus xnStartGeneratingImpl(XnNodeHandle hInstance)
 
 XN_C_API XnStatus xnStartGenerating(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	return xnStartGeneratingTreeImpl(hInstance->pNodeInfo);
 }
 
 XN_C_API XnBool xnIsGenerating(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, FALSE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, FALSE);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Generator.IsGenerating(hModuleNode);
@@ -2817,7 +2872,7 @@ XN_C_API XnBool xnIsGenerating(XnNodeHandle hInstance)
 
 XN_C_API XnStatus xnStopGenerating(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -2827,7 +2882,7 @@ XN_C_API XnStatus xnStopGenerating(XnNodeHandle hInstance)
 
 XN_C_API XnStatus xnRegisterToGenerationRunningChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -2836,7 +2891,7 @@ XN_C_API XnStatus xnRegisterToGenerationRunningChange(XnNodeHandle hInstance, Xn
 
 XN_C_API void xnUnregisterFromGenerationRunningChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR,);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR,);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	xnUnregisterFromModuleStateChange(pInterface->Generator.UnregisterFromGenerationRunningChange, hModuleNode, hCallback);
@@ -2844,7 +2899,7 @@ XN_C_API void xnUnregisterFromGenerationRunningChange(XnNodeHandle hInstance, Xn
 
 XN_C_API XnStatus xnRegisterToNewDataAvailable(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -2853,7 +2908,7 @@ XN_C_API XnStatus xnRegisterToNewDataAvailable(XnNodeHandle hInstance, XnStateCh
 
 XN_C_API void xnUnregisterFromNewDataAvailable(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR,);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR,);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	xnUnregisterFromModuleStateChange(pInterface->Generator.UnregisterFromNewDataAvailable, hModuleNode, hCallback);
@@ -2861,7 +2916,7 @@ XN_C_API void xnUnregisterFromNewDataAvailable(XnNodeHandle hInstance, XnCallbac
 
 XnBool xnIsNewDataAvailableImpl(XnNodeHandle hInstance, XnUInt64* pnTimestamp)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, FALSE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, FALSE);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Generator.IsNewDataAvailable(hModuleNode, pnTimestamp);
@@ -2882,7 +2937,7 @@ static XnStatus xnUpdateDataImpl(XnNodeHandle hInstance)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	nRetVal = pInterface->Generator.UpdateData(hModuleNode);
@@ -2901,9 +2956,18 @@ XN_C_API XnBool xnIsDataNew(XnNodeHandle hInstance)
 	return hInstance->bIsNewData;
 }
 
+XN_C_API const void* xnGetData(XnNodeHandle hInstance)
+{
+	XN_VALIDATE_PTR(hInstance, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, NULL);
+	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	return pInterface->Generator.GetData(hModuleNode);
+}
+
 XN_C_API XnUInt32 xnGetDataSize(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, (XnUInt32)-1);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, (XnUInt32)-1);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Generator.GetDataSize(hModuleNode);
@@ -2911,7 +2975,7 @@ XN_C_API XnUInt32 xnGetDataSize(XnNodeHandle hInstance)
 
 XN_C_API XnUInt64 xnGetTimestamp(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, (XnUInt64)-1);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, (XnUInt64)-1);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Generator.GetTimestamp(hModuleNode);
@@ -2919,7 +2983,7 @@ XN_C_API XnUInt64 xnGetTimestamp(XnNodeHandle hInstance)
 
 XN_C_API XnUInt32 xnGetFrameID(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, (XnUInt32)-1);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, (XnUInt32)-1);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Generator.GetFrameID(hModuleNode);
@@ -2995,7 +3059,7 @@ XN_C_API XnStatus xnCreateRecorder(XnContext* pContext, const XnChar* strFormatN
 XN_C_API XnStatus xnSetRecorderDestination(XnNodeHandle hRecorder, XnRecordMedium destType, const XnChar *strDest)
 {
 	XN_VALIDATE_INPUT_PTR(hRecorder);
-	XN_VALIDATE_INTERFACE_TYPE(hRecorder, XN_HIERARCHY_TYPE_RECORDER);
+	XN_VALIDATE_INTERFACE_TYPE(hRecorder, XN_NODE_TYPE_RECORDER);
 	XN_VALIDATE_CHANGES_ALLOWED(hRecorder);
 	//Get recorder object
 	xn::RecorderImpl *pRecorderImpl = dynamic_cast<xn::RecorderImpl*>(hRecorder->pPrivateData);
@@ -3008,7 +3072,7 @@ XN_C_API XnStatus xnSetRecorderDestination(XnNodeHandle hRecorder, XnRecordMediu
 XN_C_API XnStatus xnAddNodeToRecording(XnNodeHandle hRecorder, XnNodeHandle hNode, XnCodecID compression)
 {
 	XN_VALIDATE_INPUT_PTR(hRecorder);
-	XN_VALIDATE_INTERFACE_TYPE(hRecorder, XN_HIERARCHY_TYPE_RECORDER);
+	XN_VALIDATE_INTERFACE_TYPE(hRecorder, XN_NODE_TYPE_RECORDER);
 	XN_VALIDATE_INPUT_PTR(hNode);
 	XN_VALIDATE_CHANGES_ALLOWED(hRecorder);
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -3031,7 +3095,7 @@ XN_C_API XnStatus xnAddNodeToRecording(XnNodeHandle hRecorder, XnNodeHandle hNod
 XN_C_API XnStatus xnRemoveNodeFromRecording(XnNodeHandle hRecorder, XnNodeHandle hNode)
 {
 	XN_VALIDATE_INPUT_PTR(hRecorder);
-	XN_VALIDATE_INTERFACE_TYPE(hRecorder, XN_HIERARCHY_TYPE_RECORDER);
+	XN_VALIDATE_INTERFACE_TYPE(hRecorder, XN_NODE_TYPE_RECORDER);
 	XN_VALIDATE_INPUT_PTR(hNode);
 	XN_VALIDATE_CHANGES_ALLOWED(hRecorder);
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -3068,7 +3132,7 @@ XN_C_API XnStatus xnRemoveNodeFromRecording(XnNodeHandle hRecorder, XnNodeHandle
 XN_C_API XnStatus xnRecord(XnNodeHandle hInstance)
 {
 	XN_VALIDATE_INPUT_PTR(hInstance);
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_RECORDER);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_RECORDER);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	//Get recorder object
 	xn::RecorderImpl *pRecorderImpl = dynamic_cast<xn::RecorderImpl*>(hInstance->pPrivateData);
@@ -3145,7 +3209,7 @@ XN_C_API XnStatus xnCreatePlayer(XnContext* pContext, const XnChar* strFormatNam
 XN_C_API XnStatus xnSetPlayerRepeat(XnNodeHandle hPlayer, XnBool bRepeat)
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.SetRepeat(hModuleNode, bRepeat);
@@ -3155,7 +3219,7 @@ XN_C_API XnStatus xnSetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium sourceT
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
 	XN_VALIDATE_INPUT_PTR(strSource);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XN_VALIDATE_CHANGES_ALLOWED(hPlayer);
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
@@ -3168,7 +3232,7 @@ XN_C_API XnStatus xnSetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium sourceT
 XN_C_API XnStatus xnPlayerReadNext(XnNodeHandle hPlayer)
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.ReadNext(hModuleNode);
@@ -3179,7 +3243,7 @@ XN_C_API XnStatus xnGetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium* pSourc
 	XN_VALIDATE_INPUT_PTR(hPlayer);
 	XN_VALIDATE_OUTPUT_PTR(pSourceType);
 	XN_VALIDATE_OUTPUT_PTR(strSource);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XN_VALIDATE_CHANGES_ALLOWED(hPlayer);
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
@@ -3194,15 +3258,26 @@ XN_C_API XnStatus xnSeekPlayerToTimeStamp(XnNodeHandle hPlayer,
 										  XnPlayerSeekOrigin origin)
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XN_VALIDATE_CHANGES_ALLOWED(hPlayer);
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
 	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
-	pPlayerImpl->ResetTimeReference();
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
-	return pInterface->Player.SeekToTimeStamp(hModuleNode, nTimeOffset, origin);
+
+	// disable playback speed - so seeking would be immediate
+	XnDouble dPlaybackSpeed = pPlayerImpl->GetPlaybackSpeed();
+	pPlayerImpl->SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
+
+	// seek
+	XnStatus nRetVal = pInterface->Player.SeekToTimeStamp(hModuleNode, nTimeOffset, origin);
+
+	// restore playback speed
+	pPlayerImpl->SetPlaybackSpeed(dPlaybackSpeed);
+	pPlayerImpl->ResetTimeReference();
+
+	return (nRetVal);
 }
 
 XN_C_API XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer, 
@@ -3211,21 +3286,32 @@ XN_C_API XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer,
 									  XnPlayerSeekOrigin origin)
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XN_VALIDATE_CHANGES_ALLOWED(hPlayer);
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
 	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
-	pPlayerImpl->ResetTimeReference();
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
-	return pInterface->Player.SeekToFrame(hModuleNode, strNodeName, nFrameOffset, origin);
+
+	// disable playback speed - so seeking would be immediate
+	XnDouble dPlaybackSpeed = pPlayerImpl->GetPlaybackSpeed();
+	pPlayerImpl->SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
+
+	// seek
+	XnStatus nRetVal = pInterface->Player.SeekToFrame(hModuleNode, strNodeName, nFrameOffset, origin);
+
+	// restore playback speed
+	pPlayerImpl->SetPlaybackSpeed(dPlaybackSpeed);
+	pPlayerImpl->ResetTimeReference();
+
+	return (nRetVal);
 }
 
 XN_C_API XnStatus xnTellPlayerTimestamp(XnNodeHandle hPlayer, XnUInt64* pnTimestamp)
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.TellTimestamp(hModuleNode, pnTimestamp);
@@ -3235,7 +3321,7 @@ XN_C_API XnStatus xnTellPlayerFrame(XnNodeHandle hPlayer, const XnChar* strNodeN
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
 	XN_VALIDATE_OUTPUT_PTR(pnFrame);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.TellFrame(hModuleNode, strNodeName, pnFrame);
@@ -3245,7 +3331,7 @@ XN_C_API XnStatus xnGetPlayerNumFrames(XnNodeHandle hPlayer, const XnChar* strNo
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
 	XN_VALIDATE_OUTPUT_PTR(pnFrames);
-	XN_VALIDATE_INTERFACE_TYPE_RET(hPlayer, XN_HIERARCHY_TYPE_PLAYER, TRUE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hPlayer, XN_NODE_TYPE_PLAYER, TRUE);
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.GetNumFrames(hModuleNode, strNodeName, pnFrames);
@@ -3254,7 +3340,7 @@ XN_C_API XnStatus xnGetPlayerNumFrames(XnNodeHandle hPlayer, const XnChar* strNo
 XN_C_API const XnChar* xnGetPlayerSupportedFormat(XnNodeHandle hPlayer)
 {
 	XN_VALIDATE_PTR(hPlayer, NULL);
-	XN_VALIDATE_INTERFACE_TYPE_RET(hPlayer, XN_HIERARCHY_TYPE_PLAYER, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hPlayer, XN_NODE_TYPE_PLAYER, NULL);
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.GetSupportedFormat(hModuleNode);
@@ -3263,7 +3349,7 @@ XN_C_API const XnChar* xnGetPlayerSupportedFormat(XnNodeHandle hPlayer)
 XN_C_API XnStatus xnEnumeratePlayerNodes(XnNodeHandle hPlayer, XnNodeInfoList** ppList)
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XN_VALIDATE_OUTPUT_PTR(ppList);
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
@@ -3273,7 +3359,7 @@ XN_C_API XnStatus xnEnumeratePlayerNodes(XnNodeHandle hPlayer, XnNodeInfoList** 
 
 XN_C_API XnBool xnIsPlayerAtEOF(XnNodeHandle hPlayer)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hPlayer, XN_HIERARCHY_TYPE_PLAYER, TRUE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hPlayer, XN_NODE_TYPE_PLAYER, TRUE);
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
 	return pInterface->Player.IsEOF(hModuleNode);
@@ -3283,7 +3369,7 @@ XN_C_API XnStatus xnRegisterToEndOfFileReached(XnNodeHandle hPlayer, XnStateChan
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
 	XN_VALIDATE_INPUT_PTR(handler);
-	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
@@ -3296,7 +3382,7 @@ XN_C_API void xnUnregisterFromEndOfFileReached(XnNodeHandle hInstance, XnCallbac
 	{
 		return;
 	}
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_PLAYER, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_PLAYER, );
 	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	xnUnregisterFromModuleStateChange(pInterface->Player.UnregisterFromEndOfFileReached, hModuleNode, hCallback);
@@ -3305,7 +3391,7 @@ XN_C_API void xnUnregisterFromEndOfFileReached(XnNodeHandle hInstance, XnCallbac
 XN_C_API XnStatus xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed)
 {
 	XN_VALIDATE_INPUT_PTR(hInstance);
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_PLAYER);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_PLAYER);
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hInstance->pPrivateData);
 	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
@@ -3314,7 +3400,7 @@ XN_C_API XnStatus xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed)
 
 XN_C_API XnDouble xnGetPlaybackSpeed(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_PLAYER, -1.0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_PLAYER, -1.0);
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hInstance->pPrivateData);
 	XN_VALIDATE_PTR(pPlayerImpl, -1.0);
@@ -3327,7 +3413,7 @@ XN_C_API XnDouble xnGetPlaybackSpeed(XnNodeHandle hInstance)
 
 XN_C_API XnStatus xnSetMirror(XnNodeHandle hInstance, XnBool bMirror)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3337,7 +3423,7 @@ XN_C_API XnStatus xnSetMirror(XnNodeHandle hInstance, XnBool bMirror)
 
 XN_C_API XnBool xnIsMirrored(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, -1);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, -1);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR(pInterface->Mirror.IsMirrored);
@@ -3346,7 +3432,7 @@ XN_C_API XnBool xnIsMirrored(XnNodeHandle hInstance)
 
 XN_C_API XnStatus xnRegisterToMirrorChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3356,7 +3442,7 @@ XN_C_API XnStatus xnRegisterToMirrorChange(XnNodeHandle hInstance, XnStateChange
 
 XN_C_API void xnUnregisterFromMirrorChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, );
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->Mirror.UnregisterFromMirrorChange, );
@@ -3368,7 +3454,7 @@ XN_C_API void xnUnregisterFromMirrorChange(XnNodeHandle hInstance, XnCallbackHan
 //---------------------------------------------------------------------------
 XN_C_API XnBool xnIsViewPointSupported(XnNodeHandle hInstance, XnNodeHandle hOther)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, FALSE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, FALSE);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->AlternativeViewPoint.IsViewPointSupported, FALSE);
@@ -3377,7 +3463,7 @@ XN_C_API XnBool xnIsViewPointSupported(XnNodeHandle hInstance, XnNodeHandle hOth
 
 XN_C_API XnStatus xnSetViewPoint(XnNodeHandle hInstance, XnNodeHandle hOther)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3387,7 +3473,7 @@ XN_C_API XnStatus xnSetViewPoint(XnNodeHandle hInstance, XnNodeHandle hOther)
 
 XN_C_API XnStatus xnResetViewPoint(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3397,16 +3483,16 @@ XN_C_API XnStatus xnResetViewPoint(XnNodeHandle hInstance)
 
 XN_C_API XnBool xnIsViewPointAs(XnNodeHandle hInstance, XnNodeHandle hOther)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, FALSE);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->AlternativeViewPoint.IsViewPointAs, NULL);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->AlternativeViewPoint.IsViewPointAs, FALSE);
 	return pInterface->AlternativeViewPoint.IsViewPointAs(hModuleNode, hOther);
 }
 
 XN_C_API XnStatus xnRegisterToViewPointChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3416,7 +3502,7 @@ XN_C_API XnStatus xnRegisterToViewPointChange(XnNodeHandle hInstance, XnStateCha
 
 XN_C_API void xnUnregisterFromViewPointChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, );
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->AlternativeViewPoint.UnregisterFromViewPointChange, );
@@ -3428,7 +3514,7 @@ XN_C_API void xnUnregisterFromViewPointChange(XnNodeHandle hInstance, XnCallback
 //---------------------------------------------------------------------------
 XN_C_API XnBool xnCanFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, FALSE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, FALSE);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->FrameSync.CanFrameSyncWith, FALSE);
@@ -3439,7 +3525,7 @@ XN_C_API XnStatus xnFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther)
 {
 	XN_VALIDATE_INPUT_PTR(hInstance);
 	XN_VALIDATE_INPUT_PTR(hOther);
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 
 	// check if this is already the case
@@ -3471,7 +3557,7 @@ XN_C_API XnStatus xnStopFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOthe
 {
 	XN_VALIDATE_INPUT_PTR(hInstance);
 	XN_VALIDATE_INPUT_PTR(hOther);
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 
 	if (hInstance->hFrameSyncedWith != hOther)
@@ -3494,10 +3580,10 @@ XN_C_API XnStatus xnStopFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOthe
 
 XnBool xnIsFrameSyncedWithImpl(XnNodeHandle hInstance, XnNodeHandle hOther)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, FALSE);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->FrameSync.IsFrameSyncedWith, NULL);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->FrameSync.IsFrameSyncedWith, FALSE);
 	return pInterface->FrameSync.IsFrameSyncedWith(hModuleNode, hOther);
 }
 
@@ -3508,7 +3594,7 @@ XN_C_API XnBool xnIsFrameSyncedWith(XnNodeHandle hInstance, XnNodeHandle hOther)
 
 XN_C_API XnStatus xnRegisterToFrameSyncChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3518,7 +3604,7 @@ XN_C_API XnStatus xnRegisterToFrameSyncChange(XnNodeHandle hInstance, XnStateCha
 
 XN_C_API void xnUnregisterFromFrameSyncChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GENERATOR, );
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->FrameSync.UnregisterFromFrameSyncChange, );
@@ -3531,7 +3617,7 @@ XN_C_API void xnUnregisterFromFrameSyncChange(XnNodeHandle hInstance, XnCallback
 
 XN_C_API XnUInt32 xnGetSupportedMapOutputModesCount(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_MAP_GENERATOR, 0);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Map.GetSupportedMapOutputModesCount(hModuleNode);
@@ -3539,7 +3625,7 @@ XN_C_API XnUInt32 xnGetSupportedMapOutputModesCount(XnNodeHandle hInstance)
 
 XN_C_API XnStatus xnGetSupportedMapOutputModes(XnNodeHandle hInstance, XnMapOutputMode* aModes, XnUInt32* pnCount)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Map.GetSupportedMapOutputModes(hModuleNode, aModes, pnCount);
@@ -3547,7 +3633,7 @@ XN_C_API XnStatus xnGetSupportedMapOutputModes(XnNodeHandle hInstance, XnMapOutp
 
 XN_C_API XnStatus xnSetMapOutputMode(XnNodeHandle hInstance, const XnMapOutputMode* pOutputMode)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3556,7 +3642,7 @@ XN_C_API XnStatus xnSetMapOutputMode(XnNodeHandle hInstance, const XnMapOutputMo
 
 XN_C_API XnStatus xnGetMapOutputMode(XnNodeHandle hInstance, XnMapOutputMode* pOutputMode)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Map.GetMapOutputMode(hModuleNode, pOutputMode);
@@ -3564,7 +3650,7 @@ XN_C_API XnStatus xnGetMapOutputMode(XnNodeHandle hInstance, XnMapOutputMode* pO
 
 XN_C_API XnStatus xnRegisterToMapOutputModeChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3573,10 +3659,27 @@ XN_C_API XnStatus xnRegisterToMapOutputModeChange(XnNodeHandle hInstance, XnStat
 
 XN_C_API void xnUnregisterFromMapOutputModeChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR,);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_MAP_GENERATOR,);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	xnUnregisterFromModuleStateChange(pInterface->Map.UnregisterFromMapOutputModeChange, hModuleNode, hCallback);
+}
+
+XN_C_API XnUInt32 xnGetBytesPerPixel(XnNodeHandle hInstance)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_MAP_GENERATOR, XnUInt32(-1));
+	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	if ((void*)pInterface->Map.GetBytesPerPixel == XN_SPECIAL_BC_BEHAVIOR)
+	{
+		// special BC behavior: old image nodes did not implement the GetBytesPerPixel
+		// so we need to implement it for them
+		return xnGetBytesPerPixelForPixelFormat(xnGetPixelFormat(hInstance));
+	}
+	else
+	{
+		return pInterface->Map.GetBytesPerPixel(hModuleNode);
+	}
 }
 
 //---------------------------------------------------------------------------
@@ -3585,7 +3688,7 @@ XN_C_API void xnUnregisterFromMapOutputModeChange(XnNodeHandle hInstance, XnCall
 
 XN_C_API XnStatus xnSetCropping(XnNodeHandle hInstance, const XnCropping* pCropping)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3595,7 +3698,7 @@ XN_C_API XnStatus xnSetCropping(XnNodeHandle hInstance, const XnCropping* pCropp
 
 XN_C_API XnStatus xnGetCropping(XnNodeHandle hInstance, XnCropping* pCropping)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR(pInterface->Cropping.GetCropping);
@@ -3604,7 +3707,7 @@ XN_C_API XnStatus xnGetCropping(XnNodeHandle hInstance, XnCropping* pCropping)
 
 XN_C_API XnStatus xnRegisterToCroppingChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3614,11 +3717,52 @@ XN_C_API XnStatus xnRegisterToCroppingChange(XnNodeHandle hInstance, XnStateChan
 
 XN_C_API void xnUnregisterFromCroppingChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_MAP_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_MAP_GENERATOR, );
 	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->Cropping.UnregisterFromCroppingChange,);
 	xnUnregisterFromModuleStateChange(pInterface->Cropping.UnregisterFromCroppingChange, hModuleNode, hCallback);
+}
+
+//---------------------------------------------------------------------------
+// Anti Flicker Capability
+//---------------------------------------------------------------------------
+
+XN_C_API XnStatus xnSetPowerLineFrequency(XnNodeHandle hInstance, XnPowerLineFrequency nFrequency)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
+	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->AntiFlicker.SetPowerLineFrequency);
+	return pInterface->AntiFlicker.SetPowerLineFrequency(hModuleNode, nFrequency);
+}
+
+XN_C_API XnPowerLineFrequency xnGetPowerLineFrequency(XnNodeHandle hInstance)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_MAP_GENERATOR, XN_POWER_LINE_FREQUENCY_OFF);
+	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->AntiFlicker.GetPowerLineFrequency, XN_POWER_LINE_FREQUENCY_OFF);
+	return pInterface->AntiFlicker.GetPowerLineFrequency(hModuleNode);
+}
+
+XN_C_API XnStatus xnRegisterToPowerLineFrequencyChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_MAP_GENERATOR);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->AntiFlicker.RegisterToPowerLineFrequencyChange);
+	return xnRegisterToModuleStateChange(pInterface->AntiFlicker.RegisterToPowerLineFrequencyChange, hModuleNode, hInstance, handler, pCookie, phCallback);
+}
+
+XN_C_API void xnUnregisterFromPowerLineFrequencyChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_MAP_GENERATOR, );
+	XnMapGeneratorInterfaceContainer* pInterface = (XnMapGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->AntiFlicker.UnregisterFromPowerLineFrequencyChange,);
+	xnUnregisterFromModuleStateChange(pInterface->AntiFlicker.UnregisterFromPowerLineFrequencyChange, hModuleNode, hCallback);
 }
 
 //---------------------------------------------------------------------------
@@ -3688,7 +3832,7 @@ XN_C_API XnStatus xnCreateDepthGenerator(
 
 XN_C_API XnDepthPixel xnGetDeviceMaxDepth(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR, -1);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_DEPTH, -1);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Depth.GetDeviceMaxDepth(hModuleNode);
@@ -3698,7 +3842,7 @@ XN_C_API XnStatus xnGetDepthFieldOfView(XnNodeHandle hInstance, XnFieldOfView* p
 {
 	XN_VALIDATE_INPUT_PTR(hInstance);
 	XN_VALIDATE_OUTPUT_PTR(pFOV);
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEPTH);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	pInterface->Depth.GetFieldOfView(hModuleNode, pFOV);
@@ -3707,7 +3851,7 @@ XN_C_API XnStatus xnGetDepthFieldOfView(XnNodeHandle hInstance, XnFieldOfView* p
 
 XN_C_API XnStatus xnRegisterToDepthFieldOfViewChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEPTH);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3717,7 +3861,7 @@ XN_C_API XnStatus xnRegisterToDepthFieldOfViewChange(XnNodeHandle hInstance, XnS
 
 XN_C_API void xnUnregisterFromDepthFieldOfViewChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_DEPTH, );
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->Depth.UnregisterFromFieldOfViewChange, );
@@ -3728,7 +3872,7 @@ XN_C_API XnStatus xnConvertProjectiveToRealWorld(XnNodeHandle hInstance, XnUInt3
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEPTH);
 
 	/**
 	 * X_RW = (X_proj / X_res - 1/2) * Z * x_to_z
@@ -3760,7 +3904,7 @@ XN_C_API XnStatus xnConvertRealWorldToProjective(XnNodeHandle hInstance, XnUInt3
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEPTH);
 
 	/**
 	 * X_proj = X_res * (X_RW / (z*x_to_z) + 1/2)
@@ -3795,7 +3939,7 @@ XN_C_API XnStatus xnConvertRealWorldToProjective(XnNodeHandle hInstance, XnUInt3
 
 XN_C_API XnDepthPixel* xnGetDepthMap(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_DEPTH, NULL);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Depth.GetDepthMap(hModuleNode);
@@ -3813,7 +3957,7 @@ XN_C_API void xnGetDepthMetaData(XnNodeHandle hInstance, XnDepthMetaData* pMetaD
 
 XN_C_API XnUInt32 xnGetSupportedUserPositionsCount(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_DEPTH, 0);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->UserPosition.GetSupportedUserPositionsCount, 0);
@@ -3822,7 +3966,7 @@ XN_C_API XnUInt32 xnGetSupportedUserPositionsCount(XnNodeHandle hInstance)
 
 XN_C_API XnStatus xnSetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, const XnBoundingBox3D* pPosition)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEPTH);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3832,7 +3976,7 @@ XN_C_API XnStatus xnSetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, con
 
 XN_C_API XnStatus xnGetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, XnBoundingBox3D* pPosition)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEPTH);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR(pInterface->UserPosition.GetUserPosition);
@@ -3841,7 +3985,7 @@ XN_C_API XnStatus xnGetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, XnB
 
 XN_C_API XnStatus xnRegisterToUserPositionChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEPTH);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3851,7 +3995,7 @@ XN_C_API XnStatus xnRegisterToUserPositionChange(XnNodeHandle hInstance, XnState
 
 XN_C_API void xnUnregisterFromUserPositionChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_DEPTH, );
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->UserPosition.UnregisterFromUserPositionChange, );
@@ -3872,7 +4016,7 @@ XN_C_API XnStatus xnCreateImageGenerator(
 
 XN_C_API XnUInt8* xnGetImageMap(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_IMAGE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_IMAGE, NULL);
 	XnImageGeneratorInterfaceContainer* pInterface = (XnImageGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Image.GetImageMap(hModuleNode);
@@ -3900,7 +4044,7 @@ XN_C_API XnGrayscale16Pixel* xnGetGrayscale16ImageMap(XnNodeHandle hInstance)
 
 XN_C_API XnBool xnIsPixelFormatSupported(XnNodeHandle hInstance, XnPixelFormat Format)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_IMAGE_GENERATOR, FALSE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_IMAGE, FALSE);
 	XnImageGeneratorInterfaceContainer* pInterface = (XnImageGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Image.IsPixelFormatSupported(hModuleNode, Format);
@@ -3908,7 +4052,7 @@ XN_C_API XnBool xnIsPixelFormatSupported(XnNodeHandle hInstance, XnPixelFormat F
 
 XN_C_API XnStatus xnSetPixelFormat(XnNodeHandle hInstance, XnPixelFormat Format)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_IMAGE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_IMAGE);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnImageGeneratorInterfaceContainer* pInterface = (XnImageGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3917,7 +4061,7 @@ XN_C_API XnStatus xnSetPixelFormat(XnNodeHandle hInstance, XnPixelFormat Format)
 
 XN_C_API XnPixelFormat xnGetPixelFormat(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_IMAGE_GENERATOR, (XnPixelFormat)-1);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_IMAGE, (XnPixelFormat)-1);
 	XnImageGeneratorInterfaceContainer* pInterface = (XnImageGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Image.GetPixelFormat(hModuleNode);
@@ -3925,7 +4069,7 @@ XN_C_API XnPixelFormat xnGetPixelFormat(XnNodeHandle hInstance)
 
 XN_C_API XnStatus xnRegisterToPixelFormatChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_IMAGE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_IMAGE);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnImageGeneratorInterfaceContainer* pInterface = (XnImageGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -3934,7 +4078,7 @@ XN_C_API XnStatus xnRegisterToPixelFormatChange(XnNodeHandle hInstance, XnStateC
 
 XN_C_API void xnUnregisterFromPixelFormatChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_IMAGE_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_IMAGE, );
 	XnImageGeneratorInterfaceContainer* pInterface = (XnImageGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	xnUnregisterFromModuleStateChange(pInterface->Image.UnregisterFromPixelFormatChange, hModuleNode, hCallback);
@@ -3960,7 +4104,7 @@ XN_C_API XnStatus xnCreateIRGenerator(
 
 XN_C_API XnIRPixel* xnGetIRMap(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_IR_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_IR, NULL);
 	XnIRGeneratorInterfaceContainer* pInterface = (XnIRGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->IR.GetIRMap(hModuleNode);
@@ -3986,7 +4130,7 @@ XN_C_API XnStatus xnCreateGestureGenerator(
 
 XN_C_API XnStatus xnAddGesture(XnNodeHandle hInstance, const XnChar* strGesture, XnBoundingBox3D* pArea)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
 	XN_VALIDATE_INPUT_PTR(strGesture);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -3996,7 +4140,7 @@ XN_C_API XnStatus xnAddGesture(XnNodeHandle hInstance, const XnChar* strGesture,
 
 XN_C_API XnStatus xnRemoveGesture(XnNodeHandle hInstance, const XnChar* strGesture)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
 	XN_VALIDATE_INPUT_PTR(strGesture);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4006,7 +4150,7 @@ XN_C_API XnStatus xnRemoveGesture(XnNodeHandle hInstance, const XnChar* strGestu
 
 XN_C_API XnStatus xnGetActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* pnGestures)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
 	XN_VALIDATE_OUTPUT_PTR(pstrGestures);
 	XN_VALIDATE_OUTPUT_PTR(pnGestures);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4016,7 +4160,7 @@ XN_C_API XnStatus xnGetActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestu
 
 XN_C_API XnStatus xnGetAllActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
 	XN_VALIDATE_OUTPUT_PTR(pstrGestures);
 	XN_VALIDATE_OUTPUT_PTR(pnGestures);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4027,7 +4171,7 @@ XN_C_API XnStatus xnGetAllActiveGestures(XnNodeHandle hInstance, XnChar** pstrGe
 
 XN_C_API XnStatus xnEnumerateGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* pnGestures)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
 	XN_VALIDATE_OUTPUT_PTR(pstrGestures);
 	XN_VALIDATE_OUTPUT_PTR(pnGestures);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4036,7 +4180,7 @@ XN_C_API XnStatus xnEnumerateGestures(XnNodeHandle hInstance, XnChar** pstrGestu
 }
 XN_C_API XnStatus xnEnumerateAllGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
 	XN_VALIDATE_OUTPUT_PTR(pstrGestures);
 	XN_VALIDATE_OUTPUT_PTR(pnGestures);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4046,7 +4190,7 @@ XN_C_API XnStatus xnEnumerateAllGestures(XnNodeHandle hInstance, XnChar** pstrGe
 }
 XN_C_API XnBool xnIsGestureAvailable(XnNodeHandle hInstance, const XnChar* strGesture)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, FALSE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GESTURE, FALSE);
 	XN_VALIDATE_INPUT_PTR(strGesture);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4054,7 +4198,7 @@ XN_C_API XnBool xnIsGestureAvailable(XnNodeHandle hInstance, const XnChar* strGe
 }
 XN_C_API XnBool xnIsGestureProgressSupported(XnNodeHandle hInstance, const XnChar* strGesture)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, FALSE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GESTURE, FALSE);
 	XN_VALIDATE_INPUT_PTR(strGesture);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4090,7 +4234,7 @@ static void XN_CALLBACK_TYPE xnGestureProgressCallback(const XnChar* strGesture,
 
 XN_C_API XnStatus xnRegisterGestureCallbacks(XnNodeHandle hInstance, XnGestureRecognized RecognizedCB, XnGestureProgress ProgressCB, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4115,7 +4259,7 @@ XN_C_API XnStatus xnRegisterGestureCallbacks(XnNodeHandle hInstance, XnGestureRe
 }
 XN_C_API void xnUnregisterGestureCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GESTURE, );
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	GestureCookie* pRegCookie = (GestureCookie*)hCallback;
@@ -4124,7 +4268,7 @@ XN_C_API void xnUnregisterGestureCallbacks(XnNodeHandle hInstance, XnCallbackHan
 }
 XN_C_API XnStatus xnRegisterToGestureChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4132,7 +4276,7 @@ XN_C_API XnStatus xnRegisterToGestureChange(XnNodeHandle hInstance, XnStateChang
 }
 XN_C_API void xnUnregisterFromGestureChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_GESTURE_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GESTURE, );
 	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	xnUnregisterFromModuleStateChange(pInterface->Gesture.UnregisterFromGestureChange, hModuleNode, hCallback);
@@ -4152,14 +4296,14 @@ XN_C_API XnStatus xnCreateSceneAnalyzer(
 
 XN_C_API const XnLabel* xnGetLabelMap(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_SCENE_ANALYZER, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_SCENE, NULL);
 	XnSceneAnalyzerInterfaceContainer* pInterface = (XnSceneAnalyzerInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Scene.GetLabelMap(hModuleNode);
 }
 XN_C_API XnStatus xnGetFloor(XnNodeHandle hInstance, XnPlane3D* pPlane)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_SCENE_ANALYZER, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_SCENE);
 	XN_VALIDATE_OUTPUT_PTR(pPlane);
 	XnSceneAnalyzerInterfaceContainer* pInterface = (XnSceneAnalyzerInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4186,14 +4330,14 @@ XN_C_API XnStatus xnCreateUserGenerator(
 
 XN_C_API XnUInt16 xnGetNumberOfUsers(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, 0);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->User.GetNumberOfUsers(hModuleNode);
 }
 XN_C_API XnStatus xnGetUsers(XnNodeHandle hInstance, XnUserID* pUsers, XnUInt16* pnUsers)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pnUsers);
 	XN_VALIDATE_OUTPUT_PTR(pUsers);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4202,7 +4346,7 @@ XN_C_API XnStatus xnGetUsers(XnNodeHandle hInstance, XnUserID* pUsers, XnUInt16*
 }
 XN_C_API XnStatus xnGetUserCoM(XnNodeHandle hInstance, XnUserID user, XnPoint3D* pCoM)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pCoM);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4210,7 +4354,7 @@ XN_C_API XnStatus xnGetUserCoM(XnNodeHandle hInstance, XnUserID user, XnPoint3D*
 }
 XN_C_API XnStatus xnGetUserPixels(XnNodeHandle hInstance, XnUserID user, XnSceneMetaData* pScene)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pScene);
 	XnUserGeneratorInterfaceContainer* pInteface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4246,7 +4390,7 @@ static void XN_CALLBACK_TYPE xnLostUserCallback(XnUserID user, void* pCookie)
 
 XN_C_API XnStatus xnRegisterUserCallbacks(XnNodeHandle hInstance, XnUserHandler NewUserCB, XnUserHandler LostUserCB, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4272,7 +4416,7 @@ XN_C_API XnStatus xnRegisterUserCallbacks(XnNodeHandle hInstance, XnUserHandler 
 
 XN_C_API void xnUnregisterUserCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	UserCookie* pUserCookie = (UserCookie*)hCallback;
@@ -4329,7 +4473,7 @@ static void XN_CALLBACK_TYPE xnHandDestroyCB(XnUserID user, XnFloat fTime, void*
 
 XN_C_API XnStatus xnRegisterHandCallbacks(XnNodeHandle hInstance, XnHandCreate CreateCB, XnHandUpdate UpdateCB, XnHandDestroy DestroyCB, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_HANDS_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_HANDS);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4355,7 +4499,7 @@ XN_C_API XnStatus xnRegisterHandCallbacks(XnNodeHandle hInstance, XnHandCreate C
 }
 XN_C_API void xnUnregisterHandCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_HANDS_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_HANDS, );
 	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	HandCookie* pHandCookie = (HandCookie*)hCallback;
@@ -4365,7 +4509,7 @@ XN_C_API void xnUnregisterHandCallbacks(XnNodeHandle hInstance, XnCallbackHandle
 
 XN_C_API XnStatus xnStopTracking(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_HANDS_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_HANDS);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4373,7 +4517,7 @@ XN_C_API XnStatus xnStopTracking(XnNodeHandle hInstance, XnUserID user)
 }
 XN_C_API XnStatus xnStopTrackingAll(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_HANDS_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_HANDS);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4381,7 +4525,7 @@ XN_C_API XnStatus xnStopTrackingAll(XnNodeHandle hInstance)
 }
 XN_C_API XnStatus xnStartTracking(XnNodeHandle hInstance, const XnPoint3D* pPosition)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_HANDS_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_HANDS);
 	XN_VALIDATE_INPUT_PTR(pPosition);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4391,7 +4535,7 @@ XN_C_API XnStatus xnStartTracking(XnNodeHandle hInstance, const XnPoint3D* pPosi
 
 XN_C_API XnStatus xnSetTrackingSmoothing(XnNodeHandle hInstance, XnFloat fSmoothingFactor)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_HANDS_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_HANDS);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4404,57 +4548,57 @@ XN_C_API XnStatus xnSetTrackingSmoothing(XnNodeHandle hInstance, XnFloat fSmooth
 
 XN_C_API XnBool xnIsJointAvailable(XnNodeHandle hInstance, XnSkeletonJoint eJoint)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsJointAvailable, 0);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsJointAvailable, FALSE);
 	return pInterface->Skeleton.IsJointAvailable(hModuleNode, eJoint);
 }
 XN_C_API XnBool xnIsProfileAvailable(XnNodeHandle hInstance, XnSkeletonProfile eProfile)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsProfileAvailable, 0);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsProfileAvailable, FALSE);
 	return pInterface->Skeleton.IsProfileAvailable(hModuleNode, eProfile);
 }
 XN_C_API XnStatus xnSetSkeletonProfile(XnNodeHandle hInstance, XnSkeletonProfile eProfile)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.SetSkeletonProfile, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.SetSkeletonProfile);
 	return pInterface->Skeleton.SetSkeletonProfile(hModuleNode, eProfile);
 }
 XN_C_API XnStatus xnSetJointActive(XnNodeHandle hInstance, XnSkeletonJoint eJoint, XnBool bState)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.SetJointActive, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.SetJointActive);
 	return pInterface->Skeleton.SetJointActive(hModuleNode, eJoint, bState);
 }
 XN_C_API XnBool xnIsJointActive(XnNodeHandle hInstance, XnSkeletonJoint eJoint)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsJointActive, 0);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsJointActive, FALSE);
 	return pInterface->Skeleton.IsJointActive(hModuleNode, eJoint);
 }
 XN_C_API XnStatus xnRegisterToJointConfigurationChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.RegisterToJointConfigurationChange, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.RegisterToJointConfigurationChange);
 	return xnRegisterToModuleStateChange(pInterface->Skeleton.RegisterToJointConfigurationChange, hModuleNode, hInstance, handler, pCookie, phCallback);
 }
 XN_C_API void xnUnregisterFromJointConfigurationChange(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.UnregisterFromJointConfigurationChange, );
@@ -4462,111 +4606,127 @@ XN_C_API void xnUnregisterFromJointConfigurationChange(XnNodeHandle hInstance, X
 }
 XN_C_API XnStatus xnEnumerateActiveJoints(XnNodeHandle hInstance, XnSkeletonJoint* pJoints, XnUInt16* pnJoints)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pJoints);
 	XN_VALIDATE_OUTPUT_PTR(pnJoints);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.EnumerateActiveJoints, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.EnumerateActiveJoints);
 	return pInterface->Skeleton.EnumerateActiveJoints(hModuleNode, pJoints, pnJoints);
 }
 
 XN_C_API XnStatus xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointTransformation* pJoint)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pJoint);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.GetSkeletonJoint, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.GetSkeletonJoint);
 	return pInterface->Skeleton.GetSkeletonJoint(hModuleNode, user, eJoint, pJoint);
 }
 XN_C_API XnStatus xnGetSkeletonJointPosition(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointPosition* pJoint)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pJoint);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.GetSkeletonJointPosition, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.GetSkeletonJointPosition);
 	return pInterface->Skeleton.GetSkeletonJointPosition(hModuleNode, user, eJoint, pJoint);
 }
 XN_C_API XnStatus xnGetSkeletonJointOrientation(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointOrientation* pJoint)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pJoint);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.GetSkeletonJointOrientation, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.GetSkeletonJointOrientation);
 	return pInterface->Skeleton.GetSkeletonJointOrientation(hModuleNode, user, eJoint, pJoint);
 }
 XN_C_API XnBool xnIsSkeletonTracking(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsTracking, 0);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsTracking, FALSE);
 	return pInterface->Skeleton.IsTracking(hModuleNode, user);
 }
 XN_C_API XnBool xnIsSkeletonCalibrated(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsCalibrated, 0);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsCalibrated, FALSE);
 	return pInterface->Skeleton.IsCalibrated(hModuleNode, user);
 }
 XN_C_API XnBool xnIsSkeletonCalibrating(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsCalibrating, 0);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsCalibrating, FALSE);
 	return pInterface->Skeleton.IsCalibrating(hModuleNode, user);
 }
 XN_C_API XnStatus xnRequestSkeletonCalibration(XnNodeHandle hInstance, XnUserID user, XnBool bForce)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.RequestCalibration, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.RequestCalibration);
 	return pInterface->Skeleton.RequestCalibration(hModuleNode, user, bForce);
 }
 
 XN_C_API XnStatus xnAbortSkeletonCalibration(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.AbortCalibration, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.AbortCalibration);
 	return pInterface->Skeleton.AbortCalibration(hModuleNode, user);
 }
 
-XN_C_API XnStatus xnSaveSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot)
+XN_C_API XnStatus xnSaveSkeletonCalibrationDataToFile(XnNodeHandle hInstance, XnUserID user, const XnChar* strFileName)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.SaveCalibrationData, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.SaveCalibrationDataToFile);
+	return pInterface->Skeleton.SaveCalibrationDataToFile(hModuleNode, user, strFileName);
+}
+XN_C_API XnStatus xnLoadSkeletonCalibrationDataFromFile(XnNodeHandle hInstance, XnUserID user, const XnChar* strFileName)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.LoadCalibrationDataFromFile);
+	return pInterface->Skeleton.LoadCalibrationDataFromFile(hModuleNode, user, strFileName);
+}
+XN_C_API XnStatus xnSaveSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.SaveCalibrationData);
 	return pInterface->Skeleton.SaveCalibrationData(hModuleNode, user, nSlot);
 }
 XN_C_API XnStatus xnLoadSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.LoadCalibrationData, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.LoadCalibrationData);
 	return pInterface->Skeleton.LoadCalibrationData(hModuleNode, user, nSlot);
 }
 XN_C_API XnStatus xnClearSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.ClearCalibrationData, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.ClearCalibrationData);
 	return pInterface->Skeleton.ClearCalibrationData(hModuleNode, nSlot);
 }
 XN_C_API XnBool xnIsSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, FALSE);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.IsCalibrationData, FALSE);
@@ -4575,51 +4735,51 @@ XN_C_API XnBool xnIsSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSl
 
 XN_C_API XnStatus xnStartSkeletonTracking(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.StartTracking, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.StartTracking);
 	return pInterface->Skeleton.StartTracking(hModuleNode, user);
 }
 XN_C_API XnStatus xnStopSkeletonTracking(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.StopTracking, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.StopTracking);
 	return pInterface->Skeleton.StopTracking(hModuleNode, user);
 }
 XN_C_API XnStatus xnResetSkeleton(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.Reset, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.Reset);
 	return pInterface->Skeleton.Reset(hModuleNode, user);
 }
 XN_C_API XnBool xnNeedPoseForSkeletonCalibration(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.NeedPoseForCalibration, 0);
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.NeedPoseForCalibration, FALSE);
 	return pInterface->Skeleton.NeedPoseForCalibration(hModuleNode);
 }
 XN_C_API XnStatus xnGetSkeletonCalibrationPose(XnNodeHandle hInstance, XnChar* strPose)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(strPose);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.GetCalibrationPose, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.GetCalibrationPose);
 	return pInterface->Skeleton.GetCalibrationPose(hModuleNode, strPose);
 }
 XN_C_API XnStatus xnSetSkeletonSmoothing(XnNodeHandle hInstance, XnFloat fSmoothingFactor)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.SetSmoothing, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.SetSmoothing);
 	return pInterface->Skeleton.SetSmoothing(hModuleNode, fSmoothingFactor);
 }
 
@@ -4652,7 +4812,7 @@ static void XN_CALLBACK_TYPE xnCalibrationEndCallback(XnUserID user, XnBool bSuc
 
 XN_C_API XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, XnCalibrationStart CalibrationStartCB, XnCalibrationEnd CalibrationEndCB, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4679,7 +4839,7 @@ XN_C_API XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, XnCalib
 
 XN_C_API void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.UnregisterCalibrationCallbacks, );
@@ -4694,7 +4854,7 @@ XN_C_API void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbac
 //---------------------------------------------------------------------------
 XN_C_API XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, 0);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->PoseDetection.GetNumberOfPoses, 0);
@@ -4702,7 +4862,7 @@ XN_C_API XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance)
 }
 XN_C_API XnStatus xnGetAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32* pnPoses)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pstrPoses);
 	XN_VALIDATE_OUTPUT_PTR(pnPoses);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4712,7 +4872,7 @@ XN_C_API XnStatus xnGetAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses
 }
 XN_C_API XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(pstrPoses);
 	XN_VALIDATE_OUTPUT_PTR(pnPoses);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4722,7 +4882,7 @@ XN_C_API XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPo
 }
 XN_C_API XnStatus xnStartPoseDetection(XnNodeHandle hInstance, const XnChar* strPose, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_INPUT_PTR(strPose);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4731,7 +4891,7 @@ XN_C_API XnStatus xnStartPoseDetection(XnNodeHandle hInstance, const XnChar* str
 }
 XN_C_API XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.StopPoseDetection);
@@ -4767,7 +4927,7 @@ static void XN_CALLBACK_TYPE xnPoseDetectionEndCallback(const XnChar* strPose, X
 
 XN_C_API XnStatus xnRegisterToPoseCallbacks(XnNodeHandle hInstance, XnPoseDetectionCallback PoseDetectionStartCB, XnPoseDetectionCallback PoseDetectionEndCB, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4794,7 +4954,7 @@ XN_C_API XnStatus xnRegisterToPoseCallbacks(XnNodeHandle hInstance, XnPoseDetect
 
 XN_C_API void xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_USER_GENERATOR, );
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR_RET(pInterface->PoseDetection.UnregisterFromPoseCallbacks, );
@@ -4819,28 +4979,28 @@ XN_C_API XnStatus xnCreateAudioGenerator(
 
 XN_C_API XnUChar* xnGetAudioBuffer(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_AUDIO_GENERATOR, NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_AUDIO, NULL);
 	XnAudioGeneratorInterfaceContainer* pInterface = (XnAudioGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Audio.GetAudioBuffer(hModuleNode);
 }
 XN_C_API XnUInt32 xnGetSupportedWaveOutputModesCount(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_AUDIO_GENERATOR, 0);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_AUDIO, 0);
 	XnAudioGeneratorInterfaceContainer* pInterface = (XnAudioGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Audio.GetSupportedWaveOutputModesCount(hModuleNode);
 }
 XN_C_API XnStatus xnGetSupportedWaveOutputModes(XnNodeHandle hInstance, XnWaveOutputMode* aSupportedModes, XnUInt32* pnCount)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_AUDIO_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_AUDIO);
 	XnAudioGeneratorInterfaceContainer* pInterface = (XnAudioGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Audio.GetSupportedWaveOutputModes(hModuleNode, aSupportedModes, pnCount);
 }
 XN_C_API XnStatus xnSetWaveOutputMode(XnNodeHandle hInstance, const XnWaveOutputMode* pOutputMode)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_AUDIO_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_AUDIO);
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnAudioGeneratorInterfaceContainer* pInterface = (XnAudioGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4848,14 +5008,14 @@ XN_C_API XnStatus xnSetWaveOutputMode(XnNodeHandle hInstance, const XnWaveOutput
 }
 XN_C_API XnStatus xnGetWaveOutputMode(XnNodeHandle hInstance, XnWaveOutputMode* pOutputMode)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_AUDIO_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_AUDIO);
 	XnAudioGeneratorInterfaceContainer* pInterface = (XnAudioGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Audio.GetWaveOutputMode(hModuleNode, pOutputMode);
 }
 XN_C_API XnStatus xnRegisterToWaveOutputModeChanges(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_AUDIO_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_AUDIO);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnAudioGeneratorInterfaceContainer* pInterface = (XnAudioGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
@@ -4863,7 +5023,7 @@ XN_C_API XnStatus xnRegisterToWaveOutputModeChanges(XnNodeHandle hInstance, XnSt
 }
 XN_C_API void xnUnregisterFromWaveOutputModeChanges(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_HIERARCHY_TYPE_AUDIO_GENERATOR,);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_AUDIO,);
 	XnAudioGeneratorInterfaceContainer* pInterface = (XnAudioGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	xnUnregisterFromModuleStateChange(pInterface->Audio.UnregisterFromWaveOutputModeChanges, hModuleNode, hCallback);
@@ -4949,7 +5109,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 
 XN_C_API XnCodecID xnGetCodecID(XnNodeHandle hCodec)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hCodec, XN_HIERARCHY_TYPE_CODEC, XN_CODEC_NULL);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hCodec, XN_NODE_TYPE_CODEC, XN_CODEC_NULL);
 	XnCodecInterfaceContainer* pInterface = (XnCodecInterfaceContainer*)hCodec->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hCodec->pModuleInstance->hNode;
 	return pInterface->Codec.GetCodecID(hModuleNode);
@@ -4957,7 +5117,7 @@ XN_C_API XnCodecID xnGetCodecID(XnNodeHandle hCodec)
 
 XnStatus xnInitCodec(XnNodeHandle hCodec, XnNodeHandle hInitializerNode)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hCodec, XN_HIERARCHY_TYPE_CODEC);
+	XN_VALIDATE_INTERFACE_TYPE(hCodec, XN_NODE_TYPE_CODEC);
 	XnCodecInterfaceContainer* pInterface = (XnCodecInterfaceContainer*)hCodec->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hCodec->pModuleInstance->hNode;
 	return pInterface->Codec.Init(hModuleNode, hInitializerNode);
@@ -4965,7 +5125,7 @@ XnStatus xnInitCodec(XnNodeHandle hCodec, XnNodeHandle hInitializerNode)
 
 XN_C_API XnStatus xnEncodeData(XnNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hCodec, XN_HIERARCHY_TYPE_CODEC);
+	XN_VALIDATE_INTERFACE_TYPE(hCodec, XN_NODE_TYPE_CODEC);
 	XnCodecInterfaceContainer* pInterface = (XnCodecInterfaceContainer*)hCodec->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hCodec->pModuleInstance->hNode;
 	return pInterface->Codec.CompressData(hModuleNode, pSrc, nSrcSize, pDst, nDstSize, pnBytesWritten);
@@ -4973,7 +5133,7 @@ XN_C_API XnStatus xnEncodeData(XnNodeHandle hCodec, const void* pSrc, XnUInt32 n
 
 XN_C_API XnStatus xnDecodeData(XnNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hCodec, XN_HIERARCHY_TYPE_CODEC);
+	XN_VALIDATE_INTERFACE_TYPE(hCodec, XN_NODE_TYPE_CODEC);
 	XnCodecInterfaceContainer* pInterface = (XnCodecInterfaceContainer*)hCodec->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hCodec->pModuleInstance->hNode;
 	return pInterface->Codec.DecompressData(hModuleNode, pSrc, nSrcSize, pDst, nDstSize, pnBytesWritten);
@@ -5026,25 +5186,30 @@ XnStatus xnMockSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTime
 
 XN_C_API XnStatus xnMockDepthSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnDepthPixel* pData)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_DEPTH_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_DEPTH);
 	return xnMockSetData(hInstance, nFrameID, nTimestamp, nDataSize, pData);
 }
 
 XN_C_API XnStatus xnMockImageSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnUInt8* pData)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_IMAGE_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_IMAGE);
 	return xnMockSetData(hInstance, nFrameID, nTimestamp, nDataSize, pData);
 }
 
 XN_C_API XnStatus xnMockIRSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnIRPixel* pData)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_IR_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_IR);
 	return xnMockSetData(hInstance, nFrameID, nTimestamp, nDataSize, pData);
 }
 
 XN_C_API XnStatus xnMockAudioSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnUInt8* pData)
 {
-	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_HIERARCHY_TYPE_AUDIO_GENERATOR);
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_AUDIO);
 	return xnMockSetData(hInstance, nFrameID, nTimestamp, nDataSize, pData);
 }
 
+XN_C_API XnStatus xnMockRawSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const void* pData)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
+	return xnMockSetData(hInstance, nFrameID, nTimestamp, nDataSize, pData);
+}

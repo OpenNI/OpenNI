@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_STATUS_CODES_H__
 #define __XN_STATUS_CODES_H__
 
@@ -70,6 +66,8 @@ XN_STATUS_MESSAGE(XN_STATUS_EOF, "End of file reached")
 XN_STATUS_MESSAGE(XN_STATUS_MULTIPLE_NODES_ERROR, "More than one node is in error state!")
 XN_STATUS_MESSAGE(XN_STATUS_DEVICE_NOT_CONNECTED, "The device is not connected!")
 XN_STATUS_MESSAGE(XN_STATUS_NO_LICENSE, "No license to use this module!")
+XN_STATUS_MESSAGE(XN_STATUS_NO_SUCH_PROPERTY, "There is no such property")
+XN_STATUS_MESSAGE(XN_STATUS_NODE_ALREADY_RECORDED, "This node is already recorded!")
 XN_STATUS_MESSAGE_MAP_END(XN_ERROR_GROUP_NI)
 
 #endif // __XN_STATUS_CODES_H__

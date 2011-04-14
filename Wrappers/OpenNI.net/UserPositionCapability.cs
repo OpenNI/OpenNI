@@ -2,38 +2,41 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class UserPositionCapability : Capability
 	{
-		public UserPositionCapability(ProductionNode node) :
+		internal UserPositionCapability(ProductionNode node) :
 			base(node)
 		{
 			this.userPositionChanged = new StateChangedEvent(node,
-				OpenNIImporter.xnRegisterToUserPositionChange,
-				OpenNIImporter.xnUnregisterFromUserPositionChange);
+				SafeNativeMethods.xnRegisterToUserPositionChange,
+				SafeNativeMethods.xnUnregisterFromUserPositionChange);
 		}
 
-		public uint GetSupportedPositionsCount()
+		public int SupportedPositionsCount
 		{
-			return OpenNIImporter.xnGetSupportedUserPositionsCount(this.InternalObject);
+			get
+			{
+				return (int)SafeNativeMethods.xnGetSupportedUserPositionsCount(this.InternalObject);
+			}
 		}
 
-		public void SetPosition(uint index, BoundingBox3D pos)
+		public void SetPosition(int index, BoundingBox3D pos)
 		{
-			UInt32 status = OpenNIImporter.xnSetUserPosition(this.InternalObject, index, ref pos);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnSetUserPosition(this.InternalObject, (uint)index, ref pos);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public BoundingBox3D GetPosition(uint index)
+		public BoundingBox3D GetPosition(int index)
 		{
 			BoundingBox3D pos = new BoundingBox3D();
-			UInt32 status = OpenNIImporter.xnGetUserPosition(this.InternalObject, index, ref pos);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnGetUserPosition(this.InternalObject, (uint)index, ref pos);
+			WrapperUtils.ThrowOnError(status);
 			return pos;
 		}
 
-		public event StateChangedHandler UserPositionChanged
+		public event EventHandler UserPositionChanged
 		{
 			add { this.userPositionChanged.Event += value; }
 			remove { this.userPositionChanged.Event -= value; }

@@ -1,31 +1,30 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #include "MockGenerator.h"
 #include <XnPropNames.h>
 
-MockGenerator::MockGenerator(const XnChar* strName) : 
+MockGenerator::MockGenerator(const XnChar* strName, XnBool bAggregateData /* = FALSE */) :
 	MockProductionNode(strName),
+	m_bAggregateData(bAggregateData),
 	m_bGenerating(FALSE),
 	m_bMirror(FALSE),
 	m_nCurrentDataIdx(0),
@@ -111,17 +110,29 @@ XnStatus MockGenerator::SetNextData(const void *pData, XnUInt32 nSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
-	nRetVal = ResizeBuffer(m_nNextDataIdx, nSize);
-	XN_IS_STATUS_OK(nRetVal);
-
 	DataInfo& nextData = m_data[m_nNextDataIdx];
-	xnOSMemCopy(nextData.pData, pData, nSize);
-	nextData.nDataSize = nSize;
 
-	m_bNewDataAvailable = TRUE;
-	nRetVal = m_newDataAvailableEvent.Raise();
+	if (!m_bAggregateData)
+	{
+		nextData.nDataSize = 0;
+	}
+
+	nRetVal = ResizeBuffer(m_nNextDataIdx, nextData.nDataSize + nSize);
 	XN_IS_STATUS_OK(nRetVal);
+
+	xnOSMemCopy((XnUChar*)nextData.pData + nextData.nDataSize, pData, nSize);
+	nextData.nDataSize += nSize;
+
+	nRetVal = SetNewDataAvailable();
+	XN_IS_STATUS_OK(nRetVal);
+
 	return XN_STATUS_OK;
+}
+
+XnStatus MockGenerator::SetNewDataAvailable()
+{
+	m_bNewDataAvailable = TRUE;
+	return m_newDataAvailableEvent.Raise();
 }
 
 XnStatus MockGenerator::StartGenerating()
@@ -177,9 +188,15 @@ XnStatus MockGenerator::UpdateData()
 		//Rotate current data and next data
 		m_nCurrentDataIdx = 1 - m_nCurrentDataIdx;
 		m_nNextDataIdx = 1 - m_nNextDataIdx;
+		m_data[m_nNextDataIdx].nDataSize = 0;
 		m_bNewDataAvailable = FALSE;
 	}
 	return XN_STATUS_OK;
+}
+
+const void* MockGenerator::GetData()
+{
+	return m_data[m_nCurrentDataIdx].pData;
 }
 
 XnUInt32 MockGenerator::GetDataSize()
@@ -254,11 +271,6 @@ void MockGenerator::UnregisterFromMirrorChange(XnCallbackHandle hCallback)
 	}
 }
 
-void* MockGenerator::GetCurrentData()
-{
-	return m_data[m_nCurrentDataIdx].pData;
-}
-
 void MockGenerator::SetGenerating(XnBool bGenerating)
 {
 	if (bGenerating != m_bGenerating)
@@ -286,6 +298,12 @@ XnStatus MockGenerator::OnStateReady()
 	return (XN_STATUS_OK);
 }
 
+
+XnUInt32 MockGenerator::GetRequiredBufferSize()
+{
+	return 0;
+}
+
 XnStatus MockGenerator::ResizeBuffer(XnUInt32 nIndex, XnUInt32 nNeededSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -301,3 +319,4 @@ XnStatus MockGenerator::ResizeBuffer(XnUInt32 nIndex, XnUInt32 nNeededSize)
 	
 	return (XN_STATUS_OK);
 }
+

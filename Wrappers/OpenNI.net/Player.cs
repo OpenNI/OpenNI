@@ -3,143 +3,170 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace xn
+namespace OpenNI
 {
 	public class Player : ProductionNode
 	{
-		internal Player(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal Player(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 			this.endOfFileReachedEvent = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToEndOfFileReached,
-				OpenNIImporter.xnUnregisterFromEndOfFileReached);
+				SafeNativeMethods.xnRegisterToEndOfFileReached,
+				SafeNativeMethods.xnUnregisterFromEndOfFileReached);
 		}
 
 		public Player(Context context, string formatName) :
-			this(Create(context, formatName), false)
+			this(context, Create(context, formatName), false)
 		{
 		}
 
 		public void SetRepeat(bool repeat)
 		{
-			UInt32 status = OpenNIImporter.xnSetPlayerRepeat(this.InternalObject, repeat);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnSetPlayerRepeat(this.InternalObject, repeat);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SetSource(RecordMedium medium, string source)
 		{
-			UInt32 status = OpenNIImporter.xnSetPlayerSource(this.InternalObject, medium, source);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnSetPlayerSource(this.InternalObject, medium, source);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public string GetSource(out RecordMedium medium)
+		public string SourceName
 		{
-			const int size = 512;
-			StringBuilder sb = new StringBuilder(size);
-			UInt32 status = OpenNIImporter.xnGetPlayerSource(this.InternalObject, out medium, sb, size);
-			WrapperUtils.CheckStatus(status);
-			return sb.ToString();
+			get
+			{
+				RecordMedium medium;
+				return GetSourceImpl(out medium);
+			}
+		}
+
+		public RecordMedium Medium
+		{
+			get
+			{
+				RecordMedium medium;
+				GetSourceImpl(out medium);
+				return medium;
+			}
 		}
 
 		public void ReadNext()
 		{
-			UInt32 status = OpenNIImporter.xnPlayerReadNext(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnPlayerReadNext(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SeekToTimestamp(Int64 timeOffset, PlayerSeekOrigin origin)
 		{
-			UInt32 status = OpenNIImporter.xnSeekPlayerToTimeStamp(this.InternalObject, timeOffset, origin);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnSeekPlayerToTimeStamp(this.InternalObject, timeOffset, origin);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SeekToFrame(string nodeName, Int32 frameOffset, PlayerSeekOrigin origin)
 		{
-			UInt32 status = OpenNIImporter.xnSeekPlayerToFrame(this.InternalObject, nodeName, frameOffset, origin);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnSeekPlayerToFrame(this.InternalObject, nodeName, frameOffset, origin);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SeekToFrame(ProductionNode node, Int32 frameOffset, PlayerSeekOrigin origin)
 		{
-			SeekToFrame(node.GetName(), frameOffset, origin);
+			SeekToFrame(node.Name, frameOffset, origin);
 		}
 
-		public UInt64 TellTimestamp()
+		public Int64 TellTimestamp()
 		{
 			UInt64 timestamp;
-			UInt32 status = OpenNIImporter.xnTellPlayerTimestamp(this.InternalObject, out timestamp);
-			WrapperUtils.CheckStatus(status);
-			return timestamp;
+			int status = SafeNativeMethods.xnTellPlayerTimestamp(this.InternalObject, out timestamp);
+			WrapperUtils.ThrowOnError(status);
+			return (Int64)timestamp;
 		}
 
-		public UInt32 TellFrame(string nodeName)
+		public Int32 TellFrame(string nodeName)
 		{
 			UInt32 frame;
-			UInt32 status = OpenNIImporter.xnTellPlayerFrame(this.InternalObject, nodeName, out frame);
-			WrapperUtils.CheckStatus(status);
-			return frame;
+			int status = SafeNativeMethods.xnTellPlayerFrame(this.InternalObject, nodeName, out frame);
+			WrapperUtils.ThrowOnError(status);
+			return (Int32)frame;
 		}
 
-		public UInt32 TellFrame(ProductionNode node)
+		public Int32 TellFrame(ProductionNode node)
 		{
-			return TellFrame(node.GetName());
+			return TellFrame(node.Name);
 		}
 
-		public UInt32 GetNumFrames(string nodeName)
+		public Int32 GetNumFrames(string nodeName)
 		{
 			UInt32 frames;
-			UInt32 status = OpenNIImporter.xnGetPlayerNumFrames(this.InternalObject, nodeName, out frames);
-			WrapperUtils.CheckStatus(status);
-			return frames;
+			int status = SafeNativeMethods.xnGetPlayerNumFrames(this.InternalObject, nodeName, out frames);
+			WrapperUtils.ThrowOnError(status);
+			return (Int32)frames;
 		}
 
-		public UInt32 GetNumFrames(ProductionNode node)
+		public Int32 GetNumFrames(ProductionNode node)
 		{
-			return GetNumFrames(node.GetName());
+			return GetNumFrames(node.Name);
 		}
 
-		public string GetSupportedFormat()
+		public string SupportedFormat
 		{
-			return OpenNIImporter.xnGetPlayerSupportedFormat(this.InternalObject);
+			get
+			{
+				return Marshal.PtrToStringAnsi(SafeNativeMethods.xnGetPlayerSupportedFormat(this.InternalObject));
+			}
 		}
 
 		public NodeInfoList EnumerateNodes()
 		{
 			IntPtr pList;
-			UInt32 status = OpenNIImporter.xnEnumeratePlayerNodes(this.InternalObject, out pList);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnEnumeratePlayerNodes(this.InternalObject, out pList);
+			WrapperUtils.ThrowOnError(status);
 
 			return new NodeInfoList(pList);
 		}
 
-		public bool IsEOF()
+		public bool IsEOF
 		{
-			return OpenNIImporter.xnIsPlayerAtEOF(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnIsPlayerAtEOF(this.InternalObject);
+			}
 		}
 
-		public event StateChangedHandler EndOfFileReached
+		public event EventHandler EndOfFileReached
 		{
 			add { this.endOfFileReachedEvent.Event += value; }
 			remove { this.endOfFileReachedEvent.Event -= value; }
 		}
 
-		public void SetPlaybackSpeed(double dSpeed)
+		public double PlaybackSpeed
 		{
-			UInt32 status = OpenNIImporter.xnSetPlaybackSpeed(this.InternalObject, dSpeed);
-			WrapperUtils.CheckStatus(status);
-		}
-
-		public double GetPlaybackSpeed()
-		{
-			return OpenNIImporter.xnGetPlaybackSpeed(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetPlaybackSpeed(this.InternalObject);
+			}
+			set
+			{
+				int status = SafeNativeMethods.xnSetPlaybackSpeed(this.InternalObject, value);
+				WrapperUtils.ThrowOnError(status);
+			}
 		}
 
 		private static IntPtr Create(Context context, string formatName)
 		{
 			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnCreatePlayer(context.InternalObject, formatName, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnCreatePlayer(context.InternalObject, formatName, out nodeHandle);
+			WrapperUtils.ThrowOnError(status);
 			return nodeHandle;
+		}
+
+		private string GetSourceImpl(out RecordMedium medium)
+		{
+			const int size = 512;
+			StringBuilder sb = new StringBuilder(size);
+			int status = SafeNativeMethods.xnGetPlayerSource(this.InternalObject, out medium, sb, size);
+			WrapperUtils.ThrowOnError(status);
+			return sb.ToString();
 		}
 
 		private StateChangedEvent endOfFileReachedEvent;

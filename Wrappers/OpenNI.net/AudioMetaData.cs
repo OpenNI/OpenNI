@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class AudioMetaData : OutputMetaData
 	{
@@ -12,20 +12,20 @@ namespace xn
 
 		public byte NumberOfChannels
 		{
-			get { return this.audio.Wave.nChannels; }
-			set { this.audio.Wave.nChannels = value; }
+			get { return this.audio.Wave.Channels; }
+			set { this.audio.Wave.Channels = value; }
 		}
 
-		public UInt32 SampleRate
+		public int SampleRate
 		{
-			get { return this.audio.Wave.nSampleRate; }
-			set { this.audio.Wave.nSampleRate = value; }
+			get { return this.audio.Wave.SampleRate; }
+			set { this.audio.Wave.SampleRate = value; }
 		}
 
-		public UInt16 BitsPerSample
+		public int BitsPerSample
 		{
-			get { return this.audio.Wave.nBitsPerSample; }
-			set { this.audio.Wave.nBitsPerSample = value; }
+			get { return this.audio.Wave.BitsPerSample; }
+			set { this.audio.Wave.BitsPerSample = (ushort)value; }
 		}
 
 		public IntPtr AudioBufferPtr
@@ -38,9 +38,9 @@ namespace xn
 			return new AudioMetaDataMarshaler(this, passOut);
 		}
 
-		private OpenNIImporter.XnAudioMetaData audio = new OpenNIImporter.XnAudioMetaData();
+		private SafeNativeMethods.XnAudioMetaData audio = new SafeNativeMethods.XnAudioMetaData();
 
-		private class AudioMetaDataMarshaler : Marshaler<OpenNIImporter.XnAudioMetaData>
+		private class AudioMetaDataMarshaler : Marshaler<SafeNativeMethods.XnAudioMetaData>
 		{
 			public AudioMetaDataMarshaler(AudioMetaData obj, bool marshalOut) :
 				base(obj.audio, marshalOut,

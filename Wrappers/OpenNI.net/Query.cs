@@ -2,10 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class Query : ObjectWrapper
 	{
+		Query() : 
+			this(Create())
+		{
+		}
+
 		internal Query(IntPtr pQuery) :
 			base(pQuery)
 		{
@@ -23,73 +28,81 @@ namespace xn
 
 		public void SetVendor(string vendorName)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetVendor(this.InternalObject, vendorName);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQuerySetVendor(this.InternalObject, vendorName);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SetName(string name)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetName(this.InternalObject, name);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQuerySetName(this.InternalObject, name);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SetMinVersion(Version min)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetMinVersion(this.InternalObject, ref min);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQuerySetMinVersion(this.InternalObject, ref min);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SetMaxVersion(Version max)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetMaxVersion(this.InternalObject, ref max);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQuerySetMaxVersion(this.InternalObject, ref max);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void AddSupportedCapability(string capName)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQueryAddSupportedCapability(this.InternalObject, capName);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQueryAddSupportedCapability(this.InternalObject, capName);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void AddSupportedMapOutputMode(MapOutputMode mode)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQueryAddSupportedMapOutputMode(this.InternalObject, ref mode);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQueryAddSupportedMapOutputMode(this.InternalObject, ref mode);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public void SetSupportedMinUserPositions(uint count)
+		public void SetSupportedMinUserPositions(Int32 count)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetSupportedMinUserPositions(this.InternalObject, count);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQuerySetSupportedMinUserPositions(this.InternalObject, (UInt32)count);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SetExistingNodeOnly(bool existing)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetExistingNodeOnly(this.InternalObject, existing);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQuerySetExistingNodeOnly(this.InternalObject, existing);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void AddNeededNode(string nodeName)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQueryAddNeededNode(this.InternalObject, nodeName);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQueryAddNeededNode(this.InternalObject, nodeName);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void SetCreationInfo(string creationInfo)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQuerySetCreationInfo(this.InternalObject, creationInfo);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQuerySetCreationInfo(this.InternalObject, creationInfo);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void FilterList(Context context, NodeInfoList list)
 		{
-			UInt32 status = OpenNIImporter.xnNodeQueryFilterList(context.InternalObject, this.InternalObject, list.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeQueryFilterList(context.InternalObject, this.InternalObject, list.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		protected override void FreeObject(IntPtr ptr)
+		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{
-			OpenNIImporter.xnNodeQueryFree(ptr);
+			SafeNativeMethods.xnNodeQueryFree(ptr);
+		}
+
+		static private IntPtr Create()
+		{
+			IntPtr pQuery;
+			int status = SafeNativeMethods.xnNodeQueryAllocate(out pQuery);
+			WrapperUtils.ThrowOnError(status);
+			return pQuery;
 		}
 	}
 }

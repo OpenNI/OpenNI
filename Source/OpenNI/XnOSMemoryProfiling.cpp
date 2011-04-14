@@ -1,34 +1,31 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
 #define XN_OS_IMPL
 #include <XnOS.h>
 #include <XnOSCpp.h>
+#include <XnLog.h>
 
 //---------------------------------------------------------------------------
 // Types
@@ -36,6 +33,8 @@
 
 #define XN_MEM_PROF_MAX_FRAME_LEN 80
 #define XN_MEM_PROF_MAX_FRAMES 20
+#define XN_MASK_MEM_PROFILING	"MemoryProfiling"
+//#define XN_MEMORY_PROFILING_DUMP
 
 typedef XnChar XnFrame[XN_MEM_PROF_MAX_FRAME_LEN];
 
@@ -69,13 +68,37 @@ typedef struct
 //---------------------------------------------------------------------------
 static XnMemBlockDataLinkedList g_allocatedMemory = {NULL, NULL};
 static XN_CRITICAL_SECTION_HANDLE g_hCS;
+static XnDump m_dump;
 
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
+const XnChar* XnGetAllocTypeString(XnAllocationType nType)
+{
+	switch (nType)
+	{
+	case XN_ALLOCATION_MALLOC:
+		return "xnOSMalloc";
+	case XN_ALLOCATION_MALLOC_ALIGNED:
+		return "xnOSMallocAligned";
+	case XN_ALLOCATION_CALLOC:
+		return "xnOSCalloc";
+	case XN_ALLOCATION_CALLOC_ALIGNED:
+		return "xnOSCallocAligned";
+	case XN_ALLOCATION_NEW:
+		return "XN_NEW";
+	case XN_ALLOCATION_NEW_ARRAY:
+		return "XN_NEW_ARR";
+	default:
+		return "Unknown";
+	}
+}
+
 XN_C_API void* xnOSLogMemAlloc(void* pMemBlock, XnAllocationType nAllocType, XnUInt32 nBytes, const XnChar* csFunction, const XnChar* csFile, XnUInt32 nLine, const XnChar* csAdditional)
 {
 	static XnBool bFirstTime = TRUE;
+	static XnBool bReentrent = FALSE;
+
 	if (bFirstTime)
 	{
 		bFirstTime = FALSE;
@@ -83,7 +106,20 @@ XN_C_API void* xnOSLogMemAlloc(void* pMemBlock, XnAllocationType nAllocType, XnU
 		printf("**  WARNING: Memory Profiling is on!                      **\n");
 		printf("************************************************************\n");
 
+		m_dump = XN_DUMP_CLOSED;
+
+		bReentrent = TRUE;
 		xnOSCreateCriticalSection(&g_hCS);
+
+#ifdef XN_MEMORY_PROFILING_DUMP
+		xnDumpForceInit(&m_dump, "Entry,Address,AllocType,Bytes,Function,File,Line,AdditionalInfo\n", "MemProfiling.log");
+#endif
+		bReentrent = FALSE;
+	}
+
+	if (bReentrent)
+	{
+		return pMemBlock;
 	}
 
 	XnMemBlockDataNode* pNode;
@@ -96,6 +132,7 @@ XN_C_API void* xnOSLogMemAlloc(void* pMemBlock, XnAllocationType nAllocType, XnU
 	pNode->Data.nLine = nLine;
 	pNode->Data.csAdditional = csAdditional;
 	pNode->Data.nFrames = XN_MEM_PROF_MAX_FRAMES;
+	xnDumpWriteString(m_dump, "Alloc,0x%x,%s,%u,%s,%s,%u,%s\n", pMemBlock, XnGetAllocTypeString(nAllocType), nBytes, csFunction, csFile, nLine, csAdditional);
 
 	// try to get call stack (skip 2 frames - this one and the alloc func)
 	XnChar* pstrFrames[XN_MEM_PROF_MAX_FRAMES];
@@ -147,37 +184,21 @@ XN_C_API void xnOSLogMemFree(const void* pMemBlock)
 			if (g_allocatedMemory.pLast == pNode)
 				g_allocatedMemory.pLast = pPrev;
 
+			xnDumpWriteString(m_dump, "Free,0x%x\n", pMemBlock);
+
 			// deallocate memory
 			xnOSFree(pNode);
 
-			break;
+			return;
 		}
 
 		// move to next
 		pPrev = pNode;
 		pNode = pNode->pNext;
 	}
-}
 
-const XnChar* XnGetAllocTypeString(XnAllocationType nType)
-{
-	switch (nType)
-	{
-	case XN_ALLOCATION_MALLOC:
-		return "xnOSMalloc";
-	case XN_ALLOCATION_MALLOC_ALIGNED:
-		return "xnOSMallocAligned";
-	case XN_ALLOCATION_CALLOC:
-		return "xnOSCalloc";
-	case XN_ALLOCATION_CALLOC_ALIGNED:
-		return "xnOSCallocAligned";
-	case XN_ALLOCATION_NEW:
-		return "XN_NEW";
-	case XN_ALLOCATION_NEW_ARRAY:
-		return "XN_NEW_ARR";
-	default:
-		return "Unknown";
-	}
+	// if we got here then we're trying to free a non-allocated memory
+	XN_ASSERT(FALSE);
 }
 
 XN_C_API void xnOSWriteMemoryReport(const XnChar* csFileName)

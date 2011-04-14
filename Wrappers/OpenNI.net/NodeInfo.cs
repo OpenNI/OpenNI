@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class NodeInfo : ObjectWrapper
 	{
@@ -21,42 +21,56 @@ namespace xn
 			return new NodeInfo(pNodeInfo);
 		}
 
-		public void SetInstanceName(string strName)
+		public ProductionNodeDescription Description
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoSetInstanceName(this.InternalObject, strName);
-			WrapperUtils.CheckStatus(status);
+			get
+			{
+				return SafeNativeMethods.xnNodeInfoGetDescription(this.InternalObject);
+			}
 		}
 
-		public ProductionNodeDescription GetDescription()
+		public string InstanceName
 		{
-			return OpenNIImporter.xnNodeInfoGetDescription(this.InternalObject);
+			get
+			{
+				return Marshal.PtrToStringAnsi(SafeNativeMethods.xnNodeInfoGetInstanceName(this.InternalObject));
+			}
+			set
+			{
+				int status = SafeNativeMethods.xnNodeInfoSetInstanceName(this.InternalObject, value);
+				WrapperUtils.ThrowOnError(status);
+			}
 		}
 
-		public string GetInstanceName()
+		public string CreationInfo
 		{
-			return OpenNIImporter.xnNodeInfoGetInstanceName(this.InternalObject);
+			get
+			{
+				return Marshal.PtrToStringAnsi(SafeNativeMethods.xnNodeInfoGetCreationInfo(this.InternalObject));
+			}
 		}
 
-		public string GetCreationInfo()
+		public NodeInfoList NeededNodes
 		{
-			return OpenNIImporter.xnNodeInfoGetCreationInfo(this.InternalObject);
+			get
+			{
+				return new NodeInfoList(SafeNativeMethods.xnNodeInfoGetNeededNodes(this.InternalObject));
+			}
 		}
 
-		public NodeInfoList GetNeededNodes()
+		public ProductionNode Instance
 		{
-			return new NodeInfoList(OpenNIImporter.xnNodeInfoGetNeededNodes(this.InternalObject));
+			get
+			{
+				IntPtr handle = SafeNativeMethods.xnNodeInfoGetHandle(this.InternalObject);
+				if (handle == IntPtr.Zero)
+					return null;
+				else
+					return ProductionNode.FromNative(handle);
+			}
 		}
 
-		public ProductionNode GetInstance()
-		{
-			IntPtr handle = OpenNIImporter.xnNodeInfoGetHandle(this.InternalObject);
-			if (handle == IntPtr.Zero)
-				return null;
-			else
-				return ProductionNode.FromNative(handle);
-		}
-
-		protected override void FreeObject(IntPtr ptr)
+		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{
 			// no need to free anything
 		}

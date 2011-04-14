@@ -2,15 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
-	public delegate void ErrorStateChangedHandler(string currError);
+	public class ErrorStateEventArgs : EventArgs
+	{
+		public ErrorStateEventArgs(Int32 status)
+		{
+			if (status == 0)
+			{
+				this.currError = null;
+			}
+			else
+			{
+				this.currError = WrapperUtils.GetErrorMessage(status);
+			}
+		}
+		
+		public string CurrentError
+		{
+			get { return currError; }
+			set { currError = value; }
+		}
+
+		private string currError;
+	}
 
 	public class Context : ObjectWrapper
 	{
-		internal Context(IntPtr pContext) : 
+		private Context(IntPtr pContext) : 
 			base(pContext)
 		{
+			this.errorStateChangedHandler = this.ErrorStateChangedCallback;
+
+			lock (Context.staticLock)
+			{
+				if (Context.allContexts.ContainsKey(pContext))
+				{
+					throw new GeneralException("C# wrapper: creating a Context object wrapping an already wrapped object!");
+				}
+				Context.allContexts.Add(pContext, this);
+			}
 		}
 
 		public Context() :
@@ -30,32 +61,44 @@ namespace xn
 		/// <returns>A managed Context object</returns>
 		static public Context FromNative(IntPtr pContext)
 		{
-			return new Context(pContext);
+			lock (Context.staticLock)
+			{
+				if (Context.allContexts.ContainsKey(pContext))
+				{
+					return Context.allContexts[pContext];
+				}
+				else
+				{
+					return new Context(pContext);
+				}
+			}
 		}
 
-		static public ProductionNode CreateProductionNodeFromNative(IntPtr hNodeHandle)
+		static public ProductionNode CreateProductionNodeFromNative(IntPtr nodeHandle)
 		{
-			return CreateProductionNodeObject(hNodeHandle);
+			IntPtr pContext = SafeNativeMethods.xnGetContextFromNodeHandle(nodeHandle);
+			Context context = Context.FromNative(pContext);
+			return context.CreateProductionNodeObject(nodeHandle);
 		}
 
 		public void RunXmlScript(string xml)
 		{
 			EnumerationErrors errors = new EnumerationErrors();
-			UInt32 status = OpenNIImporter.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
+			int status = SafeNativeMethods.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
 		}
 
 		public void RunXmlScriptFromFile(string xmlFile)
 		{
 			EnumerationErrors errors = new EnumerationErrors();
-			UInt32 status = OpenNIImporter.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
+			int status = SafeNativeMethods.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
 		}
 
 		public void OpenFileRecording(string fileName)
 		{
-			UInt32 status = OpenNIImporter.xnContextOpenFileRecording(this.InternalObject, fileName);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnContextOpenFileRecording(this.InternalObject, fileName);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void Shutdown()
@@ -65,16 +108,16 @@ namespace xn
 
 		public void AddLicense(License license)
 		{
-			UInt32 status = OpenNIImporter.xnAddLicense(this.InternalObject, license);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnAddLicense(this.InternalObject, license);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public License[] EnumerateLicenses()
 		{
 			IntPtr pArray;
 			uint size;
-			UInt32 status = OpenNIImporter.xnEnumerateLicenses(this.InternalObject, out pArray, out size);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnEnumerateLicenses(this.InternalObject, out pArray, out size);
+			WrapperUtils.ThrowOnError(status);
 
 			License[] result = null;
 
@@ -91,7 +134,7 @@ namespace xn
 			}
 			finally
 			{
-				OpenNIImporter.xnFreeLicensesList(pArray);
+				SafeNativeMethods.xnFreeLicensesList(pArray);
 			}
 
 			return result;
@@ -103,7 +146,7 @@ namespace xn
 
 			using (EnumerationErrors errors = new EnumerationErrors())
 			{
-				UInt32 status = OpenNIImporter.xnEnumerateProductionTrees(this.InternalObject, type,
+				int status = SafeNativeMethods.xnEnumerateProductionTrees(this.InternalObject, type,
 					query == null ? IntPtr.Zero : query.InternalObject,
 					out resultList,
 					errors.InternalObject);
@@ -122,100 +165,105 @@ namespace xn
 		public ProductionNode CreateProductionTree(NodeInfo nodeInfo)
 		{
 			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
-			return CreateProductionNodeObject(nodeHandle, nodeInfo.GetDescription().Type);
+			int status = SafeNativeMethods.xnCreateProductionTree(this.InternalObject, nodeInfo.InternalObject, out nodeHandle);
+			WrapperUtils.ThrowOnError(status);
+			return CreateProductionNodeObject(nodeHandle, nodeInfo.Description.Type);
 		}
 
 		public NodeInfoList EnumerateExistingNodes()
 		{
 			IntPtr pList;
-			UInt32 status = OpenNIImporter.xnEnumerateExistingNodes(this.InternalObject, out pList);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnEnumerateExistingNodes(this.InternalObject, out pList);
+			WrapperUtils.ThrowOnError(status);
 			return new NodeInfoList(pList);
 		}
 
 		public NodeInfoList EnumerateExistingNodes(NodeType type)
 		{
 			IntPtr pList;
-			UInt32 status = OpenNIImporter.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnEnumerateExistingNodesByType(this.InternalObject, type, out pList);
+			WrapperUtils.ThrowOnError(status);
 			return new NodeInfoList(pList);
 		}
 
 		public ProductionNode FindExistingNode(NodeType type)
 		{
 			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle);
+			WrapperUtils.ThrowOnError(status);
 			return CreateProductionNodeObject(nodeHandle, type);
 		}
 
 		public ProductionNode GetProductionNodeByName(string name)
 		{
 			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
+			WrapperUtils.ThrowOnError(status);
 			return CreateProductionNodeObject(nodeHandle);
 		}
 
 		public NodeInfo GetProductionNodeInfoByName(string name)
 		{
 			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
-			IntPtr nodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
+			int status = SafeNativeMethods.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
+			WrapperUtils.ThrowOnError(status);
+			IntPtr nodeInfo = SafeNativeMethods.xnGetNodeInfo(nodeHandle);
 			return new NodeInfo(nodeInfo);
 		}
 
 		public void StartGeneratingAll()
 		{
-			UInt32 status = OpenNIImporter.xnStartGeneratingAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnStartGeneratingAll(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void StopGeneratingAll()
 		{
-			UInt32 status = OpenNIImporter.xnStopGeneratingAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnStopGeneratingAll(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public void SetGlobalMirror(bool mirror)
+		public bool GlobalMirror
 		{
-			UInt32 status = OpenNIImporter.xnSetGlobalMirror(this.InternalObject, mirror);
-			WrapperUtils.CheckStatus(status);
-		}
-
-		public bool GetGlobalMirror()
-		{
-			return OpenNIImporter.xnGetGlobalMirror(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetGlobalMirror(this.InternalObject);
+			}
+			set
+			{
+				int status = SafeNativeMethods.xnSetGlobalMirror(this.InternalObject, value);
+				WrapperUtils.ThrowOnError(status);
+			}
 		}
 
 		/// <summary>
 		/// Gets the global error state.
 		/// </summary>
 		/// <returns>null if all is OK, a description of the error otherwise</returns>
-		public string GetGlobalErrorState()
+		public string GlobalErrorState
 		{
-			UInt32 state = OpenNIImporter.xnGetGlobalErrorState(this.InternalObject);
-			if (state == 0)
+			get
 			{
-				return null;
-			}
-			else
-			{
-				return WrapperUtils.GetErrorMessage(state);
+				int state = SafeNativeMethods.xnGetGlobalErrorState(this.InternalObject);
+				if (state == 0)
+				{
+					return null;
+				}
+				else
+				{
+					return WrapperUtils.GetErrorMessage(state);
+				}
 			}
 		}
 
-		public event ErrorStateChangedHandler ErrorStateChanged
+		public event EventHandler<ErrorStateEventArgs> ErrorStateChanged
 		{
 			add
 			{
 				if (this.errorStateChanged == null)
 				{
-					UInt32 status = OpenNIImporter.xnRegisterToGlobalErrorStateChange(this.InternalObject, ErrorStateChangedCallback, IntPtr.Zero, out this.errorStateCallbackHandle);
-					WrapperUtils.CheckStatus(status);
+					int status = SafeNativeMethods.xnRegisterToGlobalErrorStateChange(this.InternalObject, this.errorStateChangedHandler, IntPtr.Zero, out this.errorStateCallbackHandle);
+					WrapperUtils.ThrowOnError(status);
 				}
 
 				this.errorStateChanged += value;
@@ -226,33 +274,33 @@ namespace xn
 
 				if (this.errorStateChanged == null)
 				{
-					OpenNIImporter.xnUnregisterFromGlobalErrorStateChange(this.InternalObject, this.errorStateCallbackHandle);
+					SafeNativeMethods.xnUnregisterFromGlobalErrorStateChange(this.InternalObject, this.errorStateCallbackHandle);
 				}
 			}
 		}
 
 		public void WaitAndUpdateAll()
 		{
-			UInt32 status = OpenNIImporter.xnWaitAndUpdateAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnWaitAndUpdateAll(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void WaitAnyUpdateAll()
 		{
-			UInt32 status = OpenNIImporter.xnWaitAnyUpdateAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnWaitAnyUpdateAll(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void WaitOneUpdateAll(Generator node)
 		{
-			UInt32 status = OpenNIImporter.xnWaitOneUpdateAll(this.InternalObject, node.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnWaitOneUpdateAll(this.InternalObject, node.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void WaitNoneUpdateAll()
 		{
-			UInt32 status = OpenNIImporter.xnWaitNoneUpdateAll(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnWaitNoneUpdateAll(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		internal IntPtr CreateAnyProductionTreeImpl(NodeType type, Query query)
@@ -260,7 +308,7 @@ namespace xn
 			IntPtr nodeHandle;
 			using (EnumerationErrors errors = new EnumerationErrors())
 			{
-				UInt32 status = OpenNIImporter.xnCreateAnyProductionTree(this.InternalObject, type,
+				int status = SafeNativeMethods.xnCreateAnyProductionTree(this.InternalObject, type,
 					query == null ? IntPtr.Zero : query.InternalObject,
 					out nodeHandle, errors.InternalObject);
 				WrapperUtils.CheckEnumeration(status, errors);
@@ -269,16 +317,30 @@ namespace xn
 			return nodeHandle;
 		}
 
-		protected override void FreeObject(IntPtr ptr)
+		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{
-			OpenNIImporter.xnShutdown(ptr);
+			if (disposing)
+			{
+				foreach (ProductionNode node in this.allNodes.Values)
+				{
+					node.MarkAlreadyFreed();
+				}
+
+				// remove it from the list
+				lock (Context.allContexts)
+				{
+					Context.allContexts.Remove(ptr);
+				}
+			}
+
+			SafeNativeMethods.xnShutdown(ptr);
 		}
 
 		private static IntPtr Init()
 		{
 			IntPtr pContext;
-			UInt32 status = OpenNIImporter.xnInit(out pContext);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnInit(out pContext);
+			WrapperUtils.ThrowOnError(status);
 			return pContext;
 		}
 
@@ -286,71 +348,94 @@ namespace xn
 		{
 			IntPtr pContext;
 			EnumerationErrors errors = new EnumerationErrors();
-			UInt32 status = OpenNIImporter.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
+			int status = SafeNativeMethods.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
 			return pContext;
 		}
 
-		private static ProductionNode CreateProductionNodeObject(IntPtr nodeHandle, NodeType? type)
+		private ProductionNode CreateProductionNodeObject(IntPtr nodeHandle, NodeType? type)
 		{
-			if (type == null)
+			lock (this)
 			{
-				IntPtr pNodeInfo = OpenNIImporter.xnGetNodeInfo(nodeHandle);
-				type = OpenNIImporter.xnNodeInfoGetDescription(pNodeInfo).Type;
-			}
+				if (!this.allNodes.ContainsKey(nodeHandle))
+				{
+					if (type == null)
+					{
+						IntPtr pNodeInfo = SafeNativeMethods.xnGetNodeInfo(nodeHandle);
+						type = SafeNativeMethods.xnNodeInfoGetDescription(pNodeInfo).Type;
+					}
 
-			switch (type)
-			{
-				case NodeType.Audio:
-					return new AudioGenerator(nodeHandle, true);
-				case NodeType.Codec:
-					return new Codec(nodeHandle, true);
-				case NodeType.Depth:
-					return new DepthGenerator(nodeHandle, true);
-				case NodeType.Device:
-					return new Device(nodeHandle, true);
-				case NodeType.Gesture:
-					return new GestureGenerator(nodeHandle, true);
-				case NodeType.Hands:
-					return new HandsGenerator(nodeHandle, true);
-				case NodeType.Image:
-					return new ImageGenerator(nodeHandle, true);
-				case NodeType.IR:
-					return new IRGenerator(nodeHandle, true);
-				case NodeType.Player:
-					return new Player(nodeHandle, true);
-				case NodeType.Recorder:
-					return new Recorder(nodeHandle, true);
-				case NodeType.Scene:
-					return new SceneAnalyzer(nodeHandle, true);
-				case NodeType.User:
-					return new UserGenerator(nodeHandle, true);
-				default:
-					throw new NotImplementedException("C# wrapper: Unknown generator type!");
-			}
+					ProductionNode node;
+
+					switch (type)
+					{
+						case NodeType.Audio:
+							node = new AudioGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.Codec:
+							node = new Codec(this, nodeHandle, true);
+							break;
+						case NodeType.Depth:
+							node = new DepthGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.Device:
+							node = new Device(this, nodeHandle, true);
+							break;
+						case NodeType.Gesture:
+							node = new GestureGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.Hands:
+							node = new HandsGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.Image:
+							node = new ImageGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.IR:
+							node = new IRGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.Player:
+							node = new Player(this, nodeHandle, true);
+							break;
+						case NodeType.Recorder:
+							node = new Recorder(this, nodeHandle, true);
+							break;
+						case NodeType.Scene:
+							node = new SceneAnalyzer(this, nodeHandle, true);
+							break;
+						case NodeType.User:
+							node = new UserGenerator(this, nodeHandle, true);
+							break;
+						default:
+							throw new NotImplementedException("C# wrapper: Unknown generator type!");
+					}
+					this.allNodes[nodeHandle] = node;
+				}
+
+				return this.allNodes[nodeHandle];
+			} // lock
 		}
 
-		private static ProductionNode CreateProductionNodeObject(IntPtr nodeHandle)
+		private ProductionNode CreateProductionNodeObject(IntPtr nodeHandle)
 		{
 			return CreateProductionNodeObject(nodeHandle, null);
 		}
 
-		private void ErrorStateChangedCallback(UInt32 status, IntPtr cookie)
+		private void ErrorStateChangedCallback(Int32 status, IntPtr cookie)
 		{
-			if (this.errorStateChanged != null)
+			EventHandler<ErrorStateEventArgs> handlers = this.errorStateChanged;
+			if (handlers != null)
 			{
-				if (status == 0)
-				{
-					this.errorStateChanged(null);
-				}
-				else
-				{
-					this.errorStateChanged(WrapperUtils.GetErrorMessage(status));
-				}
+				ErrorStateEventArgs args = new ErrorStateEventArgs(status);
+				handlers(this, args);
 			}
 		}
 
 		private IntPtr errorStateCallbackHandle;
-		private event ErrorStateChangedHandler errorStateChanged;
+		private event EventHandler<ErrorStateEventArgs> errorStateChanged;
+		private SafeNativeMethods.XnErrorStateChangedHandler errorStateChangedHandler;
+		private Dictionary<IntPtr, ProductionNode> allNodes = new Dictionary<IntPtr, ProductionNode>();
+
+		private static object staticLock = new object();
+		private static Dictionary<IntPtr, Context> allContexts = new Dictionary<IntPtr, Context>();
 	}
 }

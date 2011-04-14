@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class Device : ProductionNode
 	{
-		internal Device(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal Device(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 		}
 
 		public Device(Context context, Query query) :
-			this(Create(context, query), false)
+			this(context, Create(context, query), false)
 		{
 		}
 

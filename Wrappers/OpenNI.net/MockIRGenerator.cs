@@ -2,42 +2,42 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class MockIRGenerator : IRGenerator
 	{
-		internal MockIRGenerator(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal MockIRGenerator(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 		}
 
 		public MockIRGenerator(Context context, string name) :
-			this(Create(context, name), false)
+			this(context, Create(context, name), false)
 		{
 		}
 
 		public MockIRGenerator(Context context) :
-			this(context, null)
+			this(context, (string)null)
 		{
 		}
 
-		public MockIRGenerator(IRGenerator basedOn, string name) :
-			this(CreateBasedOn(basedOn, name), false)
+		public MockIRGenerator(Context context, IRGenerator basedOn, string name) :
+			this(context, CreateBasedOn(basedOn, name), false)
 		{
 		}
 
-		public MockIRGenerator(IRGenerator basedOn) :
-			this(basedOn, null)
+		public MockIRGenerator(Context context, IRGenerator basedOn) :
+			this(context, basedOn, null)
 		{
 		}
 
-		public void SetData(UInt32 frameID, UInt64 timestamp, UInt32 dataSize, IntPtr buffer)
+		public void SetData(Int32 frameID, Int64 timestamp, Int32 dataSize, IntPtr buffer)
 		{
-			UInt32 status = OpenNIImporter.xnMockIRSetData(this.InternalObject, frameID, timestamp, dataSize, buffer);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnMockIRSetData(this.InternalObject, (UInt32)frameID, (UInt64)timestamp, (UInt32)dataSize, buffer);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public void SetData(IRMetaData irMD, UInt32 frameID, UInt64 timestamp)
+		public void SetData(IRMetaData irMD, Int32 frameID, Int64 timestamp)
 		{
 			SetData(frameID, timestamp, irMD.DataSize, irMD.IRMapPtr);
 		}
@@ -50,17 +50,17 @@ namespace xn
 		private static IntPtr Create(Context context, string name)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.IR, name, out handle);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnCreateMockNode(context.InternalObject, NodeType.IR, name, out handle);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 
 		private static IntPtr CreateBasedOn(IRGenerator basedOn, string name)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject, 
+			int status = SafeNativeMethods.xnCreateMockNodeBasedOn(basedOn.Context.InternalObject, 
 				basedOn.InternalObject, name, out handle);
-			WrapperUtils.CheckStatus(status);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 	}

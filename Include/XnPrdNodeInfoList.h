@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_PRD_NODE_INFO_LIST_H__
 #define __XN_PRD_NODE_INFO_LIST_H__
 
@@ -103,7 +99,7 @@ XN_C_API XnStatus xnNodeInfoListAllocate(XnNodeInfoList** ppList);
 XN_C_API void xnNodeInfoListFree(XnNodeInfoList* pList);
 
 /**
- * Creates and adds a single @ref XnNodeInfo object to the list.
+ * Creates and adds a single @ref XnNodeInfo object to the list. See also @ref xnNodeInfoListAddEx().
  *
  * @param	pList				[in]		The list.
  * @param	pDescription		[in]		The description of this production node.
@@ -111,6 +107,20 @@ XN_C_API void xnNodeInfoListFree(XnNodeInfoList* pList);
  * @param	pNeededNodes		[in]		Optional. A list of needed nodes.
  */
 XN_C_API XnStatus xnNodeInfoListAdd(XnNodeInfoList* pList, const XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnNodeInfoList* pNeededNodes);
+
+/**
+ * Creates and adds a single @ref XnNodeInfo object to the list, with additional data. This data can be later
+ * extracted using the @ref xnNodeInfoGetAdditionalData(). Before the node info object is freed, the pFreeHandler
+ * callback will be called, so it could free the additional data object.
+ *
+ * @param	pList				[in]		The list.
+ * @param	pDescription		[in]		The description of this production node.
+ * @param	strCreationInfo		[in]		Optional. Additional needed information for instantiation.
+ * @param	pNeededNodes		[in]		Optional. A list of needed nodes.
+ * @param	pAdditionalData		[in]		Additional data, which is specific to this node.
+ * @param	pFreeHandler		[in]		Optional. A callback function for freeing the additional data.
+ */
+XN_C_API XnStatus xnNodeInfoListAddEx(XnNodeInfoList* pList, const XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnNodeInfoList* pNeededNodes, const void* pAdditionalData, XnFreeHandler pFreeHandler);
 
 /**
  * Adds a single @ref XnNodeInfo object to the list.

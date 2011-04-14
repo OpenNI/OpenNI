@@ -2,46 +2,49 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class Codec : ProductionNode
 	{
-		internal Codec(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal Codec(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 		}
 
 		public Codec(Context context, CodecID codecID, ProductionNode initializer) :
-			this(Create(context, codecID, initializer), false)
+			this(context, Create(context, codecID, initializer), false)
 		{
 		}
 
-		public CodecID GetCodecID()
+		public CodecID CodecID
 		{
-			return new CodecID(OpenNIImporter.xnGetCodecID(this.InternalObject));
+			get
+			{
+				return new CodecID(SafeNativeMethods.xnGetCodecID(this.InternalObject));
+			}
 		}
 
-		public UInt32 EncodeData(IntPtr source, UInt32 sourceSize, IntPtr dest, UInt32 destSize)
+		public int EncodeData(IntPtr source, int sourceSize, IntPtr destination, int destinationSize)
 		{
 			UInt32 written;
-			UInt32 status = OpenNIImporter.xnEncodeData(this.InternalObject, source, sourceSize, dest, destSize, out written);
-			WrapperUtils.CheckStatus(status);
-			return written;
+			int status = SafeNativeMethods.xnEncodeData(this.InternalObject, source, (UInt32)sourceSize, destination, (UInt32)destinationSize, out written);
+			WrapperUtils.ThrowOnError(status);
+			return (int)written;
 		}
 
-		public UInt32 DecodeData(IntPtr source, UInt32 sourceSize, IntPtr dest, UInt32 destSize)
+		public int DecodeData(IntPtr source, int sourceSize, IntPtr destination, int destinationSize)
 		{
 			UInt32 written;
-			UInt32 status = OpenNIImporter.xnDecodeData(this.InternalObject, source, sourceSize, dest, destSize, out written);
-			WrapperUtils.CheckStatus(status);
-			return written;
+			int status = SafeNativeMethods.xnDecodeData(this.InternalObject, source, (UInt32)sourceSize, destination, (UInt32)destinationSize, out written);
+			WrapperUtils.ThrowOnError(status);
+			return (int)written;
 		}
 
 		private static IntPtr Create(Context context, CodecID codecID, ProductionNode initializer)
 		{
 			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnCreateCodec(context.InternalObject, codecID.InternalValue, initializer.InternalObject, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnCreateCodec(context.InternalObject, codecID.InternalValue, initializer.InternalObject, out nodeHandle);
+			WrapperUtils.ThrowOnError(status);
 			return nodeHandle;
 		}
 	}

@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -696,19 +692,8 @@ VOID SubRequestCompletionRoutine(IN WDFREQUEST Request, IN WDFIOTARGET Target, P
         PSDrv_DbgPrint(1, ("urb header status %X\n", urb->UrbHeader.Status));
     }
 
-/*
-    for(i = 0; i < urb->UrbIsochronousTransfer.NumberOfPackets; i++) {
-
-        PSDrv_DbgPrint(4, ("IsoPacket[%d].Length = %X IsoPacket[%d].Status = %X\n",
-                            i,
-                            urb->UrbIsochronousTransfer.IsoPacket[i].Length,
-                            i,
-                            urb->UrbIsochronousTransfer.IsoPacket[i].Status));
-    }
-*/
-
 	// If we transfered some data, check if need to "repack" the buffer... (if the requested length is different then the actual returned length).
-	if ((rwContext->TotalLength != rwContext->Numxfer) && (rwContext->Numxfer > 0))
+	if ((rwContext->TotalLength != rwContext->Numxfer) && (rwContext->Numxfer > 0) && (rwContext->Read == TRUE))
 	{
 		// Get a pointer to the data buffer
 		pDataBuffer = (PUCHAR)MmGetSystemAddressForMdlSafe(subReqContext->SubMdl,NormalPagePriority);
@@ -774,6 +759,17 @@ VOID SubRequestCompletionRoutine(IN WDFREQUEST Request, IN WDFIOTARGET Target, P
 	}
 	else
 	{
+#ifdef ISO_COMPLETE_EXTRA_DEBUG	
+		for(i = 0; i < urb->UrbIsochronousTransfer.NumberOfPackets; i++) {
+
+			PSDrv_DbgPrint(3, ("IsoPacket[%d].Length = %X IsoPacket[%d].Status = %X\n",
+								i,
+								urb->UrbIsochronousTransfer.IsoPacket[i].Length,
+								i,
+								urb->UrbIsochronousTransfer.IsoPacket[i].Status));
+		}	
+#endif	
+	
 		PSDrv_DbgPrint(3, ("No need to repack the data buffer...\n"));
 	}
 

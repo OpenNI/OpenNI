@@ -1,26 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_NODE_WATCHER_H__
 #define __XN_NODE_WATCHER_H__
 
@@ -49,6 +47,7 @@ public:
 	virtual void Unregister() {}
 	virtual XnStatus NotifyState();
 	virtual XnStatus Watch() { return XN_STATUS_OK; }
+	virtual XnUInt64 GetTimestamp() { return 0; }
 
 protected:
 	virtual XnStatus NotifyStateImpl();
@@ -80,10 +79,11 @@ public:
 	virtual XnStatus Register();
 	virtual void Unregister();
 	virtual XnStatus Watch();
+	virtual XnUInt64 GetTimestamp();
 
 protected:
 	virtual XnStatus NotifyStateImpl();
-	virtual const void* GetCurrentData() = 0;
+	virtual const void* GetCurrentData();
 
 private:
 	Generator m_generator;
@@ -134,9 +134,6 @@ public:
 	virtual void Unregister();
 	virtual XnStatus NotifyStateImpl();
 
-protected:
-	virtual const void* GetCurrentData();
-
 private:
 	XnStatus NotifySupportedPixelFormats();
 
@@ -151,8 +148,7 @@ public:
 	IRWatcher(const IRGenerator &irGenerator, 
 		XnNodeNotifications& notifications, 
 		void* pCookie);
-protected:
-	virtual const void* GetCurrentData();
+
 private:
 	IRGenerator m_irGenerator;
 };
@@ -167,9 +163,6 @@ public:
 	virtual XnStatus Register();
 	virtual void Unregister();
 	virtual XnStatus NotifyStateImpl();
-
-protected:
-	virtual const void* GetCurrentData();
 
 private:
 	XnStatus NotifyFieldOfView();
@@ -193,9 +186,6 @@ public:
 	virtual void Unregister();
 	virtual XnStatus NotifyStateImpl();
 
-protected:
-	virtual const void* GetCurrentData();
-
 private:
 	XnStatus NotifySupportedOutputModes();
 	XnStatus NotifyOutputMode();
@@ -216,9 +206,6 @@ public:
 	virtual XnStatus Register();
 	virtual void Unregister();
 	virtual XnStatus NotifyStateImpl();
-
-protected:
-	virtual const void* GetCurrentData();
 
 private:
 	static void XN_CALLBACK_TYPE HandleGestureRecognized(

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -7,3 +8,4 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("OpenNI.net")]
 [assembly: AssemblyDescription("OpenNI Managed API")]
+[assembly: CLSCompliant(true)]

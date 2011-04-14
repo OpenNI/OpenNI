@@ -1,26 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __MOCKGENERATOR_H__
 #define __MOCKGENERATOR_H__
 
@@ -35,7 +33,7 @@ class MockGenerator :
 	virtual public xn::ModuleMirrorInterface
 {
 public:
-	MockGenerator(const XnChar* strName);
+	MockGenerator(const XnChar* strName, XnBool bAggregateData = FALSE);
 	virtual ~MockGenerator();
 
 	/*ModuleProductionNode*/
@@ -53,10 +51,11 @@ public:
 	virtual void UnregisterFromNewDataAvailable(XnCallbackHandle hCallback);
 	virtual XnBool IsNewDataAvailable(XnUInt64& nTimestamp);
 	virtual XnStatus UpdateData();
+	virtual const void* GetData();
 	virtual XnUInt32 GetDataSize();
 	virtual XnUInt64 GetTimestamp();
 	virtual XnUInt32 GetFrameID();
-	virtual ModuleMirrorInterface* GetMirrorInterface();
+	virtual xn::ModuleMirrorInterface* GetMirrorInterface();
 	virtual xn::ModuleAlternativeViewPointInterface* GetAlternativeViewPointInterface();
 	virtual xn::ModuleFrameSyncInterface* GetFrameSyncInterface();
 
@@ -68,14 +67,17 @@ public:
 
 protected:
 	XnStatus OnStateReady();
-	void* GetCurrentData();
-	virtual XnUInt32 GetRequiredBufferSize() = 0;
 	XnStatus ResizeBuffer(XnUInt32 nIndex, XnUInt32 nNeededSize);
+	XnStatus SetNewDataAvailable();
+
+	virtual XnUInt32 GetRequiredBufferSize();
 
 private:
 	XnStatus SetNextData(const void *pData, XnUInt32 nSize);
+	XnStatus AppendToNextData(const void *pData, XnUInt32 nSize);
 	void SetGenerating(XnBool bGenerating);
 
+	XnBool m_bAggregateData;
 	PropChangeEvent m_generatingChangedEvent;
 	PropChangeEvent m_newDataAvailableEvent;
 	PropChangeEvent m_mirrorChangeEvent;

@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -167,3 +163,27 @@ XN_C_API XnStatus xnOSGetMonoTime(struct timespec* pTime)
 	return (XN_STATUS_OK);
 }
 
+XN_C_API XnStatus xnOSGetTimeout(struct timespec* pTime, XnUInt32 nMilliseconds)
+{
+	pTime->tv_sec = (nMilliseconds / 1000);
+	pTime->tv_nsec = ((nMilliseconds % 1000) * 1000000);
+
+	return XN_STATUS_OK;
+}
+
+XN_C_API XnStatus xnOSGetAbsTimeout(struct timespec* pTime, XnUInt32 nMilliseconds)
+{
+	XnStatus nRetVal = xnOSGetMonoTime(pTime);
+	XN_IS_STATUS_OK(nRetVal);
+	
+	pTime->tv_sec += (nMilliseconds / 1000);
+	pTime->tv_nsec += ((nMilliseconds % 1000) * 1000000);
+
+	if (pTime->tv_nsec >= 1000000000)
+	{
+		pTime->tv_nsec -= 1000000000;
+		pTime->tv_sec++;
+	}
+	
+	return XN_STATUS_OK;
+}

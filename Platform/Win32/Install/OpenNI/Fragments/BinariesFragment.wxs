@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <!-- This is how we include wxi files -->
+  <?include $(sys.CURRENTDIR)Includes\OpenNIVariables.wxi ?>
+  <Fragment>
+    <DirectoryRef Id="INSTALLLOCATION">
+      <Component Id="GPL" Guid="*">
+        <File Id="fil04BD68110BAAE6738D69A12AA064B5B9" KeyPath="yes" Source="$(var.OpenNIFilesDir)\GPL.txt" />
+      </Component>
+      <Component Id="LGPL" Guid="*">
+        <File Id="fil8EFDF8514913AD728CF1798610E899A6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\LGPL.txt" />
+      </Component>
+      <Directory Id="dir62F52A486FD7E5CC0678D32FDE0B6B51" Name="Data">
+        <Component Id="cmp14657BC5BBC8A9B152526BB875809D9D" Guid="33EF8427-C3AB-42ED-8D3B-701641EBD580" KeyPath="yes">
+          <CreateFolder />
+        </Component>
+      </Directory>
+      <Directory Id="dir6EFCBF7ED6CB01D780B79C4D86427BA8" Name="Bin$(var.PlatformSuffix)">
+        <Component Id="niLicense" Guid="*">
+          <File Id="filF374558A6F08B598A4FA106491D94FA6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\niLicense$(var.PlatformSuffix).exe" />
+        </Component>
+        <Component Id="nimCodecs" Guid="*">
+          <File Id="filF374558A6F08B598A4FA106492D94FA6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\nimCodecs$(var.PlatformSuffix).dll" />
+        </Component>
+        <Component Id="nimMockNodes" Guid="*">
+          <File Id="filF374558A6F08B598A4FA106493D94FA6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\nimMockNodes$(var.PlatformSuffix).dll" />
+        </Component>
+        <Component Id="nimRecorder" Guid="*">
+          <File Id="filF374558A6F08B598A4FA106494D94FA6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\nimRecorder$(var.PlatformSuffix).dll" />
+        </Component>
+        <Component Id="niReg" Guid="*">
+          <File Id="filF374558A6F08B598A4FA106495D94FA6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\niReg$(var.PlatformSuffix).exe" />
+        </Component>
+        <Component Id="OpenNI" Guid="*">
+          <File Id="filF374558A6F08B598A4FA106496D94FA6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\OpenNI$(var.PlatformSuffix).dll" />
+        </Component>        
+      </Directory>
+      <Directory Id="dir80E123015D0DE85FDA6E8AE3782EF58C" Name="Driver">
+        <Component Id="dpinstamd64" Guid="*">
+          <File Id="fil5E7F1D7524A6D9945C6F32A897ACAB2E" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\dpinst-amd64.exe" />
+        </Component>
+        <Component Id="dpinstx86" Guid="*">
+          <File Id="fil93A2B26732B731AD14F14A35992DA281" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\dpinst-x86.exe" />
+        </Component>
+        <Component Id="dpinst" Guid="*">
+          <File Id="fil7AB62A2C3A9E0C1EF8875CE84BAAAEB5" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\dpinst.xml" />
+        </Component>
+        <Component Id="psdrv3cat" Guid="*">
+          <File Id="filCCDC4FCEC0114768FE35A6C4393C6D45" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\psdrv3.cat" />
+        </Component>
+        <Component Id="psdrv3ico" Guid="*">
+          <File Id="fil5CB44F6FBA0EA0B70742E4BAB3E6D05C" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\psdrv3.ico" />
+        </Component>
+        <Component Id="psdrv3inf" Guid="*">
+          <File Id="filE8A8D41F10867D9F61C756F08D2EF120" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\psdrv3.inf" />
+        </Component>
+        <Directory Id="dirA9723C179E8A0552262F479646DEE5FD" Name="amd64">
+          <Component Id="psdrv3amd64" Guid="*">
+            <File Id="fil8640AA549985C0CA97E1122B8462C1E6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\amd64\psdrv3.sys" />
+          </Component>
+          <Component Id="WdfCoInstaller01009amd64" Guid="*">
+            <File Id="fil675979718A167BEDEBEBD10BAD7EEEFF" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\amd64\WdfCoInstaller01009.dll" />
+          </Component>
+        </Directory>
+        <Directory Id="dir031BC9D00AF68A07CB4CD6F1F4152B0B" Name="x86">
+          <Component Id="psdrv3x86" Guid="*">
+            <File Id="fil0E977B72965B071387B3801543E39853" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\x86\psdrv3.sys" />
+          </Component>
+          <Component Id="WdfCoInstaller01009x86" Guid="*">
+            <File Id="fil59B75A5F2F9D7F5EA55D94D0290D103B" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Driver\x86\WdfCoInstaller01009.dll" />
+          </Component>
+        </Directory>
+      </Directory>
+    </DirectoryRef>
+    </Fragment>
+  <Fragment>
+    <ComponentGroup Id="OpenNIBinaryFiles">
+      <ComponentRef Id="cmp14657BC5BBC8A9B152526BB875809D9D"/>
+      <ComponentRef Id="GPL"/>
+      <ComponentRef Id="LGPL"/>
+      <ComponentRef Id="niLicense"/>
+      <ComponentRef Id="nimCodecs"/>
+      <ComponentRef Id="nimMockNodes"/>
+      <ComponentRef Id="nimRecorder"/>
+      <ComponentRef Id="niReg"/>
+      <ComponentRef Id="OpenNI"/>
+      <ComponentRef Id="dpinstamd64"/>
+      <ComponentRef Id="dpinstx86"/>
+      <ComponentRef Id="dpinst"/>
+      <ComponentRef Id="psdrv3cat"/>
+      <ComponentRef Id="psdrv3ico"/>
+      <ComponentRef Id="psdrv3inf"/>
+      <ComponentRef Id="psdrv3amd64"/>
+      <ComponentRef Id="WdfCoInstaller01009amd64"/>
+      <ComponentRef Id="psdrv3x86"/>
+      <ComponentRef Id="WdfCoInstaller01009x86"/>      
+    </ComponentGroup>
+  </Fragment>
+</Wix>

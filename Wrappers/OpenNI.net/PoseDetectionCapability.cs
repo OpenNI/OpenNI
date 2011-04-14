@@ -1,28 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UserID = System.UInt32;
+using UserID = System.Int32;
 using System.Text;
 
-namespace xn
+namespace OpenNI
 {
+	public class PoseDetectedEventArgs : EventArgs
+	{
+		public PoseDetectedEventArgs(string pose, UserID id)
+		{
+			this.pose = pose;
+			this.id = id;
+		}
+
+		public string Pose
+		{
+			get { return pose; }
+			set { pose = value; }
+		}
+
+		public UserID ID
+		{
+			get { return id; }
+			set { id = value; }
+		}
+
+		private string pose;
+		private UserID id;
+	}
+
+	public class PoseEndedEventArgs : EventArgs
+	{
+		public PoseEndedEventArgs(string pose, UserID id)
+		{
+			this.pose = pose;
+			this.id = id;
+		}
+
+		public string Pose
+		{
+			get { return pose; }
+			set { pose = value; }
+		}
+
+		public UserID ID
+		{
+			get { return id; }
+			set { id = value; }
+		}
+
+		private string pose;
+		private UserID id;
+	}
+
     public class PoseDetectionCapability : Capability
     {
-        public PoseDetectionCapability(ProductionNode node)
+		internal PoseDetectionCapability(ProductionNode node)
             : base(node)
         {
-            this.internalPoseDetected = new OpenNIImporter.XnPoseDetectionCallback(this.InternalPoseDetected);
-            this.internalPoseEnded = new OpenNIImporter.XnPoseDetectionCallback(this.InternalPoseEnded);
+            this.internalPoseDetected = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseDetected);
+            this.internalPoseEnded = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseEnded);
         }
 
-        public UInt32 GetNumberOfPoses()
+        public int NumberOfPoses
         {
-            return OpenNIImporter.xnGetNumberOfPoses(this.InternalObject);
+			get
+			{
+				return (Int32)SafeNativeMethods.xnGetNumberOfPoses(this.InternalObject);
+			}
         }
 
 		public string[] GetAllAvailablePoses()
 		{
-			uint count = OpenNIImporter.xnGetNumberOfPoses(this.InternalObject);
+			uint count = SafeNativeMethods.xnGetNumberOfPoses(this.InternalObject);
 			IntPtr[] arr = new IntPtr[count];
 			const int nameSize = 80;
 			string[] poses;
@@ -34,8 +85,8 @@ namespace xn
 					arr[i] = Marshal.AllocHGlobal(nameSize);
 				}
 
-				UInt32 status = OpenNIImporter.xnGetAllAvailablePoses(this.InternalObject, arr, nameSize, ref count);
-				WrapperUtils.CheckStatus(status);
+				int status = SafeNativeMethods.xnGetAllAvailablePoses(this.InternalObject, arr, nameSize, ref count);
+				WrapperUtils.ThrowOnError(status);
 
 				poses = new string[count];
 				for (int i = 0; i < count; ++i)
@@ -57,25 +108,25 @@ namespace xn
 
 		public void StartPoseDetection(string pose, UserID user)
         {
-            UInt32 status = OpenNIImporter.xnStartPoseDetection(this.InternalObject, pose, user);
-            WrapperUtils.CheckStatus(status);
+            int status = SafeNativeMethods.xnStartPoseDetection(this.InternalObject, pose, user);
+            WrapperUtils.ThrowOnError(status);
         }
         public void StopPoseDetection(UserID user)
         {
-            OpenNIImporter.xnStopPoseDetection(this.InternalObject, user);
+			int status = SafeNativeMethods.xnStopPoseDetection(this.InternalObject, user); 
+			WrapperUtils.ThrowOnError(status);
         }
 
         #region Pose Detected
-        public delegate void PoseDetectedHandler(ProductionNode node, string pose, UserID id);
-        private event PoseDetectedHandler poseDetectedEvent;
-        public event PoseDetectedHandler PoseDetected
+        private event EventHandler<PoseDetectedEventArgs> poseDetectedEvent;
+		public event EventHandler<PoseDetectedEventArgs> PoseDetected
         {
             add
             {
                 if (this.poseDetectedEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterToPoseCallbacks(this.InternalObject, internalPoseDetected, null, IntPtr.Zero, out poseDetectedHandle);
-                    WrapperUtils.CheckStatus(status);
+                    int status = SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, internalPoseDetected, null, IntPtr.Zero, out poseDetectedHandle);
+                    WrapperUtils.ThrowOnError(status);
                 }
                 this.poseDetectedEvent += value;
             }
@@ -85,30 +136,30 @@ namespace xn
 
                 if (this.poseDetectedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseDetectedHandle);
+                    SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseDetectedHandle);
                 }
             }
         }
         private void InternalPoseDetected(IntPtr hNode, string pose, UserID id, IntPtr pCookie)
         {
-            if (this.poseDetectedEvent != null)
-                this.poseDetectedEvent(this.node, pose, id);
+			EventHandler<PoseDetectedEventArgs> handlers = this.poseDetectedEvent;
+			if (handlers != null)
+				handlers(this.node, new PoseDetectedEventArgs(pose, id));
         }
-        private OpenNIImporter.XnPoseDetectionCallback internalPoseDetected;
+        private SafeNativeMethods.XnPoseDetectionCallback internalPoseDetected;
         private IntPtr poseDetectedHandle;
         #endregion
 
         #region Pose Ended
-        public delegate void PoseEndedHandler(ProductionNode node, string pose, UserID id);
-        private event PoseEndedHandler poseEndedEvent;
-        public event PoseEndedHandler PoseEnded
+        private event EventHandler<PoseEndedEventArgs> poseEndedEvent;
+		public event EventHandler<PoseEndedEventArgs> PoseEnded
         {
             add
             {
                 if (this.poseEndedEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterToPoseCallbacks(this.InternalObject, null, InternalPoseEnded, IntPtr.Zero, out poseEndedHandle);
-                    WrapperUtils.CheckStatus(status);
+					int status = SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, null, this.internalPoseEnded, IntPtr.Zero, out poseEndedHandle);
+                    WrapperUtils.ThrowOnError(status);
                 }
                 this.poseEndedEvent += value;
             }
@@ -118,16 +169,17 @@ namespace xn
 
                 if (this.poseEndedEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseEndedHandle);
+                    SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseEndedHandle);
                 }
             }
         }
         private void InternalPoseEnded(IntPtr hNode, string pose, UserID id, IntPtr pCookie)
         {
-            if (this.poseEndedEvent != null)
-                this.poseEndedEvent(this.node, pose, id);
+			EventHandler<PoseEndedEventArgs> handlers = this.poseEndedEvent;
+			if (handlers != null)
+				handlers(this.node, new PoseEndedEventArgs(pose, id));
         }
-        private OpenNIImporter.XnPoseDetectionCallback internalPoseEnded;
+        private SafeNativeMethods.XnPoseDetectionCallback internalPoseEnded;
         private IntPtr poseEndedHandle;
         #endregion
 

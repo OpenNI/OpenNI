@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -1001,9 +997,11 @@ XN_THREAD_PROC xnUSBReadThreadMain(XN_THREAD_PARAM pThreadParam)
 			libusb_transfer* pTransfer = pBufferInfo->transfer;
 
 			// wait for the next transfer to be completed, and process it
-			nRetVal = xnOSWaitEvent(pBufferInfo->hEvent, pThreadData->nTimeOut);
+			nRetVal = xnOSWaitEvent(pBufferInfo->hEvent, pThreadData->bKillReadThread ? 0 : pThreadData->nTimeOut);
 			if (nRetVal == XN_STATUS_OS_EVENT_TIMEOUT)
 			{
+//				xnLogWarning(XN_MASK_USB, "Endpoint 0x%x, Buffer %d: timeout. cancelling transfer...", pTransfer->endpoint, pBufferInfo->nBufferID);
+				
 				// cancel it
 				int rc = libusb_cancel_transfer(pBufferInfo->transfer);
 				if (rc != 0)
@@ -1259,8 +1257,8 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 		}
 */
 
-		// now wait for thread to exit
-		XnStatus nRetVal = xnOSWaitForThreadExit(pThreadData->hReadThread, XN_USB_READ_THREAD_KILL_TIMEOUT);
+		// now wait for thread to exit (we wait the timeout of all buffers + an extra second)
+		XnStatus nRetVal = xnOSWaitForThreadExit(pThreadData->hReadThread, pThreadData->nTimeOut * pThreadData->nNumBuffers + 1000);
 		if (nRetVal != XN_STATUS_OK)
 		{
 			xnOSTerminateThread(&pThreadData->hReadThread);

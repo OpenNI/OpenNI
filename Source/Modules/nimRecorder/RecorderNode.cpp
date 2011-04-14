@@ -1,26 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #include "RecorderNode.h"
 #include "DataRecords.h"
 #include "XnPropNames.h"
@@ -42,6 +40,7 @@ RecorderNode::RecorderNode(xn::Context &context) :
 	m_pRecordBuffer(NULL),
 	m_context(context),
 	m_pPayloadData(NULL),
+	m_nGlobalStartTimeStamp(0),
 	m_nGlobalMaxTimeStamp(0),
 	m_nNumNodes(0),
 	m_nConfigurationID(0)
@@ -288,11 +287,6 @@ XnStatus RecorderNode::OnNodeStateReady(const XnChar* strNodeName)
 XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void* pData, XnUInt32 nSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	if (nFrame == 0)
-	{
-		//Ignore 0 frame
-		return XN_STATUS_OK;
-	}
 
 	//Find node info
 	RecordedNodeInfo* pRecordedNodeInfo = GetRecordedNodeInfo(strNodeName);
@@ -316,22 +310,34 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 		pCompressedData = m_pPayloadData;
 	}
 
+	// correct timestamp according to first data recorded
+	if (m_nGlobalStartTimeStamp == 0)
+	{
+		m_nGlobalStartTimeStamp = nTimeStamp;
+	}
+
+	if (nTimeStamp < m_nGlobalStartTimeStamp)
+	{
+		// can happen in the rare case where a node was added in the middle of recording, and this node has data
+		// which is before the starting of the recording. In this case, we'll just ignore this data
+		return XN_STATUS_OK;
+	}
+	else
+	{
+		nTimeStamp -= m_nGlobalStartTimeStamp;
+	}
+
 	if (!pRecordedNodeInfo->bGotData)
 	{
-		//This is the first data we get for this node, save its timestamp and frame number as the minimum
-		pRecordedNodeInfo->nMinTimeStamp = nTimeStamp;
-
 		// write down the DataBegin record
 		nRetVal = WriteNodeDataBegin(strNodeName);
 		XN_IS_STATUS_OK(nRetVal);
 
 		pRecordedNodeInfo->bGotData = TRUE;
+		pRecordedNodeInfo->nMinTimeStamp = nTimeStamp;
 	}
 
-	XN_ASSERT(nTimeStamp >= pRecordedNodeInfo->nMinTimeStamp);
-	//Corrected time stamps start from 0
-	XnUInt64 nCorrectedTimeStamp = nTimeStamp - pRecordedNodeInfo->nMinTimeStamp;
-	pRecordedNodeInfo->nMaxTimeStamp = nCorrectedTimeStamp;
+	pRecordedNodeInfo->nMaxTimeStamp = nTimeStamp;
 
 	XnUInt32 nUndoRecordPos = 0;
 	nRetVal = UpdateNodePropInfo(strNodeName, XN_PROP_NEWDATA, pRecordedNodeInfo, nUndoRecordPos);
@@ -340,7 +346,7 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 	//Prepare data header
 	NewDataRecordHeader recordHeader(m_pRecordBuffer, RECORD_MAX_SIZE);
 	recordHeader.SetNodeID(pRecordedNodeInfo->nNodeID);
-	recordHeader.SetTimeStamp(nCorrectedTimeStamp);
+	recordHeader.SetTimeStamp(nTimeStamp);
 	recordHeader.SetFrameNumber(++pRecordedNodeInfo->nMaxFrameNum);
 	recordHeader.SetPayloadSize(nCompressedSize);
 	recordHeader.SetUndoRecordPos(nUndoRecordPos);
@@ -353,7 +359,7 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 	}
 
 	DataIndexEntry dataIndexEntry;
-	dataIndexEntry.nTimestamp = recordHeader.GetTimeStamp();
+	dataIndexEntry.nTimestamp = nTimeStamp;
 	dataIndexEntry.nConfigurationID = m_nConfigurationID;
 	dataIndexEntry.nSeekPos = TellStream();
 
@@ -375,9 +381,9 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 		return nRetVal;
 	}
 
-	if (nCorrectedTimeStamp > m_nGlobalMaxTimeStamp)
+	if (nTimeStamp > m_nGlobalMaxTimeStamp)
 	{
-		m_nGlobalMaxTimeStamp = nCorrectedTimeStamp;
+		m_nGlobalMaxTimeStamp = nTimeStamp;
 	}
 
 	// write to seek table

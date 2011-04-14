@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using xn;
+using OpenNI;
 using System.Threading;
 using System.Drawing.Imaging;
 
@@ -23,11 +23,11 @@ namespace SimpleViewer.net
 				throw new Exception("Viewer must have a depth node!");
 			}
 
-			this.histogram = new int[this.depth.GetDeviceMaxDepth()];
+			this.histogram = new int[this.depth.DeviceMaxDepth];
 
-			MapOutputMode mapMode = this.depth.GetMapOutputMode();
+			MapOutputMode mapMode = this.depth.MapOutputMode;
 
-			this.bitmap = new Bitmap((int)mapMode.nXRes, (int)mapMode.nYRes, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			this.bitmap = new Bitmap((int)mapMode.XRes, (int)mapMode.YRes, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			this.shouldRun = true;
 			this.readerThread = new Thread(ReaderThread);
 			this.readerThread.Start();
@@ -127,7 +127,7 @@ namespace SimpleViewer.net
 					Rectangle rect = new Rectangle(0, 0, this.bitmap.Width, this.bitmap.Height);
 					BitmapData data = this.bitmap.LockBits(rect, ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
-					ushort* pDepth = (ushort*)this.depth.GetDepthMapPtr().ToPointer();
+					ushort* pDepth = (ushort*)this.depth.DepthMapPtr.ToPointer();
 
 					// set pixels
 					for (int y = 0; y < depthMD.YRes; ++y)

@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class Recorder : ProductionNode
 	{
-		internal Recorder(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal Recorder(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 		}
 
 		public Recorder(Context context, string formatName) :
-			this(Create(context, formatName), false)
+			this(context, Create(context, formatName), false)
 		{
 		}
 
@@ -21,16 +21,16 @@ namespace xn
 		{
 		}
 
-		public void SetDestination(RecordMedium medium, string dest)
+		public void SetDestination(RecordMedium medium, string destination)
 		{
-			UInt32 status = OpenNIImporter.xnSetRecorderDestination(this.InternalObject, medium, dest);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnSetRecorderDestination(this.InternalObject, medium, destination);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void AddNodeToRecording(ProductionNode node, CodecID codec)
 		{
-			UInt32 status = OpenNIImporter.xnAddNodeToRecording(this.InternalObject, node.InternalObject, codec.InternalValue);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnAddNodeToRecording(this.InternalObject, node.InternalObject, codec.InternalValue);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void AddNodeToRecording(ProductionNode node)
@@ -40,21 +40,21 @@ namespace xn
 
 		public void RemoveNodeFromRecording(ProductionNode node)
 		{
-			UInt32 status = OpenNIImporter.xnRemoveNodeFromRecording(this.InternalObject, node.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnRemoveNodeFromRecording(this.InternalObject, node.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void Record()
 		{
-			UInt32 status = OpenNIImporter.xnRecord(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnRecord(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		private static IntPtr Create(Context context, string formatName)
 		{
 			IntPtr nodeHandle;
-			UInt32 status = OpenNIImporter.xnCreateRecorder(context.InternalObject, formatName, out nodeHandle);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnCreateRecorder(context.InternalObject, formatName, out nodeHandle);
+			WrapperUtils.ThrowOnError(status);
 			return nodeHandle;
 		}
 	}

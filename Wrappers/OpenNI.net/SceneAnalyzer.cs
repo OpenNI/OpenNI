@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UserID = System.UInt32;
 
-namespace xn
+namespace OpenNI
 {
     public class SceneAnalyzer : MapGenerator
     {
-		internal SceneAnalyzer(IntPtr nodeHandle, bool addRef)
-			: base(nodeHandle, addRef)
+		internal SceneAnalyzer(Context context, IntPtr nodeHandle, bool addRef)
+			: base(context, nodeHandle, addRef)
         {
 
         }
 
         public SceneAnalyzer(Context context, Query query, EnumerationErrors errors) :
-            this(Create(context, query, errors), false)
+			this(context, Create(context, query, errors), false)
         {
         }
         public SceneAnalyzer(Context context, Query query)
@@ -29,29 +29,38 @@ namespace xn
         private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
         {
             IntPtr handle;
-            UInt32 status =
-                OpenNIImporter.xnCreateSceneAnalyzer(context.InternalObject,
+            int status =
+                SafeNativeMethods.xnCreateSceneAnalyzer(context.InternalObject,
                                                         out handle,
                                                         query == null ? IntPtr.Zero : query.InternalObject,
                                                         errors == null ? IntPtr.Zero : errors.InternalObject);
-            WrapperUtils.CheckStatus(status);
+            WrapperUtils.ThrowOnError(status);
             return handle;
         }
 
-        public void GetFloor(ref Plane3D plane)
+		public Plane3D Floor
         {
-            UInt32 status = OpenNIImporter.xnGetFloor(this.InternalObject, ref plane);
-            WrapperUtils.CheckStatus(status);
+			get
+			{
+				Plane3D plane = new Plane3D();
+				int status = SafeNativeMethods.xnGetFloor(this.InternalObject, ref plane);
+				WrapperUtils.ThrowOnError(status);
+				return plane;
+			}
         }
 
-        public IntPtr GetLabelMapPtr()
+        public IntPtr LabelMapPtr
         {
-            return OpenNIImporter.xnGetLabelMap(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetLabelMap(this.InternalObject);
+			}
         }
 
-        public MapData<UInt16> GetLabelMap()
+        public UInt16MapData GetLabelMap()
         {
-            return GetMapData<UInt16>(GetLabelMapPtr());
+			MapOutputMode mode = this.MapOutputMode;
+			return new UInt16MapData(mode.XRes, mode.YRes, LabelMapPtr);
         }
 
         // GetMetaData

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class MapMetaData : OutputMetaData
 	{
@@ -12,38 +12,38 @@ namespace xn
 
 		public int XRes
 		{
-			get { return (int)this.map.Res.X; }
-			set { this.map.Res.X = (uint)value; }
+			get { return this.map.Res.X; }
+			set { this.map.Res.X = value; }
 		}
 
 		public int YRes
 		{
-			get { return (int)this.map.Res.Y; }
-			set { this.map.Res.Y = (uint)value; }
+			get { return this.map.Res.Y; }
+			set { this.map.Res.Y = value; }
 		}
 
 		public int XOffset
 		{
-			get { return (int)this.map.Offset.X; }
-			set { this.map.Offset.X = (uint)value; }
+			get { return this.map.Offset.X; }
+			set { this.map.Offset.X = value; }
 		}
 
 		public int YOffset
 		{
-			get { return (int)this.map.Offset.Y; }
-			set { this.map.Offset.Y = (uint)value; }
+			get { return this.map.Offset.Y; }
+			set { this.map.Offset.Y = value; }
 		}
 
 		public int FullXRes
 		{
-			get { return (int)this.map.FullRes.X; }
-			set { this.map.FullRes.X = (uint)value; }
+			get { return this.map.FullRes.X; }
+			set { this.map.FullRes.X = value; }
 		}
 
 		public int FullYRes
 		{
-			get { return (int)this.map.FullRes.Y; }
-			set { this.map.FullRes.Y = (uint)value; }
+			get { return this.map.FullRes.Y; }
+			set { this.map.FullRes.Y = value; }
 		}
 
 		public int FPS
@@ -82,12 +82,12 @@ namespace xn
 			return new MapMetaDataMarshaler(this, passOut);
 		}
 
-		protected PixelFormat PixelFormatInternal
+		protected void SetPixelFormat(PixelFormat format)
 		{
-			set { this.map.PixelFormat = value; }
+			this.map.PixelFormat = format;
 		}
 
-		private class MapMetaDataMarshaler : Marshaler<OpenNIImporter.XnMapMetaData>
+		private class MapMetaDataMarshaler : Marshaler<SafeNativeMethods.XnMapMetaData>
 		{
 			public MapMetaDataMarshaler(MapMetaData obj, bool marshalOut) :
 				base(obj.map, marshalOut,
@@ -103,37 +103,29 @@ namespace xn
 			}
 		}
 
-		internal OpenNIImporter.XnMapMetaData map = new OpenNIImporter.XnMapMetaData();
+		internal SafeNativeMethods.XnMapMetaData map = new SafeNativeMethods.XnMapMetaData();
 	}
 
-	public class MapMetaData<T> : MapMetaData
+	public class UInt16MapMetaData : MapMetaData
 	{
-		protected T this[int index, IntPtr buff]
+		protected int GetAt(IntPtr dataBuff, int index)
 		{
-			get
-			{
-				buff = new IntPtr(buff.ToInt64() + index * BytesPerPixel);
-				return (T)Marshal.PtrToStructure(buff, typeof(T));
-			}
-			set
-			{
-				buff = new IntPtr(buff.ToInt64() + index * BytesPerPixel);
-				Marshal.StructureToPtr(value, buff, false);
-			}
+			return MapUtils<UInt16>.GetAt(dataBuff, index);
 		}
 
-		protected T this[int x, int y, IntPtr buff]
+		protected void SetAt(IntPtr dataBuff, int index, int value)
 		{
-			get
-			{
-				buff = new IntPtr(buff.ToInt64() + (y * XRes + x) * BytesPerPixel);
-				return (T)Marshal.PtrToStructure(buff, typeof(T));
-			}
-			set
-			{
-				buff = new IntPtr(buff.ToInt64() + (y * XRes + x) * BytesPerPixel);
-				Marshal.StructureToPtr(value, buff, false);
-			}
+			MapUtils<UInt16>.SetAt(dataBuff, index, (UInt16)value);
+		}
+
+		protected int GetAt(IntPtr dataBuff, int x, int y)
+		{
+			return MapUtils<UInt16>.GetAt(dataBuff, XRes, x, y);
+		}
+
+		protected void SetAt(IntPtr dataBuff, int x, int y, int value)
+		{
+			MapUtils<UInt16>.SetAt(dataBuff, XRes, x, y, (UInt16)value);
 		}
 	}
 }

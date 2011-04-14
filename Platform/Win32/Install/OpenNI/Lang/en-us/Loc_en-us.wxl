@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization" Codepage="1252">  
+  <String Id="LANG">1033</String>
+  <String Id="ProductName">OpenNI</String>
+  <String Id="ProductNameSuffix">for Windows</String>
+  <String Id="ProductName64Suffix">64-bit</String>
+  <!--<String Id="LicenseRtf" Overridable="yes">\Lang\en-us\EULA_en-us.rtf</String> -->
+  <String Id="ManufacturerName">PrimeSense</String>  
+  <String Id="AppNotSupported">This application is is not supported on your current OS. Minimal OS supported is Windows XP SP2</String>
+  <String Id="DotNetFrameworkNeeded">.NET Framework 2.0 is required. Please install the .NET Framework then run this installer again.</String>
+  <String Id="OpenNINewerVersionInstalled">A newer version of !(loc.ProductName) is already installed.</String>
+  <String Id="ChoseFolder">Choose the folder in which to install !(loc.ProductName)</String>
+</WixLocalization>

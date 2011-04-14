@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_PRD_NODE_H__
 #define __XN_PRD_NODE_H__
 
@@ -205,6 +201,85 @@ XN_C_API XnStatus xnRemoveNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeede
 /** @} */
 
 //---------------------------------------------------------------------------
+// Device
+//---------------------------------------------------------------------------
+
+/**
+ * @ingroup prd_node
+ * @defgroup device Device
+ *
+ * A device node represents a physical device. The following functions can be 
+ * executed for device nodes in an OpenNI context.
+ * @{
+ */
+
+/**
+ * @brief Creates a device node.
+ *
+ * @param	pContext			[in]	The context in which to create the device
+ * @param	phDevice			[out]	A handle to the created device
+ * @param	pQuery				[in]	Optional. Can be used to select which device to create. If not specified, this function may create any device node that is available.
+ * @param	pErrors				[in]	Optional. If provided, will be filled with information about device nodes that could not be created.
+ */
+XN_C_API XnStatus xnCreateDevice(XnContext* pContext, XnNodeHandle* phDevice, XnNodeQuery* pQuery, XnEnumerationErrors* pErrors);
+
+/** @} */
+
+//---------------------------------------------------------------------------
+// Device Identification Capability
+//---------------------------------------------------------------------------
+
+/**
+ * @ingroup device
+ * @defgroup device_id Device Identification Capability
+ *
+ * The Device Identification Capability (@ref XN_CAPABILITY_DEVICE_IDENTIFICATION) allows to identify
+ * the device according to its name, to a vendor-specific string and its serial number.
+ * @{
+ */
+
+/**
+ * Gets the device name.
+ *
+ * @param	hInstance		[in]		A handle to the instance.
+ * @param	strBuffer		[in]		A buffer to accept the device name.
+ * @param	pnBufferSize	[in/out]	Size of the buffer.
+ *
+ * @returns XN_STATUS_OK if succeeded, or XN_STATUS_OUTPUT_BUFFER_OVERFLOW if buffer is not sufficient.
+ * in such a case, the device name should be truncated to fit in the buffer, and pnBufferSize should be
+ * updated to the required size.
+ */
+XN_C_API XnStatus xnGetDeviceName(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
+
+/**
+ * Gets a vendor-specific string.
+ *
+ * @param	hInstance		[in]		A handle to the instance.
+ * @param	strBuffer		[in]		A buffer to accept the string.
+ * @param	pnBufferSize	[in/out]	Size of the buffer.
+ *
+ * @returns XN_STATUS_OK if succeeded, or XN_STATUS_OUTPUT_BUFFER_OVERFLOW if buffer is not sufficient.
+ * in such a case, the string should be truncated to fit in the buffer, and pnBufferSize should be
+ * updated to the required size.
+ */
+XN_C_API XnStatus xnGetVendorSpecificData(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
+
+/**
+ * Gets the serial number of the device.
+ *
+ * @param	hInstance		[in]		A handle to the instance.
+ * @param	strBuffer		[in]		A buffer to accept the string.
+ * @param	pnBufferSize	[in/out]	Size of the buffer.
+ *
+ * @returns XN_STATUS_OK if succeeded, or XN_STATUS_OUTPUT_BUFFER_OVERFLOW if buffer is not sufficient.
+ * in such a case, the string should be truncated to fit in the buffer, and pnBufferSize should be
+ * updated to the required size.
+ */
+XN_C_API XnStatus xnGetSerialNumber(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
+
+/** @} */
+
+//---------------------------------------------------------------------------
 // ErrorState Capability
 //---------------------------------------------------------------------------
 
@@ -251,6 +326,95 @@ XN_C_API XnStatus xnRegisterToNodeErrorStateChange
  */
 XN_C_API void xnUnregisterFromNodeErrorStateChange
 	(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+
+/** @} */
+
+//---------------------------------------------------------------------------
+// GeneralIntCapability
+//---------------------------------------------------------------------------
+
+/** 
+ * @ingroup node
+ * @defgroup general_int General Int Capability
+ *
+ * The General Int Capability is a set of method that is used by several capabilities. It allows
+ * a general range value to be changed. If supported by the node, the value can also be set to 
+ * @ref XN_AUTO_CONTROL for automatic adjustment.
+ *
+ * The capabilities supporting this interface are:
+ * - Brightness (@ref XN_CAPABILITY_BRIGHTNESS)
+ * - Contrast (@ref XN_CAPABILITY_CONTRAST)
+ * - Hue (@ref XN_CAPABILITY_HUE)
+ * - Saturation (@ref XN_CAPABILITY_SATURATION)
+ * - Sharpness (@ref XN_CAPABILITY_SHARPNESS)
+ * - Gamma (@ref XN_CAPABILITY_GAMMA)
+ * - WhiteBalance (@ref XN_CAPABILITY_COLOR_TEMPERATURE)
+ * - BacklightCompensation (@ref XN_CAPABILITY_BACKLIGHT_COMPENSATION)
+ * - Gain (@ref XN_CAPABILITY_GAIN)
+ * - Pan (@ref XN_CAPABILITY_PAN)
+ * - Tilt (@ref XN_CAPABILITY_TILT)
+ * - Roll (@ref XN_CAPABILITY_ROLL)
+ * - Zoom (@ref XN_CAPABILITY_ZOOM)
+ * - Exposure (@ref XN_CAPABILITY_EXPOSURE)
+ * - Iris (@ref XN_CAPABILITY_IRIS)
+ * - Focus (@ref XN_CAPABILITY_FOCUS)
+ * - Low Light Compensation (@ref XN_CAPABILITY_LOW_LIGHT_COMPENSATION)
+ * @{
+ */
+
+/**
+ * @brief Gets the range of this capability values
+ *
+ * @param	hNode				[in]	A handle to the instance
+ * @param	strCap				[in]	Name of the capability
+ * @param	pnMin				[out]	Minimum value
+ * @param	pnMax				[out]	Maximum value	
+ * @param	pnStep				[out]	Step size
+ * @param	pnDefault			[out]	Default value
+ * @param	pbIsAutoSupported	[out]	TRUE if auto adjustment is supported, FALSE otherwise
+ */
+XN_C_API XnStatus xnGetGeneralIntRange(XnNodeHandle hNode, const XnChar* strCap, XnInt32* pnMin, XnInt32* pnMax, XnInt32* pnStep, XnInt32* pnDefault, XnBool* pbIsAutoSupported);
+
+/**
+ * @brief Gets the current value of this capability
+ *
+ * @param	hNode				[in]	A handle to the instance
+ * @param	strCap				[in]	Name of the capability
+ * @param	pnValue				[out]	Current value
+ */
+XN_C_API XnStatus xnGetGeneralIntValue(XnNodeHandle hNode, const XnChar* strCap, XnInt32* pnValue);
+
+/**
+ * @brief Sets the current value of this capability
+ *
+ * @param	hNode				[in]	A handle to the instance
+ * @param	strCap				[in]	Name of the capability
+ * @param	nValue				[in]	Value to set
+ */
+XN_C_API XnStatus xnSetGeneralIntValue(XnNodeHandle hNode, const XnChar* strCap, XnInt32 nValue);
+
+/**
+ * @brief Registers a callback function to values changes.
+ *
+ * @param	hNode		[in]	A handle to the instance.
+ * @param	strCap		[in]	Name of the capability
+ * @param	handler		[in]	A pointer to a function that will be called when value changes.
+ * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
+ * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromGeneralIntValueChange().
+ */
+XN_C_API XnStatus xnRegisterToGeneralIntValueChange
+	(XnNodeHandle hNode, const XnChar* strCap, XnStateChangedHandler handler,
+	void* pCookie, XnCallbackHandle* phCallback);
+
+/**
+ * @brief Unregisters a callback function which was registered using @ref xnRegisterToGeneralIntValueChange().
+ *
+ * @param	hNode		[in]	A handle to the instance.
+ * @param	strCap		[in]	Name of the capability
+ * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToGeneralIntValueChange().
+ */
+XN_C_API void xnUnregisterFromGeneralIntValueChange
+	(XnNodeHandle hNode, const XnChar* strCap, XnCallbackHandle hCallback);
 
 /** @} */
 
@@ -390,6 +554,15 @@ XN_C_API XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance);
  * @param	hInstance	[in]	A handle to the instance.
  */
 XN_C_API XnBool xnIsDataNew(XnNodeHandle hInstance);
+
+/**
+ * @brief Gets the current data.
+ *
+ * @param	hInstance	[in]	A handle to the instance.
+ *
+ * @returns	NULL if this production node is not a generator.
+ */
+XN_C_API const void* xnGetData(XnNodeHandle hInstance);
 
 /**
  * @brief Gets the size of current data, in bytes.
@@ -683,6 +856,15 @@ XN_C_API XnStatus xnRegisterToMapOutputModeChange(XnNodeHandle hInstance, XnStat
  */
 XN_C_API void xnUnregisterFromMapOutputModeChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
+/**
+ * @brief Gets the number of bytes per pixel for this map generator.
+ *
+ * @param	hInstance	[in]	A handle to the instance.
+ *
+ * @returns	(XnUInt32)-1 if this production node is not a map generator.
+ */
+XN_C_API XnUInt32 xnGetBytesPerPixel(XnNodeHandle hInstance);
+
 /** @} */
 
 //---------------------------------------------------------------------------
@@ -740,6 +922,57 @@ XN_C_API XnStatus xnRegisterToCroppingChange(XnNodeHandle hInstance, XnStateChan
  * @param	hCallback	[in]	The handle to the callback returned from xnRegisterToCroppingChange().
  */
 XN_C_API void xnUnregisterFromCroppingChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+
+/** @} */
+
+//---------------------------------------------------------------------------
+// Anti Flicker Capability
+//---------------------------------------------------------------------------
+
+/**
+ * @ingroup mapgen
+ * @defgroup anti_flicker Anti Flicker Capability
+ * The Anti Flicker capability (@ref XN_CAPABILITY_ANTI_FLICKER) allows a @ref mapgen to time its frames
+ * in such a way that no flickering will take place due to electric light frequencies.
+ * @{
+ */
+
+/** 
+ * @brief Sets the power line frequency: 50 Hz, 60 Hz, or 0 to turn off anti-flicker.
+ *
+ * @param	hGenerator	[in]	A handle to the instance.
+ * @param	nFrequency	[in]	The frequency to be used.
+ */
+XN_C_API XnStatus xnSetPowerLineFrequency(XnNodeHandle hGenerator, XnPowerLineFrequency nFrequency);
+
+/** 
+ * @brief Gets the power line frequency.
+ *
+ * @param	hGenerator	[in]	A handle to the instance.
+ * @returns (XnUInt32)-1 if node does not support this capability
+ */
+XN_C_API XnPowerLineFrequency xnGetPowerLineFrequency(XnNodeHandle hGenerator);
+
+/**
+ * @brief Registers a callback function to power line frequency changes.
+ *
+ * @param	hGenerator	[in]	A handle to the instance.
+ * @param	handler		[in]	A pointer to a function that will be called when power line frequency changes.
+ * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
+ * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromPowerLineFrequencyChange().
+ */
+XN_C_API XnStatus xnRegisterToPowerLineFrequencyChange
+	(XnNodeHandle hGenerator, XnStateChangedHandler handler,
+	void* pCookie, XnCallbackHandle* phCallback);
+
+/**
+ * @brief Unregisters a callback function which was registered using @ref xnRegisterToPowerLineFrequencyChange().
+ *
+ * @param	hGenerator	[in]	A handle to the instance.
+ * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToPowerLineFrequencyChange().
+ */
+XN_C_API void xnUnregisterFromPowerLineFrequencyChange
+	(XnNodeHandle hGenerator, XnCallbackHandle hCallback);
 
 /** @} */
 
@@ -1499,6 +1732,22 @@ XN_C_API XnStatus xnRequestSkeletonCalibration(XnNodeHandle hInstance, XnUserID 
 */
 XN_C_API XnStatus xnAbortSkeletonCalibration(XnNodeHandle hInstance, XnUserID user);
 /**
+* @brief Save the calibration data to file
+*
+* @param	hInstance	[in]	A handle to the instance
+* @param	user		[in]	the user for which the calibration is saved
+* @param	strFileName	[in]	The file to which to save the calibration data
+*/
+XN_C_API XnStatus xnSaveSkeletonCalibrationDataToFile(XnNodeHandle hInstance, XnUserID user, const XnChar* strFileName);
+/**
+* @brief Load previously saved calibration data from file
+*
+* @param	hInstance	[in]	A handle to the instance
+* @param	user		[in]	the user to be assigned the calibration data
+* @param	strFileName	[in]	The file from which to load the calibration data.
+*/
+XN_C_API XnStatus xnLoadSkeletonCalibrationDataFromFile(XnNodeHandle hInstance, XnUserID user, const XnChar* strFileName);
+/**
  * @brief Save the calibration data
  *
  * @param	hInstance	[in]	A handle to the instance
@@ -1792,6 +2041,7 @@ XN_C_API XnStatus xnMockDepthSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, 
 XN_C_API XnStatus xnMockImageSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnUInt8* pData);
 XN_C_API XnStatus xnMockIRSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnIRPixel* pData);
 XN_C_API XnStatus xnMockAudioSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnUInt8* pData);
+XN_C_API XnStatus xnMockRawSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const void* pData);
 
 /** @} */
 

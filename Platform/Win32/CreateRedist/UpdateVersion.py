@@ -1,24 +1,24 @@
-#/****************************************************************************
-#*                                                                           *
-#*  OpenNI 1.0 Alpha                                                         *
-#*  Copyright (C) 2010 PrimeSense Ltd.                                       *
-#*                                                                           *
-#*  This file is part of OpenNI.                                             *
-#*                                                                           *
-#*  OpenNI is free software: you can redistribute it and/or modify           *
-#*  it under the terms of the GNU Lesser General Public License as published *
-#*  by the Free Software Foundation, either version 3 of the License, or     *
-#*  (at your option) any later version.                                      *
-#*                                                                           *
-#*  OpenNI is distributed in the hope that it will be useful,                *
-#*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-#*  GNU Lesser General Public License for more details.                      *
-#*                                                                           *
-#*  You should have received a copy of the GNU Lesser General Public License *
-#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-#*                                                                           *
-#****************************************************************************/
+#/***************************************************************************
+#*                                                                          *
+#*  OpenNI 1.1 Alpha                                                        *
+#*  Copyright (C) 2011 PrimeSense Ltd.                                      *
+#*                                                                          *
+#*  This file is part of OpenNI.                                            *
+#*                                                                          *
+#*  OpenNI is free software: you can redistribute it and/or modify          *
+#*  it under the terms of the GNU Lesser General Public License as published*
+#*  by the Free Software Foundation, either version 3 of the License, or    *
+#*  (at your option) any later version.                                     *
+#*                                                                          *
+#*  OpenNI is distributed in the hope that it will be useful,               *
+#*  but WITHOUT ANY WARRANTY; without even the implied warranty of          *
+#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
+#*  GNU Lesser General Public License for more details.                     *
+#*                                                                          *
+#*  You should have received a copy of the GNU Lesser General Public License*
+#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
+#*                                                                          *
+#***************************************************************************/
 #
 import sys
 import os
@@ -26,9 +26,9 @@ import re
 
 # ----------------------- PARAMS -------------------------
 VERSION_MAJOR = 1
-VERSION_MINOR = 0
+VERSION_MINOR = 1
 VERSION_MAINTENANCE = 0
-VERSION_BUILD = 25
+VERSION_BUILD = 39
 
 # ---------------------- FUNCTIONS -----------------------
 def regx_replace(findStr,repStr,filePath):
@@ -75,6 +75,13 @@ def update_assembly_info (filePath):
 	regx_replace(r"^\[assembly: AssemblyVersion\(\"(.*)\"\)\]", "[assembly: AssemblyVersion(\"" + str(VERSION_MAJOR) + "." + str(VERSION_MINOR) + "." + str(VERSION_MAINTENANCE) + "." + str(VERSION_BUILD) + "\")]", filePath)
 	regx_replace(r"^\[assembly: AssemblyFileVersion\(\"(.*)\"\)\]", "[assembly: AssemblyFileVersion(\"" + str(VERSION_MAJOR) + "." + str(VERSION_MINOR) + "." + str(VERSION_MAINTENANCE) + "." + str(VERSION_BUILD) + "\")]", filePath)
 
+def update_wix (filePath):
+	print "Updating wix: " + filePath
+	regx_replace("define MajorVersion=(.*)", "define MajorVersion=" + str(VERSION_MAJOR) + "?>", filePath)
+	regx_replace("define MinorVersion=(.*)", "define MinorVersion=" + str(VERSION_MINOR) + "?>", filePath)
+	regx_replace("define MaintenanceVersion=(.*)", "define MaintenanceVersion=" + str(VERSION_MAINTENANCE) + "?>", filePath)
+	regx_replace("define BuildVersion=(.*)", "define BuildVersion=" + str(VERSION_BUILD) + "?>", filePath)
+		
 # ----------------------- MAIN -------------------------
 if len(sys.argv) == 5:
 	VERSION_MAJOR=int(sys.argv[1])
@@ -106,7 +113,7 @@ update_redist_eng_defs("./OpenNi_Config.xml")
 update_src_ver_defs("../../../Include/XnVersion.h")
 update_assembly_info("../Build/Res/AssemblyInfo-OpenNI.cs")
 update_assembly_info("../../Linux-x86/Build/Res/AssemblyInfo-OpenNI.cs")
-
+update_wix("../Install/OpenNI/Includes/OpenNIVariables.wxi")
 try:
 	update_redist_defs("../../../ExportOpenSource.bat")
 except:

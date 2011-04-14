@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -353,20 +349,16 @@ XN_C_API XnStatus xnOSWaitEvent(const XN_EVENT_HANDLE EventHandle, XnUInt32 nMil
 	// Make sure the actual event handle isn't NULL
 	XN_RET_IF_NULL(EventHandle, XN_STATUS_OS_INVALID_EVENT);
 
+	struct timespec time = {0};
+
 	if(EventHandle->bNamed)
 	{
-		struct timespec time ={0};
 		if (nMilliseconds != XN_WAIT_INFINITE)
 		{
-			// add timeout to this time
-			time.tv_sec = (nMilliseconds / 1000);
-			time.tv_nsec = ((nMilliseconds % 1000) * 1000000);
-		
-			// check the number of nanoseconds is still valid. If not, advance to next second
-			if (time.tv_nsec > 999999999)
+			nRetVal = xnOSGetTimeout(&time, nMilliseconds);
+			if (nRetVal != XN_STATUS_OK)
 			{
-				time.tv_nsec -= 1000000000;
-				time.tv_sec++;
+				return XN_STATUS_OS_EVENT_WAIT_FAILED;
 			}
 		}
 
@@ -409,26 +401,15 @@ XN_C_API XnStatus xnOSWaitEvent(const XN_EVENT_HANDLE EventHandle, XnUInt32 nMil
 	}
 	else // not named
 	{
-		struct timespec time;
 		if (nMilliseconds != XN_WAIT_INFINITE)
 		{
-			// calculate timeout absolute time. First we take current time
-			if (XN_STATUS_OK != xnOSGetMonoTime(&time))
+			nRetVal = xnOSGetAbsTimeout(&time, nMilliseconds);
+			if (nRetVal != XN_STATUS_OK)
 			{
-				return (XN_STATUS_OS_EVENT_WAIT_FAILED);
+				return XN_STATUS_OS_EVENT_WAIT_FAILED;
 			}
-			
-			// add timeout to this time
-			time.tv_sec += (nMilliseconds / 1000);
-			time.tv_nsec += ((nMilliseconds % 1000) * 1000000);
-			
-			// check the number of nanoseconds is still valid. If not, advance to next second
-			if (time.tv_nsec > 999999999)
-			{
-				time.tv_nsec -= 1000000000;
-				time.tv_sec++;
-			}
-		}		
+		}
+		
 		// lock the mutex
 		if (0 != pthread_mutex_lock(&EventHandle->mutex))
 		{

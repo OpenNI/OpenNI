@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class NodeInfoList : ObjectWrapper, IEnumerable<NodeInfo>
 	{
@@ -36,7 +36,7 @@ namespace xn
 			{
 				get
 				{
-					return new NodeInfo(OpenNIImporter.xnNodeInfoListGetCurrent(it));
+					return new NodeInfo(SafeNativeMethods.xnNodeInfoListGetCurrent(it));
 				}
 			}
 
@@ -61,15 +61,15 @@ namespace xn
 			{
 				if (this.reset)
 				{
-					it = OpenNIImporter.xnNodeInfoListGetFirst(list.InternalObject);
+					it = SafeNativeMethods.xnNodeInfoListGetFirst(list.InternalObject);
 					this.reset = false;
 				}
 				else
 				{
-					it = OpenNIImporter.xnNodeInfoListGetNext(it);
+					it = SafeNativeMethods.xnNodeInfoListGetNext(it);
 				}
 
-				return OpenNIImporter.xnNodeInfoListIteratorIsValid(it);
+				return SafeNativeMethods.xnNodeInfoListIteratorIsValid(it);
 			}
 
 			public void Reset()
@@ -111,46 +111,46 @@ namespace xn
 
 		public void Add(ProductionNodeDescription description, string creationInfo, NodeInfoList neededNodes)
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoListAdd(this.InternalObject, description, creationInfo,
+			int status = SafeNativeMethods.xnNodeInfoListAdd(this.InternalObject, description, creationInfo,
 				neededNodes == null ? IntPtr.Zero : neededNodes.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void AddNode(NodeInfo nodeInfo)
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoListAddNode(this.InternalObject, nodeInfo.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeInfoListAddNode(this.InternalObject, nodeInfo.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public void AddNodeFromList(IEnumerator<NodeInfo> curr)
+		public void AddNodeFromList(IEnumerator<NodeInfo> current)
 		{
-			NodeInfoListEnumerator enumer = (NodeInfoListEnumerator)curr;
-			UInt32 status = OpenNIImporter.xnNodeInfoListAddNodeFromList(this.InternalObject, enumer.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			NodeInfoListEnumerator enumer = (NodeInfoListEnumerator)current;
+			int status = SafeNativeMethods.xnNodeInfoListAddNodeFromList(this.InternalObject, enumer.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void Remove(IEnumerator<NodeInfo> location)
 		{
 			NodeInfoListEnumerator enumer = (NodeInfoListEnumerator)location;
-			UInt32 status = OpenNIImporter.xnNodeInfoListRemove(this.InternalObject, enumer.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeInfoListRemove(this.InternalObject, enumer.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void Clear()
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoListClear(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeInfoListClear(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void Append(NodeInfoList other)
 		{
-			UInt32 status = OpenNIImporter.xnNodeInfoListAppend(this.InternalObject, other.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnNodeInfoListAppend(this.InternalObject, other.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public bool IsEmpty()
 		{
-			return OpenNIImporter.xnNodeInfoListIsEmpty(this.InternalObject);
+			return SafeNativeMethods.xnNodeInfoListIsEmpty(this.InternalObject);
 		}
 
 		public void Filter(Context context, Query query)
@@ -158,9 +158,9 @@ namespace xn
 			query.FilterList(context, this);
 		}
 
-		protected override void FreeObject(IntPtr ptr)
+		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{
-			OpenNIImporter.xnNodeInfoListFree(ptr);
+			SafeNativeMethods.xnNodeInfoListFree(ptr);
 		}
 	}
 }

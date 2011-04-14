@@ -12,6 +12,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -19,7 +22,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\Bin\$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
 			>
@@ -67,7 +70,7 @@
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../Lib/$(ConfigurationName)"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="../../Bin/$(ConfigurationName)/$(TargetName).pdb"
+				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				SubSystem="2"
 				ImportLibrary="../../Lib/$(ConfigurationName)/openNI.lib"
 				TargetMachine="1"
@@ -95,9 +98,89 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="..\..\Bin64\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)$(ConfigurationName)"
+			ConfigurationType="2"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../../../../Include;../../../../Source/External/TinyXml;..\..\..\..\Platform\Win32\Driver\Build\sys"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;XN_EXPORTS;_CRT_SECURE_NO_WARNINGS"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions=""
+				AdditionalIncludeDirectories="../../../../Include"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib setupapi.lib"
+				OutputFile="$(OutDir)\$(ProjectName)64.dll"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../../Lib64/$(ConfigurationName)"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
+				SubSystem="2"
+				ImportLibrary="../../Lib64/$(ConfigurationName)/openNI64.lib"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\Bin\$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -151,12 +234,100 @@
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../Lib/$(ConfigurationName)"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="../../Bin/$(ConfigurationName)/$(TargetName).pdb"
+				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				ImportLibrary="../../Lib/$(ConfigurationName)/openNI.lib"
 				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="..\..\Bin64\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)$(ConfigurationName)"
+			ConfigurationType="2"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				AdditionalIncludeDirectories="../../../../Include;../../../../Source/External/TinyXml;..\..\..\..\Platform\Win32\Driver\Build\sys"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;XN_EXPORTS"
+				RuntimeLibrary="2"
+				BufferSecurityCheck="false"
+				EnableEnhancedInstructionSet="2"
+				FloatingPointModel="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions=""
+				AdditionalIncludeDirectories="../../../../Include"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib setupapi.lib"
+				OutputFile="$(OutDir)\$(ProjectName)64.dll"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="../../Lib64/$(ConfigurationName)"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				ImportLibrary="../../Lib64/$(ConfigurationName)/openNI64.lib"
+				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -212,10 +383,22 @@
 					RelativePath="..\..\..\..\Source\OpenNI\XnModuleLoader.h"
 					>
 				</File>
+				<File
+					RelativePath="..\..\..\..\Source\OpenNI\XnTypeManager.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\OpenNI\XnTypeManager.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="ModuleInterfaces"
 				>
+				<File
+					RelativePath="..\..\..\..\Include\XnModuleCFunctions.h"
+					>
+				</File>
 				<File
 					RelativePath="..\..\..\..\Include\XnModuleCppInterface.h"
 					>
@@ -357,6 +540,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\Source\OpenNI\Win32\Win32Semaphore.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\Source\OpenNI\Win32\Win32SharedLibs.cpp"
 					>
 				</File>
@@ -389,7 +576,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\Include\XnOSMemory.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\Source\OpenNI\XnOSMemoryProfiling.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Include\XnOSStrings.h"
 					>
 				</File>
 				<File
@@ -517,11 +712,23 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\Include\XnAlgorithms.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Include\XnArray.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\Source\OpenNI\XnBaseNode.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\..\..\..\Include\XnBaseNode.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Include\XnBitSet.h"
 					>
 				</File>
 				<File

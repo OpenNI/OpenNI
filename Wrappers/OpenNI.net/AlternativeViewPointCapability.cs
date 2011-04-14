@@ -2,46 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
-	public class AlternativeViewPointCapability : Capability
+	public class AlternativeViewpointCapability : Capability
 	{
-		public AlternativeViewPointCapability(ProductionNode node) :
+		internal AlternativeViewpointCapability(ProductionNode node) :
 			base(node)
 		{
-			this.viewPointChangedEvent = new StateChangedEvent(node,
-				OpenNIImporter.xnRegisterToViewPointChange,
-				OpenNIImporter.xnUnregisterFromViewPointChange);
+			this.viewpointChangedEvent = new StateChangedEvent(node,
+				SafeNativeMethods.xnRegisterToViewPointChange,
+				SafeNativeMethods.xnUnregisterFromViewPointChange);
 		}
 
-		public bool IsViewPointSupported(ProductionNode other)
+		public bool IsViewpointSupported(ProductionNode other)
 		{
-			return OpenNIImporter.xnIsViewPointSupported(this.InternalObject, other.InternalObject);
+			return SafeNativeMethods.xnIsViewPointSupported(this.InternalObject, other.InternalObject);
 		}
 
-		public void SetViewPoint(ProductionNode other)
+		public void SetViewpoint(ProductionNode other)
 		{
-			UInt32 status = OpenNIImporter.xnSetViewPoint(this.InternalObject, other.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnSetViewPoint(this.InternalObject, other.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public void ResetViewPoint()
+		public void ResetViewpoint()
 		{
-			UInt32 status = OpenNIImporter.xnResetViewPoint(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnResetViewPoint(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public bool IsViewPointAs(ProductionNode other)
+		public bool IsViewpointAs(ProductionNode other)
 		{
-			return OpenNIImporter.xnIsViewPointAs(this.InternalObject, other.InternalObject);
+			return SafeNativeMethods.xnIsViewPointAs(this.InternalObject, other.InternalObject);
 		}
 
-		public event StateChangedHandler ViewPointChanged
+		public event EventHandler ViewpointChanged
 		{
-			add { this.viewPointChangedEvent.Event += value; }
-			remove { this.viewPointChangedEvent.Event -= value; }
+			add { this.viewpointChangedEvent.Event += value; }
+			remove { this.viewpointChangedEvent.Event -= value; }
 		}
 
-		private StateChangedEvent viewPointChangedEvent;
+		private StateChangedEvent viewpointChangedEvent;
 	}
 }

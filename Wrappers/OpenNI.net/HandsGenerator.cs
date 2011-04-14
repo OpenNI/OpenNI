@@ -1,22 +1,110 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UserID = System.UInt32;
+using UserID = System.Int32;
 
-namespace xn
+namespace OpenNI
 {
+	public class HandCreateEventArgs : EventArgs
+	{
+		public HandCreateEventArgs(UserID id, Point3D position, float time)
+		{
+			this.id = id;
+			this.position = position;
+			this.time = time;
+		}
+
+		public UserID UserID
+		{
+			get { return id; }
+			set { id = value; }
+		}
+
+		public OpenNI.Point3D Position
+		{
+			get { return position; }
+			set { position = value; }
+		}
+
+		public float Time
+		{
+			get { return time; }
+			set { time = value; }
+		}
+
+		private UserID id;
+		private Point3D position;
+		private float time;
+	}
+
+	public class HandUpdateEventArgs : EventArgs
+	{
+		public HandUpdateEventArgs(UserID id, Point3D position, float time)
+		{
+			this.id = id;
+			this.position = position;
+			this.time = time;
+		}
+
+		public UserID UserID
+		{
+			get { return id; }
+			set { id = value; }
+		}
+
+		public OpenNI.Point3D Position
+		{
+			get { return position; }
+			set { position = value; }
+		}
+
+		public float Time
+		{
+			get { return time; }
+			set { time = value; }
+		}
+
+		private UserID id;
+		private Point3D position;
+		private float time;
+	}
+
+	public class HandDestroyEventArgs : EventArgs
+	{
+		public HandDestroyEventArgs(UserID id, float time)
+		{
+			this.id = id;
+			this.time = time;
+		}
+
+		public UserID UserID
+		{
+			get { return id; }
+			set { id = value; }
+		}
+
+		public float Time
+		{
+			get { return time; }
+			set { time = value; }
+		}
+
+		private UserID id;
+		private float time;
+	}
+
     public class HandsGenerator : Generator
     {
-		internal HandsGenerator(IntPtr nodeHandle, bool addRef)
-			: base(nodeHandle, addRef)
+		internal HandsGenerator(Context context, IntPtr nodeHandle, bool addRef)
+			: base(context, nodeHandle, addRef)
         {
-            this.internalHandCreate = new OpenNIImporter.XnHandCreate(this.InternalHandCreate);
-            this.internalHandUpdate = new OpenNIImporter.XnHandUpdate(this.InternalHandUpdate);
-            this.internalHandDestroy = new OpenNIImporter.XnHandDestroy(this.InternalHandDestroy);
+            this.internalHandCreate = new SafeNativeMethods.XnHandCreate(this.InternalHandCreate);
+            this.internalHandUpdate = new SafeNativeMethods.XnHandUpdate(this.InternalHandUpdate);
+            this.internalHandDestroy = new SafeNativeMethods.XnHandDestroy(this.InternalHandDestroy);
         }
 
         public HandsGenerator(Context context, Query query, EnumerationErrors errors) :
-            this(Create(context, query, errors), false)
+			this(context, Create(context, query, errors), false)
         {
         }
         public HandsGenerator(Context context, Query query)
@@ -31,47 +119,49 @@ namespace xn
         private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
         {
             IntPtr handle;
-            UInt32 status =
-                OpenNIImporter.xnCreateHandsGenerator(context.InternalObject,
+            int status =
+                SafeNativeMethods.xnCreateHandsGenerator(context.InternalObject,
                                                         out handle,
                                                         query == null ? IntPtr.Zero : query.InternalObject,
                                                         errors == null ? IntPtr.Zero : errors.InternalObject);
-            WrapperUtils.CheckStatus(status);
+            WrapperUtils.ThrowOnError(status);
             return handle;
         }
 
         public void StopTracking(UserID id)
         {
-            UInt32 status = OpenNIImporter.xnStopTracking(this.InternalObject, id);
-            WrapperUtils.CheckStatus(status);
+            int status = SafeNativeMethods.xnStopTracking(this.InternalObject, id);
+            WrapperUtils.ThrowOnError(status);
         }
+
         public void StopTrackingAll()
         {
-            UInt32 status = OpenNIImporter.xnStopTrackingAll(this.InternalObject);
-            WrapperUtils.CheckStatus(status);
+            int status = SafeNativeMethods.xnStopTrackingAll(this.InternalObject);
+            WrapperUtils.ThrowOnError(status);
         }
-        public void StartTracking(ref Point3D position)
+
+        public void StartTracking(Point3D position)
         {
-            UInt32 status = OpenNIImporter.xnStartTracking(this.InternalObject, ref position);
-            WrapperUtils.CheckStatus(status);
+            int status = SafeNativeMethods.xnStartTracking(this.InternalObject, ref position);
+            WrapperUtils.ThrowOnError(status);
         }
+
         public void SetSmoothing(float factor)
         {
-            UInt32 status = OpenNIImporter.xnSetTrackingSmoothing(this.InternalObject, factor);
-            WrapperUtils.CheckStatus(status);
+            int status = SafeNativeMethods.xnSetTrackingSmoothing(this.InternalObject, factor);
+            WrapperUtils.ThrowOnError(status);
         }
 
         #region Hand Create
-        public delegate void HandCreateHandler(ProductionNode node, UserID id, ref Point3D position, float fTime);
-        private event HandCreateHandler handCreateEvent;
-        public event HandCreateHandler HandCreate
+        private event EventHandler<HandCreateEventArgs> handCreateEvent;
+		public event EventHandler<HandCreateEventArgs> HandCreate
         {
             add
             {
                 if (this.handCreateEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreate, null, null, IntPtr.Zero, out handCreateHandle);
-                    WrapperUtils.CheckStatus(status);
+                    int status = SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, this.internalHandCreate, null, null, IntPtr.Zero, out handCreateHandle);
+                    WrapperUtils.ThrowOnError(status);
                 }
                 this.handCreateEvent += value;
             }
@@ -81,30 +171,30 @@ namespace xn
 
                 if (this.handCreateEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handCreateHandle);
+                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handCreateHandle);
                 }
             }
         }
         private void InternalHandCreate(IntPtr hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
         {
-            if (this.handCreateEvent != null)
-                this.handCreateEvent(this, id, ref position, fTime);
+			EventHandler<HandCreateEventArgs> handlers = this.handCreateEvent;
+			if (handlers != null)
+				handlers(this, new HandCreateEventArgs(id, position, fTime));
         }
-        private OpenNIImporter.XnHandCreate internalHandCreate;
+        private SafeNativeMethods.XnHandCreate internalHandCreate;
         private IntPtr handCreateHandle;
         #endregion
 
         #region Hand Update
-        public delegate void HandUpdateHandler(ProductionNode node, UserID id, ref Point3D position, float fTime);
-        private event HandUpdateHandler handUpdateEvent;
-        public event HandUpdateHandler HandUpdate
+		private event EventHandler<HandUpdateEventArgs> handUpdateEvent;
+		public event EventHandler<HandUpdateEventArgs> HandUpdate
         {
             add
             {
                 if (this.handUpdateEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out handUpdateHandle);
-                    WrapperUtils.CheckStatus(status);
+                    int status = SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, this.internalHandUpdate, null, IntPtr.Zero, out handUpdateHandle);
+                    WrapperUtils.ThrowOnError(status);
                 }
                 this.handUpdateEvent += value;
             }
@@ -114,30 +204,30 @@ namespace xn
 
                 if (this.handUpdateEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
+                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handUpdateHandle);
                 }
             }
         }
         private void InternalHandUpdate(IntPtr hNode, UserID id, ref Point3D position, float fTime, IntPtr pCookie)
         {
-            if (this.handUpdateEvent != null)
-                this.handUpdateEvent(this, id, ref position, fTime);
+			EventHandler<HandUpdateEventArgs> handlers = this.handUpdateEvent;
+			if (handlers != null)
+				handlers(this, new HandUpdateEventArgs(id, position, fTime));
         }
-        private OpenNIImporter.XnHandUpdate internalHandUpdate;
+        private SafeNativeMethods.XnHandUpdate internalHandUpdate;
         private IntPtr handUpdateHandle;
         #endregion
 
         #region Hand Destroy
-        public delegate void HandDestroyHandler(ProductionNode node, UserID id, float fTime);
-        private event HandDestroyHandler handDestroyEvent;
-        public event HandDestroyHandler HandDestroy
+		private event EventHandler<HandDestroyEventArgs> handDestroyEvent;
+		public event EventHandler<HandDestroyEventArgs> HandDestroy
         {
             add
             {
                 if (this.handDestroyEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out handDestroyHandle);
-                    WrapperUtils.CheckStatus(status);
+                    int status = SafeNativeMethods.xnRegisterHandCallbacks(this.InternalObject, null, null, this.internalHandDestroy, IntPtr.Zero, out handDestroyHandle);
+                    WrapperUtils.ThrowOnError(status);
                 }
                 this.handDestroyEvent += value;
             }
@@ -147,16 +237,17 @@ namespace xn
 
                 if (this.handDestroyEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle);
+                    SafeNativeMethods.xnUnregisterHandCallbacks(this.InternalObject, this.handDestroyHandle);
                 }
             }
         }
         private void InternalHandDestroy(IntPtr hNode, UserID id, float fTime, IntPtr pCookie)
         {
-            if (this.handDestroyEvent != null)
-                this.handDestroyEvent(this, id, fTime);
+			EventHandler<HandDestroyEventArgs> handlers = this.handDestroyEvent;
+			if (handlers != null)
+				handlers(this, new HandDestroyEventArgs(id, fTime));
         }
-        private OpenNIImporter.XnHandDestroy internalHandDestroy;
+        private SafeNativeMethods.XnHandDestroy internalHandDestroy;
         private IntPtr handDestroyHandle;
         #endregion
 

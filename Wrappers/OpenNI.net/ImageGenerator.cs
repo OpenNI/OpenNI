@@ -2,20 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class ImageGenerator : MapGenerator
 	{
-		internal ImageGenerator(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal ImageGenerator(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 			this.pixelFormatChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToPixelFormatChange,
-				OpenNIImporter.xnUnregisterFromPixelFormatChange);
+				SafeNativeMethods.xnRegisterToPixelFormatChange,
+				SafeNativeMethods.xnUnregisterFromPixelFormatChange);
 		}
 
 		public ImageGenerator(Context context, Query query, EnumerationErrors errors) :
-			this(Create(context, query, errors), false)
+			this(context, Create(context, query, errors), false)
 		{
 		}
 
@@ -29,47 +29,53 @@ namespace xn
 		{
 		}
 
-		public IntPtr GetImageMapPtr()
+		public IntPtr ImageMapPtr
 		{
-			return OpenNIImporter.xnGetImageMap(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetImageMap(this.InternalObject);
+			}
 		}
 
 		public MapData<RGB24Pixel> GetRGB24ImageMap()
 		{
-			return GetMapData<RGB24Pixel>(OpenNIImporter.xnGetRGB24ImageMap(this.InternalObject));
+			return GetMapData<RGB24Pixel>(SafeNativeMethods.xnGetRGB24ImageMap(this.InternalObject));
 		}
 
 		public MapData<byte> GetGrayscale8ImageMap()
 		{
-			return GetMapData<byte>(OpenNIImporter.xnGetGrayscale8ImageMap(this.InternalObject));
+			return GetMapData<byte>(SafeNativeMethods.xnGetGrayscale8ImageMap(this.InternalObject));
 		}
 
-		public MapData<UInt16> GetGrayscale16ImageMap()
+		public UInt16MapData GetGrayscale16ImageMap()
 		{
-			return GetMapData<UInt16>(OpenNIImporter.xnGetGrayscale16ImageMap(this.InternalObject));
+			MapOutputMode mode = this.MapOutputMode;
+			return new UInt16MapData(mode.XRes, mode.YRes, SafeNativeMethods.xnGetGrayscale16ImageMap(this.InternalObject));
 		}
 
 		public bool IsPixelFormatSupported(PixelFormat format)
 		{
-			return OpenNIImporter.xnIsPixelFormatSupported(this.InternalObject, format);
+			return SafeNativeMethods.xnIsPixelFormatSupported(this.InternalObject, format);
 		}
 
-		public void SetPixelFormat(PixelFormat format)
+		public PixelFormat PixelFormat
 		{
-			UInt32 status = OpenNIImporter.xnSetPixelFormat(this.InternalObject, format);
-			WrapperUtils.CheckStatus(status);
-		}
-
-		public PixelFormat GetPixelFormat()
-		{
-			return OpenNIImporter.xnGetPixelFormat(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetPixelFormat(this.InternalObject);
+			}
+			set
+			{
+				int status = SafeNativeMethods.xnSetPixelFormat(this.InternalObject, value);
+				WrapperUtils.ThrowOnError(status);
+			}
 		}
 
 		public void GetMetaData(ImageMetaData imageMD)
 		{
 			using (IMarshaler marsh = imageMD.GetMarshaler(true))
 			{
-				OpenNIImporter.xnGetImageMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetImageMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 
@@ -80,7 +86,7 @@ namespace xn
 			return imageMD;
 		}
 
-		public event StateChangedHandler PixelFormatChanged
+		public event EventHandler PixelFormatChanged
 		{
 			add { this.pixelFormatChanged.Event += value; }
 			remove { this.pixelFormatChanged.Event -= value; }
@@ -89,10 +95,10 @@ namespace xn
 		private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateImageGenerator(context.InternalObject, out handle,
+			int status = SafeNativeMethods.xnCreateImageGenerator(context.InternalObject, out handle,
 				query == null ? IntPtr.Zero : query.InternalObject,
 				errors == null ? IntPtr.Zero : errors.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 

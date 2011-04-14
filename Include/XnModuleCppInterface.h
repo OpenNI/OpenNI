@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_MODULE_CPP_INTERFACE_H__
 #define __XN_MODULE_CPP_INTERFACE_H__
 
@@ -83,6 +79,26 @@ namespace xn
 		ExportedNodesList m_ExportedNodes;
 	};
 
+	class ExtensionModule : public Module
+	{
+	public:
+		virtual XnStatus Load()
+		{
+			XnStatus nRetVal = XN_STATUS_OK;
+			
+			nRetVal = Module::Load();
+			XN_IS_STATUS_OK(nRetVal);
+
+			nRetVal = RegisterNewTypes();
+			XN_IS_STATUS_OK(nRetVal);
+			
+			return (XN_STATUS_OK);
+		}
+
+	protected:
+		virtual XnStatus RegisterNewTypes() = 0;
+	};
+
 	class ModuleExportedProductionNode
 	{
 	public:
@@ -122,28 +138,49 @@ namespace xn
 		virtual void UnregisterFromErrorStateChange(XnCallbackHandle hCallback) = 0;
 	};
 
+	class ModuleGeneralIntInterface
+	{
+	public:
+		virtual XnStatus GetRange(const XnChar* strCap, XnInt32& nMin, XnInt32& nMax, XnInt32& nStep, XnInt32& nDefault, XnBool& bIsAutoSupported) = 0;
+		virtual XnStatus Get(const XnChar* strCap, XnInt32& nValue) = 0;
+		virtual XnInt32 Set(const XnChar* strCap, XnInt32 nValue) = 0;
+		virtual XnStatus RegisterToValueChange(const XnChar* strCap, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromValueChange(const XnChar* strCap, XnCallbackHandle hCallback) = 0;
+	};
+
 	class ModuleProductionNode
 	{
 	public:
 		virtual ~ModuleProductionNode() {}
-		virtual XnBool IsCapabilitySupported(const XnChar* strCapabilityName) { return FALSE; }
-		virtual XnStatus SetIntProperty(const XnChar* strName, XnUInt64 nValue) { return XN_STATUS_ERROR; }
-		virtual XnStatus SetRealProperty(const XnChar* strName, XnDouble dValue) { return XN_STATUS_ERROR; }
-		virtual XnStatus SetStringProperty(const XnChar* strName, const XnChar* strValue) { return XN_STATUS_ERROR; }
-		virtual XnStatus SetGeneralProperty(const XnChar* strName, XnUInt32 nBufferSize, const void* pBuffer) { return XN_STATUS_ERROR; }
-		virtual XnStatus GetIntProperty(const XnChar* strName, XnUInt64& nValue) const { return XN_STATUS_ERROR; }
-		virtual XnStatus GetRealProperty(const XnChar* strName, XnDouble& dValue) const { return XN_STATUS_ERROR; }
-		virtual XnStatus GetStringProperty(const XnChar* strName, XnChar* csValue, XnUInt32 nBufSize) const { return XN_STATUS_ERROR; }
-		virtual XnStatus GetGeneralProperty(const XnChar* strName, XnUInt32 nBufferSize, void* pBuffer) const { return XN_STATUS_ERROR; }
+		virtual XnBool IsCapabilitySupported(const XnChar* /*strCapabilityName*/) { return FALSE; }
+		virtual XnStatus SetIntProperty(const XnChar* /*strName*/, XnUInt64 /*nValue*/) { return XN_STATUS_ERROR; }
+		virtual XnStatus SetRealProperty(const XnChar* /*strName*/, XnDouble /*dValue*/) { return XN_STATUS_ERROR; }
+		virtual XnStatus SetStringProperty(const XnChar* /*strName*/, const XnChar* /*strValue*/) { return XN_STATUS_ERROR; }
+		virtual XnStatus SetGeneralProperty(const XnChar* /*strName*/, XnUInt32 /*nBufferSize*/, const void* /*pBuffer*/) { return XN_STATUS_ERROR; }
+		virtual XnStatus GetIntProperty(const XnChar* /*strName*/, XnUInt64& /*nValue*/) const { return XN_STATUS_ERROR; }
+		virtual XnStatus GetRealProperty(const XnChar* /*strName*/, XnDouble& /*dValue*/) const { return XN_STATUS_ERROR; }
+		virtual XnStatus GetStringProperty(const XnChar* /*strName*/, XnChar* /*csValue*/, XnUInt32 /*nBufSize*/) const { return XN_STATUS_ERROR; }
+		virtual XnStatus GetGeneralProperty(const XnChar* /*strName*/, XnUInt32 /*nBufferSize*/, void* /*pBuffer*/) const { return XN_STATUS_ERROR; }
 		virtual ModuleExtendedSerializationInterface* GetExtendedSerializationInterface() { return NULL; }
 		virtual ModuleLockAwareInterface* GetLockAwareInterface() { return NULL; }
 		virtual ModuleErrorStateInterface* GetErrorStateInterface() { return NULL; }
+		virtual ModuleGeneralIntInterface* GetGeneralIntInterface(const XnChar* /*strCap*/) { return NULL; }
+	};
+
+	class ModuleDeviceIdentificationInterface
+	{
+	public:
+		virtual ~ModuleDeviceIdentificationInterface() {}
+		virtual XnStatus GetDeviceName(XnChar* strBuffer, XnUInt32& nBufferSize) = 0;
+		virtual XnStatus GetVendorSpecificData(XnChar* strBuffer, XnUInt32& nBufferSize) = 0;
+		virtual XnStatus GetSerialNumber(XnChar* strBuffer, XnUInt32& nBufferSize) = 0;
 	};
 
 	class ModuleDevice : virtual public ModuleProductionNode
 	{
 	public:
 		virtual ~ModuleDevice() {}
+		virtual ModuleDeviceIdentificationInterface* GetIdentificationInterface() { return NULL; }
 	};
 
 	class ModuleMirrorInterface
@@ -192,6 +229,7 @@ namespace xn
 		virtual void UnregisterFromNewDataAvailable(XnCallbackHandle hCallback) = 0;
 		virtual XnBool IsNewDataAvailable(XnUInt64& nTimestamp) = 0;
 		virtual XnStatus UpdateData() = 0;
+		virtual const void* GetData() = 0;
 		virtual XnUInt32 GetDataSize() = 0;
 		virtual XnUInt64 GetTimestamp() = 0;
 		virtual XnUInt32 GetFrameID() = 0;
@@ -253,6 +291,16 @@ namespace xn
 		virtual void UnregisterFromCroppingChange(XnCallbackHandle hCallback) = 0;
 	};
 
+	class ModuleAntiFlickerInterface
+	{
+	public:
+		virtual ~ModuleAntiFlickerInterface() {}
+		virtual XnStatus SetPowerLineFrequency(XnPowerLineFrequency nFrequency) = 0;
+		virtual XnPowerLineFrequency GetPowerLineFrequency() = 0;
+		virtual XnStatus RegisterToPowerLineFrequencyChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromPowerLineFrequencyChange(XnCallbackHandle hCallback) = 0;
+	};
+
 	class ModuleMapGenerator : virtual public ModuleGenerator
 	{
 	public:
@@ -263,7 +311,9 @@ namespace xn
 		virtual XnStatus GetMapOutputMode(XnMapOutputMode& Mode) = 0;
 		virtual XnStatus RegisterToMapOutputModeChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback) = 0;
 		virtual void UnregisterFromMapOutputModeChange(XnCallbackHandle hCallback) = 0;
+		virtual XnUInt32 GetBytesPerPixel() = 0;
 		virtual ModuleCroppingInterface* GetCroppingInterface() { return NULL; }
+		virtual ModuleAntiFlickerInterface* GetAntiFlickerInterface() { return NULL; }
 	};
 
 	class ModuleUserPositionInterface
@@ -281,6 +331,8 @@ namespace xn
 	{
 	public:
 		virtual ~ModuleDepthGenerator() {}
+		virtual const void* GetData() { return GetDepthMap(); }
+		virtual XnUInt32 GetBytesPerPixel() { return sizeof(XnDepthPixel); }
 		virtual XnDepthPixel* GetDepthMap() = 0;
 		virtual XnDepthPixel GetDeviceMaxDepth() = 0;
 		virtual void GetFieldOfView(XnFieldOfView& FOV) = 0;
@@ -293,6 +345,8 @@ namespace xn
 	{
 	public:
 		virtual ~ModuleImageGenerator() {}
+		virtual const void* GetData() { return GetImageMap(); }
+		virtual XnUInt32 GetBytesPerPixel() { return xnGetBytesPerPixelForPixelFormat(GetPixelFormat()); }
 		virtual XnUInt8* GetImageMap() = 0;
 		virtual XnBool IsPixelFormatSupported(XnPixelFormat Format) = 0;
 		virtual XnStatus SetPixelFormat(XnPixelFormat Format) = 0;
@@ -305,6 +359,8 @@ namespace xn
 	{
 	public:
 		virtual ~ModuleIRGenerator() {}
+		virtual const void* GetData() { return GetIRMap(); }
+		virtual XnUInt32 GetBytesPerPixel() { return sizeof(XnIRPixel); }
 		virtual XnIRPixel* GetIRMap() = 0;
 	};
 
@@ -312,6 +368,7 @@ namespace xn
 	{
 	public:
 		virtual ~ModuleGestureGenerator() {}
+		virtual const void* GetData() { return NULL; }
 		virtual XnStatus AddGesture(const XnChar* strGesture, XnBoundingBox3D* pArea) = 0;
 		virtual XnStatus RemoveGesture(const XnChar* strGesture) = 0;
 		virtual XnStatus GetActiveGestures(XnChar** pstrGestures, XnUInt16& nGestures) = 0;
@@ -330,6 +387,8 @@ namespace xn
 	{
 	public:
 		virtual ~ModuleSceneAnalyzer() {}
+		virtual const void* GetData() { return GetLabelMap(); }
+		virtual XnUInt32 GetBytesPerPixel() { return sizeof(XnLabel); }
 		virtual const XnLabel* GetLabelMap() = 0;
 		virtual XnStatus GetFloor(XnPlane3D& pPlane) = 0;
 	};
@@ -338,6 +397,7 @@ namespace xn
 	{
 	public:
 		virtual ~ModuleHandsGenerator() {}
+		virtual const void* GetData() { return NULL; }
 		virtual XnStatus RegisterHandCallbacks(XnModuleHandCreate CreateCB, XnModuleHandUpdate UpdateCB, XnModuleHandDestroy DestroyCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
 		virtual void UnregisterHandCallbacks(XnCallbackHandle hCallback) = 0;
 		virtual XnStatus StopTracking(XnUserID user) = 0;
@@ -366,6 +426,8 @@ namespace xn
 		virtual XnBool IsCalibrating(XnUserID user) = 0;
 		virtual XnStatus RequestCalibration(XnUserID user, XnBool bForce) = 0;
 		virtual XnStatus AbortCalibration(XnUserID user) = 0;
+		virtual XnStatus SaveCalibrationDataToFile(XnUserID user, const XnChar* strFileName) = 0;
+		virtual XnStatus LoadCalibrationDataFromFile(XnUserID user, const XnChar* strFileName) = 0;
 		virtual XnStatus SaveCalibrationData(XnUserID user, XnUInt32 nSlot) = 0;
 		virtual XnStatus LoadCalibrationData(XnUserID user, XnUInt32 nSlot) = 0;
 		virtual XnStatus ClearCalibrationData(XnUInt32 nSlot) = 0;
@@ -401,6 +463,7 @@ namespace xn
 	{
 	public:
 		virtual ~ModuleUserGenerator() {}
+		virtual const void* GetData() { return NULL; }
 		virtual XnUInt16 GetNumberOfUsers() = 0;
 		virtual XnStatus GetUsers(XnUserID* pUsers, XnUInt16& nUsers) = 0;
 		virtual XnStatus GetCoM(XnUserID user, XnPoint3D& com) = 0;
@@ -416,6 +479,7 @@ namespace xn
 	{
 	public:
 		virtual ~ModuleAudioGenerator() {}
+		virtual const void* GetData() { return GetAudioBuffer(); }
 		virtual XnUChar* GetAudioBuffer() = 0;
 		virtual XnUInt32 GetSupportedWaveOutputModesCount() = 0;
 		virtual XnStatus GetSupportedWaveOutputModes(XnWaveOutputMode aSupportedModes[], XnUInt32& nCount) = 0;

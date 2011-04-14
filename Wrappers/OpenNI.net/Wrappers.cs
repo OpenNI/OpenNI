@@ -1,25 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
-namespace xn
+namespace OpenNI
 {
-	public class WrapperUtils
+	public static class WrapperUtils
 	{
-		public static string GetErrorMessage(UInt32 status)
+		public static string GetErrorMessage(Int32 status)
 		{
-            return Marshal.PtrToStringAnsi(OpenNIImporter.xnGetStatusString(status));
+            return Marshal.PtrToStringAnsi(SafeNativeMethods.xnGetStatusString(status));
 		}
 
-		public static void CheckStatus(UInt32 status)
+		public static void ThrowOnError(Int32 status)
 		{
 			if (status != 0)
 			{
-				throw new XnStatusException(status);
+				throw new StatusException(status);
 			}
 		}
 
-		public static void CheckEnumeration(UInt32 status, EnumerationErrors errors)
+		public static void CheckEnumeration(Int32 status, EnumerationErrors errors)
 		{
 			if (status != 0)
 			{
@@ -29,7 +31,7 @@ namespace xn
 				}
 				else
 				{
-					throw new XnStatusException(status);
+					throw new StatusException(status);
 				}
 			}
 		}
@@ -37,7 +39,7 @@ namespace xn
 
 	public abstract class HandleWrapper
 	{
-		internal HandleWrapper(UInt32 handle)
+		internal HandleWrapper(Int32 handle)
 		{
 			this.handle = handle;
 		}
@@ -46,17 +48,17 @@ namespace xn
 		/// Gets the native (C language) OpenNI handle. This method should only be used for native-managed transitions.
 		/// </summary>
 		/// <returns>An OpenNI handle</returns>
-		public UInt32 ToNative()
+		public Int32 ToNative()
 		{
 			return this.handle;
 		}
 
-		internal UInt32 InternalHandle
+		internal Int32 InternalHandle
 		{
 			get { return this.handle; }
 		}
 
-		private UInt32 handle;
+		private Int32 handle;
 	}
 
 	public abstract class ObjectWrapper : IDisposable
@@ -82,7 +84,7 @@ namespace xn
 		/// <returns>A pointer to the OpenNI object</returns>
 		public IntPtr ToNative()
 		{
-			return this.ptr;
+			return this.InternalObject;
 		}
 
 		#region IDisposable Members
@@ -97,50 +99,106 @@ namespace xn
 
 		internal IntPtr InternalObject
 		{
-			get { return this.ptr; }
+			get 
+			{
+				if (this.ptr == IntPtr.Zero)
+				{
+					throw new ObjectDisposedException(GetType().Name);
+				}
+				return this.ptr; 
+			}
 		}
 
-		protected abstract void FreeObject(IntPtr ptr);
+		protected abstract void FreeObject(IntPtr ptr, bool disposing);
 
 		protected virtual void Dispose(bool disposing)
 		{
-			if (this.InternalObject != IntPtr.Zero)
+			if (this.ptr != IntPtr.Zero)
 			{
-				FreeObject(this.InternalObject);
+				FreeObject(this.ptr, disposing);
 				this.ptr = IntPtr.Zero;
 			}
+		}
+
+		internal void MarkAlreadyFreed()
+		{
+			this.ptr = IntPtr.Zero;
 		}
 
 		private IntPtr ptr;
 	}
 
+	[Serializable]
 	public class GeneralException : System.Exception
 	{
-		public GeneralException(string message)
-			: base(message)
+		public GeneralException() :
+			base()
+		{
+		}
+
+		public GeneralException(string message) :
+			base(message)
+		{
+		}
+
+		public GeneralException(string message, Exception innerException) :
+			base(message, innerException)
+		{
+		}
+
+		protected GeneralException(SerializationInfo info, StreamingContext context) : 
+			base(info, context)
 		{
 		}
 	}
 
-	public class XnStatusException : GeneralException
+	[Serializable]
+	public class StatusException : GeneralException
 	{
-		public XnStatusException(UInt32 status)
-			: base(WrapperUtils.GetErrorMessage(status))
+		public StatusException() :
+			this(0)
+		{
+		}
+
+		public StatusException(Int32 status) :
+			base(WrapperUtils.GetErrorMessage(status))
 		{
 			this.status = status;
 		}
 
-		public UInt32 Status
+		public StatusException(string message) :
+			base(message)
+		{
+		}
+
+		public StatusException(string message, Exception innerException) :
+			base(message, innerException)
+		{
+		}
+
+		protected StatusException(SerializationInfo info, StreamingContext context) : 
+			base(info, context)
+		{
+		}
+
+		public Int32 Status
 		{
 			get { return status; }
 		}
 
-		private UInt32 status;
+		[SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
+		public override void GetObjectData(SerializationInfo info, StreamingContext context)
+		{
+			info.AddValue("Status", status);
+			base.GetObjectData(info, context);
+		}
+
+		private Int32 status;
 	}
 
 	public class LockHandle : HandleWrapper
 	{
-		internal LockHandle(UInt32 handle)
+		internal LockHandle(Int32 handle)
 			: base(handle)
 		{
 		}
@@ -150,7 +208,7 @@ namespace xn
 		/// </summary>
 		/// <param name="handle">The native lock handle</param>
 		/// <returns>A managed LockHandle object</returns>
-		static public LockHandle FromNative(UInt32 handle)
+		static public LockHandle FromNative(Int32 handle)
 		{
 			return new LockHandle(handle);
 		}
@@ -158,13 +216,13 @@ namespace xn
 
 	public struct CodecID
 	{
-		public CodecID(UInt32 internalValue)
+		public CodecID(int internalValue)
 		{
 			this.val = internalValue;
 		}
 
 		public CodecID(byte byte1, byte byte2, byte byte3, byte byte4) :
-			this((UInt32)(byte1 << 24 | byte2 << 16 | byte3 << 8 | byte4))
+			this(byte4 << 24 | byte3 << 16 | byte2 << 8 | byte1)
 		{
 		}
 
@@ -180,12 +238,12 @@ namespace xn
 		public static readonly CodecID Z16WithTables = new CodecID('1', '6', 'z', 'T');
 		public static readonly CodecID Z8 = new CodecID('I', 'm', '8', 'z');
 
-		internal UInt32 InternalValue
+		internal int InternalValue
 		{
 			get { return this.val; }
 		}
 
-		private UInt32 val;
+		private int val;
 	}
 
 	public class NodeWrapper : ObjectWrapper
@@ -195,7 +253,7 @@ namespace xn
 		{
 			if (addRef)
 			{
-				OpenNIImporter.xnProductionNodeAddRef(hNode);
+				WrapperUtils.ThrowOnError(SafeNativeMethods.xnProductionNodeAddRef(hNode));
 			}
 		}
 
@@ -223,14 +281,17 @@ namespace xn
 			get { return (this.InternalObject != IntPtr.Zero); }
 		}
 
-		public string GetName()
+		public string Name
 		{
-			return OpenNIImporter.xnGetNodeName(this.InternalObject);
+			get
+			{
+				return Marshal.PtrToStringAnsi(SafeNativeMethods.xnGetNodeName(this.InternalObject));
+			}
 		}
 
-		protected override void FreeObject(IntPtr ptr)
+		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{
-			OpenNIImporter.xnProductionNodeRelease(ptr);
+			SafeNativeMethods.xnProductionNodeRelease(ptr);
 		}
 	};
 

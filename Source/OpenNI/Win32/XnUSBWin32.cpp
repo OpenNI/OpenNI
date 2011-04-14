@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -205,8 +201,15 @@ XnStatus xnUSBSetPipeProperty(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nIndex, XnUIn
 	PipeProp.nIndex = nIndex;
 	PipeProp.nValue = nValue;
 
-	// Do the set pipe property
+	// Set pipe property (regular handle)
 	bResult = DeviceIoControl(pEPHandle->hEPHandle, IOCTL_PSDRV_SET_PIPE_PROPERTY, &PipeProp, sizeof(PSUSBDRV_PIPE_PROPERTY), NULL, NULL, &nRetBytes, NULL);
+	if (bResult == FALSE)
+	{
+		return (XN_STATUS_USB_SET_ENDPOINT_POLICY_FAILED);
+	}
+
+	// Set pipe property (ovlp handle)
+	bResult = DeviceIoControl(pEPHandle->hEPHandleOvlp, IOCTL_PSDRV_SET_PIPE_PROPERTY, &PipeProp, sizeof(PSUSBDRV_PIPE_PROPERTY), NULL, NULL, &nRetBytes, NULL);
 	if (bResult == FALSE)
 	{
 		return (XN_STATUS_USB_SET_ENDPOINT_POLICY_FAILED);
@@ -1057,7 +1060,8 @@ XN_C_API XnStatus xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControl
 			return (XN_STATUS_USB_TRANSFER_TIMEOUT);
 		}
 
-		// Nope, return a generic error
+		// Nope, log and return a generic error
+		xnLogError(XN_MASK_USB, "Got error receiving data: %u", nLastErr);
 		return (XN_STATUS_USB_CONTROL_RECV_FAILED);
 	}
 
@@ -1113,6 +1117,10 @@ XN_C_API XnStatus xnUSBReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer
 
 		pEPHandle->nTimeOut = nTimeOut;
 	}
+
+	// Reset the endpoint
+	nRetVal = xnUSBResetEndPoint(pEPHandle);
+	XN_IS_STATUS_OK(nRetVal);
 
 	// Read from the EP
 	bResult = ReadFile(pEPHandle->hEPHandle, pBuffer, nBufferSize, (PULONG)pnBytesReceived, NULL);
@@ -1177,6 +1185,10 @@ XN_C_API XnStatus xnUSBWriteEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffe
 		pEPHandle->nTimeOut = nTimeOut;
 	}
 
+	// Reset the endpoint
+	nRetVal = xnUSBResetEndPoint(pEPHandle);
+	XN_IS_STATUS_OK(nRetVal);
+
 	// Write into the EP
 	bResult = WriteFile(pEPHandle->hEPHandle, pBuffer, nBufferSize,  (PULONG) &nBytesSent, NULL);
 	if (bResult == FALSE)
@@ -1239,6 +1251,10 @@ XN_C_API XnStatus xnUSBQueueReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pB
 
 		pEPHandle->nTimeOut = nTimeOut;
 	}
+
+	// Reset the endpoint
+	nRetVal = xnUSBResetEndPoint(pEPHandle);
+	XN_IS_STATUS_OK(nRetVal);
 
 	// Queue the read via overlapped I/O
 	bResult = ReadFile(pEPHandle->hEPHandleOvlp, pBuffer, nBufferSize, (PULONG)&nBytesRcvd, &pEPHandle->ovlpIO);

@@ -1,28 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #ifndef __XN_OS_H__
 #define __XN_OS_H__
 
@@ -32,6 +28,8 @@
 #include "XnPlatform.h"
 #include "XnMacros.h"
 #include "XnStatusCodes.h"
+#include "XnOSStrings.h"
+#include "XnOSMemory.h"
 
 //---------------------------------------------------------------------------
 // Defines
@@ -48,6 +46,8 @@
 	#include "Win32/XnOSWin32.h"
 #elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#include "Linux-x86/XnOSLinux-x86.h"
+#elif defined(_ARC)
+	#include "ARC/XnOSARC.h"
 #else
 	#error OpenNI OS Abstraction Layer - Unsupported Platform!
 #endif
@@ -162,16 +162,21 @@ typedef enum {
 			x = NULL;			\
 		}
 
+
 /** Creates a new type object and validates that allocation succeeded. */
 #if XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_WIN32_VAARGS_STYLE
 	#define XN_VALIDATE_NEW(ptr, type, ...)						\
+		__pragma(warning (push))								\
+		__pragma(warning (disable: 4127))						\
 		do {													\
 			(ptr) = XN_NEW(type, __VA_ARGS__);					\
 			if ((ptr) == NULL)									\
 			{													\
 				return (XN_STATUS_ALLOC_FAILED);				\
 			}													\
-		} while (0)
+		} while (0)												\
+		__pragma(warning (pop))
+
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_GCC_VAARGS_STYLE
 	#define XN_VALIDATE_NEW(ptr, type, ...)						\
 		do {													\
@@ -319,24 +324,6 @@ XN_C_API XnStatus xnOSInit();
 XN_C_API XnStatus xnOSShutdown();
 XN_C_API XnStatus xnOSGetInfo(xnOSInfo* pOSInfo);
 
-// Memory
-XN_C_API void* xnOSMalloc(const XnSizeT nAllocSize);
-XN_C_API void* xnOSMallocAligned(const XnSizeT nAllocSize, const XnSizeT nAlignment);
-XN_C_API void* xnOSCalloc(const XnSizeT nAllocNum, const XnSizeT nAllocSize);
-XN_C_API void* xnOSCallocAligned(const XnSizeT nAllocNum, const XnSizeT nAllocSize, const XnSizeT nAlignment);
-XN_C_API void* xnOSRealloc(void* pMemory, const XnSizeT nAllocSize);
-XN_C_API void* xnOSReallocAligned(void* pMemory, const XnSizeT nAllocSize, const XnSizeT nAlignment);
-XN_C_API void* xnOSRecalloc(void* pMemory, const XnSizeT nAllocNum, const XnSizeT nAllocSize);
-XN_C_API void xnOSFree(const void* pMemBlock);
-XN_C_API void xnOSFreeAligned(const void* pMemBlock);
-XN_C_API void xnOSMemCopy(void* pDest, const void* pSource, XnSizeT nCount);
-XN_C_API XnInt32 xnOSMemCmp(const void *pBuf1, const void *pBuf2, XnSizeT nCount);
-XN_C_API void xnOSMemSet(void* pDest, XnUInt8 nValue, XnSizeT nCount);
-XN_C_API void xnOSMemMove(void* pDest, const void* pSource, XnSizeT nCount);
-XN_C_API XnUInt64 xnOSEndianSwapUINT64(XnUInt64 nValue);
-XN_C_API XnUInt32 xnOSEndianSwapUINT32(XnUInt32 nValue);
-XN_C_API XnUInt16 xnOSEndianSwapUINT16(XnUInt16 nValue);
-XN_C_API XnFloat xnOSEndianSwapFLOAT(XnFloat fValue);
 
 #if XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_WIN32_VAARGS_STYLE
 	#define XN_NEW(type, ...)		new type(__VA_ARGS__)
@@ -388,6 +375,16 @@ XN_C_API void xnOSWriteMemoryReport(const XnChar* csFileName);
 
 	#ifdef __cplusplus
 		#include <new>
+		static void* operator new(size_t size)
+		{
+			void* p = xnOSMalloc(size);
+			return xnOSLogMemAlloc(p, XN_ALLOCATION_NEW, size, "", "", 0, "");
+		}
+		static void* operator new[](size_t size)
+		{
+			void* p = xnOSMalloc(size);
+			return xnOSLogMemAlloc(p, XN_ALLOCATION_NEW, size, "", "", 0, "");
+		}
 		static void* operator new(size_t size, const XnChar* csFunction, const XnChar* csFile, XnUInt32 nLine, const XnChar* csAdditional)
 		{
 			void* p = xnOSMalloc(size);
@@ -487,23 +484,8 @@ XN_C_API XnStatus xnOSLoadLibrary(const XnChar* cpFileName, XN_LIB_HANDLE* pLibH
 XN_C_API XnStatus xnOSFreeLibrary(const XN_LIB_HANDLE LibHandle);
 XN_C_API XnStatus xnOSGetProcAddress(const XN_LIB_HANDLE LibHandle, const XnChar* cpProcName, XnFarProc* pProcAddr);
 
-// Strings
-XN_C_API XnStatus xnOSStrPrefix(const XnChar* cpPrefixString, XnChar* cpDestString, const XnUInt32 nDestLength);
-XN_C_API XnStatus xnOSStrAppend(XnChar* cpDestString, const XnChar* cpSrcString, const XnUInt32 nDestLength);
-XN_C_API XnStatus xnOSStrCopy(XnChar* cpDestString, const XnChar* cpSrcString, const XnUInt32 nDestLength);
-XN_C_API XnUInt32 xnOSStrLen(const XnChar* cpString);
-XN_C_API XnStatus xnOSStrNCopy(XnChar* cpDestString, const XnChar* cpSrcString, const XnUInt32 nCopyLength, const XnUInt32 nDestLength);
-XN_C_API XnStatus xnOSStrCRC32(const XnChar* cpString, XnUInt32* nCRC32);
-XN_C_API XnStatus xnOSStrNCRC32(XnUChar* cpBuffer, XnUInt32 nBufferSize, XnUInt32* nCRC32);
-XN_C_API XnStatus xnOSStrFormat(XnChar* cpDestString, const XnUInt32 nDestLength, XnUInt32* pnCharsWritten, const XnChar* cpFormat, ...);
-XN_C_API XnStatus xnOSStrFormatV(XnChar* cpDestString, const XnUInt32 nDestLength, XnUInt32* pnCharsWritten, const XnChar* cpFormat, va_list args);
-XN_C_API XnInt32  xnOSStrCmp(const XnChar* cpFirstString, const XnChar* cpSecondString);
-XN_C_API XnInt32  xnOSStrCaseCmp(const XnChar* cpFirstString, const XnChar* cpSecondString);
-XN_C_API void     xnOSItoA(XnInt32 nValue, XnChar* cpStr, XnInt32 nBase);
-/** Should be freed using @ref xnOSFree() */
-XN_C_API XnChar* xnOSStrDup(const XnChar* strSource);
-XN_C_API XnStatus xnOSExpandEnvironmentStrings(const XnChar* strSrc, XnChar* strDest, XnUInt32 nDestSize);
-
+struct timespec;
+	
 // Time
 XN_C_API XnStatus xnOSGetEpochTime(XnUInt32* nEpochTime);
 XN_C_API XnStatus xnOSGetTimeStamp(XnUInt64* nTimeStamp);
@@ -514,6 +496,8 @@ XN_C_API XnStatus xnOSStartHighResTimer(XnOSTimer* pTimer);
 XN_C_API XnStatus xnOSQueryTimer(XnOSTimer Timer, XnUInt64* pnTimeSinceStart);
 XN_C_API XnStatus xnOSStopTimer(XnOSTimer* pTimer);
 XN_C_API XnStatus xnOSGetMonoTime(struct timespec* pTime);
+XN_C_API XnStatus xnOSGetTimeout(struct timespec* pTime, XnUInt32 nMilliseconds);
+XN_C_API XnStatus xnOSGetAbsTimeout(struct timespec* pTime, XnUInt32 nMilliseconds);
 
 // Threads
 typedef enum XnThreadPriority
@@ -558,6 +542,12 @@ XN_C_API XnStatus xnOSSetEvent(const XN_EVENT_HANDLE EventHandle);
 XN_C_API XnStatus xnOSResetEvent(const XN_EVENT_HANDLE EventHandle);
 XN_C_API XnStatus xnOSWaitEvent(const XN_EVENT_HANDLE EventHandle, XnUInt32 nMilliseconds);
 XN_C_API XnBool xnOSIsEventSet(const XN_EVENT_HANDLE EventHandle);
+
+// Semaphores
+XN_C_API XnStatus xnOSCreateSemaphore(XN_SEMAPHORE_HANDLE* pSemaphoreHandle, XnUInt32 nInitialCount);
+XN_C_API XnStatus xnOSLockSemaphore(XN_SEMAPHORE_HANDLE hSemaphore, XnUInt32 nMilliseconds);
+XN_C_API XnStatus xnOSUnlockSemaphore(XN_SEMAPHORE_HANDLE hSemaphore);
+XN_C_API XnStatus xnOSCloseSemaphore(XN_SEMAPHORE_HANDLE* pSemaphoreHandle);
 
 /** 
 * Waits for a condition to be met. The condition is evaluated every time an event is set.
@@ -765,6 +755,12 @@ XN_STATUS_MESSAGE(XN_STATUS_USB_FAILED_TO_REGISTER_CALLBACK, "Failed to register
 XN_STATUS_MESSAGE(XN_STATUS_OS_NETWORK_CONNECTION_CLOSED, "The network connection has been closed!")
 XN_STATUS_MESSAGE(XN_STATUS_OS_EVENT_OPEN_FAILED, "Xiron OS failed to open an event!")
 XN_STATUS_MESSAGE(XN_STATUS_OS_PROCESS_CREATION_FAILED, "Xiron OS failed to create a process!")
+XN_STATUS_MESSAGE(XN_STATUS_OS_SEMAPHORE_CREATION_FAILED, "Xiron OS Failed to create a semaphore!")
+XN_STATUS_MESSAGE(XN_STATUS_OS_SEMAPHORE_CLOSE_FAILED, "Xiron OS failed to close a semaphore!")
+XN_STATUS_MESSAGE(XN_STATUS_OS_SEMAPHORE_LOCK_FAILED, "Xiron OS failed to lock a semaphore!")
+XN_STATUS_MESSAGE(XN_STATUS_OS_SEMAPHORE_UNLOCK_FAILED, "Xiron OS failed to unlock a semaphore!")
+XN_STATUS_MESSAGE(XN_STATUS_OS_SEMAPHORE_TIMEOUT, "Xiron OS got a semaphore timeout!")
+XN_STATUS_MESSAGE(XN_STATUS_OS_INVALID_SEMAPHORE, "This Xiron OS semaphore is invalid!")
 XN_STATUS_MESSAGE_MAP_END(XN_ERROR_GROUP_OS)
 
 #endif //__XN_OS_H__

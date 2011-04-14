@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace xn
+namespace OpenNI
 {
 	public class EnumerationError
 	{
@@ -12,15 +12,21 @@ namespace xn
 			this.it = it;
 		}
 
-		public ProductionNodeDescription GetDescription()
+		public ProductionNodeDescription Description
 		{
-			return OpenNIImporter.xnEnumerationErrorsGetCurrentDescription(this.it);
+			get
+			{
+				return SafeNativeMethods.xnEnumerationErrorsGetCurrentDescription(this.it);
+			}
 		}
 
-		public string GetError()
+		public string Error
 		{
-			UInt32 status = OpenNIImporter.xnEnumerationErrorsGetCurrentError(this.it);
-			return WrapperUtils.GetErrorMessage(status);
+			get
+			{
+				int status = SafeNativeMethods.xnEnumerationErrorsGetCurrentError(this.it);
+				return WrapperUtils.GetErrorMessage(status);
+			}
 		}
 
 		private IntPtr it;
@@ -40,16 +46,16 @@ namespace xn
 
 		public bool IsEmpty()
 		{
-			IntPtr first = OpenNIImporter.xnEnumerationErrorsGetFirst(this.InternalObject);
-			return !OpenNIImporter.xnEnumerationErrorsIteratorIsValid(first);
+			IntPtr first = SafeNativeMethods.xnEnumerationErrorsGetFirst(this.InternalObject);
+			return !SafeNativeMethods.xnEnumerationErrorsIteratorIsValid(first);
 		}
 
 		public override string ToString()
 		{
 			const int size = 2048;
 			StringBuilder sb = new StringBuilder(size);
-			UInt32 status = OpenNIImporter.xnEnumerationErrorsToString(this.InternalObject, sb, size);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnEnumerationErrorsToString(this.InternalObject, sb, size);
+			WrapperUtils.ThrowOnError(status);
 			return sb.ToString();
 		}
 
@@ -92,15 +98,15 @@ namespace xn
 			{
 				if (this.reset)
 				{
-					this.it = OpenNIImporter.xnEnumerationErrorsGetFirst(this.errors.InternalObject);
+					this.it = SafeNativeMethods.xnEnumerationErrorsGetFirst(this.errors.InternalObject);
 					this.reset = false;
 				}
 				else
 				{
-					this.it = OpenNIImporter.xnEnumerationErrorsGetNext(this.it);
+					this.it = SafeNativeMethods.xnEnumerationErrorsGetNext(this.it);
 				}
 
-				return OpenNIImporter.xnEnumerationErrorsIteratorIsValid(this.it);
+				return SafeNativeMethods.xnEnumerationErrorsIteratorIsValid(this.it);
 			}
 
 			public void Reset()
@@ -135,16 +141,16 @@ namespace xn
 
 		#endregion
 
-		protected override void FreeObject(IntPtr ptr)
+		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{
-			OpenNIImporter.xnEnumerationErrorsFree(ptr);
+			SafeNativeMethods.xnEnumerationErrorsFree(ptr);
 		}
 
 		private static IntPtr Create()
 		{
 			IntPtr pErrors;
-			UInt32 status = OpenNIImporter.xnEnumerationErrorsAllocate(out pErrors);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnEnumerationErrorsAllocate(out pErrors);
+			WrapperUtils.ThrowOnError(status);
 			return pErrors;
 		}
 	}

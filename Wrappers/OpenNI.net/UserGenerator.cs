@@ -1,21 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UserID = System.UInt32;
+using UserID = System.Int32;
 
-namespace xn
+namespace OpenNI
 {
+	public class UserEventArgs : EventArgs
+	{
+		public UserEventArgs(UserID id)
+		{
+			this.id = id;
+		}
+
+		public UserID ID
+		{
+			get { return id; }
+			set { id = value; }
+		}
+
+		private UserID id;
+	}
+
+	public class NewUserEventArgs : UserEventArgs
+	{
+		public NewUserEventArgs(UserID id) : base(id) { }
+	}
+
+	public class UserLostEventArgs : UserEventArgs
+	{
+		public UserLostEventArgs(UserID id) : base(id) { }
+	}
+
 	public class UserGenerator : Generator
     {
-        public UserGenerator(IntPtr nodeHandle, bool addRef) : 
-			base(nodeHandle, addRef)
+		public UserGenerator(Context context, IntPtr nodeHandle, bool addRef) : 
+			base(context, nodeHandle, addRef)
         {
-            this.internalNewUser = new OpenNIImporter.XnUserHandler(this.InternalNewUser);
-            this.internalLostUser = new OpenNIImporter.XnUserHandler(this.InternalLostUser);
+            this.internalNewUser = new SafeNativeMethods.XnUserHandler(this.InternalNewUser);
+            this.internalLostUser = new SafeNativeMethods.XnUserHandler(this.InternalLostUser);
         }
 
         public UserGenerator(Context context, Query query, EnumerationErrors errors) :
-            this(Create(context, query, errors), false)
+			this(context, Create(context, query, errors), false)
         {
         }
         public UserGenerator(Context context, Query query)
@@ -30,34 +56,37 @@ namespace xn
         private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
         {
             IntPtr handle;
-            UInt32 status =
-                OpenNIImporter.xnCreateUserGenerator(context.InternalObject,
+            int status =
+                SafeNativeMethods.xnCreateUserGenerator(context.InternalObject,
                                                         out handle,
                                                         query == null ? IntPtr.Zero : query.InternalObject,
                                                         errors == null ? IntPtr.Zero : errors.InternalObject);
-            WrapperUtils.CheckStatus(status);
+            WrapperUtils.ThrowOnError(status);
             return handle;
         }
 
-        public UInt16 GetNumberOfUsers()
+        public int NumberOfUsers
         {
-            return OpenNIImporter.xnGetNumberOfUsers(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetNumberOfUsers(this.InternalObject);
+			}
         }
         
         public UserID[] GetUsers()
         {
-            ushort count = GetNumberOfUsers();
+            ushort count = (ushort)NumberOfUsers;
             UserID[] users = new UserID[count];
-            UInt32 status = OpenNIImporter.xnGetUsers(this.InternalObject, users, ref count);
-            WrapperUtils.CheckStatus(status);
+            int status = SafeNativeMethods.xnGetUsers(this.InternalObject, users, ref count);
+            WrapperUtils.ThrowOnError(status);
             return users;
         }
         
         public Point3D GetCoM(UserID id)
         {
             Point3D com = new Point3D();
-            UInt32 status = OpenNIImporter.xnGetUserCoM(this.InternalObject, id, out com);
-            WrapperUtils.CheckStatus(status);
+            int status = SafeNativeMethods.xnGetUserCoM(this.InternalObject, id, out com);
+            WrapperUtils.ThrowOnError(status);
             return com;
         }
 
@@ -66,33 +95,38 @@ namespace xn
             SceneMetaData smd = new SceneMetaData();
 			using (IMarshaler marsh = smd.GetMarshaler(true))
 			{
-				UInt32 status = OpenNIImporter.xnGetUserPixels(this.InternalObject, id, marsh.Native);
-				WrapperUtils.CheckStatus(status);
+				int status = SafeNativeMethods.xnGetUserPixels(this.InternalObject, id, marsh.Native);
+				WrapperUtils.ThrowOnError(status);
 			}
 
             return smd;
         }
 
-        public SkeletonCapability GetSkeletonCap()
+        public SkeletonCapability SkeletonCapability
         {
-            return new SkeletonCapability(this);
+			get
+			{
+				return new SkeletonCapability(this);
+			}
         }
-        public PoseDetectionCapability GetPoseDetectionCap()
+		public PoseDetectionCapability PoseDetectionCapability
         {
-            return new PoseDetectionCapability(this);
+			get
+			{
+				return new PoseDetectionCapability(this);
+			}
         }
 
         #region New User
-        public delegate void NewUserHandler(ProductionNode node, UserID id);
-        private event NewUserHandler newUserEvent;
-        public event NewUserHandler NewUser
+        private event EventHandler<NewUserEventArgs> newUserEvent;
+		public event EventHandler<NewUserEventArgs> NewUser
         {
             add
             {
                 if (this.newUserEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, this.internalNewUser, null, IntPtr.Zero, out newUserHandle);
-                    WrapperUtils.CheckStatus(status);
+                    int status = SafeNativeMethods.xnRegisterUserCallbacks(this.InternalObject, this.internalNewUser, null, IntPtr.Zero, out newUserHandle);
+                    WrapperUtils.ThrowOnError(status);
                 }
                 this.newUserEvent += value;
             }
@@ -102,30 +136,30 @@ namespace xn
 
                 if (this.newUserEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterUserCallbacks(this.InternalObject, this.newUserHandle);
+                    SafeNativeMethods.xnUnregisterUserCallbacks(this.InternalObject, this.newUserHandle);
                 }
             }
         }
         private void InternalNewUser(IntPtr hNode, UserID id, IntPtr pCookie)
         {
-            if (this.newUserEvent != null)
-                this.newUserEvent(this, id);
+			EventHandler<NewUserEventArgs> handlers = this.newUserEvent;
+			if (handlers != null)
+				handlers(this, new NewUserEventArgs(id));
         }
-        private OpenNIImporter.XnUserHandler internalNewUser;
+        private SafeNativeMethods.XnUserHandler internalNewUser;
         private IntPtr newUserHandle;
         #endregion
 
         #region Lost User
-        public delegate void LostUserHandler(ProductionNode node, UserID id);
-        private event LostUserHandler lostUserEvent;
-        public event LostUserHandler LostUser
+		private event EventHandler<UserLostEventArgs> lostUserEvent;
+		public event EventHandler<UserLostEventArgs> LostUser
         {
             add
             {
                 if (this.lostUserEvent == null)
                 {
-                    UInt32 status = OpenNIImporter.xnRegisterUserCallbacks(this.InternalObject, null, this.internalLostUser, IntPtr.Zero, out lostUserHandle);
-                    WrapperUtils.CheckStatus(status);
+                    int status = SafeNativeMethods.xnRegisterUserCallbacks(this.InternalObject, null, this.internalLostUser, IntPtr.Zero, out lostUserHandle);
+                    WrapperUtils.ThrowOnError(status);
                 }
                 this.lostUserEvent += value;
             }
@@ -135,16 +169,17 @@ namespace xn
 
                 if (this.lostUserEvent == null)
                 {
-                    OpenNIImporter.xnUnregisterUserCallbacks(this.InternalObject, this.lostUserHandle);
+                    SafeNativeMethods.xnUnregisterUserCallbacks(this.InternalObject, this.lostUserHandle);
                 }
             }
         }
         private void InternalLostUser(IntPtr hNode, UserID id, IntPtr pCookie)
         {
-            if (this.lostUserEvent != null)
-                this.lostUserEvent(this, id);
+			EventHandler<UserLostEventArgs> handlers = this.lostUserEvent;
+			if (handlers != null)
+				handlers(this, new UserLostEventArgs(id));
         }
-        private OpenNIImporter.XnUserHandler internalLostUser;
+        private SafeNativeMethods.XnUserHandler internalLostUser;
         private IntPtr lostUserHandle;
         #endregion
     }

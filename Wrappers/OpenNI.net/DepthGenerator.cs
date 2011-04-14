@@ -2,20 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class DepthGenerator : MapGenerator
 	{
-		internal DepthGenerator(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal DepthGenerator(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 			this.fovChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToDepthFieldOfViewChange,
-				OpenNIImporter.xnUnregisterFromDepthFieldOfViewChange);
+				SafeNativeMethods.xnRegisterToDepthFieldOfViewChange,
+				SafeNativeMethods.xnUnregisterFromDepthFieldOfViewChange);
 		}
 
 		public DepthGenerator(Context context, Query query, EnumerationErrors errors) :
-			this(Create(context, query, errors), false)
+			this(context, Create(context, query, errors), false)
 		{
 		}
 
@@ -29,30 +29,40 @@ namespace xn
 		{
 		}
 
-		public IntPtr GetDepthMapPtr()
+		public IntPtr DepthMapPtr
 		{
-			return OpenNIImporter.xnGetDepthMap(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetDepthMap(this.InternalObject);
+			}
 		}
 
-		public MapData<UInt16> GetDepthMap()
+		public UInt16MapData GetDepthMap()
 		{
-			return GetMapData<UInt16>(GetDepthMapPtr());
+			MapOutputMode mode = this.MapOutputMode;
+			return new UInt16MapData(mode.XRes, mode.YRes, this.DepthMapPtr);
 		}
 
-		public UInt16 GetDeviceMaxDepth()
+		public int DeviceMaxDepth
 		{
-			return OpenNIImporter.xnGetDeviceMaxDepth(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnGetDeviceMaxDepth(this.InternalObject);
+			}
 		}
 
-		public FieldOfView GetFieldOfView()
+		public FieldOfView FieldOfView
 		{
-			FieldOfView fov = new FieldOfView();
-			UInt32 status = OpenNIImporter.xnGetDepthFieldOfView(this.InternalObject, ref fov);
-			WrapperUtils.CheckStatus(status);
-			return fov;
+			get
+			{
+				FieldOfView fov = new FieldOfView();
+				int status = SafeNativeMethods.xnGetDepthFieldOfView(this.InternalObject, ref fov);
+				WrapperUtils.ThrowOnError(status);
+				return fov;
+			}
 		}
 
-		public event StateChangedHandler FieldOfViewChanged
+		public event EventHandler FieldOfViewChanged
 		{
 			add { this.fovChanged.Event += value; }
 			remove { this.fovChanged.Event -= value; }
@@ -61,8 +71,8 @@ namespace xn
 		public Point3D[] ConvertProjectiveToRealWorld(Point3D[] projectivePoints)
 		{
 			Point3D[] realWorld = new Point3D[projectivePoints.Length];
-			UInt32 status = OpenNIImporter.xnConvertProjectiveToRealWorld(this.InternalObject, (uint)projectivePoints.Length, projectivePoints, realWorld);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnConvertProjectiveToRealWorld(this.InternalObject, (uint)projectivePoints.Length, projectivePoints, realWorld);
+			WrapperUtils.ThrowOnError(status);
 			return realWorld;
 		}
 
@@ -77,8 +87,8 @@ namespace xn
         public Point3D[] ConvertRealWorldToProjective(Point3D[] realWorldPoints)
         {
             Point3D[] projective = new Point3D[realWorldPoints.Length];
-            UInt32 status = OpenNIImporter.xnConvertRealWorldToProjective(this.InternalObject, (uint)realWorldPoints.Length, realWorldPoints, projective);
-            WrapperUtils.CheckStatus(status);
+            int status = SafeNativeMethods.xnConvertRealWorldToProjective(this.InternalObject, (uint)realWorldPoints.Length, realWorldPoints, projective);
+            WrapperUtils.ThrowOnError(status);
             return projective;
         }
         
@@ -90,16 +100,19 @@ namespace xn
             return ConvertRealWorldToProjective(realWorldPoints)[0];
         }
 
-		public UserPositionCapability GetUserPositionCap()
+		public UserPositionCapability UserPositionCapability
 		{
-			return new UserPositionCapability(this);
+			get
+			{
+				return new UserPositionCapability(this);
+			}
 		}
 
 		public void GetMetaData(DepthMetaData depthMD)
 		{
 			using (IMarshaler marsh = depthMD.GetMarshaler(true))
 			{
-				OpenNIImporter.xnGetDepthMetaData(this.InternalObject, marsh.Native);
+				SafeNativeMethods.xnGetDepthMetaData(this.InternalObject, marsh.Native);
 			}
 		}
 
@@ -113,10 +126,10 @@ namespace xn
 		private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateDepthGenerator(context.InternalObject, out handle,
+			int status = SafeNativeMethods.xnCreateDepthGenerator(context.InternalObject, out handle,
 				query == null ? IntPtr.Zero : query.InternalObject,
 				errors == null ? IntPtr.Zero : errors.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 

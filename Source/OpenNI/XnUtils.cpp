@@ -1,33 +1,32 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
 #include "XnUtils.h"
 #include "XnEnum.h"
+#include "XnTypeManager.h"
+#include "XnInternalTypes.h"
+#include "XnModuleLoader.h"
 
 //---------------------------------------------------------------------------
 // Static Data
@@ -37,6 +36,7 @@ XN_ENUM_MAP_START(XnPixelFormat)
 	XN_ENUM_MAP_ENTRY(XN_PIXEL_FORMAT_YUV422, "YUV422")
 	XN_ENUM_MAP_ENTRY(XN_PIXEL_FORMAT_GRAYSCALE_8_BIT, "Grayscale8")
 	XN_ENUM_MAP_ENTRY(XN_PIXEL_FORMAT_GRAYSCALE_16_BIT, "Grayscale16")
+	XN_ENUM_MAP_ENTRY(XN_PIXEL_FORMAT_MJPEG, "MJPEG")
 XN_ENUM_MAP_END()
 
 //---------------------------------------------------------------------------
@@ -82,6 +82,26 @@ XN_C_API XnStatus xnPixelFormatFromString(const XnChar* strType, XnPixelFormat* 
 	XN_ENUM_VALIDATE_FROM_STRING(XnPixelFormat, strType, *pFormat);
 
 	return (XN_STATUS_OK);
+}
+
+XN_C_API XnUInt32 xnGetBytesPerPixelForPixelFormat(XnPixelFormat format)
+{
+	switch (format)
+	{
+	case XN_PIXEL_FORMAT_RGB24:
+		return sizeof(XnRGB24Pixel);
+	case XN_PIXEL_FORMAT_YUV422:
+		return sizeof(XnYUV422DoublePixel) / 2;
+	case XN_PIXEL_FORMAT_GRAYSCALE_8_BIT:
+		return sizeof(XnUInt8);
+	case XN_PIXEL_FORMAT_GRAYSCALE_16_BIT:
+		return sizeof(XnUInt16);
+	case XN_PIXEL_FORMAT_MJPEG:
+		return 2;
+	default:
+		XN_ASSERT(FALSE);
+		return 0;
+	}
 }
 
 XN_C_API XnInt32 xnVersionCompare(const XnVersion* pVersion1, const XnVersion* pVersion2)
@@ -421,4 +441,22 @@ XN_C_API XnStatus xnCopySceneMetaData(XnSceneMetaData* pDestination, const XnSce
 	pDestination->pMap = pMap;
 
 	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnRegisterExtensionNode(const XnChar* strTypeName, XnProductionNodeType baseType, XnProductionNodeType* pTypeID)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XN_VALIDATE_INPUT_PTR(strTypeName);
+	XN_VALIDATE_OUTPUT_PTR(pTypeID);
+
+	nRetVal = TypeManager::GetInstance().RegisterNewType(strTypeName, baseType, pTypeID);
+	XN_IS_STATUS_OK(nRetVal);
+	
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnModuleNodeHandle xnGetModuleNodeHandle(XnNodeHandle hNode)
+{
+	return hNode->pModuleInstance->hNode;
 }

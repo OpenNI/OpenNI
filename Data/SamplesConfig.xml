@@ -14,21 +14,18 @@
 		</Dumps>
 	</Log>
 	<ProductionNodes>
-		<Node type="Image" name="Image1">
+		<Node type="Depth" name="Depth1">
 			<Configuration>
-				<MapOutputMode xRes="640" yRes="480" FPS="30"/>
 				<Mirror on="true"/>
 			</Configuration>
 		</Node>
-		<Node type="Depth" name="Depth1">
+		<Node type="Image" name="Image1" stopOnError="false">
 			<Configuration>
-				<MapOutputMode xRes="640" yRes="480" FPS="30"/>
 				<Mirror on="true"/>
 			</Configuration>
 		</Node>
 		<!--
-		<Node type="Audio" name="Audio1">
-		</Node>
+		<Node type="Audio" name="Audio1"/>
 		-->
 	</ProductionNodes>
 </OpenNI>

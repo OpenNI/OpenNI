@@ -2,41 +2,41 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class FrameSyncCapability : Capability
 	{
-		public FrameSyncCapability(Generator node) :
+		internal FrameSyncCapability(Generator node) :
 			base(node)
 		{
 			this.frameSyncChangedEvent = new StateChangedEvent(node,
-				OpenNIImporter.xnRegisterToFrameSyncChange,
-				OpenNIImporter.xnUnregisterFromFrameSyncChange);
+				SafeNativeMethods.xnRegisterToFrameSyncChange,
+				SafeNativeMethods.xnUnregisterFromFrameSyncChange);
 		}
 
 		public bool CanFrameSyncWith(Generator other)
 		{
-			return OpenNIImporter.xnCanFrameSyncWith(this.InternalObject, other.InternalObject);
+			return SafeNativeMethods.xnCanFrameSyncWith(this.InternalObject, other.InternalObject);
 		}
 
 		public void FrameSyncWith(Generator other)
 		{
-			UInt32 status = OpenNIImporter.xnFrameSyncWith(this.InternalObject, other.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnFrameSyncWith(this.InternalObject, other.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public void StopFrameSyncWith(Generator other)
 		{
-			UInt32 status = OpenNIImporter.xnStopFrameSyncWith(this.InternalObject, other.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnStopFrameSyncWith(this.InternalObject, other.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
 		public bool IsFrameSyncedWith(Generator other)
 		{
-			return OpenNIImporter.xnIsFrameSyncedWith(this.InternalObject, other.InternalObject);
+			return SafeNativeMethods.xnIsFrameSyncedWith(this.InternalObject, other.InternalObject);
 		}
 
-		public event StateChangedHandler FrameSyncChanged
+		public event EventHandler FrameSyncChanged
 		{
 			add { this.frameSyncChangedEvent.Event += value; }
 			remove { this.frameSyncChangedEvent.Event -= value; }

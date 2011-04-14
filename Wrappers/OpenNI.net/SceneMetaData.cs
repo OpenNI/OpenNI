@@ -2,32 +2,32 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
-	public class SceneMetaData : MapMetaData<UInt16>
+	public class SceneMetaData : UInt16MapMetaData
 	{
 		public SceneMetaData()
 		{
 		}
 
-		public UInt16 this[int index]
+		public int this[int index]
 		{
-			get { return base[index, this.scene.pData]; }
-			set { base[index, this.scene.pData] = value; }
+			get { return GetAt(this.scene.pData, index); }
+			set { SetAt(this.scene.pData, index, value); }
 		}
 
-		public UInt16 this[int x, int y]
+		public int this[int x, int y]
 		{
-			get { return base[x, y, this.scene.pData]; }
-			set { base[x, y, this.scene.pData] = value; }
+			get { return GetAt(this.scene.pData, x, y); }
+			set { SetAt(this.scene.pData, x, y, value); }
 		}
 
-		public MapData<UInt16> GetSceneMap()
+		public UInt16MapData GetLabelMap()
 		{
-			return new MapData<UInt16>(XRes, YRes, this.scene.pData);
+			return new UInt16MapData(XRes, YRes, this.scene.pData);
 		}
 
-		public IntPtr SceneMapPtr
+		public IntPtr LabelMapPtr
 		{
 			get { return this.scene.pData; }
 		}
@@ -37,9 +37,9 @@ namespace xn
 			return new SceneMetaDataMarshaler(this, passOut);
 		}
 
-		internal OpenNIImporter.XnSceneMetaData scene = new OpenNIImporter.XnSceneMetaData();
+		internal SafeNativeMethods.XnSceneMetaData scene = new SafeNativeMethods.XnSceneMetaData();
 
-		private class SceneMetaDataMarshaler : Marshaler<OpenNIImporter.XnSceneMetaData>
+		private class SceneMetaDataMarshaler : Marshaler<SafeNativeMethods.XnSceneMetaData>
 		{
 			public SceneMetaDataMarshaler(SceneMetaData obj, bool marshalOut) :
 				base(obj.scene, marshalOut,

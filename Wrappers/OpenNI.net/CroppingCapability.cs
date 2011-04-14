@@ -2,33 +2,35 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class CroppingCapability : Capability
 	{
-		public CroppingCapability(ProductionNode node) :
+		internal CroppingCapability(ProductionNode node) :
 			base(node)
 		{
 			this.croppingChanged = new StateChangedEvent(node,
-				OpenNIImporter.xnRegisterToCroppingChange,
-				OpenNIImporter.xnUnregisterFromCroppingChange);
+				SafeNativeMethods.xnRegisterToCroppingChange,
+				SafeNativeMethods.xnUnregisterFromCroppingChange);
 		}
 
-		public void SetCropping(ref Cropping cropping)
+		public Cropping Cropping
 		{
-			UInt32 status = OpenNIImporter.xnSetCropping(this.InternalObject, ref cropping);
-			WrapperUtils.CheckStatus(status);
+			get
+			{
+				Cropping cropping = new Cropping();
+				int status = SafeNativeMethods.xnGetCropping(this.InternalObject, ref cropping);
+				WrapperUtils.ThrowOnError(status);
+				return cropping;
+			}
+			set
+			{
+				int status = SafeNativeMethods.xnSetCropping(this.InternalObject, ref value);
+				WrapperUtils.ThrowOnError(status);
+			}
 		}
 
-		public Cropping GetCropping()
-		{
-			Cropping cropping = new Cropping();
-			UInt32 status = OpenNIImporter.xnGetCropping(this.InternalObject, ref cropping);
-			WrapperUtils.CheckStatus(status);
-			return cropping;
-		}
-
-		public event StateChangedHandler CroppingChanged
+		public event EventHandler CroppingChanged
 		{
 			add { this.croppingChanged.Event += value; }
 			remove { this.croppingChanged.Event -= value; }

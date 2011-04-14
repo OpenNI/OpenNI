@@ -1,26 +1,24 @@
-/*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.1 Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 #include "PlayerNode.h"
 #include "DataRecords.h"
 #include <XnPropNames.h>
@@ -258,44 +256,32 @@ DataIndexEntry* PlayerNode::FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 
 	XN_ASSERT((nNodeID != INVALID_NODE_ID) && (nNodeID < m_nMaxNodes));
 	PlayerNodeInfo* pPlayerNodeInfo = &m_pNodeInfoMap[nNodeID];
 	
-	// perform binary search
-	XnUInt32 nNum = pPlayerNodeInfo->nFrames;
-	DataIndexEntry* pMin = pPlayerNodeInfo->pDataIndex;
-	DataIndexEntry* pMax = pPlayerNodeInfo->pDataIndex + (nNum - 1);
-	DataIndexEntry* pMid;
-	XnUInt32 nHalf;
+	// perform binary search. We're looking for the highest timestamp BEFORE searched timestamp
+	int first = 1;
+	int last = pPlayerNodeInfo->nFrames;
+	int mid;
+	XnUInt64 nMidTimestamp;
 
-	while (pMin <= pMax)
+	while (first <= last)
 	{
-		nHalf = nNum / 2;
-		if (nHalf != 0)
-		{
-			pMid = pMin + ((nNum & 1) ? nHalf : (nHalf - 1));
+		mid = (first + last) / 2;
+		nMidTimestamp = pPlayerNodeInfo->pDataIndex[mid].nTimestamp;
 
-			if (pMid->nTimestamp == nTimestamp)
-			{
-				return pMid;
-			}
-			else if (pMid->nTimestamp > nTimestamp)
-			{
-				pMax = pMid - 1;
-				nNum = (nNum & 1) ? nHalf : nHalf-1;
-			}
-			else
-			{
-				pMin = pMid + 1;
-				nNum = nHalf;
-			}
-		}
-		else
+		if (nMidTimestamp > nTimestamp)
 		{
-			// we always want the frame before requested timestamp
-			return pMin;
+			last = mid - 1;
+		}
+		else if (nMidTimestamp < nTimestamp)
+		{
+			first = mid + 1;
+		}
+		else // equals
+		{
+			break;
 		}
 	}
 
-	// we always want the frame before requested timestamp
-	return pMin;
+	return &pPlayerNodeInfo->pDataIndex[first-1];
 }
 
 DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnUInt32 nDestFrame)
@@ -320,10 +306,10 @@ DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnU
 	// find corresponding frames of other nodes
 	for (XnUInt32 i = 0; i < m_nMaxNodes; ++i)
 	{
-		if (m_pNodeInfoMap[i].bIsGenerator)
+		if (m_pNodeInfoMap[i].bIsGenerator && i != nNodeID)
 		{
 			m_aSeekTempArray[i] = FindTimestampInDataIndex(i, pDestFrame->nTimestamp);
-			if (m_aSeekTempArray[i]->nConfigurationID != pCurrentFrame->nConfigurationID)
+			if (m_aSeekTempArray[i] != NULL && m_aSeekTempArray[i]->nConfigurationID != pCurrentFrame->nConfigurationID)
 			{
 				return NULL;
 			}
@@ -360,7 +346,7 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 		// move each node to its relevant data
 		for (XnUInt32 i = 0; i < m_nMaxNodes; i++)
 		{
-			if (m_pNodeInfoMap[i].bIsGenerator)
+			if (m_aSeekTempArray[i] != NULL)
 			{
 				// read data
 				nRetVal = SeekStream(XN_OS_SEEK_SET, m_aSeekTempArray[i]->nSeekPos);
@@ -368,6 +354,7 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 				nRetVal = ReadNext();
 				XN_IS_STATUS_OK(nRetVal);
 
+				// check for latest position. This will be directly after the frame we seeked to.
 				XnUInt32 nPos = TellStream();
 				if (nPos > nLastPos)
 				{
@@ -375,6 +362,9 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 				}
 			}
 		}
+
+		// now seek to directly after last position
+		SeekStream(XN_OS_SEEK_SET, nLastPos);
 	}
 	else
 	{
@@ -1230,8 +1220,13 @@ XnStatus PlayerNode::HandleNodeStateReadyRecord(NodeStateReadyRecord record)
 		return XN_STATUS_CORRUPT_FILE;
 	}
 
-	nRetVal = m_pNodeNotifications->OnNodeStateReady(m_pNotificationsCookie, pPlayerNodeInfo->strName);
-	XN_IS_STATUS_OK(nRetVal);
+	// after wrap-around, if node wasn't destroyed, no need to notify about state ready
+	if (!pPlayerNodeInfo->bStateReady)
+	{
+		nRetVal = m_pNodeNotifications->OnNodeStateReady(m_pNotificationsCookie, pPlayerNodeInfo->strName);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
 	if (pPlayerNodeInfo->bIsGenerator && 
 		(pPlayerNodeInfo->compression != XN_CODEC_NULL) && 
 		!pPlayerNodeInfo->codec.IsValid())
@@ -1393,11 +1388,6 @@ XnStatus PlayerNode::HandleDataIndexRecord(DataIndexRecordHeader record, XnBool 
 	XN_ASSERT(record.GetNodeID() != INVALID_NODE_ID);
 	PlayerNodeInfo* pPlayerNodeInfo = GetPlayerNodeInfo(record.GetNodeID());
 	XN_VALIDATE_PTR(pPlayerNodeInfo, XN_STATUS_CORRUPT_FILE);
-	if (!pPlayerNodeInfo->bValid)
-	{
-		XN_ASSERT(FALSE);
-		return XN_STATUS_CORRUPT_FILE;
-	}
 
 	XnUInt32 nRecordTotalSize = record.GetSize() + record.GetPayloadSize();
 	if (nRecordTotalSize > RECORD_MAX_SIZE)
@@ -1406,14 +1396,21 @@ XnStatus PlayerNode::HandleDataIndexRecord(DataIndexRecordHeader record, XnBool 
 		XN_LOG_ERROR_RETURN(XN_STATUS_INTERNAL_BUFFER_TOO_SMALL, XN_MASK_OPEN_NI, "Record size %u is larger than player internal buffer", nRecordTotalSize);
 	}
 
-	if (record.GetPayloadSize() != (pPlayerNodeInfo->nFrames+1) * sizeof(DataIndexEntry))
-	{
-		XN_ASSERT(FALSE);
-		XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Seek table has %u entries, but node has %u frames!", record.GetPayloadSize() / sizeof(DataIndexEntry), pPlayerNodeInfo->nFrames);
-	}
-
 	if (bReadPayload)
 	{
+		// make sure node exists
+		if (!pPlayerNodeInfo->bValid)
+		{
+			XN_ASSERT(FALSE);
+			return XN_STATUS_CORRUPT_FILE;
+		}
+
+		if (record.GetPayloadSize() != (pPlayerNodeInfo->nFrames+1) * sizeof(DataIndexEntry))
+		{
+			XN_ASSERT(FALSE);
+			XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Seek table has %u entries, but node has %u frames!", record.GetPayloadSize() / sizeof(DataIndexEntry), pPlayerNodeInfo->nFrames);
+		}
+
 		// allocate our data index
 		pPlayerNodeInfo->pDataIndex = (DataIndexEntry*)xnOSCalloc(pPlayerNodeInfo->nFrames+1, sizeof(DataIndexEntry));
 		XN_VALIDATE_ALLOC_PTR(pPlayerNodeInfo->pDataIndex);
@@ -1443,6 +1440,11 @@ XnStatus PlayerNode::HandleEndRecord(EndRecord record)
 	XnStatus nRetVal = record.Decode();
 	XN_IS_STATUS_OK(nRetVal);
 	DEBUG_LOG_RECORD(record, "End");
+
+	if (!m_bDataBegun)
+	{
+		XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "File does not contain any data!");
+	}
 
 	nRetVal = m_eofReachedEvent.Raise();
 	XN_IS_STATUS_OK(nRetVal);

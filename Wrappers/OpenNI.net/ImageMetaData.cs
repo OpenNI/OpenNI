@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class ImageMetaData : MapMetaData
 	{
@@ -13,7 +13,7 @@ namespace xn
 		public new PixelFormat PixelFormat
 		{
 			get { return ((MapMetaData)this).PixelFormat; }
-			set { this.PixelFormatInternal = value; }
+			set { this.SetPixelFormat(value); }
 		}
 
 		public MapData<RGB24Pixel> GetRGB24ImageMap()
@@ -26,9 +26,9 @@ namespace xn
 			return new MapData<byte>(XRes, YRes, this.image.pData);
 		}
 
-		public MapData<UInt16> GetGrayscale16ImageMap()
+		public UInt16MapData GetGrayscale16ImageMap()
 		{
-			return new MapData<UInt16>(XRes, YRes, this.image.pData);
+			return new UInt16MapData(XRes, YRes, this.image.pData);
 		}
 
 		public IntPtr ImageMapPtr
@@ -41,9 +41,9 @@ namespace xn
 			return new ImageMetaDataMarshaler(this, passOut);
 		}
 
-		internal OpenNIImporter.XnImageMetaData image = new OpenNIImporter.XnImageMetaData();
+		internal SafeNativeMethods.XnImageMetaData image = new SafeNativeMethods.XnImageMetaData();
 
-		private class ImageMetaDataMarshaler : Marshaler<OpenNIImporter.XnImageMetaData>
+		private class ImageMetaDataMarshaler : Marshaler<SafeNativeMethods.XnImageMetaData>
 		{
 			public ImageMetaDataMarshaler(ImageMetaData obj, bool marshalOut) :
 				base(obj.image, marshalOut,

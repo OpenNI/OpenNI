@@ -2,57 +2,68 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class Generator : ProductionNode
 	{
-		internal Generator(IntPtr pNode, bool addRef)
-			: base(pNode, addRef)
+		internal Generator(Context context, IntPtr pNode, bool addRef)
+			: base(context, pNode, addRef)
 		{
 			this.generationRunningChanged = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToGenerationRunningChange,
-				OpenNIImporter.xnUnregisterFromGenerationRunningChange);
+				SafeNativeMethods.xnRegisterToGenerationRunningChange,
+				SafeNativeMethods.xnUnregisterFromGenerationRunningChange);
 
 			this.newDataAvailable = new StateChangedEvent(this,
-				OpenNIImporter.xnRegisterToNewDataAvailable,
-				OpenNIImporter.xnUnregisterFromNewDataAvailable);
+				SafeNativeMethods.xnRegisterToNewDataAvailable,
+				SafeNativeMethods.xnUnregisterFromNewDataAvailable);
 		}
 
 		public void StartGenerating()
 		{
-			UInt32 status = OpenNIImporter.xnStartGenerating(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnStartGenerating(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public bool IsGenerating()
+		public bool IsGenerating
 		{
-			return OpenNIImporter.xnIsGenerating(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnIsGenerating(this.InternalObject);
+			}
 		}
 
 		public void StopGenerating()
 		{
-			UInt32 status = OpenNIImporter.xnStopGenerating(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnStopGenerating(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public event StateChangedHandler GenerationRunningChanged
+		public event EventHandler GenerationRunningChanged
 		{
 			add { generationRunningChanged.Event += value; }
 			remove { generationRunningChanged.Event -= value; }
 		}
 
-		public bool IsNewDataAvailable(out UInt64 timestamp)
+		public bool IsNewDataAvailable
 		{
-			return OpenNIImporter.xnIsNewDataAvailable(this.InternalObject, out timestamp);
+			get
+			{
+				UInt64 timestamp;
+				return SafeNativeMethods.xnIsNewDataAvailable(this.InternalObject, out timestamp);
+			}
 		}
 
-		public bool IsNewDataAvailable()
+		public Int64 AvailableTimestamp
 		{
-			UInt64 timestamp;
-			return OpenNIImporter.xnIsNewDataAvailable(this.InternalObject, out timestamp);
+			get
+			{
+				UInt64 timestamp;
+				SafeNativeMethods.xnIsNewDataAvailable(this.InternalObject, out timestamp);
+				return (Int64)timestamp;
+			}
 		}
 
-		public event StateChangedHandler NewDataAvailable
+		public event EventHandler NewDataAvailable
 		{
 			add { newDataAvailable.Event += value; }
 			remove { newDataAvailable.Event -= value; }
@@ -60,43 +71,64 @@ namespace xn
 
 		public void WaitAndUpdateData()
 		{
-			UInt32 status = OpenNIImporter.xnWaitAndUpdateData(this.InternalObject);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnWaitAndUpdateData(this.InternalObject);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public bool IsDataNew()
+		public bool IsDataNew
 		{
-			return OpenNIImporter.xnIsDataNew(this.InternalObject);
+			get
+			{
+				return SafeNativeMethods.xnIsDataNew(this.InternalObject);
+			}
 		}
 
-		public UInt32 GetDataSize()
+		public Int32 DataSize
 		{
-			return OpenNIImporter.xnGetDataSize(this.InternalObject);
+			get
+			{
+				return (Int32)SafeNativeMethods.xnGetDataSize(this.InternalObject);
+			}
 		}
 
-		public UInt64 GetTimestamp()
+		public Int64 Timestamp
 		{
-			return OpenNIImporter.xnGetTimestamp(this.InternalObject);
+			get
+			{
+				return (Int64)SafeNativeMethods.xnGetTimestamp(this.InternalObject);
+			}
 		}
 
-		public UInt32 GetFrameID()
+		public Int32 FrameID
 		{
-			return OpenNIImporter.xnGetFrameID(this.InternalObject);
+			get
+			{
+				return (Int32)SafeNativeMethods.xnGetFrameID(this.InternalObject);
+			}
 		}
 
-		public MirrorCapability GetMirrorCap()
+		public MirrorCapability MirrorCapability
 		{
-			return new MirrorCapability(this);
+			get
+			{
+				return new MirrorCapability(this);
+			}
 		}
 
-		public AlternativeViewPointCapability GetAlternativeViewPointCap()
+		public AlternativeViewpointCapability AlternativeViewpointCapability
 		{
-			return new AlternativeViewPointCapability(this);
+			get
+			{
+				return new AlternativeViewpointCapability(this);
+			}
 		}
 
-		public FrameSyncCapability GetFrameSyncCap()
+		public FrameSyncCapability FrameSyncCapability
 		{
-			return new FrameSyncCapability(this);
+			get
+			{
+				return new FrameSyncCapability(this);
+			}
 		}
 
 		private StateChangedEvent generationRunningChanged;

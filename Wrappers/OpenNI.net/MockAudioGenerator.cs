@@ -2,42 +2,42 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace xn
+namespace OpenNI
 {
 	public class MockAudioGenerator : AudioGenerator
 	{
-		internal MockAudioGenerator(IntPtr nodeHandle, bool addRef) :
-			base(nodeHandle, addRef)
+		internal MockAudioGenerator(Context context, IntPtr nodeHandle, bool addRef) :
+			base(context, nodeHandle, addRef)
 		{
 		}
 
 		public MockAudioGenerator(Context context, string name) :
-			this(Create(context, name), false)
+			this(context, Create(context, name), false)
 		{
 		}
 
 		public MockAudioGenerator(Context context) :
-			this(context, null)
+			this(context, (string)null)
 		{
 		}
 
-		public MockAudioGenerator(AudioGenerator basedOn, string name) :
-			this(CreateBasedOn(basedOn, name), false)
+		public MockAudioGenerator(Context context, AudioGenerator basedOn, string name) :
+			this(context, CreateBasedOn(basedOn, name), false)
 		{
 		}
 
-		public MockAudioGenerator(AudioGenerator basedOn) :
-			this(basedOn, null)
+		public MockAudioGenerator(Context context, AudioGenerator basedOn) :
+			this(context, basedOn, null)
 		{
 		}
 
-		public void SetData(UInt32 frameID, UInt64 timestamp, UInt32 dataSize, IntPtr buffer)
+		public void SetData(Int32 frameID, Int64 timestamp, Int32 dataSize, IntPtr buffer)
 		{
-			UInt32 status = OpenNIImporter.xnMockAudioSetData(this.InternalObject, frameID, timestamp, dataSize, buffer);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnMockAudioSetData(this.InternalObject, (UInt32)frameID, (UInt64)timestamp, (UInt32)dataSize, buffer);
+			WrapperUtils.ThrowOnError(status);
 		}
 
-		public void SetData(AudioMetaData audioMD, UInt32 frameID, UInt64 timestamp)
+		public void SetData(AudioMetaData audioMD, Int32 frameID, Int64 timestamp)
 		{
 			SetData(frameID, timestamp, audioMD.DataSize, audioMD.AudioBufferPtr);
 		}
@@ -50,17 +50,17 @@ namespace xn
 		private static IntPtr Create(Context context, string name)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNode(context.InternalObject, NodeType.Audio, name, out handle);
-			WrapperUtils.CheckStatus(status);
+			int status = SafeNativeMethods.xnCreateMockNode(context.InternalObject, NodeType.Audio, name, out handle);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 
 		private static IntPtr CreateBasedOn(AudioGenerator basedOn, string name)
 		{
 			IntPtr handle;
-			UInt32 status = OpenNIImporter.xnCreateMockNodeBasedOn(basedOn.GetContext().InternalObject, 
+			int status = SafeNativeMethods.xnCreateMockNodeBasedOn(basedOn.Context.InternalObject, 
 				basedOn.InternalObject, name, out handle);
-			WrapperUtils.CheckStatus(status);
+			WrapperUtils.ThrowOnError(status);
 			return handle;
 		}
 	}
