@@ -149,6 +149,9 @@ XnStatus resolveModulesFile(XnChar* strFileName, XnUInt32 nBufSize)
 		nRetVal = xnOSExpandEnvironmentStrings("%OPEN_NI_INSTALL_PATH%\\Data\\modules.xml", strFileName, nBufSize);
 		XN_IS_STATUS_OK(nRetVal);
 	#endif
+#elif (CE4100)
+	nRetVal = xnOSStrCopy(strFileName, "/usr/etc/ni/modules.xml", nBufSize);
+	XN_IS_STATUS_OK(nRetVal);
 #elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
 	nRetVal = xnOSStrCopy(strFileName, "/var/lib/ni/modules.xml", nBufSize);
 	XN_IS_STATUS_OK(nRetVal);

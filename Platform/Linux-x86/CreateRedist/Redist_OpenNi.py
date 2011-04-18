@@ -31,6 +31,7 @@ import os
 import re
 import sys
 import shutil
+import stat
 
 #-------------Functions--------------------------------------------------------#
 
@@ -115,11 +116,30 @@ def fix_file(arg,dirname,fname):
             input.close()
             os.remove(filePath)
             os.rename(tempName,filePath)
+            
+def copy_install_script(platform, filePath, dest):
+    "Copies the install script and fixing it if needed"
+    input = open(filePath)
+    dest_name = os.path.join(dest, os.path.basename(filePath))
+    output = open(dest_name, 'w')
+    
+    for line in input:
+        if platform == 'CE4100':
+            line = re.sub(r"/var/lib/ni", r"/usr/etc/ni", line)
+            
+        output.write(line)
+        
+    input.close()
+    output.close()
+    os.chmod(dest_name, stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
 
-use_4100=0
-if len(sys.argv) == 2:
-	if sys.argv[1] == '4100':
-		use_4100=1
+platform="x86"
+if len(sys.argv) >= 2:
+    if sys.argv[1] == 'CE4100':
+        platform='CE4100'
+    else:
+        print "Unknown platform!!"
+        finish_script(1)
 
 #------------Constants and globals---------------------------------------------#
 DateTimeSTR = strftime("%Y-%m-%d %H:%M:%S")
@@ -174,12 +194,8 @@ logger.info("Building OpenNI...")
 
 # Build
 result = os.system("gacutil -u OpenNI.net > " + SCRIPT_DIR + "/Output/gacutil.txt")
-if use_4100 == 1:
-#	result = os.system("cd ../Build; ./Make.4100 clean > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + "_clean.txt; cd ../CreateRedist")
-	result = os.system("cd ../Build; ./Make.4100 > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + ".txt; cd ../CreateRedist")
-else:
-	result = os.system("make clean -C ../Build > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + "_clean.txt")
-	result = os.system("make -C ../Build > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + ".txt")
+#result = os.system('make PLATFORM=' + platform + ' -C ../Build clean > ' + SCRIPT_DIR + '/Output/Build' + PROJECT_NAME + '_clean.txt')
+result = os.system('make PLATFORM=' + platform + ' -C ../Build > ' + SCRIPT_DIR + '/Output/Build' + PROJECT_NAME + '.txt')
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/Build" + PROJECT_NAME + ".txt").readlines()
@@ -256,7 +272,7 @@ shutil.copy("Bin/Release/libOpenNI"+LIBS_TYPE, "Redist/Lib")
 MonoDetected = 0
 shutil.copy("Bin/Release/niReg", "Redist/Bin")
 shutil.copy("Bin/Release/niLicense", "Redist/Bin")
-if use_4100 != 1:
+if platform != 'CE4100':
 	if (os.path.exists("/usr/bin/gmcs")):
 	    shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Bin")
 	    shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Debug")
@@ -281,7 +297,7 @@ samples_list = os.listdir("Build/Samples")
 if '.svn' in samples_list:
     samples_list.remove('.svn')
 
-if use_4100 == 1:
+if platform == 'CE4100':
     samples_list.remove('NiViewer')
     samples_list.remove('NiSimpleViewer')
 
@@ -327,6 +343,7 @@ print "* Creating Makefile..."
 logger.info("Creating Makefile...")
 
 MAKEFILE = open("Redist/Samples/Build/Makefile", 'w')
+MAKEFILE.write("-include Platform.$(PLATFORM)\n\n")
 MAKEFILE.write(".PHONY: all\n\n")
 MAKEFILE.write("NETPROJ = \n")
 
@@ -342,35 +359,31 @@ for sample in samples_list:
         MAKEFILE.write(sample + " ")
 MAKEFILE.write("\n\n")
 
-
-use_gles=""
-if use_4100 == 1:
-	use_gles=" GLES=1 "
-
 for sample in samples_list:
     MAKEFILE.write("\n")
     MAKEFILE.write(".PHONY: "+sample+"\n")
     MAKEFILE.write(sample+":\n")
-    MAKEFILE.write("\t$(MAKE) " + use_gles + " -C ../"+sample+"\n")
+    MAKEFILE.write("\t$(MAKE) -C ../"+sample+"\n")
 # Close files
 MAKEFILE.close()
+
+# copy platform file
+platform_file = "Build/Platform." + platform
+if os.path.exists(platform_file):
+    shutil.copy(platform_file, "Redist/Samples/Build")
 
 #-------Copy install script---------------------------------------------------#
 print "* Copying install script..."
 logger.info("Copying install script...")
 
-shutil.copy("CreateRedist/install.sh", "Redist")
+copy_install_script(platform, "CreateRedist/install.sh", "Redist")
 
 #-------------Build Samples---------------------------------------------------#
 print "* Building Samples in release configuration......"
 logger.info("Building Samples in release configuration...")
 
 # Build project solution
-additional=""
-if use_4100 == 1:
-	additional = "TARGET_SYS_ROOT=/home/primesense/IntelCE-20/IntelCE-20.0.11052.243195/build_i686/staging_dir/ CXX=/home/primesense/IntelCE-20/IntelCE-20.0.11052.243195/build_i686/staging_dir/bin/i686-cm-linux-g++"
-
-result = os.system("make -C Redist/Samples/Build " + additional + " > "+SCRIPT_DIR+"/Output/BuildSmpRelease.txt")
+result = os.system("make PLATFORM=" + platform + " -C Redist/Samples/Build " + " > "+SCRIPT_DIR+"/Output/BuildSmpRelease.txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/BuildSmpRelease.txt").readlines()
@@ -388,7 +401,7 @@ print "* Building Samples in debug configuration......"
 logger.info("Building Samples in debug configuration...")
 
 # Build project solution
-result = os.system("make CFG=Debug -C Redist/Samples/Build " + additional + " > "+SCRIPT_DIR+"/Output/BuildSmpDebug.txt")
+result = os.system("make CFG=Debug -C Redist/Samples/Build > "+SCRIPT_DIR+"/Output/BuildSmpDebug.txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/BuildSmpDebug.txt").readlines()
@@ -417,7 +430,7 @@ os.makedirs(SCRIPT_DIR+"/Final")
 
 if ostype == "Darwin":
     TAR_TARGET = "MacOSX"
-elif use_4100 == 1:
+elif platform == 'CE4100':
     TAR_TARGET = "CE4100"
 elif machinetype == "i686":
     TAR_TARGET = "Linux32"

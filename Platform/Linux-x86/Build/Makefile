@@ -7,11 +7,20 @@
 # default compiler is g++. for another one use:
 #   make CXX=<comp>
 #
+# default platform is x86. for CE4100 use:
+#   make PLATFORM=CE4100
+#
 #############################################################################
 
 # default config is Release
 ifndef CFG
 	CFG = Release
+endif
+export CFG
+
+# default platform is x86
+ifndef PLATFORM
+	PLATFORM = x86
 endif
 
 # tools
@@ -22,6 +31,9 @@ RM = rm
 BIN_DIR = ../Bin
 # output directory
 OUT_DIR = $(BIN_DIR)/$(CFG)
+
+# platform specific args
+-include Platform.$(PLATFORM)
 
 # list all modules
 ALL_MODULES = \
@@ -46,16 +58,20 @@ ALL_CORE_PROJS = \
 # list all samples
 CORE_SAMPLES = \
 	Samples/NiSimpleRead \
-	Samples/NiViewer \
 	Samples/NiBackRecorder \
 	Samples/NiConvertXToONI \
 	Samples/NiRecordSynthetic \
 	Samples/NiSampleModule \
 	Samples/NiSimpleCreate \
 	Samples/NiCRead \
-	Samples/NiSimpleViewer \
 	Samples/NiAudioSample \
 	Samples/NiUserTracker
+	
+ifneq "$(PLATFORM)" "CE4100"	
+	CORE_SAMPLES += \
+		Samples/NiViewer \
+		Samples/NiSimpleViewer
+endif
 
 MONO_SAMPLES = \
 	Samples/SimpleRead.net
@@ -73,11 +89,15 @@ ALL_BUILD_PROJS = \
 	$(ALL_SAMPLES)
 
 ALL_PROJS = \
-	$(ALL_BUILD_PROJS) 
-ifneq "$(realpath /usr/bin/gmcs)" ""
-	ALL_PROJS += $(ALL_MONO_PROJS)
-	ALL_PROJS += $(MONO_SAMPLES)
-	ALL_PROJS += $(MONO_FORMS_SAMPLES)
+	$(ALL_BUILD_PROJS)
+
+ifneq "$(PLATFORM)" "CE4100"
+	# check if mono is installed
+	ifneq "$(realpath /usr/bin/gmcs)" ""
+		ALL_PROJS += $(ALL_MONO_PROJS)
+		ALL_PROJS += $(MONO_SAMPLES)
+		ALL_PROJS += $(MONO_FORMS_SAMPLES)
+	endif
 endif
 
 ALL_PROJS_CLEAN = $(foreach proj,$(ALL_PROJS),$(proj)-clean)
@@ -85,10 +105,10 @@ ALL_PROJS_CLEAN = $(foreach proj,$(ALL_PROJS),$(proj)-clean)
 # define a function which creates a target for each proj
 define CREATE_PROJ_TARGET
 $1: 
-	$(MAKE) -C $1 CFG=$(CFG)
+	$(MAKE) -C $1
 
 $1-clean: 
-	$(MAKE) -C $1 CFG=$(CFG) clean
+	$(MAKE) -C $1 clean
 endef
 
 ################ TARGETS ##################

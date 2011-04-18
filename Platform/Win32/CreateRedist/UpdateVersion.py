@@ -28,7 +28,9 @@ import re
 VERSION_MAJOR = 1
 VERSION_MINOR = 1
 VERSION_MAINTENANCE = 0
-VERSION_BUILD = 39
+VERSION_BUILD = 41
+
+strVersion = str(VERSION_MAJOR) + "." + str(VERSION_MINOR) + "." + str(VERSION_MAINTENANCE) + "." + str(VERSION_BUILD)
 
 # ---------------------- FUNCTIONS -----------------------
 def regx_replace(findStr,repStr,filePath):
@@ -82,6 +84,11 @@ def update_wix (filePath):
 	regx_replace("define MaintenanceVersion=(.*)", "define MaintenanceVersion=" + str(VERSION_MAINTENANCE) + "?>", filePath)
 	regx_replace("define BuildVersion=(.*)", "define BuildVersion=" + str(VERSION_BUILD) + "?>", filePath)
 		
+def update_publisher_policy (filePath):
+	print "Updating publisher policy: " + filePath
+	regx_replace("oldVersion=\"1.1.0.31 - (.*)\"", "oldVersion=\"1.1.0.31 - " + strVersion + "\"", filePath)
+	regx_replace("newVersion=\"(.*)\"", "newVersion=\"" + strVersion + "\"", filePath)
+		
 # ----------------------- MAIN -------------------------
 if len(sys.argv) == 5:
 	VERSION_MAJOR=int(sys.argv[1])
@@ -114,6 +121,8 @@ update_src_ver_defs("../../../Include/XnVersion.h")
 update_assembly_info("../Build/Res/AssemblyInfo-OpenNI.cs")
 update_assembly_info("../../Linux-x86/Build/Res/AssemblyInfo-OpenNI.cs")
 update_wix("../Install/OpenNI/Includes/OpenNIVariables.wxi")
+update_publisher_policy("../../../Wrappers/OpenNI.Net/PublisherPolicy.config")
+
 try:
 	update_redist_defs("../../../ExportOpenSource.bat")
 except:

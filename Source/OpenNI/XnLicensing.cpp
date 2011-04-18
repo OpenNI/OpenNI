@@ -137,6 +137,9 @@ XnStatus resolveLicensesFile(XnChar* strFileName, XnUInt32 nBufSize)
 		nRetVal = xnOSExpandEnvironmentStrings("%OPEN_NI_INSTALL_PATH%\\Data\\licenses.xml", strFileName, nBufSize);
 		XN_IS_STATUS_OK(nRetVal);
 	#endif
+#elif (CE4100)
+	nRetVal = xnOSStrCopy(strFileName, "/usr/etc/ni/licenses.xml", nBufSize);
+	XN_IS_STATUS_OK(nRetVal);
 #elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
 	nRetVal = xnOSStrCopy(strFileName, "/var/lib/ni/licenses.xml", nBufSize);
 	XN_IS_STATUS_OK(nRetVal);

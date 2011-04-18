@@ -176,12 +176,14 @@
 
     <!-- Install OpenNI.net-->
     <DirectoryRef Id="TARGETDIR" >
-      <Component Id="OpneNINET" Guid="60718C69-87CB-45C0-A8A0-1B60E072D20A" DiskId="1">
-        <File Id="OpneNINET" Name="OpenNI.net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\OpenNI.net.dll" />        
+      <Component Id="OpenNINET" Guid="60718C69-87CB-45C0-A8A0-1B60E072D20A" DiskId="1">
+        <File Id="OpenNINET" Name="OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\OpenNI.Net.dll" />
+      </Component>
+      <Component Id="OpenNIPolicy" Guid="ED633D34-ADC1-4b87-B3F6-930B8D600E0C" DiskId="1">
+        <File Id="OpenNIPolicy" Name="Policy.1.1.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\Policy.1.1.OpenNI.Net.dll" />
+        <File Id="OpenNIPolicyConfig" Name="PublisherPolicy.config" KeyPath="no" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\PublisherPolicy.config" />
       </Component>
     </DirectoryRef>
-   
-    
     
     <DirectoryRef Id="TARGETDIR" >
       <Component Id="EnviromentVars" Guid="9270882A-E2CA-4F91-BB6B-87F483A0D3D0" DiskId="1">
@@ -233,7 +235,7 @@
     
     <!--  Install the visual studio 2008 DLLs-->
     <DirectoryRef Id="TARGETDIR">
-      <?if $(var.Platform)="32"?>
+      <?if $(var.Platform)="x86"?>
         <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86.msm" DiskId="1" Language="0"/>
       <?else?>
         <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" Language="0"/>
@@ -306,7 +308,8 @@
       
       <ComponentRef Id="ApplicationShortcut" />
       <ComponentRef Id="RegistryEntries" />
-      <ComponentRef Id="OpneNINET"/>
+      <ComponentRef Id="OpenNINET"/>
+      <ComponentRef Id="OpenNIPolicy"/>
       <ComponentRef Id="EnviromentVars"/>
       <ComponentRef Id="RemoveLogDir"/>
     </Feature>

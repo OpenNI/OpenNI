@@ -295,6 +295,11 @@ if VC_version == 10:
     MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\10.0")    
     MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
     VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]    
+    
+# find Windows SDK install dir
+WIN_SDK_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Microsoft SDKs\Windows")
+WIN_SDK_VALUES = [("CurrentInstallFolder", win32con.REG_SZ)]
+WIN_SDK_INST_DIR = get_reg_values(WIN_SDK_KEY, WIN_SDK_VALUES)[0]
 
 DateTimeSTR = strftime("%Y-%m-%d %H:%M:%S")
 DateSTR = strftime("%Y-%m-%d")
@@ -326,6 +331,14 @@ else:
 	bin_dir = "Bin64"
 	lib_dir = "Lib64"
 	vc_build_platform = "x64"
+
+version_file = open("../../../Include/XnVersion.h").read()
+version_major = re.search(r"define XN_MAJOR_VERSION (\d+)", version_file).groups()[0]
+version_minor = re.search(r"define XN_MINOR_VERSION (\d+)", version_file).groups()[0]
+version_maintenance = re.search(r"define XN_MAINTENANCE_VERSION (\d+)", version_file).groups()[0]
+version_build = re.search(r"define XN_BUILD_VERSION (\d+)", version_file).groups()[0]
+
+version_string = version_major + "." + version_minor + "." + version_maintenance + "." + version_build
 
 #-------------Log--------------------------------------------------------------#
 if not(os.path.exists(SCRIPT_DIR + "\\Output\\")):
@@ -375,11 +388,26 @@ if failed_builds != 0:
     print("Building Failed!!")
     logger.critical("Building Failed!")
     finish_script(1)
+    
+# Build the .NET publisher policy assembly (unfortunately, this should be done manually):
+cmd = WIN_SDK_INST_DIR + '\\Bin\\al.exe'
+cmd += ' /link:..\\..\\..\\Wrappers\\OpenNI.Net\\PublisherPolicy.config'
+cmd += ' /out:..\\' + bin_dir + '\\Release\\Policy.1.1.OpenNI.Net.dll'
+cmd += ' /keyFile:Wrappers\\OpenNI.Net\\OpenNI.snk'
+cmd += ' /platform:'
+if vc_build_bits=="32":
+    cmd += 'x86'
+else:
+    cmd += 'x64'
+cmd += ' /version:' + version_string
+    
+if subprocess.call(cmd) != 0:
+    print("Building Publisher Policy Failed!!")
+    logger.critical("Building Publisher Policy Failed!")
+    finish_script(1)
 
-
-
+#--------------Doxygen---------------------------------------------------------#
 if Make_Doxy==1:
-    #--------------Doxygen---------------------------------------------------------#
     print("* Creating Doxygen...")
     logger.info("Creating Doxygen...")
     os.chdir(WORK_DIR + "Source\\Doxygen");
@@ -427,7 +455,9 @@ os.system ("copy \"..\\..\\LGPL.txt\" Redist")
 
 #bin
 os.system ("copy " + bin_dir + "\\Release\\OpenNI*.dll Redist\\" + bin_dir)
-os.system ("copy " + bin_dir + "\\Release\\OpenNI.net.dll Redist\\" + bin_dir)
+os.system ("copy " + bin_dir + "\\Release\\OpenNI.Net.dll Redist\\" + bin_dir)
+os.system ("copy " + bin_dir + "\\Release\\Policy.1.1.OpenNI.Net.dll Redist\\" + bin_dir)
+os.system ("copy " + "..\\..\\Wrappers\\OpenNI.Net\\PublisherPolicy.config Redist\\" + bin_dir)
 os.system ("copy " + bin_dir + "\\Release\\nimCodecs*.dll Redist\\" + bin_dir)
 os.system ("copy " + bin_dir + "\\Release\\nimMockNodes*.dll Redist\\" + bin_dir)
 os.system ("copy " + bin_dir + "\\Release\\nimRecorder*.dll Redist\\" + bin_dir)

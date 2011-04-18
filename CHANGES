@@ -1,6 +1,18 @@
 Detailed Change log:
 --------------------
 
+Version 1.1.0.41 (Unstable version - Apr 18th 2010)
+---------------------------------------------------
+  * .Net wrapper: adding publisher policy to the installation, to redirect previous versions to current one.
+  * Fixed the 32-bit VCRedist problem (the MSI installer didn't call it by mistake)
+  * Bug Fix: Log multithreaded sync issue - when writing to log from multiple threads, messages sometime got garbled
+  * Log optimization: don't waste time formatting message if not writing to screen and not writing to file
+  * NiViewer bug fix: when image is off, only write "Image stream is off" if drawing mode includes image.
+  * Adding Additional Data field to XnNodeInfo.
+  * .NET wrapper - adding a ctor to Query object.
+  * CE4100: stop using /var/lib - filesystem is replaced by tempfs.
+  * CE4100: proper support in makefile, redist and install.
+
 Version 1.1.0.39 (Unstable version - Apr 11th 2010)
 ---------------------------------------------------
   * Typo fix: ANTI_FILCKER was misspelled (should be ANTI_FLICKER)
@@ -157,5 +169,5 @@ Version 1.0.0.25 (Unstable version - Jan 10th 2011)
   * C++ wrappers Bug Fix: RegisterToGestureChange would register to pixel format change.  
 
 Version 1.0.0.23 (Stable version - Dec 8th 2010)
------------------------------------------------------
-* Initial release...  
+------------------------------------------------
+  * Initial release...  

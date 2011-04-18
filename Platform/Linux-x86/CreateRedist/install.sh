@@ -1,46 +1,32 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 INSTALL_LIB=/usr/lib
 INSTALL_BIN=/usr/bin
 INSTALL_INC=/usr/include/ni
 INSTALL_VAR=/var/lib/ni
 
-if [ "`uname -s`" == "Darwin" ]; then
+OS_NAME=`uname -s`
+
+case $OS_NAME in
+Darwin)
 	MODULES="libnimMockNodes.dylib libnimCodecs.dylib libnimRecorder.dylib"
-else
+	;;
+*)
 	MODULES="libnimMockNodes.so libnimCodecs.so libnimRecorder.so"
-fi
+	;;
+esac
 
 SCRIPT_DIR=`pwd`/`dirname $0`
-
-# read script args
-INSTALL="1"
-
-while (( "$#" )); do
-	case "$1" in
-	"-i")
-		INSTALL="1"
-		;;
-	"-u")
-		INSTALL="0"
-		;;
-	*)
-		echo "Usage: $0 [options]"
-		echo "Available options:"
-		printf "\t-i\tInstall (default)\n"
-		printf "\t-u\tUninstall\n"
-		exit 1
-		;;
-	esac
-	shift
-done
 
 # create file list
 LIB_FILES=`ls $SCRIPT_DIR/Lib/*`
 BIN_FILES=`ls $SCRIPT_DIR/Bin/ni*`
 
-if [ "$INSTALL" == "1" ]; then
-
+case $1 in
+-i | "")
+	printf "Installing OpenNI\n"
+	printf "****************************\n\n"
+	
 	# copy libraries
 	printf "copying shared libraries..."
 	cp $LIB_FILES $INSTALL_LIB
@@ -74,8 +60,12 @@ if [ "$INSTALL" == "1" ]; then
 	then
 		gacutil -i Bin/OpenNI.net.dll -package 2.0
 	fi
+	;;
+	
+-u)
+	printf "Uninstalling OpenNI\n"
+	printf "****************************\n\n"
 
-else
 	# unregister modules
 	for module in $MODULES; do
     	printf "unregistering module '$module'..."
@@ -109,7 +99,15 @@ else
 		printf "Removing OpenNI.net: "
 		gacutil -u OpenNI.net
 	fi
-fi
+	;;
+*) 
+	echo "Usage: $0 [options]"
+	echo "Available options:"
+	printf "\t-i\tInstall (default)\n"
+	printf "\t-u\tUninstall\n"
+	exit 1
+	;;
+esac
 
 printf "\n*** DONE ***\n\n"
 
