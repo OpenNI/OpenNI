@@ -138,8 +138,19 @@ XnStatus resolveLicensesFile(XnChar* strFileName, XnUInt32 nBufSize)
 		XN_IS_STATUS_OK(nRetVal);
 	#endif
 #elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
-	nRetVal = xnOSStrCopy(strFileName, "/var/lib/ni/licenses.xml", nBufSize);
-	XN_IS_STATUS_OK(nRetVal);
+	char *pathVar = getenv( "OPEN_NI_CONFIG_PATH" );
+	if ( pathVar )
+	{
+		nRetVal = xnOSStrCopy(strFileName, pathVar, nBufSize);
+		XN_IS_STATUS_OK(nRetVal);
+		nRetVal = xnOSStrAppend( strFileName, "/licenses.xml", nBufSize );
+		XN_IS_STATUS_OK(nRetVal);
+	}
+	else
+	{
+		nRetVal = xnOSStrCopy(strFileName, "/var/lib/ni/licenses.xml", nBufSize);
+		XN_IS_STATUS_OK(nRetVal);
+	}
 #else
 	nRetVal = xnOSStrCopy(strFileName, "licenses.xml", nBufSize);
 	XN_IS_STATUS_OK(nRetVal);
