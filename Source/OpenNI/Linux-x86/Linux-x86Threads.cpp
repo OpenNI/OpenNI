@@ -27,6 +27,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <XnLog.h>
+#include <string.h>
 
 //---------------------------------------------------------------------------
 // Code
@@ -150,6 +151,7 @@ XN_C_API XnStatus xnOSSetThreadPriority(XN_THREAD_HANDLE ThreadHandle, XnThreadP
 	
 	if (nPriority == XN_PRIORITY_CRITICAL)
 	{
+		memset( &param, 0, sizeof(param) );
 #ifndef XN_PLATFORM_HAS_NO_SCHED_PARAM
 		param.__sched_priority = 5;
 #endif
