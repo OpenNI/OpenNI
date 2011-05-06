@@ -68,9 +68,7 @@ public:
 	XnStatus CreateRootNode(XnNodeInfo* pTree, XnModuleInstance** ppInstance);
 	void DestroyModuleInstance(XnModuleInstance* pInstance);
 
-#if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 	static XnStatus RegisterModule(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
-#endif
 
 private:
 	XnStatus LoadAllModules();
@@ -125,7 +123,6 @@ private:
 	XN_DECLARE_HASH(XnProductionNodeDescription, XnLoadedGenerator, XnLoadedGeneratorsHash, XnGeneratorDescriptionTranslator, XnLoadedGeneratorTranslator, XnDescriptionKeyManager);
 	XN_DECLARE_STRINGS_HASH(XnProductionNodeType, ExtendedNodeTypesHash);
 
-#if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 	typedef struct RegisteredModule
 	{
 		XnOpenNIModuleInterface* pInterface;
@@ -134,7 +131,6 @@ private:
 	} RegisteredModule;
 	XN_DECLARE_LIST(RegisteredModule, RegisteredModulesList);
 	static RegisteredModulesList sm_modulesList;
-#endif
 
 	XnLoadedGeneratorsHash m_AllGenerators;
 	ExtendedNodeTypesHash m_ExtendedNodeTypesHash;

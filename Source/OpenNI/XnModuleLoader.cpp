@@ -234,14 +234,17 @@ XnStatus XnModuleLoader::Init()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-#if XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
-	nRetVal = LoadAllModules();
-	XN_IS_STATUS_OK(nRetVal);
-#else
 	for (RegisteredModulesList::Iterator it = sm_modulesList.begin(); it != sm_modulesList.end(); ++it)
 	{
 		RegisteredModule& module = *it;
 		nRetVal = AddModule(module.pInterface, module.strConfigDir, module.strName);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+#if XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
+	if (sm_modulesList.IsEmpty())
+	{
+		nRetVal = LoadAllModules();
 		XN_IS_STATUS_OK(nRetVal);
 	}
 #endif
@@ -1556,7 +1559,6 @@ XN_C_API XnStatus xnPrintRegisteredModules()
 	return loader.Init();
 }
 
-#if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 XnModuleLoader::RegisteredModulesList XnModuleLoader::sm_modulesList;
 
 XnStatus XnModuleLoader::RegisterModule(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName)
@@ -1569,6 +1571,5 @@ XN_C_API XnStatus xnRegisterModuleWithOpenNI(XnOpenNIModuleInterface* pInterface
 {
 	return XnModuleLoader::RegisterModule(pInterface, strConfigDir, strName);
 }
-#endif
 
 

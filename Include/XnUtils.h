@@ -409,7 +409,6 @@ XN_C_API XnStatus xnRegisterExtensionNode(const XnChar* strTypeName, XnProductio
  */
 XN_C_API XnModuleNodeHandle xnGetModuleNodeHandle(XnNodeHandle hNode);
 
-#if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 /**
  * Registers a module to OpenNI in environments where dynamic library loading is not supported.
  *
@@ -418,7 +417,6 @@ XN_C_API XnModuleNodeHandle xnGetModuleNodeHandle(XnNodeHandle hNode);
  * @param	strName			[in]	Name of this module.
  */
 XN_C_API XnStatus xnRegisterModuleWithOpenNI(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
-#endif
 
 /// @}
 
