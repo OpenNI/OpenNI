@@ -260,8 +260,18 @@ int main(int argc, char* argv[])
 	}
 
 	rc = g_context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_depth);
+        if (rc != XN_STATUS_OK)
+	{
+		printf("Find Depth Generator Failed: %s\n", xnGetStatusString(rc));
+		return (rc);
+	}
+    
 	rc = g_context.FindExistingNode(XN_NODE_TYPE_IMAGE, g_image);
-
+        if (rc != XN_STATUS_OK)
+	{
+		printf("Find Image Generator Failed: %s\n", xnGetStatusString(rc));
+		return (rc);
+	}
 	g_depth.GetMetaData(g_depthMD);
 	g_image.GetMetaData(g_imageMD);
 
