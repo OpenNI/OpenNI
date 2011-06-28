@@ -87,6 +87,10 @@ Linux:
 		   From: http://freeglut.sourceforge.net/index.php#download
 		   Or via apt:
 		   sudo apt-get install freeglut3-dev
+		5) Mono
+		   From: http://www.go-mono.com/mono-downloads/download.html
+		   Or via apt:
+		   sudo apt-get install mono-complete
 		   
 	Optional Requirements (To build the documentation):
 		1) Doxygen
@@ -97,12 +101,6 @@ Linux:
 		   From: http://www.graphviz.org/Download_linux_ubuntu.php
 		   Or via apt:
 		   sudo apt-get install graphviz
-
-	Optional Requirements (To build the Mono wrapper):
-		1) Mono
-		   From: http://www.go-mono.com/mono-downloads/download.html
-		   Or via apt:
-		   sudo apt-get install mono-complete
 		   
 	Building OpenNI:
 		1) Go into the directory: "Platform/Linux-x86/CreateRedist".
