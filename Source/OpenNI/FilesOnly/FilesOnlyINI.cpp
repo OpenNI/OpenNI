@@ -56,7 +56,7 @@
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
-XnStatus FindEntry(const XnChar* cpINIFile, const XnChar* cpSection, const XnChar* cpKey, XnChar* cpDest)
+static XnStatus FindEntry(const XnChar* cpINIFile, const XnChar* cpSection, const XnChar* cpKey, XnChar* cpDest)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	

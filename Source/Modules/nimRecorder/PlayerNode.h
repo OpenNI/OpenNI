@@ -132,6 +132,7 @@ private:
 	XnStatus SeekToRecordByType(XnUInt32 nNodeID, RecordType type);
 	DataIndexEntry* FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 nTimestamp);
 	DataIndexEntry** GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnUInt32 nDestFrame);
+	XnNodeHandle GetSelfNodeHandle();
 
 	// BC functions
 	XnStatus HandleNodeAdded_1_0_0_5_Record(NodeAdded_1_0_0_5_Record record);
@@ -162,6 +163,7 @@ private:
 	PlayerNodeInfo* m_pNodeInfoMap;
 	XnUInt32 m_nMaxNodes;
 	xn::Context m_context;
+	XnNodeHandle m_hSelf;
 
 	DataIndexEntry** m_aSeekTempArray;
 };

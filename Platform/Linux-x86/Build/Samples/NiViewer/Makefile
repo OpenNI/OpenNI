@@ -18,5 +18,5 @@ USED_LIBS += OpenNI
 
 EXE_NAME = NiViewer
 
-include ../../CommonMakefile
+include ../../CommonCppMakefile
 

@@ -62,11 +62,15 @@ namespace OpenNI
 		{
 			get
 			{
-				IntPtr handle = SafeNativeMethods.xnNodeInfoGetHandle(this.InternalObject);
+				IntPtr handle = SafeNativeMethods.xnNodeInfoGetRefHandle(this.InternalObject);
 				if (handle == IntPtr.Zero)
 					return null;
 				else
-					return ProductionNode.FromNative(handle);
+				{
+					ProductionNode result = ProductionNode.FromNative(handle);
+					SafeNativeMethods.xnProductionNodeRelease(handle);
+					return result;
+				}
 			}
 		}
 

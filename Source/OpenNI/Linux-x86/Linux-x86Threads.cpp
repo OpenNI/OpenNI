@@ -64,8 +64,12 @@ XN_C_API XnStatus xnOSTerminateThread(XN_THREAD_HANDLE* pThreadHandle)
 	
 	XN_THREAD_HANDLE handle = *pThreadHandle;
 
-	// send the KILL signal to the thread
+#ifndef XN_PLATFORM_LINUX_NO_PTHREAD_CANCEL
 	if (0 != pthread_cancel(*handle))
+#else
+	// send the KILL signal to the thread
+	if (0 != pthread_kill(*handle, SIGUSR1))
+#endif
 	{
 		return (XN_STATUS_OS_THREAD_TERMINATION_FAILED);
 	}
@@ -163,7 +167,7 @@ XN_C_API XnStatus xnOSSetThreadPriority(XN_THREAD_HANDLE ThreadHandle, XnThreadP
 	rc = pthread_setschedparam(*ThreadHandle, nPolicy, &param);
 	if (rc != 0)
 	{
-		xnLogWarning(XN_MASK_OS, "Failed to set thread priority: %s", sys_errlist[rc]);
+		xnLogWarning(XN_MASK_OS, "Failed to set thread priority (%d)", errno);
 		return (XN_STATUS_OS_THREAD_SET_PRIORITY_FAILED);
 	}
 	

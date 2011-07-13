@@ -1,0 +1,24 @@
+# some defaults
+ifndef SSE_GENERATION
+	SSE_GENERATION = 3
+endif
+
+# change c struct alignment options to be compatable with Win32
+ifneq ("$(OSTYPE)","Darwin")
+	CFLAGS += -malign-double
+else
+	CFLAGS += -arch i386 -arch x86_64
+	LDFLAGS += -arch i386 -arch x86_64
+endif
+
+ifeq "$(CFG)" "Release"
+	ifeq ($(SSE_GENERATION), 2)
+		CFLAGS += -msse2
+	else
+		ifeq ($(SSE_GENERATION), 3)
+			CFLAGS += -msse3
+		else
+			($error "Only SSE2 and SSE3 are supported")
+		endif
+	endif
+endif

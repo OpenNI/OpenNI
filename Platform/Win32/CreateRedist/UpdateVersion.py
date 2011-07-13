@@ -26,9 +26,9 @@ import re
 
 # ----------------------- PARAMS -------------------------
 VERSION_MAJOR = 1
-VERSION_MINOR = 1
-VERSION_MAINTENANCE = 0
-VERSION_BUILD = 41
+VERSION_MINOR = 3
+VERSION_MAINTENANCE = 2
+VERSION_BUILD = 1
 
 strVersion = str(VERSION_MAJOR) + "." + str(VERSION_MINOR) + "." + str(VERSION_MAINTENANCE) + "." + str(VERSION_BUILD)
 
@@ -68,6 +68,13 @@ def update_redist_defs (filePath):
 	regx_replace("set MAINTENANCE_VERSION=(.*)", "set MAINTENANCE_VERSION=" + str(VERSION_MAINTENANCE), filePath)	
 	regx_replace("set BUILD_VERSION=(.*)", "set BUILD_VERSION=" + str(VERSION_BUILD), filePath)
 
+def update_redist_script (filePath):
+	print "Updating Redist script version defines: " + filePath
+	regx_replace("set MAJOR_VERSION=(.*)", "set MAJOR_VERSION=" + str(VERSION_MAJOR), filePath)
+	regx_replace("set MINOR_VERSION=(.*)", "set MINOR_VERSION=" + str(VERSION_MINOR), filePath)
+	regx_replace("set MAINTENANCE_VERSION=(.*)", "set MAINTENANCE_VERSION=" + str(VERSION_MAINTENANCE), filePath)	
+	regx_replace("set BUILD_VERSION=(.*)", "set BUILD_VERSION=" + str(VERSION_BUILD), filePath)
+
 def update_redist_eng_defs (filePath):
 	print "Updating Redist Engine version defines: " + filePath
 	regx_replace("  <VERSION_NUMBER>(\d+).(\d+).(\d+)</VERSION_NUMBER>", "  <VERSION_NUMBER>" + str(VERSION_MAJOR) + "." + str(VERSION_MINOR) + "." + str(VERSION_MAINTENANCE) + "</VERSION_NUMBER>", filePath)
@@ -89,6 +96,10 @@ def update_publisher_policy (filePath):
 	regx_replace("oldVersion=\"1.1.0.31 - (.*)\"", "oldVersion=\"1.1.0.31 - " + strVersion + "\"", filePath)
 	regx_replace("newVersion=\"(.*)\"", "newVersion=\"" + strVersion + "\"", filePath)
 		
+def update_doxygen (filePath):
+	print "Updating doxygen: " + filePath
+	regx_replace("PROJECT_NAME\s*=\s*\"OpenNI (\d+)\.(\d+)\.(\d+)\"", "PROJECT_NAME = \"OpenNI " + str(VERSION_MAJOR) + "." + str(VERSION_MINOR) + "." + str(VERSION_MAINTENANCE) + "\"", filePath)
+
 # ----------------------- MAIN -------------------------
 if len(sys.argv) == 5:
 	VERSION_MAJOR=int(sys.argv[1])
@@ -116,12 +127,14 @@ print "Going to update files to version: %d.%d.%d.%d" % (VERSION_MAJOR, VERSION_
 
 update_self_defs("./UpdateVersion.py")
 update_redist_defs("./RedistMaker.bat")
+update_redist_script("./Redist_OpenNI.py")
 update_redist_eng_defs("./OpenNi_Config.xml")
 update_src_ver_defs("../../../Include/XnVersion.h")
 update_assembly_info("../Build/Res/AssemblyInfo-OpenNI.cs")
 update_assembly_info("../../Linux-x86/Build/Res/AssemblyInfo-OpenNI.cs")
 update_wix("../Install/OpenNI/Includes/OpenNIVariables.wxi")
 update_publisher_policy("../../../Wrappers/OpenNI.Net/PublisherPolicy.config")
+update_doxygen("../../../Source/DoxyGen/Doxyfile")
 
 try:
 	update_redist_defs("../../../ExportOpenSource.bat")

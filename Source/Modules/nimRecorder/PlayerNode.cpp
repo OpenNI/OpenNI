@@ -84,7 +84,8 @@ PlayerNode::PlayerNode(xn::Context &context, const XnChar* strName) :
 	m_pNodeInfoMap(NULL),
 	m_nMaxNodes(0),
 	m_bEOF(FALSE),
-	m_aSeekTempArray(NULL)
+	m_aSeekTempArray(NULL),
+	m_hSelf(NULL)
 {
 	xnOSStrCopy(m_strName, strName, sizeof(m_strName));
 }
@@ -794,10 +795,6 @@ XnStatus PlayerNode::RemovePlayerNodeInfo(XnUInt32 nNodeID)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	xn::Player playerNode;
-	nRetVal = m_context.GetProductionNodeByName(m_strName, playerNode);
-	XN_IS_STATUS_OK(nRetVal);
-
 	PlayerNodeInfo* pPlayerNodeInfo = GetPlayerNodeInfo(nNodeID);
 	XN_VALIDATE_PTR(pPlayerNodeInfo, XN_STATUS_CORRUPT_FILE);
 	if (pPlayerNodeInfo->bValid)
@@ -811,8 +808,11 @@ XnStatus PlayerNode::RemovePlayerNodeInfo(XnUInt32 nNodeID)
 			}
 		}
 
-		playerNode.RemoveNeededNode(pPlayerNodeInfo->codec);
-		pPlayerNodeInfo->codec = NULL;
+		if (pPlayerNodeInfo->codec.IsValid())
+		{
+			xnRemoveNeededNode(GetSelfNodeHandle(), pPlayerNodeInfo->codec);
+			pPlayerNodeInfo->codec.Release();
+		}
 		pPlayerNodeInfo->Reset(); //Now it's not valid anymore
 	}
 
@@ -1237,28 +1237,14 @@ XnStatus PlayerNode::HandleNodeStateReadyRecord(NodeStateReadyRecord record)
 		  GetProductionNodeByName() will fail. */
 		nRetVal = m_context.GetProductionNodeByName(pPlayerNodeInfo->strName, node);
 		XN_IS_STATUS_OK(nRetVal);
+
 		nRetVal = m_context.CreateCodec(pPlayerNodeInfo->compression, node, pPlayerNodeInfo->codec);
 		XN_IS_STATUS_OK(nRetVal);
 
-		// make the player dependent on the codec
-		xn::Player playerNode;
-		nRetVal = m_context.GetProductionNodeByName(m_strName, playerNode);
-		if (nRetVal != XN_STATUS_OK)
-		{
-			pPlayerNodeInfo->codec.Release();
-			return (nRetVal);
-		}
-
-		nRetVal = playerNode.AddNeededNode(pPlayerNodeInfo->codec);
-		if (nRetVal != XN_STATUS_OK)
-		{
-			pPlayerNodeInfo->codec.Release();
-			return (nRetVal);
-		}
-
-		// at this point, we can unref the codec (it will still have at least one ref, as we added it to needed nodes).
-		xn::Codec codec = pPlayerNodeInfo->codec;
-		codec.Release();
+		// we need to make the codec a needed node, so that if xnForceShutdown() is called, we will be
+		// destroyed *before* it does (as we hold a reference to it).
+		nRetVal = xnAddNeededNode(GetSelfNodeHandle(), pPlayerNodeInfo->codec);
+		XN_IS_STATUS_OK(nRetVal);
 	}
 
 	pPlayerNodeInfo->bStateReady = TRUE;
@@ -1657,6 +1643,22 @@ XnStatus PlayerNode::GetRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const Xn
 XnStatus PlayerNode::SkipRecordPayload(Record record)
 {
 	return SeekStream(XN_OS_SEEK_CUR, record.GetPayloadSize());
+}
+
+XnNodeHandle PlayerNode::GetSelfNodeHandle()
+{
+	if (m_hSelf == NULL)
+	{
+		xn::Player thisPlayer;
+		XnStatus nRetVal = m_context.GetProductionNodeByName(m_strName, thisPlayer);
+		XN_ASSERT(nRetVal == XN_STATUS_OK);
+
+		// we keep just the handle, without a reference (otherwise, we keep a reference to ourselves, 
+		// and we will never be destroyed)
+		m_hSelf = thisPlayer;
+	}
+
+	return m_hSelf;
 }
 
 PlayerNode::PlayerNodeInfo::PlayerNodeInfo()

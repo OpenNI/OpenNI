@@ -70,6 +70,17 @@ namespace OpenNI
 
 		/** A Codec **/
 		Codec = 12,
+
+		/** A general production node **/
+		ProductionNode = 13,
+
+		/** A general generator **/
+		Generator = 14,
+
+		/** A general map generator **/
+		MapGenerator = 15,
+
+		ScriptNode = 16,
 	}
 
 	public enum LogSeverity
@@ -177,6 +188,47 @@ namespace OpenNI
 		Hz50 = 50,
 		Hz60 = 60,
 	};
+
+    public enum Direction
+    {
+        Illegal = 0,
+        Left = 1,
+        Right = 2,
+        Up = 3,
+        Down = 4,
+        Forward = 5,
+        Backward = 6,
+    }
+
+    /** Possible statuses for pose detection */
+    public enum PoseDetectionStatus
+    {
+	    OK = 0,
+	    NoUser = 1,
+	    TopFOV = 2,
+	    SideFoV = 3,
+	    Error = 4,
+    }
+
+/** Possible statuses for calibration */
+    public enum CalibrationStatus
+    {
+	    OK = 0,
+	    NoUser = 1,
+	    Arm = 2,
+	    Leg = 3,
+	    Head = 4,
+	    Torso = 5,
+	    TopFOV = 6,
+	    SideFoV = 7,
+	    Pose = 8,
+    }
+
+    public enum SkeletonPostProcessing
+    {
+    	None	= 0,
+    	All		= 1,
+    }
 
 	public static class Capabilities
 	{
@@ -775,17 +827,24 @@ namespace OpenNI
 		};
 
 		public delegate void XnErrorStateChangedHandler(XnStatus errorState, IntPtr pCookie);
+		public delegate void XnContextShuttingDownHandler(XnContext pContext, IntPtr pCookie);
 		public delegate void XnStateChangedHandler(XnNodeHandle hNode, IntPtr pCookie);
 		public delegate void XnGestureRecognized(XnNodeHandle hNode, string strGesture, ref Point3D pIDPosition, ref Point3D pEndPosition, IntPtr pCookie);
 		public delegate void XnGestureProgress(XnNodeHandle hNode, string strGesture, ref Point3D pPosition, XnFloat fProgress, IntPtr pCookie);
-		public delegate void XnCalibrationStart(XnNodeHandle hNode, XnUserID user, IntPtr pCookie);
+        public delegate void XnGestureIntermediateStageCompleted(XnNodeHandle hNode, string strGesture, ref Point3D pPosition, IntPtr pCookie);
+        public delegate void XnGestureReadyForNextIntermediateStage(XnNodeHandle hNode, string strGesture, ref Point3D pPosition, IntPtr pCookie);
+        public delegate void XnCalibrationStart(XnNodeHandle hNode, XnUserID user, IntPtr pCookie);
 		public delegate void XnCalibrationEnd(XnNodeHandle hNode, XnUserID user, XnBool bSuccess, IntPtr pCookie);
+        public delegate void XnCalibrationComplete(XnNodeHandle hNode, XnUserID user, CalibrationStatus status, IntPtr pCookie);
+        public delegate void XnCalibrationInProgress(XnNodeHandle hNode, XnUserID user, CalibrationStatus status, IntPtr pCookie);
 		public delegate void XnPoseDetectionCallback(XnNodeHandle hNode, string strPose, XnUserID user, IntPtr pCookie);
+        public delegate void XnPoseDetectionInProgress(XnNodeHandle hNode, string strPose, XnUserID user, PoseDetectionStatus status, IntPtr pCookie);
 
 		public delegate void XnUserHandler(XnNodeHandle hNode, XnUserID user, IntPtr pCookie);
 		public delegate void XnHandCreate(XnNodeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
 		public delegate void XnHandUpdate(XnNodeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, IntPtr pCookie);
 		public delegate void XnHandDestroy(XnNodeHandle hNode, XnUserID user, XnFloat fTime, IntPtr pCookie);
+        public delegate void XnHandTouchingFOVEdge(XnNodeHandle hNode, XnUserID user, ref Point3D pPosition, XnFloat fTime, Direction dir, IntPtr pCookie);
 
 #if Win_x64
 		private const string openNILibraryName = "OpenNI64";
@@ -796,15 +855,38 @@ namespace OpenNI
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnInit(out XnContext pContext);
 		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern XnStatus xnContextRunXmlScriptFromFile(XnContext pContext, string strFileName, XnEnumerationErrors pErrors);
 		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnContextRunXmlScriptFromFileEx(XnContext pContext, string strFileName, XnEnumerationErrors pErrors, out XnNodeHandle hScriptNode);
+		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern XnStatus xnContextRunXmlScript(XnContext pContext, string xmlScript, XnEnumerationErrors pErrors);
 		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnContextRunXmlScriptEx(XnContext pContext, string xmlScript, XnEnumerationErrors pErrors, out XnNodeHandle hScriptNode);
+		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern XnStatus xnInitFromXmlFile(string strFileName, out XnContext ppContext, XnEnumerationErrors pErrors);
 		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnInitFromXmlFileEx(string strFileName, out XnContext ppContext, XnEnumerationErrors pErrors, out XnNodeHandle hScriptNode);
+		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern XnStatus xnContextOpenFileRecording(XnContext pContext, string strFileName);
 		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnContextOpenFileRecordingEx(XnContext pContext, string strFileName, out XnNodeHandle hScriptNode);
+		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnContextAddRef(XnContext pContext);
+		[DllImport(openNILibraryName)]
+		public static extern void xnContextRelease(XnContext pContext);
+		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern void xnShutdown(XnContext pContext);
+		[DllImport(openNILibraryName)]
+		public static extern void xnForceShutdown(XnContext pContext);
+		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnContextRegisterForShutdown(XnContext pContext, [MarshalAs(UnmanagedType.FunctionPtr)] XnContextShuttingDownHandler pHandler, IntPtr pCookie, out XnCallbackHandle phCallback);
+		[DllImport(openNILibraryName)]
+		public static extern void xnContextUnregisterFromShutdown(XnContext pContext, XnCallbackHandle hCallback);
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnEnumerateProductionTrees(XnContext pContext, NodeType Type, XnNodeQuery pQuery, out XnNodeInfoList ppTreesList, XnEnumerationErrors pErrors);
 		[DllImport(openNILibraryName)]
@@ -824,9 +906,15 @@ namespace OpenNI
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnEnumerateExistingNodesByType(XnContext pContext, NodeType type, out XnNodeInfoList ppList);
 		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern XnStatus xnFindExistingNodeByType(XnContext pContext, NodeType type, out XnNodeHandle phNode);
 		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnFindExistingRefNodeByType(XnContext pContext, NodeType type, out XnNodeHandle phNode);
+		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern XnStatus xnGetNodeHandleByName(XnContext pContext, string strInstanceName, out XnNodeHandle phNode);
+		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnGetRefNodeHandleByName(XnContext pContext, string strInstanceName, out XnNodeHandle phNode);
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnWaitAndUpdateAll(XnContext pContext);
 		[DllImport(openNILibraryName)]
@@ -924,7 +1012,10 @@ namespace OpenNI
 		[DllImport(openNILibraryName)]
 		public static extern IntPtr xnGetNodeName(XnNodeHandle hNode);
 		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern XnContext xnGetContextFromNodeHandle(XnNodeHandle hNode);
+		[DllImport(openNILibraryName)]
+		public static extern XnContext xnGetRefContextFromNodeHandle(XnNodeHandle hNode);
 		[DllImport(openNILibraryName)]
 		public static extern XnBool xnIsCapabilitySupported(XnNodeHandle hInstance, string strCapabilityName);
 		[DllImport(openNILibraryName)]
@@ -1135,7 +1226,15 @@ namespace OpenNI
 		public static extern XnStatus xnRegisterGestureCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureRecognized RecognizedCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureProgress ProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport(openNILibraryName)]
 		public static extern void xnUnregisterGestureCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToGestureIntermediateStageCompleted(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureIntermediateStageCompleted GestureIntermediateStageCompletedCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromGestureIntermediateStageCompleted(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToGestureReadyForNextIntermediateStage(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureReadyForNextIntermediateStage GestureReadyForNextIntermediateStageCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromGestureReadyForNextIntermediateStage(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
 		public static extern XnStatus xnRegisterToGestureChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport(openNILibraryName)]
 		public static extern void xnUnregisterFromGestureChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
@@ -1161,7 +1260,15 @@ namespace OpenNI
 		public static extern XnStatus xnRegisterUserCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler NewUserCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler LostUserCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport(openNILibraryName)]
 		public static extern void xnUnregisterUserCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToUserExit(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler UserExitCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromUserExit(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToUserReEnter(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler UserReEnterCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromUserReEnter(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
 		public static extern XnBool xnIsJointAvailable(XnNodeHandle hInstance, SkeletonJoint eJoint);
 		[DllImport(openNILibraryName)]
 		public static extern XnBool xnIsProfileAvailable(XnNodeHandle hInstance, SkeletonProfile eProfile);
@@ -1217,10 +1324,22 @@ namespace OpenNI
 		public static extern XnStatus xnGetSkeletonCalibrationPose(XnNodeHandle hInstance, StringBuilder sb);
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnSetSkeletonSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
-		[DllImport(openNILibraryName)]
-		public static extern XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationStart CalibrationStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationEnd CalibrationEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationStart CalibrationStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationEnd CalibrationEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport(openNILibraryName)]
 		public static extern void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToCalibrationStart(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationStart CalibrationStartCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromCalibrationStart(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToCalibrationInProgress(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationInProgress CalibrationInProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromCalibrationInProgress(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToCalibrationComplete(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationComplete CalibrationCompleteCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromCalibrationComplete(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport(openNILibraryName)]
 		public static extern XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance);
 		[DllImport(openNILibraryName)]
@@ -1233,12 +1352,28 @@ namespace OpenNI
 		public static extern XnStatus xnRegisterToPoseCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport(openNILibraryName)]
 		public static extern void xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToPoseDetected(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionStartCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromPoseDetected(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToOutOfPose(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionStartCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromOutOfPose(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToPoseDetectionInProgress(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionInProgress PoseDetectionInProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromPoseDetectionInProgress(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
 		public static extern XnStatus xnCreateHandsGenerator(XnContext pContext, out XnNodeHandle phHandsGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnRegisterHandCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandCreate CreateCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandUpdate UpdateCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandDestroy DestroyCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport(openNILibraryName)]
 		public static extern void xnUnregisterHandCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName)]
+        public static extern XnStatus xnRegisterToHandTouchingFOVEdge(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandTouchingFOVEdge TouchingCB, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName)]
+        public static extern void xnUnregisterFromHandTouchingFOVEdge(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnStopTracking(XnNodeHandle hInstance, XnUserID user);
 		[DllImport(openNILibraryName)]
@@ -1340,7 +1475,10 @@ namespace OpenNI
 		[DllImport(openNILibraryName)]
 		public static extern XnNodeInfoList xnNodeInfoGetNeededNodes(XnNodeInfo pNodeInfo);
 		[DllImport(openNILibraryName)]
+		[Obsolete]
 		public static extern XnNodeHandle xnNodeInfoGetHandle(XnNodeInfo pNodeInfo);
+		[DllImport(openNILibraryName)]
+		public static extern XnNodeHandle xnNodeInfoGetRefHandle(XnNodeInfo pNodeInfo);
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnNodeInfoListAllocate(out XnNodeInfoList ppList);
 		[DllImport(openNILibraryName)]
@@ -1517,5 +1655,16 @@ namespace OpenNI
 		public static extern XnStatus xnCopySceneMetaData(IntPtr pDestination, IntPtr pSource);
 		[DllImport(openNILibraryName)]
 		public static extern XnStatus xnAutoEnumerateOverSingleInput(XnContext pContext, XnNodeInfoList pList, ProductionNodeDescription pDescription, string strCreationInfo, NodeType InputType, XnEnumerationErrors pErrors, XnNodeQuery pQuery);
+
+		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnCreateScriptNode(XnContext pContext, string strFormat, out XnNodeHandle phScript);
+		[DllImport(openNILibraryName)]
+		public static extern IntPtr xnScriptNodeGetSupportedFormat(XnNodeHandle hScript);
+		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnLoadScriptFromFile(XnNodeHandle hScript, string strFileName);
+		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnLoadScriptFromString(XnNodeHandle hScript, string strScript);
+		[DllImport(openNILibraryName)]
+		public static extern XnStatus xnScriptNodeRun(XnNodeHandle hScript);
 	}
 }

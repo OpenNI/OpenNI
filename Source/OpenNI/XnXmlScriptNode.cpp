@@ -22,11 +22,13 @@
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
-#include <XnOpenNI.h>
-#include "XnXml.h"
+#include "XnXmlScriptNode.h"
 #include <XnLog.h>
 #include <XnStringsHash.h>
 #include "XnLicensingInternal.h"
+#include <XnOSCpp.h>
+#include "XnInternalTypes.h"
+#include "XnTypeManager.h"
 
 //---------------------------------------------------------------------------
 // Code
@@ -34,7 +36,7 @@
 XnStatus xnXmlReadMapOutputMode(const TiXmlElement* pOpcode, XnMapOutputMode* pMapOutputMode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	XnInt nValue;
 	nRetVal = xnXmlReadIntAttribute(pOpcode, "xRes", &nValue);
 	XN_IS_STATUS_OK(nRetVal);
@@ -47,7 +49,7 @@ XnStatus xnXmlReadMapOutputMode(const TiXmlElement* pOpcode, XnMapOutputMode* pM
 	nRetVal = xnXmlReadIntAttribute(pOpcode, "FPS", &nValue);
 	XN_IS_STATUS_OK(nRetVal);
 	pMapOutputMode->nFPS = nValue;
-	
+
 	return (XN_STATUS_OK);
 }
 
@@ -74,10 +76,10 @@ XnStatus xnXmlReadWaveOutputMode(const TiXmlElement* pOpcode, XnWaveOutputMode* 
 XnStatus xnXmlReadCropping(const TiXmlElement* pOpcode, XnCropping* pCropping)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	nRetVal = xnXmlReadBoolAttribute(pOpcode, "enabled", &pCropping->bEnabled);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	XnInt nValue;
 	nRetVal = xnXmlReadIntAttribute(pOpcode, "xOffset", &nValue);
 	XN_IS_STATUS_OK(nRetVal);
@@ -94,14 +96,14 @@ XnStatus xnXmlReadCropping(const TiXmlElement* pOpcode, XnCropping* pCropping)
 	nRetVal = xnXmlReadIntAttribute(pOpcode, "ySize", &nValue);
 	XN_IS_STATUS_OK(nRetVal);
 	pCropping->nYSize = nValue;
-	
+
 	return (XN_STATUS_OK);
 }
 
 XnStatus xnXmlReadVecotr3D(const TiXmlElement* pOpcode, XnVector3D* pVector)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	XnDouble dValue;
 	nRetVal = xnXmlReadRealAttribute(pOpcode, "x", &dValue);
 	XN_IS_STATUS_OK(nRetVal);
@@ -121,14 +123,14 @@ XnStatus xnXmlReadVecotr3D(const TiXmlElement* pOpcode, XnVector3D* pVector)
 XnStatus xnXmlReadBoundingBox3D(const TiXmlElement* pElem, XnBoundingBox3D* pBox)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	const TiXmlElement* pMin;
 	nRetVal = xnXmlGetChildElement(pElem, "Min", &pMin);
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = xnXmlReadVecotr3D(pMin, &pBox->LeftBottomNear);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	const TiXmlElement* pMax;
 	nRetVal = xnXmlGetChildElement(pElem, "Max", &pMax);
 	XN_IS_STATUS_OK(nRetVal);
@@ -142,7 +144,7 @@ XnStatus xnXmlReadBoundingBox3D(const TiXmlElement* pElem, XnBoundingBox3D* pBox
 XnStatus xnXmlReadUserPosition(const TiXmlElement* pOpcode, XnInt* pnIndex, XnBoundingBox3D* pUserPosition)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	nRetVal = xnXmlReadIntAttribute(pOpcode, "index", pnIndex);
 	XN_IS_STATUS_OK(nRetVal);
 
@@ -155,28 +157,28 @@ XnStatus xnXmlReadUserPosition(const TiXmlElement* pOpcode, XnInt* pnIndex, XnBo
 XnStatus xnConfigureMirror(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	XnBool bOn;
 	nRetVal = xnXmlReadBoolAttribute(pOpcode, "on", &bOn);
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = xnSetMirror(hNode, bOn);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	return (XN_STATUS_OK);
 }
 
 XnStatus xnConfigureMapOutputMode(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	XnMapOutputMode Mode;
 	nRetVal = xnXmlReadMapOutputMode(pOpcode, &Mode);
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = xnSetMapOutputMode(hNode, &Mode);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	return (XN_STATUS_OK);
 }
 
@@ -197,14 +199,14 @@ XnStatus xnConfigureWaveOutputMode(XnNodeHandle hNode, const TiXmlElement* pOpco
 XnStatus xnConfigureCropping(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	XnCropping Cropping;
 	nRetVal = xnXmlReadCropping(pOpcode, &Cropping);
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = xnSetCropping(hNode, &Cropping);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	return (XN_STATUS_OK);
 }
 
@@ -225,7 +227,7 @@ XnStatus xnConfigurePixelFormat(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 XnStatus xnConfigureUserPosition(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	XnInt nIndex;
 	XnBoundingBox3D UserPosition;
 	nRetVal = xnXmlReadUserPosition(pOpcode, &nIndex, &UserPosition);
@@ -233,7 +235,7 @@ XnStatus xnConfigureUserPosition(XnNodeHandle hNode, const TiXmlElement* pOpcode
 
 	nRetVal = xnSetUserPosition(hNode, nIndex, &UserPosition);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	return (XN_STATUS_OK);
 }
 
@@ -287,16 +289,17 @@ XnStatus xnConfigureProperty(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 XnStatus xnConfigureFrameSync(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
-	XnContext* pContext = xnGetContextFromNodeHandle(hNode);
+
+	XnContext* pContext = hNode->pContext;
 	XnNodeHandle hOther = NULL;
 
-	nRetVal = xnGetNodeHandleByName(pContext, pOpcode->GetText(), &hOther);
+	nRetVal = xnGetRefNodeHandleByName(pContext, pOpcode->GetText(), &hOther);
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = xnFrameSyncWith(hNode, hOther);
+	xnProductionNodeRelease(hOther);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	return (XN_STATUS_OK);
 }
 
@@ -309,13 +312,14 @@ XnStatus xnConfigureAlternativeViewPoint(XnNodeHandle hNode, const TiXmlElement*
 		return XN_STATUS_INVALID_OPERATION;
 	}
 
-	XnContext* pContext = xnGetContextFromNodeHandle(hNode);
+	XnContext* pContext = hNode->pContext;
 	XnNodeHandle hOther = NULL;
 
-	nRetVal = xnGetNodeHandleByName(pContext, pOpcode->GetText(), &hOther);
+	nRetVal = xnGetRefNodeHandleByName(pContext, pOpcode->GetText(), &hOther);
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = xnSetViewPoint(hNode, hOther);
+	xnProductionNodeRelease(hOther);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -349,14 +353,14 @@ XnStatus xnConfigureRecorderDestination(XnNodeHandle hNode, const TiXmlElement* 
 
 	nRetVal = xnSetRecorderDestination(hNode, XN_RECORD_MEDIUM_FILE, strName);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	return (XN_STATUS_OK);
 }
 
 XnStatus xnConfigureAddNodeToRecording(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	const XnChar* strName;
 	nRetVal = xnXmlReadStringAttribute(pOpcode, "name", &strName);
 	XN_IS_STATUS_OK(nRetVal);
@@ -366,14 +370,15 @@ XnStatus xnConfigureAddNodeToRecording(XnNodeHandle hNode, const TiXmlElement* p
 	XN_IS_STATUS_OK(nRetVal);
 
 	// find node
-	XnContext* pContext = xnGetContextFromNodeHandle(hNode);
+	XnContext* pContext = hNode->pContext;
 	XnNodeHandle hOther = NULL;
-	nRetVal = xnGetNodeHandleByName(pContext, strName, &hOther);
+	nRetVal = xnGetRefNodeHandleByName(pContext, strName, &hOther);
 	XN_IS_STATUS_OK(nRetVal);
 
 	// find codec
 	if (strlen(strCodec) != sizeof(XnCodecID))
 	{
+		xnProductionNodeRelease(hOther);
 		XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "'%s' is not a valid codec ID!", strCodec);
 	}
 
@@ -381,8 +386,9 @@ XnStatus xnConfigureAddNodeToRecording(XnNodeHandle hNode, const TiXmlElement* p
 	xnOSMemCopy(&codecID, strCodec, sizeof(codecID));
 
 	nRetVal = xnAddNodeToRecording(hNode, hOther, codecID);
+	xnProductionNodeRelease(hOther);
 	XN_IS_STATUS_OK(nRetVal);
-	
+
 	return (XN_STATUS_OK);
 }
 
@@ -440,14 +446,14 @@ XnStatus xnConfigureSetOpcode(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 	{
 		XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Invalid configuration option: %s", strOpcode);
 	}
-	
+
 	return (XN_STATUS_OK);
 }
 
 XnStatus xnConfigureNodeFromXml(XnNodeHandle hNode, const TiXmlElement* pNode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	const TiXmlElement* pConfig = pNode->FirstChildElement("Configuration");
 	if (pConfig == NULL)
 	{
@@ -548,7 +554,7 @@ XnStatus xnReadVersionFromXml(const TiXmlElement* pElem, XnVersion* pVersion)
 XnStatus xnXmlReadQuery(const TiXmlElement* pQueryElem, XnNodeQuery* pQuery)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	// vendor
 	const TiXmlElement* pVendor = pQueryElem->FirstChildElement("Vendor");
 	if (pVendor != NULL)
@@ -625,6 +631,28 @@ XnStatus xnXmlReadQuery(const TiXmlElement* pQueryElem, XnNodeQuery* pQuery)
 		xnNodeQuerySetSupportedMinUserPositions(pQuery, nMinUserPositions);
 	}
 
+	// Existing Node Only
+	XnBool bExistingOnly = FALSE;
+	const TiXmlElement* pExistingOnly = pQueryElem->FirstChildElement("ExistingNodeOnly");
+	if (pExistingOnly != NULL)
+	{
+		xnNodeQuerySetExistingNodeOnly(pQuery, TRUE);
+		bExistingOnly = TRUE;
+	}
+
+	// Non Existing Node Only
+	const TiXmlElement* pNonExistingOnly = pQueryElem->FirstChildElement("NonExistingNodeOnly");
+	if (pNonExistingOnly != NULL)
+	{
+		if (bExistingOnly)
+		{
+			xnLogError(XN_MASK_OPEN_NI, "Cannot specify both <ExistingNodeOnly> and <NonExistingNodeOnly> in query");
+			XN_ASSERT(FALSE);
+			return XN_STATUS_INVALID_OPERATION;
+		}
+		xnNodeQuerySetNonExistingNodeOnly(pQuery, TRUE);
+	}
+
 	// Needed Nodes
 	const TiXmlElement* pNeededNodes = pQueryElem->FirstChildElement("NeededNodes");
 	if (pNeededNodes != NULL)
@@ -648,7 +676,7 @@ XnStatus xnXmlReadQuery(const TiXmlElement* pQueryElem, XnNodeQuery* pQuery)
 	return (XN_STATUS_OK);
 }
 
-XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootElem, XnEnumerationErrors* pErrors)
+XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootElem, XnNodeInfoList* pCreatedNodes, XnEnumerationErrors* pErrors)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -680,12 +708,16 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 
 		xnLogVerbose(XN_MASK_OPEN_NI, "Opening file recording '%s'...", strFileName);
 
-		nRetVal = xnContextOpenFileRecording(pContext, strFileName);
+		XnNodeHandle hPlayer;
+		nRetVal = xnContextOpenFileRecordingEx(pContext, strFileName, &hPlayer);
 		XN_IS_STATUS_OK(nRetVal);
 
-		XnNodeHandle hPlayer;
-		nRetVal = xnFindExistingNodeByType(pContext, XN_NODE_TYPE_PLAYER, &hPlayer);
-		XN_IS_STATUS_OK(nRetVal);
+		nRetVal = xnNodeInfoListAddNode(pCreatedNodes, hPlayer->pNodeInfo);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnProductionNodeRelease(hPlayer);
+			return (nRetVal);
+		}
 
 		XnDouble dSpeed = 1.0;
 		if (NULL != pRecording->Attribute("playbackSpeed", &dSpeed))
@@ -803,9 +835,21 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 		// free the list
 		xnNodeInfoListFree(pTrees);
 
+		// add it to the list of created nodes
+		nRetVal = xnNodeInfoListAddNode(pCreatedNodes, pChosenInfo);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnProductionNodeRelease(hNode);
+			return (nRetVal);
+		}
+
 		// config it
 		nRetVal = xnConfigureNodeFromXml(hNode, pNode);
-		XN_IS_STATUS_OK(nRetVal);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnProductionNodeRelease(hNode);
+			return (nRetVal);
+		}
 
 		// check if we need to start it (if start generating all is on, it will be started at the end)
 		XnBool bStart = FALSE;
@@ -814,68 +858,100 @@ XnStatus xnConfigureCreateNodes(XnContext* pContext, const TiXmlElement* pRootEl
 			if (NULL != pNode->Attribute(strStartGeneratingAttr))
 			{
 				nRetVal = xnXmlReadBoolAttribute(pNode, strStartGeneratingAttr, &bStart);
-				XN_IS_STATUS_OK(nRetVal);
+				if (nRetVal != XN_STATUS_OK)
+				{
+					xnProductionNodeRelease(hNode);
+					return (nRetVal);
+				}
 			}
 
 			if (bStart)
 			{
 				nRetVal = xnStartGenerating(hNode);
-				XN_IS_STATUS_OK(nRetVal);
+				if (nRetVal != XN_STATUS_OK)
+				{
+					xnProductionNodeRelease(hNode);
+					return (nRetVal);
+				}
 			}
 		}
 
 		pNode = pNode->NextSiblingElement(strNodeTagName);
 	}
 
-	// start generating all
+	// start generating all created nodes (by the order they were created in)
 	if (bStartGeneratingAll)
 	{
-		nRetVal = xnStartGeneratingAll(pContext);
-		XN_IS_STATUS_OK(nRetVal);
+		XnBool bIsGenerator;
+
+		for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pCreatedNodes);
+			xnNodeInfoListIteratorIsValid(it);
+			it = xnNodeInfoListGetNext(it))
+		{
+			XnNodeInfo* pNodeInfo = xnNodeInfoListGetCurrent(it);
+			nRetVal = TypeManager::GetInstance().IsTypeDerivedFrom(pNodeInfo->Description.Type, XN_NODE_TYPE_GENERATOR, &bIsGenerator);
+			XN_IS_STATUS_OK(nRetVal);
+
+			if (bIsGenerator)
+			{
+				XN_ASSERT(pNodeInfo->hNode != NULL);
+				nRetVal = xnStartGenerating(pNodeInfo->hNode);
+				XN_IS_STATUS_OK(nRetVal);
+			}
+		}
 	}
 
 	return (XN_STATUS_OK);
 }
 
-XnStatus RunXmlScriptImpl(XnContext* pContext, TiXmlDocument* pDoc, XnEnumerationErrors* pErrors)
+XnStatus RunXmlScriptImpl(XnContext* pContext, TiXmlDocument* pDoc, XnNodeInfoList* pCreatedNodes, XnEnumerationErrors* pErrors)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	TiXmlElement* pRootElem = pDoc->RootElement();
 	if (pRootElem != NULL)
 	{
 		nRetVal = xnLoadLicensesFromXml(pContext, pRootElem);
 		XN_IS_STATUS_OK(nRetVal);
 
-		nRetVal = xnConfigureCreateNodes(pContext, pRootElem, pErrors);
+		nRetVal = xnConfigureCreateNodes(pContext, pRootElem, pCreatedNodes, pErrors);
 		XN_IS_STATUS_OK(nRetVal);
 	}
-	
+
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnChar* strFileName, XnEnumerationErrors* pErrors)
+XnXmlScriptNode::XnXmlScriptNode(xn::Context context) : m_context(context)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
-	TiXmlDocument doc;
-	nRetVal = xnXmlLoadDocument(doc, strFileName);
-	XN_IS_STATUS_OK(nRetVal);
-
-	return RunXmlScriptImpl(pContext, &doc, pErrors);
 }
 
-XN_C_API XnStatus xnContextRunXmlScript(XnContext* pContext, const XnChar* xmlScript, XnEnumerationErrors* pErrors)
+XnXmlScriptNode::~XnXmlScriptNode()
 {
-	XnStatus nRetVal = XN_STATUS_OK;
+}
 
-	TiXmlDocument doc;
-	if (!doc.Parse(xmlScript))
+const XnChar* XnXmlScriptNode::GetSupportedFormat()
+{
+	return XN_SCRIPT_FORMAT_XML;
+}
+
+XnStatus XnXmlScriptNode::LoadScriptFromFile(const XnChar* strFileName)
+{
+	return xnXmlLoadDocument(m_doc, strFileName);
+}
+
+XnStatus XnXmlScriptNode::LoadScriptFromString(const XnChar* strScript)
+{
+	if (!m_doc.Parse(strScript))
 	{
 		XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI,
 			"Failed loading xml: %s [row %d, column %d]",
-			doc.ErrorDesc(), doc.ErrorRow(), doc.ErrorCol());
+			m_doc.ErrorDesc(), m_doc.ErrorRow(), m_doc.ErrorCol());
 	}
 
-	return RunXmlScriptImpl(pContext, &doc, pErrors);
+	return XN_STATUS_OK;
+}
+
+XnStatus XnXmlScriptNode::Run(xn::NodeInfoList& createdNodes, xn::EnumerationErrors& errors)
+{
+	return RunXmlScriptImpl(m_context.GetUnderlyingObject(), &m_doc, createdNodes.GetUnderlyingObject(), errors.GetUnderlying());
 }

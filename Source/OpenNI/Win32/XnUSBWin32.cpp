@@ -1119,8 +1119,11 @@ XN_C_API XnStatus xnUSBReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer
 	}
 
 	// Reset the endpoint
-	nRetVal = xnUSBResetEndPoint(pEPHandle);
-	XN_IS_STATUS_OK(nRetVal);
+	if (pEPHandle->nEPType == XN_USB_EP_ISOCHRONOUS)
+	{
+		nRetVal = xnUSBResetEndPoint(pEPHandle);
+		XN_IS_STATUS_OK(nRetVal);
+	}
 
 	// Read from the EP
 	bResult = ReadFile(pEPHandle->hEPHandle, pBuffer, nBufferSize, (PULONG)pnBytesReceived, NULL);
@@ -1186,8 +1189,11 @@ XN_C_API XnStatus xnUSBWriteEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffe
 	}
 
 	// Reset the endpoint
-	nRetVal = xnUSBResetEndPoint(pEPHandle);
-	XN_IS_STATUS_OK(nRetVal);
+	if (pEPHandle->nEPType == XN_USB_EP_ISOCHRONOUS)
+	{
+		nRetVal = xnUSBResetEndPoint(pEPHandle);
+		XN_IS_STATUS_OK(nRetVal);
+	}
 
 	// Write into the EP
 	bResult = WriteFile(pEPHandle->hEPHandle, pBuffer, nBufferSize,  (PULONG) &nBytesSent, NULL);
@@ -1253,8 +1259,11 @@ XN_C_API XnStatus xnUSBQueueReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pB
 	}
 
 	// Reset the endpoint
-	nRetVal = xnUSBResetEndPoint(pEPHandle);
-	XN_IS_STATUS_OK(nRetVal);
+	if (pEPHandle->nEPType == XN_USB_EP_ISOCHRONOUS)
+	{
+		nRetVal = xnUSBResetEndPoint(pEPHandle);
+		XN_IS_STATUS_OK(nRetVal);
+	}
 
 	// Queue the read via overlapped I/O
 	bResult = ReadFile(pEPHandle->hEPHandleOvlp, pBuffer, nBufferSize, (PULONG)&nBytesRcvd, &pEPHandle->ovlpIO);

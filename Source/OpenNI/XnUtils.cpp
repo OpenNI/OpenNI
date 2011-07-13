@@ -458,5 +458,6 @@ XN_C_API XnStatus xnRegisterExtensionNode(const XnChar* strTypeName, XnProductio
 
 XN_C_API XnModuleNodeHandle xnGetModuleNodeHandle(XnNodeHandle hNode)
 {
+	XN_VALIDATE_PTR(hNode, NULL);
 	return hNode->pModuleInstance->hNode;
 }

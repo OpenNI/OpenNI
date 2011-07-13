@@ -29,7 +29,7 @@ namespace OpenNI
 
 	public class Context : ObjectWrapper
 	{
-		private Context(IntPtr pContext) : 
+		private Context(IntPtr pContext, bool addRef) : 
 			base(pContext)
 		{
 			this.errorStateChangedHandler = this.ErrorStateChangedCallback;
@@ -42,16 +42,38 @@ namespace OpenNI
 				}
 				Context.allContexts.Add(pContext, this);
 			}
+
+			if (addRef)
+			{
+				WrapperUtils.ThrowOnError(SafeNativeMethods.xnContextAddRef(pContext));
+			}
+
+			this.shutdownHandler = OnContextShuttingDown;
+
+			WrapperUtils.ThrowOnError(SafeNativeMethods.xnContextRegisterForShutdown(pContext, this.shutdownHandler, IntPtr.Zero, out this.shutdownCallbackHandle));
 		}
+
+		private Context(IntPtr pContext) : this(pContext, true) { }
 
 		public Context() :
-			this(Init())
+			this(Init(), false)
 		{
 		}
 
+		[Obsolete("use Context.CreateFromXmlFile() instead")]
 		public Context(string xmlFile) :
-			this(InitFromXml(xmlFile))
+			this(InitFromXml(xmlFile), false)
 		{
+			this.usingDeprecatedAPI = true;
+		}
+
+		public static Context CreateFromXmlFile(string xmlFile, out ScriptNode scriptNode)
+		{
+			IntPtr hScriptNode;
+			IntPtr pContext = InitFromXmlEx(xmlFile, out hScriptNode);
+			Context context = new Context(pContext, false);
+			scriptNode = new ScriptNode(context, hScriptNode, false);
+			return context;
 		}
 
 		/// <summary>
@@ -76,32 +98,73 @@ namespace OpenNI
 
 		static public ProductionNode CreateProductionNodeFromNative(IntPtr nodeHandle)
 		{
-			IntPtr pContext = SafeNativeMethods.xnGetContextFromNodeHandle(nodeHandle);
+			IntPtr pContext = SafeNativeMethods.xnGetRefContextFromNodeHandle(nodeHandle);
 			Context context = Context.FromNative(pContext);
+			SafeNativeMethods.xnContextRelease(pContext);
 			return context.CreateProductionNodeObject(nodeHandle);
 		}
 
+		[Obsolete("Use RunXmlScriptEx() instead")]
 		public void RunXmlScript(string xml)
 		{
+			this.usingDeprecatedAPI = true;
 			EnumerationErrors errors = new EnumerationErrors();
 			int status = SafeNativeMethods.xnContextRunXmlScript(this.InternalObject, xml, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
 		}
 
+		public ScriptNode RunXmlScriptEx(string xml)
+		{
+			EnumerationErrors errors = new EnumerationErrors();
+			IntPtr hScriptNode;
+			int status = SafeNativeMethods.xnContextRunXmlScriptEx(this.InternalObject, xml, errors.InternalObject, out hScriptNode);
+			WrapperUtils.CheckEnumeration(status, errors);
+			return new ScriptNode(this, hScriptNode, false);
+		}
+
+		[Obsolete("Use RunXmlScriptFromFileEx() instead")]
 		public void RunXmlScriptFromFile(string xmlFile)
 		{
+			this.usingDeprecatedAPI = true;
 			EnumerationErrors errors = new EnumerationErrors();
 			int status = SafeNativeMethods.xnContextRunXmlScriptFromFile(this.InternalObject, xmlFile, errors.InternalObject);
 			WrapperUtils.CheckEnumeration(status, errors);
 		}
 
+		public ProductionNode RunXmlScriptFromFileEx(string xmlFile)
+		{
+			EnumerationErrors errors = new EnumerationErrors();
+			IntPtr hScriptNode;
+			int status = SafeNativeMethods.xnContextRunXmlScriptFromFileEx(this.InternalObject, xmlFile, errors.InternalObject, out hScriptNode);
+			WrapperUtils.CheckEnumeration(status, errors);
+			return new ScriptNode(this, hScriptNode, false);
+		}
+
+		[Obsolete("Use OpenFileRecordingEx() instead")]
 		public void OpenFileRecording(string fileName)
 		{
+			this.usingDeprecatedAPI = true;
 			int status = SafeNativeMethods.xnContextOpenFileRecording(this.InternalObject, fileName);
 			WrapperUtils.ThrowOnError(status);
 		}
 
+		public ProductionNode OpenFileRecordingEx(string fileName)
+		{
+			IntPtr hScriptNode;
+			int status = SafeNativeMethods.xnContextOpenFileRecordingEx(this.InternalObject, fileName, out hScriptNode);
+			WrapperUtils.ThrowOnError(status);
+			return CreateProductionNodeFromNative(hScriptNode);
+		}
+
+		[Obsolete("Do not use this function. You may use Release() instead, or count on GC.")]
 		public void Shutdown()
+		{
+			SafeNativeMethods.xnShutdown(this.InternalObject);
+			UnsafeReplaceInternalObject(IntPtr.Zero);
+			Dispose();
+		}
+
+		public void Release()
 		{
 			Dispose();
 		}
@@ -189,25 +252,37 @@ namespace OpenNI
 		public ProductionNode FindExistingNode(NodeType type)
 		{
 			IntPtr nodeHandle;
-			int status = SafeNativeMethods.xnFindExistingNodeByType(this.InternalObject, type, out nodeHandle);
+			int status = SafeNativeMethods.xnFindExistingRefNodeByType(this.InternalObject, type, out nodeHandle);
 			WrapperUtils.ThrowOnError(status);
-			return CreateProductionNodeObject(nodeHandle, type);
+			ProductionNode node = CreateProductionNodeObject(nodeHandle, type);
+
+			// release the handle
+			SafeNativeMethods.xnProductionNodeRelease(nodeHandle);
+
+			return node;
 		}
 
 		public ProductionNode GetProductionNodeByName(string name)
 		{
 			IntPtr nodeHandle;
-			int status = SafeNativeMethods.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
+			int status = SafeNativeMethods.xnGetRefNodeHandleByName(this.InternalObject, name, out nodeHandle);
 			WrapperUtils.ThrowOnError(status);
-			return CreateProductionNodeObject(nodeHandle);
+
+			ProductionNode node = CreateProductionNodeObject(nodeHandle);
+
+			// release the handle
+			SafeNativeMethods.xnProductionNodeRelease(nodeHandle);
+
+			return node;
 		}
 
 		public NodeInfo GetProductionNodeInfoByName(string name)
 		{
 			IntPtr nodeHandle;
-			int status = SafeNativeMethods.xnGetNodeHandleByName(this.InternalObject, name, out nodeHandle);
+			int status = SafeNativeMethods.xnGetRefNodeHandleByName(this.InternalObject, name, out nodeHandle);
 			WrapperUtils.ThrowOnError(status);
 			IntPtr nodeInfo = SafeNativeMethods.xnGetNodeInfo(nodeHandle);
+			SafeNativeMethods.xnProductionNodeRelease(nodeHandle);
 			return new NodeInfo(nodeInfo);
 		}
 
@@ -321,11 +396,6 @@ namespace OpenNI
 		{
 			if (disposing)
 			{
-				foreach (ProductionNode node in this.allNodes.Values)
-				{
-					node.MarkAlreadyFreed();
-				}
-
 				// remove it from the list
 				lock (Context.allContexts)
 				{
@@ -333,7 +403,15 @@ namespace OpenNI
 				}
 			}
 
-			SafeNativeMethods.xnShutdown(ptr);
+			if (this.usingDeprecatedAPI)
+			{
+				SafeNativeMethods.xnForceShutdown(ptr);
+			}
+			else
+			{
+				SafeNativeMethods.xnContextUnregisterFromShutdown(ptr, this.shutdownCallbackHandle);
+				SafeNativeMethods.xnContextRelease(ptr);
+			}
 		}
 
 		private static IntPtr Init()
@@ -348,7 +426,18 @@ namespace OpenNI
 		{
 			IntPtr pContext;
 			EnumerationErrors errors = new EnumerationErrors();
+			#pragma warning disable 612
 			int status = SafeNativeMethods.xnInitFromXmlFile(xmlFile, out pContext, errors.InternalObject);
+			#pragma warning restore 612
+			WrapperUtils.CheckEnumeration(status, errors);
+			return pContext;
+		}
+
+		private static IntPtr InitFromXmlEx(string xmlFile, out IntPtr hScriptNode)
+		{
+			IntPtr pContext;
+			EnumerationErrors errors = new EnumerationErrors();
+			int status = SafeNativeMethods.xnInitFromXmlFileEx(xmlFile, out pContext, errors.InternalObject, out hScriptNode);
 			WrapperUtils.CheckEnumeration(status, errors);
 			return pContext;
 		}
@@ -369,41 +458,53 @@ namespace OpenNI
 
 					switch (type)
 					{
-						case NodeType.Audio:
-							node = new AudioGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.Codec:
-							node = new Codec(this, nodeHandle, true);
+						case NodeType.Device:
+							node = new Device(this, nodeHandle, true);
 							break;
 						case NodeType.Depth:
 							node = new DepthGenerator(this, nodeHandle, true);
 							break;
-						case NodeType.Device:
-							node = new Device(this, nodeHandle, true);
-							break;
-						case NodeType.Gesture:
-							node = new GestureGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.Hands:
-							node = new HandsGenerator(this, nodeHandle, true);
-							break;
 						case NodeType.Image:
 							node = new ImageGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.Audio:
+							node = new AudioGenerator(this, nodeHandle, true);
 							break;
 						case NodeType.IR:
 							node = new IRGenerator(this, nodeHandle, true);
 							break;
-						case NodeType.Player:
-							node = new Player(this, nodeHandle, true);
+						case NodeType.User:
+							node = new UserGenerator(this, nodeHandle, true);
 							break;
 						case NodeType.Recorder:
 							node = new Recorder(this, nodeHandle, true);
 							break;
+						case NodeType.Player:
+							node = new Player(this, nodeHandle, true);
+							break;
+						case NodeType.Gesture:
+							node = new GestureGenerator(this, nodeHandle, true);
+							break;
 						case NodeType.Scene:
 							node = new SceneAnalyzer(this, nodeHandle, true);
 							break;
-						case NodeType.User:
-							node = new UserGenerator(this, nodeHandle, true);
+						case NodeType.Hands:
+							node = new HandsGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.Codec:
+							node = new Codec(this, nodeHandle, true);
+							break;
+						case NodeType.ProductionNode:
+							node = new ProductionNode(this, nodeHandle, true);
+							break;
+						case NodeType.Generator:
+							node = new Generator(this, nodeHandle, true);
+							break;
+						case NodeType.MapGenerator:
+							node = new MapGenerator(this, nodeHandle, true);
+							break;
+						case NodeType.ScriptNode:
+							node = new ScriptNode(this, nodeHandle, true);
 							break;
 						default:
 							throw new NotImplementedException("C# wrapper: Unknown generator type!");
@@ -430,9 +531,21 @@ namespace OpenNI
 			}
 		}
 
+		private void OnContextShuttingDown(IntPtr pContext, IntPtr pCookie)
+		{
+			// context is shutting down. This object is no longer valid
+			// no need to unregister from event, the event is destroyed anyway
+			UnsafeReplaceInternalObject(IntPtr.Zero);
+
+			Dispose();
+		}
+
+		private bool usingDeprecatedAPI;
 		private IntPtr errorStateCallbackHandle;
 		private event EventHandler<ErrorStateEventArgs> errorStateChanged;
 		private SafeNativeMethods.XnErrorStateChangedHandler errorStateChangedHandler;
+		private IntPtr shutdownCallbackHandle;
+		private SafeNativeMethods.XnContextShuttingDownHandler shutdownHandler;
 		private Dictionary<IntPtr, ProductionNode> allNodes = new Dictionary<IntPtr, ProductionNode>();
 
 		private static object staticLock = new object();

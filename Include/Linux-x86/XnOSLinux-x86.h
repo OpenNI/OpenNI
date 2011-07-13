@@ -116,7 +116,7 @@ typedef	void* XN_THREAD_PARAM;
 //---------------------------------------------------------------------------
 /** A Xiron mutex type. */
 struct XnMutex;
-typedef	XnMutex* XN_MUTEX_HANDLE;
+typedef	struct XnMutex* XN_MUTEX_HANDLE;
 
 //---------------------------------------------------------------------------
 // Critical Sections
@@ -128,17 +128,8 @@ typedef	XN_MUTEX_HANDLE XN_CRITICAL_SECTION_HANDLE;
 // Events
 //---------------------------------------------------------------------------
 /** A Xiron event type. */ 
-typedef struct
-{
-	int NamedSem;
-	pthread_cond_t cond;
-	pthread_mutex_t mutex;
-	XnBool bSignaled;
-	XnBool bManualReset;
-	XnBool bNamed;
-	XnChar csSemFileName[XN_FILE_MAX_PATH];
-	int hSemFile;
-} _XnEvent, *XN_EVENT_HANDLE;
+struct _XnEvent;
+typedef struct _XnEvent _XnEvent, *XN_EVENT_HANDLE ;
 
 //---------------------------------------------------------------------------
 // Semaphores

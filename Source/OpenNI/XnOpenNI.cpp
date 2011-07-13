@@ -52,6 +52,7 @@
 #define XN_FRAME_SYNC_THRESHOLD		3000
 #define XN_NODE_FPS_CALC_SAMPLES	90
 #define XN_MASK_FPS					"FPS"
+#define XN_DUMP_MASK_REF_COUNT		"RefCount"
 
 //---------------------------------------------------------------------------
 // Macros
@@ -84,6 +85,7 @@
 //---------------------------------------------------------------------------
 // Forward Declarations
 //---------------------------------------------------------------------------
+static void xnContextDestroy(XnContext* pContext, XnBool bForce = FALSE);
 static XnStatus xnStartGeneratingImpl(XnNodeHandle hInstance);
 static XnStatus xnUpdateDataImpl(XnNodeHandle hInstance);
 static void xnUpdateMetaData(XnNodeHandle hNode);
@@ -98,8 +100,30 @@ static XnStatus xnInitCodec(XnNodeHandle hCodec, XnNodeHandle hInitializerNode);
 static XnBool xnIsFrameSyncedWithImpl(XnNodeHandle hInstance, XnNodeHandle hOther);
 
 //---------------------------------------------------------------------------
+// Static Variables
+//---------------------------------------------------------------------------
+XnDump g_refCountDump = XN_DUMP_CLOSED;
+
+//---------------------------------------------------------------------------
 // Initialization / Deinitialization
 //---------------------------------------------------------------------------
+
+static void xnDumpRefCount(XnContext* pContext, XnNodeHandle hNode, XnUInt32 nRefCount, const XnChar* strComment)
+{
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	const XnChar* strName = "Context";
+	if (hNode != NULL)
+	{
+		strName = hNode->pNodeInfo->strInstanceName;
+	}
+	const XnChar* strActualComment = strComment;
+	if (strActualComment == NULL)
+	{
+		strActualComment = "";
+	}
+	xnDumpWriteString(pContext->dumpRefCount, "%llu,%s,%u,%s\n", nNow, strName, nRefCount, strActualComment);
+}
 
 XN_C_API XnStatus xnInit(XnContext** ppContext)
 {
@@ -128,21 +152,26 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	pContext->pModuleLoader = XN_NEW(XnModuleLoader, pContext);
 	pContext->pNodesMap = XN_NEW(XnNodesMap);
 	pContext->pGlobalErrorChangeEvent = XN_NEW(XnErrorStateChangedEvent);
+	pContext->pShutdownEvent = XN_NEW(XnContextShuttingDownEvent);
+	pContext->nRefCount = 1;
+	pContext->dumpRefCount = XN_DUMP_CLOSED;
+	xnDumpInit(&pContext->dumpRefCount, XN_DUMP_MASK_REF_COUNT, "Timestamp,Object,RefCount,Comment\n", "RefCount.csv");
 
 	// validate memory allocations
 	if (pContext->pLicenses == NULL ||
 		pContext->pModuleLoader == NULL ||
 		pContext->pNodesMap == NULL ||
-		pContext->pGlobalErrorChangeEvent == NULL)
+		pContext->pGlobalErrorChangeEvent == NULL ||
+		pContext->pShutdownEvent == NULL)
 	{
-		xnShutdown(pContext);
+		xnContextDestroy(pContext);
 		return (XN_STATUS_ALLOC_FAILED);
 	}
 
 	nRetVal = xnFPSInit(&pContext->readFPS, XN_NODE_FPS_CALC_SAMPLES);
 	if (nRetVal != XN_STATUS_OK)
 	{
-		xnShutdown(pContext);
+		xnContextDestroy(pContext);
 		return (nRetVal);
 	}
 
@@ -150,7 +179,24 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	nRetVal = xnOSCreateEvent(&pContext->hNewDataEvent, FALSE);
 	if (nRetVal != XN_STATUS_OK)
 	{
-		xnShutdown(pContext);
+		xnContextDestroy(pContext);
+		return (nRetVal);
+	}
+
+	// create lock
+	nRetVal = xnOSCreateCriticalSection(&pContext->hLock);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnContextDestroy(pContext);
+		return (nRetVal);
+	}
+
+	// create owned nodes list (nodes that are owned by the context and not by users, for example,
+	// nodes that were created from XML script).
+	nRetVal = xnNodeInfoListAllocate(&pContext->pOwnedNodes);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnContextDestroy(pContext);
 		return (nRetVal);
 	}
 
@@ -158,15 +204,182 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	nRetVal = pContext->pModuleLoader->Init();
 	if (nRetVal != XN_STATUS_OK)
 	{
-		xnShutdown(pContext);
+		xnContextDestroy(pContext);
 		return (nRetVal);
 	}
 
 	// load global licenses
 	nRetVal = xnLoadGlobalLicenses(pContext);
-	XN_IS_STATUS_OK(nRetVal);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnContextDestroy(pContext);
+		return (nRetVal);
+	}
+
+	xnDumpRefCount(pContext, NULL, 1, "Create");
 
 	// return to caller
+	*ppContext = pContext;
+	
+	return (XN_STATUS_OK);
+}
+
+void xnFindValidName(XnContext* pContext, const XnChar* strBaseName, XnChar* strName)
+{
+	XnUInt i = 1;
+
+	XnInternalNodeData* pNode;
+
+	while (TRUE)
+	{
+		sprintf(strName, "%s%u", strBaseName, i);
+
+		// check if name already exists
+		if (pContext->pNodesMap->Get(strName, pNode) != XN_STATUS_OK)
+		{
+			// found it
+			break;
+		}
+
+		++i;
+	}
+}
+
+void xnFindValidNameForType(XnContext* pContext, XnProductionNodeType Type, XnChar* strName)
+{
+	// get type string
+	const XnChar* strTypeName = xnProductionNodeTypeToString(Type);
+	xnFindValidName(pContext, strTypeName, strName);
+}
+
+void xnMarkOwnedNode(XnContext* pContext, XnNodeHandle hNode)
+{
+	hNode->bIsOwnedByContext = TRUE;
+	xnNodeInfoListAddNode(pContext->pOwnedNodes, hNode->pNodeInfo);
+	xnProductionNodeAddRef(hNode);
+}
+
+XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnChar* strFileName, XnEnumerationErrors* pErrors)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XnNodeHandle hScriptNode;
+	nRetVal = xnContextRunXmlScriptFromFileEx(pContext, strFileName, pErrors, &hScriptNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	// take ownership of created node
+	xnMarkOwnedNode(pContext, hScriptNode);
+	xnProductionNodeRelease(hScriptNode);
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnContextRunXmlScriptFromFileEx(XnContext* pContext, const XnChar* strFileName, XnEnumerationErrors* pErrors, XnNodeHandle* phScriptNode)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XN_VALIDATE_INPUT_PTR(pContext);
+	XN_VALIDATE_INPUT_PTR(strFileName);
+	XN_VALIDATE_OUTPUT_PTR(phScriptNode);
+
+	*phScriptNode = NULL;
+
+	XnNodeHandle hScriptNode;
+	nRetVal = xnCreateScriptNode(pContext, XN_SCRIPT_FORMAT_XML, &hScriptNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnLoadScriptFromFile(hScriptNode, strFileName);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnProductionNodeRelease(hScriptNode);
+		return (nRetVal);
+	}
+
+	nRetVal = xnScriptNodeRun(hScriptNode, pErrors);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnProductionNodeRelease(hScriptNode);
+		return (nRetVal);
+	}
+
+	*phScriptNode = hScriptNode;
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnContextRunXmlScriptEx(XnContext* pContext, const XnChar* xmlScript, XnEnumerationErrors* pErrors, XnNodeHandle* phScriptNode)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XN_VALIDATE_INPUT_PTR(pContext);
+	XN_VALIDATE_INPUT_PTR(xmlScript);
+	XN_VALIDATE_OUTPUT_PTR(phScriptNode);
+
+	*phScriptNode = NULL;
+
+	XnNodeHandle hScriptNode;
+	nRetVal = xnCreateScriptNode(pContext, XN_SCRIPT_FORMAT_XML, &hScriptNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnLoadScriptFromString(hScriptNode, xmlScript);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnProductionNodeRelease(hScriptNode);
+		return (nRetVal);
+	}
+
+	nRetVal = xnScriptNodeRun(hScriptNode, pErrors);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnProductionNodeRelease(hScriptNode);
+		return (nRetVal);
+	}
+
+	*phScriptNode = hScriptNode;
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnContextRunXmlScript(XnContext* pContext, const XnChar* xmlScript, XnEnumerationErrors* pErrors)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XnNodeHandle hScriptNode;
+	nRetVal = xnContextRunXmlScriptEx(pContext, xmlScript, pErrors, &hScriptNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	// take ownership of created node
+	xnMarkOwnedNode(pContext, hScriptNode);
+	xnProductionNodeRelease(hScriptNode);
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnInitFromXmlFileEx(const XnChar* strFileName, XnContext** ppContext, XnEnumerationErrors* pErrors, XnNodeHandle* phScriptNode)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XN_VALIDATE_INPUT_PTR(strFileName);
+	XN_VALIDATE_OUTPUT_PTR(ppContext);
+	XN_VALIDATE_OUTPUT_PTR(phScriptNode);
+
+	*ppContext = NULL;
+	*phScriptNode = NULL;
+
+	nRetVal = xnLogInitFromXmlFile(strFileName);
+	XN_IS_STATUS_OK(nRetVal);
+
+	XnContext* pContext;
+	nRetVal = xnInit(&pContext);
+	XN_IS_STATUS_OK(nRetVal);
+
+ 	nRetVal = xnContextRunXmlScriptFromFileEx(pContext, strFileName, pErrors, phScriptNode);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnContextRelease(pContext);
+		return (nRetVal);
+	}
+
 	*ppContext = pContext;
 	
 	return (XN_STATUS_OK);
@@ -176,28 +389,40 @@ XN_C_API XnStatus xnInitFromXmlFile(const XnChar* strFileName, XnContext** ppCon
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
-	XN_VALIDATE_INPUT_PTR(strFileName);
-	XN_VALIDATE_OUTPUT_PTR(ppContext);
-
-	*ppContext = NULL;
-
-	nRetVal = xnLogInitFromXmlFile(strFileName);
+	XnNodeHandle hScriptNode;
+	nRetVal = xnInitFromXmlFileEx(strFileName, ppContext, pErrors, &hScriptNode);
 	XN_IS_STATUS_OK(nRetVal);
-
-	XnContext* pContext;
-	nRetVal = xnInit(&pContext);
-	XN_IS_STATUS_OK(nRetVal);
-
- 	nRetVal = xnContextRunXmlScriptFromFile(pContext, strFileName, pErrors);
-	if (nRetVal != XN_STATUS_OK)
-	{
-		xnShutdown(pContext);
-		return (nRetVal);
-	}
-
-	*ppContext = pContext;
 	
+	// take ownership of created nodes
+	xnMarkOwnedNode(*ppContext, hScriptNode);
+	xnProductionNodeRelease(hScriptNode);
+
 	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnContextAddRef(XnContext* pContext)
+{
+	XN_VALIDATE_INPUT_PTR(pContext);
+	XnAutoCSLocker lock(pContext->hLock);
+	pContext->nRefCount++;
+	xnDumpRefCount(pContext, NULL, pContext->nRefCount, NULL);
+	return XN_STATUS_OK;
+}
+
+XN_C_API void xnContextRelease(XnContext* pContext)
+{
+	XN_ASSERT(pContext != NULL);
+
+	// decrease ref count in a lock
+	XnAutoCSLocker lock(pContext->hLock);
+	pContext->nRefCount--;
+	xnDumpRefCount(pContext, NULL, pContext->nRefCount, NULL);
+
+	if (pContext->nRefCount == 0)
+	{
+		lock.Unlock();
+		xnContextDestroy(pContext);
+	}
 }
 
 /** Checks if a node is needed by another. */
@@ -221,10 +446,13 @@ static XnBool xnIsNeeded(XnContext* pContext, XnNodeHandle hNode)
 	return FALSE;
 }
 
-XN_C_API void xnShutdown(XnContext* pContext)
+static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 {
 	if (pContext != NULL)
 	{
+		xnDumpRefCount(pContext, NULL, 0, "Destroy");
+		xnDumpClose(&pContext->dumpRefCount);
+
 		// we have to destroy nodes from top to bottom. So we'll go over the list, each time removing
 		// nodes that nobody needs, until the list is empty
 		while (!pContext->pNodesMap->IsEmpty())
@@ -239,30 +467,77 @@ XN_C_API void xnShutdown(XnContext* pContext)
 			}
 		}
 
+		if (bForce)
+		{
+			// raise the shutdown event *after* all nodes have been destroyed (some nodes might call the
+			// context or other nodes when destroying)
+			pContext->pShutdownEvent->Raise(pContext);
+		}
+
+		xnLogInfo(XN_MASK_OPEN_NI, "Destroying context");
+
+		xnNodeInfoListFree(pContext->pOwnedNodes);
+		xnOSCloseCriticalSection(&pContext->hLock);
 		xnOSCloseEvent(&pContext->hNewDataEvent);
 		XN_DELETE(pContext->pNodesMap);
 		XN_DELETE(pContext->pModuleLoader);
 		XN_DELETE(pContext->pLicenses);
 		XN_DELETE(pContext->pGlobalErrorChangeEvent);
+		XN_DELETE(pContext->pShutdownEvent);
 		xnFPSFree(&pContext->readFPS);
 		xnOSFree(pContext);
 
 #ifdef XN_MEM_PROFILING
-#ifdef _WIN32
+	#ifdef _WIN32
 		xnOSWriteMemoryReport("C:\\xnMemProf.txt");
-#else
+	#else
 		//TODO: Something for linux
-#endif
+	#endif
 #endif
 	}
 }
 
-XN_C_API XnStatus xnContextOpenFileRecording(XnContext* pContext, const XnChar* strFileName)
+XN_C_API void xnShutdown(XnContext* pContext)
+{
+	xnForceShutdown(pContext);
+}
+
+XN_C_API void xnForceShutdown(XnContext* pContext)
+{
+	xnContextDestroy(pContext, TRUE);
+}
+
+XN_C_API XnStatus xnContextRegisterForShutdown(XnContext* pContext, XnContextShuttingDownHandler pHandler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INPUT_PTR(pContext);
+	XN_VALIDATE_INPUT_PTR(pHandler);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	return pContext->pShutdownEvent->Register(pHandler, pCookie, phCallback);
+}
+
+XN_C_API void xnContextUnregisterFromShutdown(XnContext* pContext, XnCallbackHandle hCallback)
+{
+	XN_ASSERT(pContext != NULL);
+	XN_ASSERT(hCallback != NULL);
+
+	if (pContext == NULL || hCallback == NULL)
+	{
+		return;
+	}
+
+	XnStatus nRetVal = pContext->pShutdownEvent->Unregister(hCallback);
+	XN_ASSERT(nRetVal == XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnContextOpenFileRecordingEx(XnContext* pContext, const XnChar* strFileName, XnNodeHandle* phPlayerNode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	XN_VALIDATE_INPUT_PTR(pContext);
 	XN_VALIDATE_INPUT_PTR(strFileName);
+	XN_VALIDATE_OUTPUT_PTR(phPlayerNode);
+
+	*phPlayerNode = NULL;
 
 	const char* strExt = strrchr(strFileName, '.');
 	if (strExt == NULL)
@@ -283,7 +558,26 @@ XN_C_API XnStatus xnContextOpenFileRecording(XnContext* pContext, const XnChar* 
 		return (nRetVal);
 	}
 
+	*phPlayerNode = hPlayer;
 	return XN_STATUS_OK;
+}
+
+XN_C_API XnStatus xnContextOpenFileRecording(XnContext* pContext, const XnChar* strFileName)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XnNodeHandle hPlayer;
+	nRetVal = xnContextOpenFileRecordingEx(pContext, strFileName, &hPlayer);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnNodeInfoListAddNode(pContext->pOwnedNodes, hPlayer->pNodeInfo);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnProductionNodeRelease(hPlayer);
+		return (nRetVal);
+	}
+	
+	return (XN_STATUS_OK);
 }
 
 //---------------------------------------------------------------------------
@@ -696,26 +990,42 @@ XnStatus xnNodeInfoSetAdditionalData(XnNodeInfo* pNodeInfo, const void* pAdditio
 
 XN_C_API const XnProductionNodeDescription* xnNodeInfoGetDescription(XnNodeInfo* pNodeInfo)
 {
+	XN_VALIDATE_PTR(pNodeInfo, NULL);
 	return &pNodeInfo->Description;
 }
 
 XN_C_API const XnChar* xnNodeInfoGetInstanceName(XnNodeInfo* pNodeInfo)
 {
+	XN_VALIDATE_PTR(pNodeInfo, NULL);
 	return pNodeInfo->strInstanceName;
 }
 
 XN_C_API const XnChar* xnNodeInfoGetCreationInfo(XnNodeInfo* pNodeInfo)
 {
+	XN_VALIDATE_PTR(pNodeInfo, NULL);
 	return pNodeInfo->strCreationInfo;
 }
 
 XN_C_API XnNodeInfoList* xnNodeInfoGetNeededNodes(XnNodeInfo* pNodeInfo)
 {
+	XN_VALIDATE_PTR(pNodeInfo, NULL);
 	return pNodeInfo->pNeededTrees;
 }
 
 XN_C_API XnNodeHandle xnNodeInfoGetHandle(XnNodeInfo* pNodeInfo)
 {
+	XN_VALIDATE_PTR(pNodeInfo, NULL);
+	return pNodeInfo->hNode;
+}
+
+XN_C_API XnNodeHandle xnNodeInfoGetRefHandle(XnNodeInfo* pNodeInfo)
+{
+	XN_VALIDATE_PTR(pNodeInfo, NULL);
+	if (pNodeInfo->hNode != NULL)
+	{
+		XnStatus nRetVal = xnProductionNodeAddRef(pNodeInfo->hNode);
+		XN_ASSERT(nRetVal == XN_STATUS_OK);
+	}
 	return pNodeInfo->hNode;
 }
 
@@ -1053,30 +1363,6 @@ XN_C_API XnStatus xnEnumerateProductionTrees(XnContext* pContext, XnProductionNo
 	return (XN_STATUS_OK);
 }
 
-void xnFindValidNameForType(XnContext* pContext, XnProductionNodeType Type, XnChar* strName)
-{
-	// get type string
-	const XnChar* strTypeName = xnProductionNodeTypeToString(Type);
-
-	XnUInt i = 1;
-
-	XnInternalNodeData* pNode;
-
-	while (TRUE)
-	{
-		sprintf(strName, "%s%u", strTypeName, i);
-
-		// check if name already exists
-		if (pContext->pNodesMap->Get(strName, pNode) != XN_STATUS_OK)
-		{
-			// found it
-			break;
-		}
-
-		++i;
-	}
-}
-
 XnStatus xnCreateMetaData(XnInternalNodeData* pNodeData)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -1243,9 +1529,11 @@ void XN_CALLBACK_TYPE xnNodeFrameSyncChanged(XnNodeHandle hNode, void* pCookie)
 	hNode->hFrameSyncedWith = hFrameSyncedWith;
 }
 
-static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTree)
+static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTree, XnNodeHandle* phNode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
+
+	*phNode = NULL;
 	
 	// first of all, check if name is empty, if so - give it a default name
 	if (pTree->strInstanceName[0] == '\0')
@@ -1268,7 +1556,21 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 	pNodeData->pNodeInfo = pTree;
 	pNodeData->nRefCount = 1;
 	pNodeData->pModuleInstance = pModuleInstance;
+
+	// reference context
+	nRetVal = xnContextAddRef(pContext);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		return xnFreeProductionNodeImpl(pNodeData, nRetVal);
+	}
 	pNodeData->pContext = pContext;
+
+	nRetVal = xnOSCreateCriticalSection(&pNodeData->hLock);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		return xnFreeProductionNodeImpl(pNodeData, nRetVal);
+	}
+
 	pNodeData->pNeededNodesDataHash = XN_NEW(XnNeededNodesDataHash);
 
 	if (pNodeData->pNeededNodesDataHash == NULL)
@@ -1372,21 +1674,30 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 	// increase info ref count (context now holds it)
 	++pTree->nRefCount;
 
+	xnDumpRefCount(pContext, pNodeData, 1, "Create");
+
 	// update handle in node info
 	pTree->hNode = pNodeData;
+
+	// return value
+	*phNode = pNodeData;
 
 	return (XN_STATUS_OK);
 }
 
-static XnStatus xnCreateProductionTreeImpl(XnContext* pContext, XnNodeInfo* pTree)
+static XnStatus xnCreateProductionTreeImpl(XnContext* pContext, XnNodeInfo* pTree, XnNodeHandle* phNode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
+	XnArray<XnNodeHandle> createdNodes;
+
+	*phNode = NULL;
 	
 	// check stop condition
 	if (pTree->hNode != NULL)
 	{
 		// tree already exists. only increase ref count
 		xnProductionNodeAddRef(pTree->hNode);
+		*phNode = pTree->hNode;
 		return (XN_STATUS_OK);
 	}
 
@@ -1396,19 +1707,40 @@ static XnStatus xnCreateProductionTreeImpl(XnContext* pContext, XnNodeInfo* pTre
 		it = xnNodeInfoListGetNext(it))
 	{
 		XnNodeInfo* pChild = xnNodeInfoListGetCurrent(it);
-		nRetVal = xnCreateProductionTreeImpl(pContext, pChild);
+		XnNodeHandle hNeeded;
+		nRetVal = xnCreateProductionTreeImpl(pContext, pChild, &hNeeded);
 		if (nRetVal != XN_STATUS_OK)
 		{
-			// TODO: free created objects so far if failed.
-			return nRetVal;
+			break;
+		}
+		else
+		{
+			// store created node
+			nRetVal = createdNodes.AddLast(hNeeded);
+			if (nRetVal != XN_STATUS_OK)
+			{
+				xnProductionNodeRelease(hNeeded);
+				break;
+			}
 		}
 	}
 
 	// now create root
-	nRetVal = xnCreateProductionNodeImpl(pContext, pTree);
-	XN_IS_STATUS_OK(nRetVal);
+	if (nRetVal == XN_STATUS_OK)
+	{
+		nRetVal = xnCreateProductionNodeImpl(pContext, pTree, phNode);
+	}
 
-	return (XN_STATUS_OK);
+	// If something went wrong, release all created objects
+	if (nRetVal != XN_STATUS_OK)
+	{
+		for (XnUInt32 i = 0; i < createdNodes.GetSize(); ++i)
+		{
+			xnProductionNodeRelease(createdNodes[i]);
+		}
+	}
+
+	return (nRetVal);
 }
 
 static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*= XN_STATUS_OK*/)
@@ -1444,10 +1776,21 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 			xnOSFree(it.Key());
 		}
 		XN_DELETE(hNode->pRegistrationCookiesHash);
-
 		XN_DELETE(hNode->pNeededNodesDataHash);
+
+		if (hNode->hLock != NULL)
+		{
+			xnOSCloseCriticalSection(&hNode->hLock);
+		}
+
 		xnFPSFree(&hNode->genFPS);
 		xnFPSFree(&hNode->readFPS);
+
+		if (hNode->pContext != NULL)
+		{
+			xnContextRelease(hNode->pContext);
+		}
+
 		xnOSFree(hNode);
 	}
 	return nRetVal;
@@ -1501,6 +1844,8 @@ void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 	// NULL handle in info object
 	hNode->pNodeInfo->hNode = NULL;
 
+	xnDumpRefCount(hNode->pContext, hNode, 0, "Destroy");
+
 	// dec ref of info object (it was removed from context)
 	xnNodeInfoFree(hNode->pNodeInfo);
 
@@ -1510,8 +1855,17 @@ void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 
 XN_C_API XnStatus xnProductionNodeAddRef(XnNodeHandle hNode)
 {
+	XnStatus nRetVal = XN_STATUS_OK;
 	XN_VALIDATE_INPUT_PTR(hNode);
+
+	// preform this in a lock
+	XnAutoCSLocker lock(hNode->hLock);
+
+	// now increase the ref count of the node itself
 	++hNode->nRefCount;
+
+	xnDumpRefCount(hNode->pContext, hNode, hNode->nRefCount, NULL);
+
 	return (XN_STATUS_OK);
 }
 
@@ -1522,8 +1876,28 @@ XN_C_API XnStatus xnRefProductionNode(XnNodeHandle hNode)
 
 XN_C_API void xnProductionNodeRelease(XnNodeHandle hNode)
 {
-	if ((hNode != NULL) && (hNode->nRefCount > 0) && (--hNode->nRefCount == 0))
+	XN_ASSERT(hNode != NULL);
+
+	// preform this in a lock
+	XnAutoCSLocker lock(hNode->hLock);
+
+	// perform some checks
+	XN_ASSERT(hNode->nRefCount > 0);
+	if (hNode == NULL || hNode->nRefCount == 0)
+		return;
+
+	// and dec ref
+	--hNode->nRefCount;
+
+	xnDumpRefCount(hNode->pContext, hNode, hNode->nRefCount, NULL);
+
+	// release it if needed
+	if (hNode->nRefCount == 0)
 	{
+		// release lock (the destruction destroys the lock as well)
+		lock.Unlock();
+
+		// destroy it
 		XnNodeInfo* pInfo = hNode->pNodeInfo;
 		XnUInt32 nInfoRefCount = pInfo->nRefCount;
 		xnDestroyProductionNodeImpl(hNode);
@@ -1551,10 +1925,8 @@ XN_C_API XnStatus xnCreateProductionTree(XnContext* pContext, XnNodeInfo* pTree,
 	XN_VALIDATE_OUTPUT_PTR(phNode);
 
 	// create missing instances
-	nRetVal = xnCreateProductionTreeImpl(pContext, pTree);
+	nRetVal = xnCreateProductionTreeImpl(pContext, pTree, phNode);
 	XN_IS_STATUS_OK(nRetVal);
-
-	*phNode = pTree->hNode;
 	
 	return (XN_STATUS_OK);
 }
@@ -1683,7 +2055,7 @@ XN_C_API XnStatus xnCreateMockNodeBasedOn(XnContext* pContext,
 		xnProductionNodeRelease(hMockNode);
 		return nRetVal;
 	}
-	
+
 	*phMockNode = hMockNode;
 
 	return XN_STATUS_OK;
@@ -1725,8 +2097,19 @@ XN_C_API XnBool xnIsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeT
 
 XN_C_API XnContext* xnGetContextFromNodeHandle(XnNodeHandle hNode)
 {
+	XnContext* pContext = xnGetRefContextFromNodeHandle(hNode);
+	xnContextRelease(pContext);
+	return pContext;
+}
+
+XN_C_API XnContext* xnGetRefContextFromNodeHandle(XnNodeHandle hNode)
+{
 	XN_ASSERT(hNode != NULL);
 	XN_VALIDATE_PTR(hNode, NULL);
+
+	XnStatus nRetVal = xnContextAddRef(hNode->pContext);
+	XN_ASSERT(nRetVal == XN_STATUS_OK);
+
 	return hNode->pContext;
 }
 
@@ -2235,19 +2618,38 @@ XN_C_API XnStatus xnGetNodeHandleByName(XnContext* pContext, const XnChar* strIn
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
+	nRetVal = xnGetRefNodeHandleByName(pContext, strInstanceName, phNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	// backwards compatibility
+	xnProductionNodeRelease(*phNode);
+	
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnGetRefNodeHandleByName(XnContext* pContext, const XnChar* strInstanceName, XnNodeHandle* phNode)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
 	XN_VALIDATE_INPUT_PTR(pContext);
 	XN_VALIDATE_INPUT_PTR(strInstanceName);
 	XN_VALIDATE_OUTPUT_PTR(phNode);
 
 	*phNode = NULL;
 
-	nRetVal = pContext->pNodesMap->Get(strInstanceName, *phNode);
+	XnNodeHandle hNode;
+	nRetVal = pContext->pNodesMap->Get(strInstanceName, hNode);
 	if (nRetVal == XN_STATUS_NO_MATCH)
 	{
 		return XN_STATUS_BAD_NODE_NAME;
 	}
 	XN_IS_STATUS_OK(nRetVal);
-	
+
+	nRetVal = xnProductionNodeAddRef(hNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	*phNode = hNode;
+
 	return (XN_STATUS_OK);
 }
 
@@ -2299,7 +2701,7 @@ XN_C_API XnStatus xnEnumerateExistingNodesByType(XnContext* pContext, XnProducti
 	return xnEnumerateExistingNodesImpl(pContext, ppList, &type);
 }
 
-XN_C_API XnStatus xnFindExistingNodeByType(XnContext* pContext, XnProductionNodeType type, XnNodeHandle* phNode)
+XN_C_API XnStatus xnFindExistingRefNodeByType(XnContext* pContext, XnProductionNodeType type, XnNodeHandle* phNode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -2321,9 +2723,21 @@ XN_C_API XnStatus xnFindExistingNodeByType(XnContext* pContext, XnProductionNode
 	}
 
 	XnNodeInfo* pNodeInfo = xnNodeInfoListGetCurrent(it);
-	*phNode = xnNodeInfoGetHandle(pNodeInfo);
+	*phNode = xnNodeInfoGetRefHandle(pNodeInfo);
 	xnNodeInfoListFree(pList);
 
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnFindExistingNodeByType(XnContext* pContext, XnProductionNodeType type, XnNodeHandle* phNode)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	nRetVal = xnFindExistingRefNodeByType(pContext, type, phNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	xnProductionNodeRelease(*phNode);
+	
 	return (XN_STATUS_OK);
 }
 
@@ -2742,12 +3156,6 @@ XN_C_API XnStatus xnAddNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNo
 		return XN_STATUS_INVALID_OPERATION;
 	}
 
-	// check if its already needed
-	if (isNodeNeededBy(hInstance->pNodeInfo, hNeededNode->pNodeInfo))
-	{
-		return XN_STATUS_OK;
-	}
-
 	// make sure this does not create a loop dependency
 	if (isNodeNeededBy(hNeededNode->pNodeInfo, hInstance->pNodeInfo))
 	{
@@ -3065,6 +3473,21 @@ XN_C_API XnStatus xnSetRecorderDestination(XnNodeHandle hRecorder, XnRecordMediu
 	xn::RecorderImpl *pRecorderImpl = dynamic_cast<xn::RecorderImpl*>(hRecorder->pPrivateData);
 	XN_VALIDATE_PTR(pRecorderImpl, XN_STATUS_ERROR);
 	XnStatus nRetVal = pRecorderImpl->SetDestination(destType, strDest);
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;	
+}
+
+XN_C_API XnStatus XN_C_DECL xnGetRecorderDestination(XnNodeHandle hRecorder, XnRecordMedium* pDestType, XnChar* strDest, XnUInt32 nBufSize)
+{
+	XN_VALIDATE_INPUT_PTR(hRecorder);
+	XN_VALIDATE_INTERFACE_TYPE(hRecorder, XN_NODE_TYPE_RECORDER);
+	XN_VALIDATE_CHANGES_ALLOWED(hRecorder);
+	XN_VALIDATE_OUTPUT_PTR(pDestType);
+	XN_VALIDATE_OUTPUT_PTR(strDest);
+	//Get recorder object
+	xn::RecorderImpl *pRecorderImpl = dynamic_cast<xn::RecorderImpl*>(hRecorder->pPrivateData);
+	XN_VALIDATE_PTR(pRecorderImpl, XN_STATUS_ERROR);
+	XnStatus nRetVal = pRecorderImpl->GetDestination(*pDestType, strDest, nBufSize);
 	XN_IS_STATUS_OK(nRetVal);
 	return XN_STATUS_OK;	
 }
@@ -4282,6 +4705,153 @@ XN_C_API void xnUnregisterFromGestureChange(XnNodeHandle hInstance, XnCallbackHa
 	xnUnregisterFromModuleStateChange(pInterface->Gesture.UnregisterFromGestureChange, hModuleNode, hCallback);
 }
 
+typedef struct GestureIntermediateStageCompletedCookie
+{
+	XnGestureIntermediateStageCompleted handler;
+	void* pUserCookie;
+	XnCallbackHandle hCallback;
+	XnNodeHandle hNode;
+} GestureIntermediateStageCompletedCookie;
+
+static void XN_CALLBACK_TYPE xnModuleGestureIntermediateStageCompleted(const XnChar* strGesture, const XnPoint3D* pIDPosition, void* pCookie)
+{
+	GestureIntermediateStageCompletedCookie* pGestureCookie = (GestureIntermediateStageCompletedCookie*)pCookie;
+	if (pGestureCookie->handler != NULL)
+	{
+		pGestureCookie->handler(pGestureCookie->hNode, strGesture, pIDPosition, pGestureCookie->pUserCookie);
+	}
+}
+
+static void XN_CALLBACK_TYPE xnModuleGestureStateViaProgress(const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie)
+{
+	GestureIntermediateStageCompletedCookie* pGestureCookie = (GestureIntermediateStageCompletedCookie*)pCookie;
+	if (pGestureCookie->handler != NULL)
+	{
+		pGestureCookie->handler(pGestureCookie->hNode, strGesture, pPosition, pGestureCookie->pUserCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToGestureIntermediateStageCompleted(XnNodeHandle hInstance, XnGestureIntermediateStageCompleted handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	GestureIntermediateStageCompletedCookie* pRegCookie;
+	XN_VALIDATE_ALLOC(pRegCookie, GestureIntermediateStageCompletedCookie);
+	pRegCookie->handler = handler;
+	pRegCookie->hNode = hInstance;
+	pRegCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+	if (pInterface->Gesture.RegisterToGestureIntermediateStageCompleted != NULL)
+	{
+		nRetVal = pInterface->Gesture.RegisterToGestureIntermediateStageCompleted(hModuleNode, xnModuleGestureIntermediateStageCompleted, pRegCookie, &pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		nRetVal = pInterface->Gesture.RegisterGestureCallbacks(hModuleNode, NULL, xnModuleGestureStateViaProgress, pRegCookie, &pRegCookie->hCallback);
+	}
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pRegCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pRegCookie;
+
+	return XN_STATUS_OK;
+}
+XN_C_API void xnUnregisterFromGestureIntermediateStageCompleted(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GESTURE, );
+	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	GestureIntermediateStageCompletedCookie* pRegCookie = (GestureIntermediateStageCompletedCookie*)hCallback;
+	if (pInterface->Gesture.UnregisterFromGestureIntermediateStageCompleted != NULL)
+	{
+		pInterface->Gesture.UnregisterFromGestureIntermediateStageCompleted(hModuleNode, pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->Gesture.UnregisterGestureCallbacks(hModuleNode, pRegCookie->hCallback);
+	}
+	xnOSFree(pRegCookie);
+}
+
+typedef struct GestureReadyForNextIntermediateStageCookie
+{
+	XnGestureReadyForNextIntermediateStage handler;
+	void* pUserCookie;
+	XnCallbackHandle hCallback;
+	XnNodeHandle hNode;
+} GestureReadyForNextIntermediateStageCookie;
+
+static void XN_CALLBACK_TYPE xnModuleGestureReadyForNextIntermediateStage(const XnChar* strGesture, const XnPoint3D* pIDPosition, void* pCookie)
+{
+	GestureReadyForNextIntermediateStageCookie* pGestureCookie = (GestureReadyForNextIntermediateStageCookie*)pCookie;
+	if (pGestureCookie->handler != NULL)
+	{
+		pGestureCookie->handler(pGestureCookie->hNode, strGesture, pIDPosition, pGestureCookie->pUserCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToGestureReadyForNextIntermediateStage(XnNodeHandle hInstance, XnGestureReadyForNextIntermediateStage handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	GestureReadyForNextIntermediateStageCookie* pRegCookie;
+	XN_VALIDATE_ALLOC(pRegCookie, GestureReadyForNextIntermediateStageCookie);
+	pRegCookie->handler = handler;
+	pRegCookie->hNode = hInstance;
+	pRegCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+	if (pInterface->Gesture.RegisterToGestureReadyForNextIntermediateStage != NULL)
+	{
+		nRetVal = pInterface->Gesture.RegisterToGestureReadyForNextIntermediateStage(hModuleNode, xnModuleGestureReadyForNextIntermediateStage, pRegCookie, &pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		nRetVal = pInterface->Gesture.RegisterGestureCallbacks(hModuleNode, NULL, xnModuleGestureStateViaProgress, pRegCookie, &pRegCookie->hCallback);
+	}
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pRegCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pRegCookie;
+
+	return XN_STATUS_OK;
+}
+XN_C_API void xnUnregisterFromGestureReadyForNextIntermediateStage(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GESTURE, );
+	XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	GestureReadyForNextIntermediateStageCookie* pRegCookie = (GestureReadyForNextIntermediateStageCookie*)hCallback;
+	if (pInterface->Gesture.UnregisterFromGestureReadyForNextIntermediateStage != NULL)
+	{
+		pInterface->Gesture.UnregisterFromGestureReadyForNextIntermediateStage(hModuleNode, pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->Gesture.UnregisterGestureCallbacks(hModuleNode, pRegCookie->hCallback);
+	}
+	xnOSFree(pRegCookie);
+}
+
 //---------------------------------------------------------------------------
 // Scene Analyzer
 //---------------------------------------------------------------------------
@@ -4424,6 +4994,121 @@ XN_C_API void xnUnregisterUserCallbacks(XnNodeHandle hInstance, XnCallbackHandle
 	xnOSFree(pUserCookie);
 }
 
+typedef struct UserSingleCookie
+{
+	XnUserHandler handler;
+	void* pUserCookie;
+	XnCallbackHandle hCallback;
+	XnNodeHandle hNode;
+} UserSingleCookie;
+
+static void XN_CALLBACK_TYPE xnModuleUserSingle(XnUserID user, void* pCookie)
+{
+	UserSingleCookie* pHandCookie = (UserSingleCookie*)pCookie;
+	if (pHandCookie->handler != NULL)
+	{
+		pHandCookie->handler(pHandCookie->hNode, user, pHandCookie->pUserCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToUserExit(XnNodeHandle hInstance, XnUserHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	UserSingleCookie* pRegCookie;
+	XN_VALIDATE_ALLOC(pRegCookie, UserSingleCookie);
+	pRegCookie->handler = handler;
+	pRegCookie->hNode = hInstance;
+	pRegCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+	if (pInterface->User.RegisterToUserExit != NULL)
+	{
+		nRetVal = pInterface->User.RegisterToUserExit(hModuleNode, xnModuleUserSingle, pRegCookie, &pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		nRetVal = pInterface->User.RegisterUserCallbacks(hModuleNode, NULL, xnModuleUserSingle, pRegCookie, &pRegCookie->hCallback);
+	}
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pRegCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pRegCookie;
+
+	return XN_STATUS_OK;
+}
+XN_C_API void xnUnregisterFromUserExit(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	UserSingleCookie* pRegCookie = (UserSingleCookie*)hCallback;
+	if (pInterface->User.UnregisterFromUserExit != NULL)
+	{
+		pInterface->User.UnregisterFromUserExit(hModuleNode, pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->User.UnregisterUserCallbacks(hModuleNode, pRegCookie->hCallback);
+	}
+	xnOSFree(pRegCookie);
+}
+
+XN_C_API XnStatus xnRegisterToUserReEnter(XnNodeHandle hInstance, XnUserHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	// Versions before 1.3.2 didn't have this API. Fabricate it.
+	if (pInterface->User.RegisterToUserReEnter == NULL)
+	{
+
+	}
+
+	UserSingleCookie* pRegCookie;
+	XN_VALIDATE_ALLOC(pRegCookie, UserSingleCookie);
+	pRegCookie->handler = handler;
+	pRegCookie->hNode = hInstance;
+	pRegCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = pInterface->User.RegisterToUserReEnter(hModuleNode, xnModuleUserSingle, pRegCookie, &pRegCookie->hCallback);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pRegCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pRegCookie;
+
+	return XN_STATUS_OK;
+}
+XN_C_API void xnUnregisterFromUserReEnter(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	// Versions before 1.3.2 didn't have this API. Fabricate it.
+	if (pInterface->User.UnregisterFromUserReEnter == NULL)
+	{
+
+	}
+
+	UserSingleCookie* pRegCookie = (UserSingleCookie*)hCallback;
+	pInterface->User.UnregisterFromUserReEnter(hModuleNode, pRegCookie->hCallback);
+	xnOSFree(pRegCookie);
+}
 //---------------------------------------------------------------------------
 //  Hands Generator
 //---------------------------------------------------------------------------
@@ -4540,6 +5225,63 @@ XN_C_API XnStatus xnSetTrackingSmoothing(XnNodeHandle hInstance, XnFloat fSmooth
 	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Hands.SetSmoothing(hModuleNode, fSmoothingFactor);
+}
+//---------------------------------------------------------------------------
+// Hand Touching FOV Edge Capability
+//---------------------------------------------------------------------------
+
+typedef struct HandTouchingFOVEdgeCookie
+{
+	XnHandTouchingFOVEdge handler;
+	void* pUserCookie;
+	XnCallbackHandle hCallback;
+	XnNodeHandle hNode;
+} HandTouchingFOVEdgeCookie;
+
+static void XN_CALLBACK_TYPE xnModuleHandTouchingFOVEdge(XnUserID user, const XnPoint3D* pPosition, XnFloat fTime, XnDirection eDir, void* pCookie)
+{
+	HandTouchingFOVEdgeCookie* pHandCookie = (HandTouchingFOVEdgeCookie*)pCookie;
+	if (pHandCookie->handler != NULL)
+	{
+		pHandCookie->handler(pHandCookie->hNode, user, pPosition, fTime, eDir, pHandCookie->pUserCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToHandTouchingFOVEdge(XnNodeHandle hInstance, XnHandTouchingFOVEdge handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_HANDS);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->HandTouchingFOVEdge.RegisterToHandTouchingFOVEdge);
+
+	HandTouchingFOVEdgeCookie* pRegCookie;
+	XN_VALIDATE_ALLOC(pRegCookie, HandTouchingFOVEdgeCookie);
+	pRegCookie->handler = handler;
+	pRegCookie->hNode = hInstance;
+	pRegCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = pInterface->HandTouchingFOVEdge.RegisterToHandTouchingFOVEdge(hModuleNode, xnModuleHandTouchingFOVEdge, pRegCookie, &pRegCookie->hCallback);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pRegCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pRegCookie;
+
+	return XN_STATUS_OK;
+}
+XN_C_API void xnUnregisterFromHandTouchingFOVEdge(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_HANDS, );
+	XnHandsGeneratorInterfaceContainer* pInterface = (XnHandsGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->HandTouchingFOVEdge.UnregisterFromHandTouchingFOVEdge, );
+
+	HandTouchingFOVEdgeCookie* pRegCookie = (HandTouchingFOVEdgeCookie*)hCallback;
+	pInterface->HandTouchingFOVEdge.UnregisterFromHandTouchingFOVEdge(hModuleNode, pRegCookie->hCallback);
+	xnOSFree(pRegCookie);
 }
 
 //---------------------------------------------------------------------------
@@ -4792,7 +5534,7 @@ typedef struct SkeletonCookie
 	XnCallbackHandle hCallback;
 } SkeletonCookie;
 
-static void XN_CALLBACK_TYPE xnCalibrationStartCallback(XnUserID user, void* pCookie)
+static void XN_CALLBACK_TYPE xnCalibrationStartBundleCallback(XnUserID user, void* pCookie)
 {
 	SkeletonCookie* pRegCookie = (SkeletonCookie*)pCookie;
 	if (pRegCookie->startHandler != NULL)
@@ -4801,7 +5543,7 @@ static void XN_CALLBACK_TYPE xnCalibrationStartCallback(XnUserID user, void* pCo
 	}
 }
 
-static void XN_CALLBACK_TYPE xnCalibrationEndCallback(XnUserID user, XnBool bSuccess, void* pCookie)
+static void XN_CALLBACK_TYPE xnCalibrationEndBundleCallback(XnUserID user, XnBool bSuccess, void* pCookie)
 {
 	SkeletonCookie* pRegCookie = (SkeletonCookie*)pCookie;
 	if (pRegCookie->endHandler != NULL)
@@ -4810,13 +5552,13 @@ static void XN_CALLBACK_TYPE xnCalibrationEndCallback(XnUserID user, XnBool bSuc
 	}
 }
 
-XN_C_API XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, XnCalibrationStart CalibrationStartCB, XnCalibrationEnd CalibrationEndCB, void* pCookie, XnCallbackHandle* phCallback)
+XN_C_API XnStatus XN_API_DEPRECATED("Please use RegisterToCalibrationStart/Complete") xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, XnCalibrationStart CalibrationStartCB, XnCalibrationEnd CalibrationEndCB, void* pCookie, XnCallbackHandle* phCallback)
 {
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->Skeleton.RegisterCalibrationCallbacks, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->Skeleton.RegisterCalibrationCallbacks);
 
 	SkeletonCookie* pSkeletonCookie;
 	XN_VALIDATE_ALLOC(pSkeletonCookie, SkeletonCookie);
@@ -4825,7 +5567,7 @@ XN_C_API XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, XnCalib
 	pSkeletonCookie->hNode = hInstance;
 	pSkeletonCookie->pUserCookie = pCookie;
 
-	XnStatus nRetVal = pInterface->Skeleton.RegisterCalibrationCallbacks(hModuleNode, xnCalibrationStartCallback, xnCalibrationEndCallback, pSkeletonCookie, &pSkeletonCookie->hCallback);
+	XnStatus nRetVal = pInterface->Skeleton.RegisterCalibrationCallbacks(hModuleNode, xnCalibrationStartBundleCallback, xnCalibrationEndBundleCallback, pSkeletonCookie, &pSkeletonCookie->hCallback);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		xnOSFree(pSkeletonCookie);
@@ -4837,7 +5579,7 @@ XN_C_API XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, XnCalib
 	return (XN_STATUS_OK);
 }
 
-XN_C_API void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+XN_C_API void XN_API_DEPRECATED("Please use UnregisterFromCalibrationStart/Complete") xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
 	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4849,6 +5591,235 @@ XN_C_API void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbac
 	xnOSFree(pSkeletonCookie);
 }
 
+typedef struct CalibrationStartCookie
+{
+	XnCalibrationStart handler;
+	void* pUserCookie;
+	XnNodeHandle hNode;
+	XnCallbackHandle hCallback;
+} CalibrationStartCookie;
+
+static void XN_CALLBACK_TYPE xnCalibrationStartCallback(XnUserID user, void* pCookie)
+{
+	CalibrationStartCookie* pRegCookie = (CalibrationStartCookie*)pCookie;
+	if (pRegCookie->handler != NULL)
+	{
+		pRegCookie->handler(pRegCookie->hNode, user, pRegCookie->pUserCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToCalibrationStart(XnNodeHandle hInstance, XnCalibrationStart handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	CalibrationStartCookie* pCalibrationCookie;
+	XN_VALIDATE_ALLOC(pCalibrationCookie, CalibrationStartCookie);
+	pCalibrationCookie->handler = handler;
+	pCalibrationCookie->hNode = hInstance;
+	pCalibrationCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	if (pInterface->Skeleton.RegisterToCalibrationStart != NULL)
+	{
+		nRetVal = pInterface->Skeleton.RegisterToCalibrationStart(hModuleNode, xnCalibrationStartCallback, pCalibrationCookie, &pCalibrationCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		nRetVal = pInterface->Skeleton.RegisterCalibrationCallbacks(hModuleNode, xnCalibrationStartCallback, NULL, pCalibrationCookie, &pCalibrationCookie->hCallback);
+	}
+
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pCalibrationCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pCalibrationCookie;
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API void xnUnregisterFromCalibrationStart(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	
+	CalibrationStartCookie* pCalibrationCookie = (CalibrationStartCookie*)hCallback;
+
+	if (pInterface->Skeleton.UnregisterFromCalibrationStart != NULL)
+	{
+		pInterface->Skeleton.UnregisterFromCalibrationStart(hModuleNode, pCalibrationCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->Skeleton.UnregisterCalibrationCallbacks(hModuleNode, pCalibrationCookie->hCallback);
+	}
+	xnOSFree(pCalibrationCookie);
+}
+
+typedef struct CalibrationInProgressCookie
+{
+	XnCalibrationInProgress handler;
+	void* pUserCookie;
+	XnCallbackHandle hCallback;
+	XnNodeHandle hNode;
+} CalibrationInProgressCookie;
+
+static void XN_CALLBACK_TYPE xnModuleCalibrationInProgress(XnUserID user, XnCalibrationStatus calibrationError, void* pCookie)
+{
+	CalibrationInProgressCookie* pCalibrationCookie = (CalibrationInProgressCookie*)pCookie;
+	if (pCalibrationCookie->handler != NULL)
+	{
+		pCalibrationCookie->handler(pCalibrationCookie->hNode, user, calibrationError, pCalibrationCookie->pUserCookie);
+	}
+}
+
+static void XN_CALLBACK_TYPE xnModuleCalibrationInProgressViaStart(XnUserID user, void* pCookie)
+{
+	CalibrationInProgressCookie* pCalibrationCookie = (CalibrationInProgressCookie*)pCookie;
+	if (pCalibrationCookie->handler != NULL)
+	{
+		pCalibrationCookie->handler(pCalibrationCookie->hNode, user, XN_CALIBRATION_STATUS_OK, pCalibrationCookie->pUserCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToCalibrationInProgress(XnNodeHandle hInstance, XnCalibrationInProgress handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	CalibrationInProgressCookie* pRegCookie;
+	XN_VALIDATE_ALLOC(pRegCookie, CalibrationInProgressCookie);
+	pRegCookie->handler = handler;
+	pRegCookie->hNode = hInstance;
+	pRegCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+	if (pInterface->Skeleton.RegisterToCalibrationInProgress != NULL)
+	{
+		pInterface->Skeleton.RegisterToCalibrationInProgress(hModuleNode, xnModuleCalibrationInProgress, pRegCookie, &pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->Skeleton.RegisterCalibrationCallbacks(hModuleNode, xnModuleCalibrationInProgressViaStart, NULL, pRegCookie, &pRegCookie->hCallback);
+	}
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pRegCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pRegCookie;
+
+	return XN_STATUS_OK;
+}
+XN_C_API void xnUnregisterFromCalibrationInProgress(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	// Versions before 1.3.2 didn't have this API. Fabricate it.
+	if (pInterface->Skeleton.UnregisterFromCalibrationInProgress == NULL)
+	{
+
+	}
+
+	CalibrationInProgressCookie* pRegCookie = (CalibrationInProgressCookie*)hCallback;
+	pInterface->Skeleton.UnregisterFromCalibrationInProgress(hModuleNode, pRegCookie->hCallback);
+	xnOSFree(pRegCookie);
+}
+
+typedef struct CalibrationCompleteCookie
+{
+	XnCalibrationComplete handler;
+	void* pUserCookie;
+	XnCallbackHandle hCallback;
+	XnNodeHandle hNode;
+} CalibrationCompleteCookie;
+
+static void XN_CALLBACK_TYPE xnModuleCalibrationComplete(XnUserID user, XnCalibrationStatus calibrationError, void* pCookie)
+{
+	CalibrationCompleteCookie* pHandCookie = (CalibrationCompleteCookie*)pCookie;
+	if (pHandCookie->handler != NULL)
+	{
+		pHandCookie->handler(pHandCookie->hNode, user, calibrationError, pHandCookie->pUserCookie);
+	}
+}
+
+static void XN_CALLBACK_TYPE xnModuleCalibrationCompleteViaEnd(XnUserID user, XnBool bSuccess, void* pCookie)
+{
+	CalibrationCompleteCookie* pHandCookie = (CalibrationCompleteCookie*)pCookie;
+	if (pHandCookie->handler != NULL)
+	{
+		pHandCookie->handler(pHandCookie->hNode, user, bSuccess?XN_CALIBRATION_STATUS_OK:XN_CALIBRATION_STATUS_POSE, pHandCookie->pUserCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToCalibrationComplete(XnNodeHandle hInstance, XnCalibrationComplete handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	CalibrationCompleteCookie* pRegCookie;
+	XN_VALIDATE_ALLOC(pRegCookie, CalibrationCompleteCookie);
+	pRegCookie->handler = handler;
+	pRegCookie->hNode = hInstance;
+	pRegCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	if (pInterface->Skeleton.RegisterToCalibrationComplete != NULL)
+	{
+		nRetVal = pInterface->Skeleton.RegisterToCalibrationComplete(hModuleNode, xnModuleCalibrationComplete, pRegCookie, &pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		nRetVal = pInterface->Skeleton.RegisterCalibrationCallbacks(hModuleNode, NULL, xnModuleCalibrationCompleteViaEnd, pRegCookie, &pRegCookie->hCallback);
+	}
+
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pRegCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pRegCookie;
+
+	return XN_STATUS_OK;
+}
+XN_C_API void xnUnregisterFromCalibrationComplete(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	CalibrationCompleteCookie* pRegCookie = (CalibrationCompleteCookie*)hCallback;
+	if (pInterface->Skeleton.UnregisterFromCalibrationComplete == NULL)
+	{
+		pInterface->Skeleton.UnregisterFromCalibrationComplete(hModuleNode, pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->Skeleton.UnregisterCalibrationCallbacks(hModuleNode, pRegCookie->hCallback);
+	}
+
+	xnOSFree(pRegCookie);
+}
 //---------------------------------------------------------------------------
 // Pose Detection Capability
 //---------------------------------------------------------------------------
@@ -4925,13 +5896,13 @@ static void XN_CALLBACK_TYPE xnPoseDetectionEndCallback(const XnChar* strPose, X
 	}
 }
 
-XN_C_API XnStatus xnRegisterToPoseCallbacks(XnNodeHandle hInstance, XnPoseDetectionCallback PoseDetectionStartCB, XnPoseDetectionCallback PoseDetectionEndCB, void* pCookie, XnCallbackHandle* phCallback)
+XN_C_API XnStatus XN_API_DEPRECATED("Please use xnRegisterToPoseDetected/xnRegisterToOutOfPose instead") xnRegisterToPoseCallbacks(XnNodeHandle hInstance, XnPoseDetectionCallback PoseDetectionStartCB, XnPoseDetectionCallback PoseDetectionEndCB, void* pCookie, XnCallbackHandle* phCallback)
 {
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->PoseDetection.RegisterToPoseCallbacks, 0);
+	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.RegisterToPoseCallbacks);
 
 	PoseCookie* pPoseCookie;
 	XN_VALIDATE_ALLOC(pPoseCookie, PoseCookie);
@@ -4952,7 +5923,7 @@ XN_C_API XnStatus xnRegisterToPoseCallbacks(XnNodeHandle hInstance, XnPoseDetect
 	return (XN_STATUS_OK);
 }
 
-XN_C_API void xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+XN_C_API void XN_API_DEPRECATED("Please use xnUnregisterFromPoseDetected/xnUnregisterFromOutOfPose instead") xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback)
 {
 	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4962,6 +5933,214 @@ XN_C_API void xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHa
 	PoseCookie* pPoseCookie = (PoseCookie*)hCallback;
 	pInterface->PoseDetection.UnregisterFromPoseCallbacks(hModuleNode, pPoseCookie->hCallback);
 	xnOSFree(pPoseCookie);
+}
+
+typedef struct PoseDetectionCookie
+{
+	XnPoseDetectionCallback handler;
+	void* pPoseCookie;
+	XnNodeHandle hNode;
+	XnCallbackHandle hCallback;
+} PoseDetectionCookie;
+
+static void XN_CALLBACK_TYPE xnPoseDetectionCallback(const XnChar* strPose, XnUserID user, void* pCookie)
+{
+	PoseDetectionCookie* pRegCookie = (PoseDetectionCookie*)pCookie;
+	if (pRegCookie->handler != NULL)
+	{
+		pRegCookie->handler(pRegCookie->hNode, strPose, user, pRegCookie->pPoseCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToPoseDetected(XnNodeHandle hInstance, XnPoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	PoseDetectionCookie* pPoseCookie;
+	XN_VALIDATE_ALLOC(pPoseCookie, PoseDetectionCookie);
+	pPoseCookie->handler = handler;
+	pPoseCookie->hNode = hInstance;
+	pPoseCookie->pPoseCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	if (pInterface->PoseDetection.RegisterToPoseDetected != NULL)
+	{
+		nRetVal = pInterface->PoseDetection.RegisterToPoseDetected(hModuleNode, xnPoseDetectionCallback, pPoseCookie, &pPoseCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		nRetVal = pInterface->PoseDetection.RegisterToPoseCallbacks(hModuleNode, xnPoseDetectionCallback, NULL, pPoseCookie, &pPoseCookie->hCallback);
+	}
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pPoseCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pPoseCookie;
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API void xnUnregisterFromPoseDetected(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	PoseDetectionCookie* pPoseCookie = (PoseDetectionCookie*)hCallback;
+
+	if (pInterface->PoseDetection.UnregisterFromPoseDetected != NULL)
+	{
+		pInterface->PoseDetection.UnregisterFromPoseDetected(hModuleNode, pPoseCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->PoseDetection.UnregisterFromPoseCallbacks(hModuleNode, pPoseCookie->hCallback);
+	}
+
+	xnOSFree(pPoseCookie);
+}
+
+XN_C_API XnStatus xnRegisterToOutOfPose(XnNodeHandle hInstance, XnPoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.RegisterToOutOfPose);
+
+	PoseDetectionCookie* pPoseCookie;
+	XN_VALIDATE_ALLOC(pPoseCookie, PoseDetectionCookie);
+	pPoseCookie->handler = handler;
+	pPoseCookie->hNode = hInstance;
+	pPoseCookie->pPoseCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	if (pInterface->PoseDetection.RegisterToOutOfPose != NULL)
+	{
+		nRetVal = pInterface->PoseDetection.RegisterToOutOfPose(hModuleNode, xnPoseDetectionCallback, pPoseCookie, &pPoseCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		nRetVal = pInterface->PoseDetection.RegisterToPoseCallbacks(hModuleNode, NULL, xnPoseDetectionCallback, pPoseCookie, &pPoseCookie->hCallback);
+	}
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pPoseCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pPoseCookie;
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API void xnUnregisterFromOutOfPose(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR_RET(pInterface->PoseDetection.UnregisterFromOutOfPose, );
+
+	PoseDetectionCookie* pPoseCookie = (PoseDetectionCookie*)hCallback;
+	if (pInterface->PoseDetection.UnregisterFromOutOfPose != NULL)
+	{
+		pInterface->PoseDetection.UnregisterFromOutOfPose(hModuleNode, pPoseCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->PoseDetection.UnregisterFromPoseCallbacks(hModuleNode, pPoseCookie->hCallback);
+	}
+	xnOSFree(pPoseCookie);
+}
+
+
+typedef struct PoseDetectionInProgressCookie
+{
+	XnPoseDetectionInProgress handler;
+	void* pUserCookie;
+	XnCallbackHandle hCallback;
+	XnNodeHandle hNode;
+} PoseDetectionInProgressCookie;
+
+static void XN_CALLBACK_TYPE xnModulePoseDetectionInProgress(const XnChar* strPose, XnUserID user, XnPoseDetectionStatus poseDetectionError, void* pCookie)
+{
+	PoseDetectionInProgressCookie* pHandCookie = (PoseDetectionInProgressCookie*)pCookie;
+	if (pHandCookie->handler != NULL)
+	{
+		pHandCookie->handler(pHandCookie->hNode, strPose, user, poseDetectionError, pHandCookie->pUserCookie);
+	}
+}
+
+static void XN_CALLBACK_TYPE xnModulePoseDetectionInProgressViaStart(const XnChar* strPose, XnUserID user, void* pCookie)
+{
+	PoseDetectionInProgressCookie* pHandCookie = (PoseDetectionInProgressCookie*)pCookie;
+	if (pHandCookie->handler != NULL)
+	{
+		pHandCookie->handler(pHandCookie->hNode, strPose, user, XN_POSE_DETECTION_STATUS_OK, pHandCookie->pUserCookie);
+	}
+}
+
+XN_C_API XnStatus xnRegisterToPoseDetectionInProgress(XnNodeHandle hInstance, XnPoseDetectionInProgress handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	PoseDetectionInProgressCookie* pRegCookie;
+	XN_VALIDATE_ALLOC(pRegCookie, PoseDetectionInProgressCookie);
+	pRegCookie->handler = handler;
+	pRegCookie->hNode = hInstance;
+	pRegCookie->pUserCookie = pCookie;
+
+	XnStatus nRetVal = XN_STATUS_OK;
+	if (pInterface->PoseDetection.RegisterToPoseDetectionInProgress != NULL)
+	{
+		nRetVal = pInterface->PoseDetection.RegisterToPoseDetectionInProgress(hModuleNode, xnModulePoseDetectionInProgress, pRegCookie, &pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		nRetVal = pInterface->PoseDetection.RegisterToPoseCallbacks(hModuleNode, xnModulePoseDetectionInProgressViaStart, NULL, pRegCookie, &pRegCookie->hCallback);
+	}
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pRegCookie);
+		return (nRetVal);
+	}
+
+	*phCallback = pRegCookie;
+
+	return XN_STATUS_OK;
+}
+XN_C_API void xnUnregisterFromPoseDetectionInProgress(XnNodeHandle hInstance, XnCallbackHandle hCallback)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+
+	PoseDetectionInProgressCookie* pRegCookie = (PoseDetectionInProgressCookie*)hCallback;
+	if (pInterface->PoseDetection.UnregisterFromPoseDetectionInProgress != NULL)
+	{
+		pInterface->PoseDetection.UnregisterFromPoseDetectionInProgress(hModuleNode, pRegCookie->hCallback);
+	}
+	else
+	{
+		// Versions before 1.3.2 didn't have this API. Fabricate it.
+		pInterface->PoseDetection.UnregisterFromPoseCallbacks(hModuleNode, pRegCookie->hCallback);
+	}
+	xnOSFree(pRegCookie);
 }
 
 //---------------------------------------------------------------------------
@@ -5099,6 +6278,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 	nRetVal = xnInitCodec(hCodec, hInitializerNode);
 	if (nRetVal != XN_STATUS_OK)
 	{
+		xnProductionNodeRelease(hCodec);
 		XN_LOG_ERROR_RETURN(nRetVal, XN_MASK_OPEN_NI, "Failed to init codec using given node: %s", xnGetStatusString(nRetVal));
 	}
 
@@ -5212,4 +6392,180 @@ XN_C_API XnStatus xnMockRawSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, Xn
 {
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
 	return xnMockSetData(hInstance, nFrameID, nTimestamp, nDataSize, pData);
+}
+
+XN_C_API XnStatus xnCreateScriptNode(XnContext* pContext, const XnChar* strFormat, XnNodeHandle* phScript)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	// for now we only support OpenNI XML format
+	if (strcmp(strFormat, XN_SCRIPT_FORMAT_XML) != 0)
+	{
+		return XN_STATUS_NOT_IMPLEMENTED;
+	}
+
+	XnNodeInfo* pInfo;
+	XnProductionNodeDescription desc;
+	GetOpenNIScriptNodeDescription(&desc);
+
+	nRetVal = xnNodeInfoAllocate(&desc, NULL, NULL, &pInfo);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnCreateProductionTree(pContext, pInfo, phScript);
+	XN_IS_STATUS_OK(nRetVal);
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API const XnChar* xnScriptNodeGetSupportedFormat(XnNodeHandle hScript)
+{
+	XN_VALIDATE_INTERFACE_TYPE_RET(hScript, XN_NODE_TYPE_SCRIPT, NULL);
+	XnScriptNodeInterfaceContainer* pInterface = (XnScriptNodeInterfaceContainer*)hScript->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hScript->pModuleInstance->hNode;
+	return pInterface->Script.GetSupportedFormat(hModuleNode);
+}
+
+XN_C_API XnStatus xnLoadScriptFromFile(XnNodeHandle hScript, const XnChar* strFileName)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hScript, XN_NODE_TYPE_SCRIPT);
+	XN_VALIDATE_INPUT_PTR(strFileName);
+	XnScriptNodeInterfaceContainer* pInterface = (XnScriptNodeInterfaceContainer*)hScript->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hScript->pModuleInstance->hNode;
+	return pInterface->Script.LoadScriptFromFile(hModuleNode, strFileName);
+}
+
+XN_C_API XnStatus xnLoadScriptFromString(XnNodeHandle hScript, const XnChar* strScript)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hScript, XN_NODE_TYPE_SCRIPT);
+	XN_VALIDATE_INPUT_PTR(strScript);
+	XnScriptNodeInterfaceContainer* pInterface = (XnScriptNodeInterfaceContainer*)hScript->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hScript->pModuleInstance->hNode;
+	return pInterface->Script.LoadScriptFromString(hModuleNode, strScript);
+}
+
+static XnStatus xnScriptNodeRunImpl(XnNodeHandle hScript, XnNodeInfoList* pCreatedNodes, XnEnumerationErrors* pErrors)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hScript, XN_NODE_TYPE_SCRIPT);
+	XN_VALIDATE_INPUT_PTR(pCreatedNodes);
+	XN_VALIDATE_INPUT_PTR(pErrors);
+	XnScriptNodeInterfaceContainer* pInterface = (XnScriptNodeInterfaceContainer*)hScript->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hScript->pModuleInstance->hNode;
+	return pInterface->Script.Run(hModuleNode, pCreatedNodes, pErrors);
+}
+
+XN_C_API XnStatus xnScriptNodeRun(XnNodeHandle hScript, XnEnumerationErrors* pErrors)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XN_VALIDATE_INTERFACE_TYPE(hScript, XN_NODE_TYPE_SCRIPT);
+
+	XnNodeInfoList* pCreatedNodes = NULL;
+	nRetVal = xnNodeInfoListAllocate(&pCreatedNodes);
+	XN_IS_STATUS_OK(nRetVal);
+
+	XnEnumerationErrors* pActualErrors = pErrors;
+	if (pActualErrors == NULL)
+	{
+		nRetVal = xnEnumerationErrorsAllocate(&pActualErrors);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnNodeInfoListFree(pCreatedNodes);
+			return (nRetVal);
+		}
+	}
+
+	// run the script
+	nRetVal = xnScriptNodeRunImpl(hScript, pCreatedNodes, pActualErrors);
+
+	if (nRetVal == XN_STATUS_OK)
+	{
+		// add all created nodes to the list of dependencies
+		for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pCreatedNodes);
+			xnNodeInfoListIteratorIsValid(it);
+			it = xnNodeInfoListGetNext(it))
+		{
+			XnNodeInfo* pInfo = xnNodeInfoListGetCurrent(it);
+			if (pInfo->hNode == NULL)
+			{
+				nRetVal = XN_STATUS_ERROR;
+				break;
+			}
+
+			nRetVal = xnAddNeededNode(hScript, pInfo->hNode);
+			if (nRetVal != XN_STATUS_OK)
+			{
+				break;
+			}
+		}
+	}
+
+	// release all nodes (either we had an error, or they are already added to the list of needed nodes
+	for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pCreatedNodes);
+		xnNodeInfoListIteratorIsValid(it);
+		it = xnNodeInfoListGetNext(it))
+	{
+		XnNodeInfo* pInfo = xnNodeInfoListGetCurrent(it);
+		if (pInfo->hNode != NULL)
+		{
+			xnProductionNodeRelease(pInfo->hNode);
+		}
+	}
+
+	// free the list
+	xnNodeInfoListFree(pCreatedNodes);
+
+	// free errors object (if needed)
+	if (pErrors == NULL)
+	{
+		xnEnumerationErrorsFree(pErrors);
+	}
+
+	return (nRetVal);
+}
+
+//---------------------------------------------------------------------------
+// General
+//---------------------------------------------------------------------------
+#if (XN_PLATFORM == XN_PLATFORM_WIN32) && (_M_X64)
+	#define XN_OPEN_NI_INSTALL_PATH_ENV "OPEN_NI_INSTALL_PATH64"
+#else
+	#define XN_OPEN_NI_INSTALL_PATH_ENV "OPEN_NI_INSTALL_PATH"
+#endif
+
+#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+	#define XN_OPEN_NI_FILES_LOCATION "\\Data\\"
+#elif (CE4100)
+	#define XN_OPEN_NI_FILES_LOCATION "/usr/etc/ni/"
+#elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#define XN_OPEN_NI_FILES_LOCATION "/var/lib/ni/"
+#elif (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM)
+	#define XN_OPEN_NI_FILES_LOCATION "/data/ni/"
+#else
+	#error "Unsupported platform!"
+#endif
+
+XnStatus xnGetOpenNIConfFilesPath(XnChar* strDest, XnUInt32 nBufSize)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	nRetVal = xnOSGetEnvironmentVariable(XN_OPEN_NI_INSTALL_PATH_ENV, strDest, nBufSize);
+	if (nRetVal == XN_STATUS_OS_ENV_VAR_NOT_FOUND)
+	{
+		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+			// we don't allow environment variable not to be defined on Windows.
+			return nRetVal;
+		#else
+			// use root FS
+			strDest[0] = '\0';
+		#endif
+	}
+	else
+	{
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	nRetVal = xnOSStrAppend(strDest, XN_OPEN_NI_FILES_LOCATION, nBufSize);
+	XN_IS_STATUS_OK(nRetVal);
+	
+	return (XN_STATUS_OK);
 }

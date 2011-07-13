@@ -381,6 +381,11 @@ namespace xn
 		virtual void UnregisterGestureCallbacks(XnCallbackHandle hCallback) = 0;
 		virtual XnStatus RegisterToGestureChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback) = 0;
 		virtual void UnregisterFromGestureChange(XnCallbackHandle hCallback) = 0;
+
+		virtual XnStatus RegisterToGestureIntermediateStageCompleted(XnModuleGestureIntermediateStageCompleted GestureIntermediateStageCompletedCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromGestureIntermediateStageCompleted(XnCallbackHandle hCallback) = 0;
+		virtual XnStatus RegisterToGestureReadyForNextIntermediateStage(XnModuleGestureReadyForNextIntermediateStage ReadyForNextIntermediateStageCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromGestureReadyForNextIntermediateStage(XnCallbackHandle hCallback) = 0;
 	};
 
 	class ModuleSceneAnalyzer : virtual public ModuleMapGenerator
@@ -391,6 +396,14 @@ namespace xn
 		virtual XnUInt32 GetBytesPerPixel() { return sizeof(XnLabel); }
 		virtual const XnLabel* GetLabelMap() = 0;
 		virtual XnStatus GetFloor(XnPlane3D& pPlane) = 0;
+	};
+
+	class ModuleHandTouchingFOVEdgeInterface
+	{
+	public:
+		virtual ~ModuleHandTouchingFOVEdgeInterface() {}
+		virtual XnStatus RegisterToHandTouchingFOVEdge(XnModuleHandTouchingFOVEdge TouchingFOVEdgeCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromHandTouchingFOVEdge(XnCallbackHandle hCallback) = 0;
 	};
 
 	class ModuleHandsGenerator : virtual public ModuleGenerator
@@ -404,6 +417,8 @@ namespace xn
 		virtual XnStatus StopTrackingAll() = 0;
 		virtual XnStatus StartTracking(const XnPoint3D& ptPosition) = 0;
 		virtual XnStatus SetSmoothing(XnFloat fSmoothingFactor) = 0;
+
+		virtual ModuleHandTouchingFOVEdgeInterface* GetHandTouchingFOVEdgeInterface() { return NULL; }
 	};
 
 	class ModuleSkeletonInterface
@@ -440,6 +455,14 @@ namespace xn
 		virtual XnStatus SetSmoothing(XnFloat fSmoothingFactor) = 0;
 		virtual XnStatus RegisterCalibrationCallbacks(XnModuleCalibrationStart CalibrationStartCB, XnModuleCalibrationEnd CalibrationEndCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
 		virtual void UnregisterCalibrationCallbacks(XnCallbackHandle hCallback) = 0;
+
+		virtual XnStatus RegisterToCalibrationInProgress(XnModuleCalibrationInProgress CalibrationInProgressCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromCalibrationInProgress(XnCallbackHandle hCallback) = 0;
+		virtual XnStatus RegisterToCalibrationComplete(XnModuleCalibrationComplete CalibrationCompleteCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromCalibrationComplete(XnCallbackHandle hCallback) = 0;
+
+		virtual XnStatus RegisterToCalibrationStart(XnModuleCalibrationStart handler, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromCalibrationStart(XnCallbackHandle hCallback) = 0;
 	};
 
 	class ModulePoseDetectionInteface
@@ -457,6 +480,13 @@ namespace xn
 		virtual XnStatus RegisterToPoseDetectionCallbacks(XnModulePoseDetectionCallback StartPoseCB, XnModulePoseDetectionCallback EndPoseCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
 		virtual void UnregisterFromPoseDetectionCallbacks(XnCallbackHandle hCallback) = 0;
 
+		virtual XnStatus RegisterToPoseDetectionInProgress(XnModulePoseDetectionInProgressCallback InProgressCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromPoseDetectionInProgress(XnCallbackHandle hCallback) = 0;
+
+		virtual XnStatus RegisterToPoseDetected(XnModulePoseDetectionCallback handler, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual XnStatus RegisterToOutOfPose(XnModulePoseDetectionCallback handler, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromPoseDetected(XnCallbackHandle hCallback) = 0;
+		virtual void UnregisterFromOutOfPose(XnCallbackHandle hCallback) = 0;
 	};
 
 	class ModuleUserGenerator : virtual public ModuleGenerator
@@ -473,6 +503,10 @@ namespace xn
 		virtual ModuleSkeletonInterface* GetSkeletonInterface() { return NULL; }
 		virtual ModulePoseDetectionInteface* GetPoseDetectionInteface() {return NULL;}
 
+		virtual XnStatus RegisterToUserExit(XnModuleUserHandler UserExitCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromUserExit(XnCallbackHandle hCallback) = 0;
+		virtual XnStatus RegisterToUserReEnter(XnModuleUserHandler UserReEnterCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
+		virtual void UnregisterFromUserReEnter(XnCallbackHandle hCallback) = 0;
 	};
 
 	class ModuleAudioGenerator : virtual public ModuleGenerator
@@ -497,6 +531,16 @@ namespace xn
 		virtual XnStatus Init(const ProductionNode& node) = 0;
 		virtual XnStatus CompressData(const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten) const = 0;
 		virtual XnStatus DecompressData(const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten) const = 0;
+	};
+
+	class ModuleScriptNode : virtual public ModuleProductionNode
+	{
+	public:
+		virtual ~ModuleScriptNode() {}
+		virtual const XnChar* GetSupportedFormat() = 0;
+		virtual XnStatus LoadScriptFromFile(const XnChar* strFileName) = 0;
+		virtual XnStatus LoadScriptFromString(const XnChar* strScript) = 0;
+		virtual XnStatus Run(NodeInfoList& createdNodes, EnumerationErrors& errors) = 0;
 	};
 }
 

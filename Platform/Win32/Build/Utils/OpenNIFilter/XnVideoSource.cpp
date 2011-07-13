@@ -93,7 +93,8 @@ XnVideoSource::~XnVideoSource()
 		delete GetPin(i);
 	}
 
-	m_context.Shutdown();
+	m_image.Release();
+	m_context.Release();
 }
 
 //

@@ -141,6 +141,15 @@ XnStatus PlayerImpl::GetSource(XnRecordMedium &sourceType, XnChar* strSource, Xn
 void PlayerImpl::Destroy()
 {
 	CloseFileImpl();
+
+	for (PlayedNodesHash::Iterator it = m_playedNodes.begin(); it != m_playedNodes.end(); ++it)
+	{
+		PlayedNodeInfo& nodeInfo = it.Value();
+		xnUnlockNodeForChanges(nodeInfo.hNode, nodeInfo.hLock);
+		xnProductionNodeRelease(nodeInfo.hNode);
+	}
+
+	m_playedNodes.Clear();
 }
 
 XnStatus PlayerImpl::EnumerateNodes(XnNodeInfoList** ppList)
@@ -380,18 +389,35 @@ XnStatus PlayerImpl::AddNode(const XnChar* strNodeName, XnProductionNodeType typ
 	}
 
 	// check if we need to create it (maybe it's a rewind...)
-	if (xnGetNodeHandleByName(m_hPlayer->pContext, strNodeName, &playedNodeInfo.hNode) != XN_STATUS_OK)
+	if (xnGetRefNodeHandleByName(m_hPlayer->pContext, strNodeName, &playedNodeInfo.hNode) != XN_STATUS_OK)
 	{
 		XnStatus nRetVal = xnCreateMockNode(m_hPlayer->pContext, type, strNodeName, &playedNodeInfo.hNode);
 		XN_IS_STATUS_OK(nRetVal);
+
+		// mark this node as needed node. We need this in order to make sure if xnForceShutdown() is called,
+		// the player will be destroyed *before* mock node is (so we can release it).
+		nRetVal = xnAddNeededNode(m_hPlayer, playedNodeInfo.hNode);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnProductionNodeRelease(playedNodeInfo.hNode);
+			return (nRetVal);
+		}
 	}
 
 	// lock it, so no one can change configuration (this is a file recording)
 	nRetVal = xnLockNodeForChanges(playedNodeInfo.hNode, &playedNodeInfo.hLock);
-	XN_IS_STATUS_OK(nRetVal);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnProductionNodeRelease(playedNodeInfo.hNode);
+		return (nRetVal);
+	}
 
 	nRetVal = m_playedNodes.Set(strNodeName, playedNodeInfo);
-	XN_IS_STATUS_OK(nRetVal);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnProductionNodeRelease(playedNodeInfo.hNode);
+		return (nRetVal);
+	}
 
 	return XN_STATUS_OK;
 }
@@ -406,10 +432,15 @@ XnStatus PlayerImpl::RemoveNode(const XnChar* strNodeName)
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = xnUnlockNodeForChanges(playedNodeInfo.hNode, playedNodeInfo.hLock);
-	XN_IS_STATUS_OK(nRetVal);
-	
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to unlock node when removing from playing: %s", xnGetStatusString(nRetVal));
+	}
+
 	nRetVal = m_playedNodes.Remove(strNodeName);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_ASSERT(nRetVal == XN_STATUS_OK);
+
+	xnProductionNodeRelease(playedNodeInfo.hNode);
 
 	return (XN_STATUS_OK);
 }

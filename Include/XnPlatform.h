@@ -34,6 +34,7 @@
 #define XN_PLATFORM_ARC 6
 #define XN_PLATFORM_LINUX_ARM 7
 #define XN_PLATFORM_MACOSX 8
+#define XN_PLATFORM_ANDROID_ARM 9
 
 #define XN_PLATFORM_IS_LITTLE_ENDIAN 1
 #define XN_PLATFORM_IS_BIG_ENDIAN    2
@@ -59,6 +60,8 @@
 	#endif
 
 	#include "Win32/XnPlatformWin32.h"
+#elif defined(android) && defined(__arm__)
+	#include "Android-Arm/XnPlatformAndroid-Arm.h"
 #elif (linux && (i386 || __x86_64__))
 	#include "Linux-x86/XnPlatformLinux-x86.h"
 #elif (linux && __arm__)
@@ -87,6 +90,8 @@
 #define XN_MAX(a,b)            (((a) > (b)) ? (a) : (b))
 
 typedef void (*XnFuncPtr)();
+
+#define XN_COMPILER_ASSERT(x) typedef int compileAssert[x ? 1 : -1]
 
 //---------------------------------------------------------------------------
 // API Export/Import Macros
