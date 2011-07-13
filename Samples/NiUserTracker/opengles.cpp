@@ -63,8 +63,8 @@ static bool setup_egl(NativeDisplayType nativeDisplay, NativeWindowType nativeWi
 	 */
 	EGLint configAttrs[] =
 	{
-		EGL_BUFFER_SIZE,       16,
-	        EGL_DEPTH_SIZE,        15,
+		EGL_BUFFER_SIZE,       32,
+	        EGL_DEPTH_SIZE,        24,
         	EGL_NONE
 	};
 	

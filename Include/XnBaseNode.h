@@ -48,12 +48,12 @@ typedef struct XnBaseNode
 /**
  * Provide an available xnBaseNode from the node pool.
  */ 
-XN_C_API XnBaseNode* xnAllocateBaseNode();
+XN_C_API XnBaseNode* XN_C_DECL xnAllocateBaseNode();
 
 /**
  * Release an xnBaseNode to the node pool.
  * @param	pNode	[in]	The base node to return to the pool.
  */ 
-XN_C_API void xnDeallocateBaseNode(XnBaseNode* pNode);
+XN_C_API void XN_C_DECL xnDeallocateBaseNode(XnBaseNode* pNode);
 
 #endif //_NINODEALLOC_H

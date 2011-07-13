@@ -50,6 +50,7 @@ TypeManager::TypeManager()
 	AddNewType("Recorder", XN_NODE_TYPE_RECORDER, XN_NODE_TYPE_PRODUCTION_NODE);
 	AddNewType("Player", XN_NODE_TYPE_PLAYER, XN_NODE_TYPE_PRODUCTION_NODE);
 	AddNewType("Codec", XN_NODE_TYPE_CODEC, XN_NODE_TYPE_PRODUCTION_NODE);
+	AddNewType("Script", XN_NODE_TYPE_SCRIPT, XN_NODE_TYPE_PRODUCTION_NODE);
 	AddNewType("Generator", XN_NODE_TYPE_GENERATOR, XN_NODE_TYPE_PRODUCTION_NODE);
 
 	// Generators
@@ -94,7 +95,6 @@ XnStatus TypeManager::RegisterNewType(const XnChar* strName, XnProductionNodeTyp
 	if (XN_STATUS_OK == GetTypeByName(strName, &type))
 	{
 		*pNewType = type;
-		return (XN_STATUS_OK);
 	}
 	else
 	{
@@ -117,9 +117,14 @@ XnStatus TypeManager::RegisterNewType(const XnChar* strName, XnProductionNodeTyp
 	return (XN_STATUS_OK);
 }
 
-XnStatus TypeManager::GetTypeName(XnProductionNodeType type, const XnChar** pstrName)
+XnStatus TypeManager::GetTypeName(XnProductionNodeType type, const XnChar** pstrName) const
 {
-	NodeTypeInfo* pInfo = m_pTypesArray[type];
+	if (type > XN_MAX_TYPES_COUNT)
+	{
+		return XN_STATUS_NO_MATCH;
+	}
+
+	const NodeTypeInfo* pInfo = m_pTypesArray[type];
 	if (pInfo == NULL)
 	{
 		return XN_STATUS_NO_MATCH;
@@ -129,7 +134,7 @@ XnStatus TypeManager::GetTypeName(XnProductionNodeType type, const XnChar** pstr
 	return XN_STATUS_OK;
 }
 
-XnStatus TypeManager::GetTypeByName(const XnChar* strName, XnProductionNodeType* pType)
+XnStatus TypeManager::GetTypeByName(const XnChar* strName, XnProductionNodeType* pType) const
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -150,9 +155,9 @@ XnStatus TypeManager::GetTypeByName(const XnChar* strName, XnProductionNodeType*
 	return (XN_STATUS_NO_MATCH);
 }
 
-XnStatus TypeManager::IsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base, XnBool* pbIsDerived)
+XnStatus TypeManager::IsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base, XnBool* pbIsDerived) const
 {
-	NodeTypeInfo* pInfo = m_pTypesArray[type];
+	const NodeTypeInfo* pInfo = m_pTypesArray[type];
 	if (pInfo == NULL)
 	{
 		return XN_STATUS_NO_MATCH;
@@ -163,9 +168,9 @@ XnStatus TypeManager::IsTypeDerivedFrom(XnProductionNodeType type, XnProductionN
 	return XN_STATUS_OK;
 }
 
-XnStatus TypeManager::GetTypeHierarchy(XnProductionNodeType type, const XnBitSet*& pHierarchy)
+XnStatus TypeManager::GetTypeHierarchy(XnProductionNodeType type, const XnBitSet*& pHierarchy) const
 {
-	NodeTypeInfo* pInfo = m_pTypesArray[type];
+	const NodeTypeInfo* pInfo = m_pTypesArray[type];
 	if (pInfo == NULL)
 	{
 		return XN_STATUS_NO_MATCH;

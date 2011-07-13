@@ -72,46 +72,46 @@ typedef XnBool (XN_CALLBACK_TYPE* XnUSBEventCallbackFunctionPtr)(XnUSBEventType 
 //---------------------------------------------------------------------------
 // Exported Function Declaration
 //---------------------------------------------------------------------------
-XN_C_API XnStatus xnUSBInit();
-XN_C_API XnStatus xnUSBShutdown();
+XN_C_API XnStatus XN_C_DECL xnUSBInit();
+XN_C_API XnStatus XN_C_DECL xnUSBShutdown();
 
-XN_C_API XnStatus XN_API_DEPRECATED("Use xnUSBEnumerateDevices() instead") xnUSBIsDevicePresent(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, XnBool* pbDevicePresent);
+XN_C_API XnStatus XN_API_DEPRECATED("Use xnUSBEnumerateDevices() instead") XN_C_DECL xnUSBIsDevicePresent(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, XnBool* pbDevicePresent);
 
-XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID, const XnUSBConnectionString** pastrDevicePaths, XnUInt32* pnCount);
-XN_C_API void xnUSBFreeDevicesList(const XnUSBConnectionString* astrDevicePaths);
+XN_C_API XnStatus XN_C_DECL xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID, const XnUSBConnectionString** pastrDevicePaths, XnUInt32* pnCount);
+XN_C_API void XN_C_DECL xnUSBFreeDevicesList(const XnUSBConnectionString* astrDevicePaths);
 
-XN_C_API XnStatus XN_API_DEPRECATED("Use xnUSBOpenDeviceByPath() instead") xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr);
-XN_C_API XnStatus xnUSBOpenDeviceByPath(const XnUSBConnectionString strDevicePath, XN_USB_DEV_HANDLE* pDevHandlePtr);
-XN_C_API XnStatus xnUSBCloseDevice(XN_USB_DEV_HANDLE pDevHandle);
+XN_C_API XnStatus XN_API_DEPRECATED("Use xnUSBOpenDeviceByPath() instead") XN_C_DECL xnUSBOpenDevice(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr);
+XN_C_API XnStatus XN_C_DECL xnUSBOpenDeviceByPath(const XnUSBConnectionString strDevicePath, XN_USB_DEV_HANDLE* pDevHandlePtr);
+XN_C_API XnStatus XN_C_DECL xnUSBCloseDevice(XN_USB_DEV_HANDLE pDevHandle);
 
-XN_C_API XnStatus xnUSBGetDeviceSpeed(XN_USB_DEV_HANDLE pDevHandle, XnUSBDeviceSpeed* pDevSpeed);
+XN_C_API XnStatus XN_C_DECL xnUSBGetDeviceSpeed(XN_USB_DEV_HANDLE pDevHandle, XnUSBDeviceSpeed* pDevSpeed);
 
-XN_C_API XnStatus xnUSBSetConfig(XN_USB_DEV_HANDLE pDevHandle, XnUInt8 nConfig);
-XN_C_API XnStatus xnUSBGetConfig(XN_USB_DEV_HANDLE pDevHandle, XnUInt8* pnConfig);
+XN_C_API XnStatus XN_C_DECL xnUSBSetConfig(XN_USB_DEV_HANDLE pDevHandle, XnUInt8 nConfig);
+XN_C_API XnStatus XN_C_DECL xnUSBGetConfig(XN_USB_DEV_HANDLE pDevHandle, XnUInt8* pnConfig);
 
-XN_C_API XnStatus xnUSBSetInterface(XN_USB_DEV_HANDLE pDevHandle, XnUInt8 nInterface, XnUInt8 nAltInterface);
-XN_C_API XnStatus xnUSBGetInterface(XN_USB_DEV_HANDLE pDevHandle, XnUInt8* pnInterface, XnUInt8* pnAltInterface);
+XN_C_API XnStatus XN_C_DECL xnUSBSetInterface(XN_USB_DEV_HANDLE pDevHandle, XnUInt8 nInterface, XnUInt8 nAltInterface);
+XN_C_API XnStatus XN_C_DECL xnUSBGetInterface(XN_USB_DEV_HANDLE pDevHandle, XnUInt8* pnInterface, XnUInt8* pnAltInterface);
 
-XN_C_API XnStatus xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndPointID, XnUSBEndPointType nEPType, XnUSBDirectionType nDirType, XN_USB_EP_HANDLE* pEPHandlePtr);
-XN_C_API XnStatus xnUSBCloseEndPoint(XN_USB_EP_HANDLE pEPHandle);
-XN_C_API XnStatus xnUSBGetEndPointMaxPacketSize(XN_USB_EP_HANDLE pEPHandle, XnUInt32* pnMaxPacketSize);
+XN_C_API XnStatus XN_C_DECL xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndPointID, XnUSBEndPointType nEPType, XnUSBDirectionType nDirType, XN_USB_EP_HANDLE* pEPHandlePtr);
+XN_C_API XnStatus XN_C_DECL xnUSBCloseEndPoint(XN_USB_EP_HANDLE pEPHandle);
+XN_C_API XnStatus XN_C_DECL xnUSBGetEndPointMaxPacketSize(XN_USB_EP_HANDLE pEPHandle, XnUInt32* pnMaxPacketSize);
 
-XN_C_API XnStatus xnUSBAbortEndPoint(XN_USB_EP_HANDLE pEPHandle);
-XN_C_API XnStatus xnUSBFlushEndPoint(XN_USB_EP_HANDLE pEPHandle);
-XN_C_API XnStatus xnUSBResetEndPoint(XN_USB_EP_HANDLE pEPHandle);
+XN_C_API XnStatus XN_C_DECL xnUSBAbortEndPoint(XN_USB_EP_HANDLE pEPHandle);
+XN_C_API XnStatus XN_C_DECL xnUSBFlushEndPoint(XN_USB_EP_HANDLE pEPHandle);
+XN_C_API XnStatus XN_C_DECL xnUSBResetEndPoint(XN_USB_EP_HANDLE pEPHandle);
 
-XN_C_API XnStatus xnUSBSendControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControlType nType, XnUInt8 nRequest, XnUInt16 nValue, XnUInt16 nIndex, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32 nTimeOut);
-XN_C_API XnStatus xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControlType nType, XnUInt8 nRequest, XnUInt16 nValue, XnUInt16 nIndex, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32* pnBytesReceived, XnUInt32 nTimeOut);
+XN_C_API XnStatus XN_C_DECL xnUSBSendControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControlType nType, XnUInt8 nRequest, XnUInt16 nValue, XnUInt16 nIndex, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32 nTimeOut);
+XN_C_API XnStatus XN_C_DECL xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControlType nType, XnUInt8 nRequest, XnUInt16 nValue, XnUInt16 nIndex, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32* pnBytesReceived, XnUInt32 nTimeOut);
 
-XN_C_API XnStatus xnUSBReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32* pnBytesReceived, XnUInt32 nTimeOut);
-XN_C_API XnStatus xnUSBWriteEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32 nTimeOut);
+XN_C_API XnStatus XN_C_DECL xnUSBReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32* pnBytesReceived, XnUInt32 nTimeOut);
+XN_C_API XnStatus XN_C_DECL xnUSBWriteEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32 nTimeOut);
 
-XN_C_API XnStatus xnUSBQueueReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32 nTimeOut);
-XN_C_API XnStatus xnUSBFinishReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUInt32* pnBytesReceived, XnUInt32 nTimeOut);
+XN_C_API XnStatus XN_C_DECL xnUSBQueueReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer, XnUInt32 nBufferSize, XnUInt32 nTimeOut);
+XN_C_API XnStatus XN_C_DECL xnUSBFinishReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUInt32* pnBytesReceived, XnUInt32 nTimeOut);
 
-XN_C_API XnStatus xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBufferSize, XnUInt32 nNumBuffers, XnUInt32 nTimeOut, XnUSBReadCallbackFunctionPtr pCallbackFunction, void* pCallbackData);
-XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle);
+XN_C_API XnStatus XN_C_DECL xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBufferSize, XnUInt32 nNumBuffers, XnUInt32 nTimeOut, XnUSBReadCallbackFunctionPtr pCallbackFunction, void* pCallbackData);
+XN_C_API XnStatus XN_C_DECL xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle);
 
-XN_C_API XnStatus xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData);
+XN_C_API XnStatus XN_C_DECL xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData);
 
 #endif //_XN_USB_H_

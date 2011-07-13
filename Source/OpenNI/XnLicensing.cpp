@@ -24,6 +24,7 @@
 //---------------------------------------------------------------------------
 #include "XnLicensing.h"
 #include "XnInternalTypes.h"
+#include "xnInternalFuncs.h"
 #include "XnXml.h"
 
 //---------------------------------------------------------------------------
@@ -129,21 +130,11 @@ XnStatus resolveLicensesFile(XnChar* strFileName, XnUInt32 nBufSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-	#ifdef _M_X64
-		nRetVal = xnOSExpandEnvironmentStrings("%OPEN_NI_INSTALL_PATH64%\\Data\\licenses.xml", strFileName, nBufSize);
-		XN_IS_STATUS_OK(nRetVal);
-	#else
-		nRetVal = xnOSExpandEnvironmentStrings("%OPEN_NI_INSTALL_PATH%\\Data\\licenses.xml", strFileName, nBufSize);
-		XN_IS_STATUS_OK(nRetVal);
-	#endif
-#elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
-	nRetVal = xnOSStrCopy(strFileName, "/var/lib/ni/licenses.xml", nBufSize);
+	nRetVal = xnGetOpenNIConfFilesPath(strFileName, nBufSize);
 	XN_IS_STATUS_OK(nRetVal);
-#else
-	nRetVal = xnOSStrCopy(strFileName, "licenses.xml", nBufSize);
+
+	nRetVal = xnOSStrAppend(strFileName, "licenses.xml", nBufSize);
 	XN_IS_STATUS_OK(nRetVal);
-#endif
 
 	return (XN_STATUS_OK);
 }

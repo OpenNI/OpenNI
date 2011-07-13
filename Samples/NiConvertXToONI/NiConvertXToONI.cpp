@@ -82,12 +82,9 @@ int main(int argc, char* argv[])
 	CHECK_RC(nRetVal, "Init");
 
 	// open input file
-	nRetVal = context.OpenFileRecording(strInputFile);
-	CHECK_RC(nRetVal, "Open input file");
-
 	Player player;
-	nRetVal = context.FindExistingNode(XN_NODE_TYPE_PLAYER, player);
-	CHECK_RC(nRetVal, "Get player node");
+	nRetVal = context.OpenFileRecording(strInputFile, player);
+	CHECK_RC(nRetVal, "Open input file");
 
 	nRetVal = player.SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
 	CHECK_RC(nRetVal, "Setting playback speed");
@@ -122,17 +119,17 @@ int main(int argc, char* argv[])
 		nRetVal = nodeInfo.GetInstance(node);
 		CHECK_RC(nRetVal, "Get instance");
 
-		if (seekNodeType == nodeInfo.GetDescription().Type)
+		if (seekNodeType == XN_NODE_TYPE_INVALID)
 		{
-			seekNode = node;
-			nRetVal = player.SeekToFrame(seekNode.GetName(), nStartFrame, XN_PLAYER_SEEK_SET);
-			CHECK_RC(nRetVal, "Seek player to frame");
-			nRetVal = recorder.AddNodeToRecording(seekNode);
-			CHECK_RC(nRetVal, "Add seek node to recording");
-			break; //Out of for - we found our sought node.
+			//No node type specified - record all nodes.
+			nRetVal = recorder.AddNodeToRecording(node);
+			CHECK_RC(nRetVal, "Add node to recording");
 		}
-		else
+		else if (seekNodeType == nodeInfo.GetDescription().Type)
 		{
+			//If node type is specified, we only record nodes of that type.
+			nRetVal = player.SeekToFrame(node.GetName(), nStartFrame, XN_PLAYER_SEEK_SET);
+			CHECK_RC(nRetVal, "Seek player to frame");
 			nRetVal = recorder.AddNodeToRecording(node);
 			CHECK_RC(nRetVal, "Add node to recording");
 		}
@@ -147,13 +144,14 @@ int main(int argc, char* argv[])
 	{
 		CHECK_RC(nRetVal, "Read next frame");
 		printf("Recording: %u\r", nFrame++);
-		if (seekNode.IsValid() && (nFrame == nEndFrame))
+		if ((seekNodeType != XN_NODE_TYPE_INVALID) && (nFrame == nEndFrame))
 		{
 			break;			
 		}
 	}
 
-	context.Shutdown();
+	player.Release();
+	context.Release();
 
 	return 0;
 }

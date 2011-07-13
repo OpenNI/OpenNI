@@ -55,6 +55,7 @@ namespace xn
 		XnStatus SetRawNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void* pData, XnUInt32 nSize);
 
 		XnStatus SetDestination(XnRecordMedium destType, const XnChar* strDest);
+		XnStatus GetDestination(XnRecordMedium& destType, XnChar* strDest, XnUInt32 nBufSize);
 		XnStatus Record();
 
 	protected:
@@ -87,6 +88,7 @@ namespace xn
 		//XnRecorderOutputStreamInterface implementation that writes to an stdio file
 		static XnRecorderOutputStreamInterface s_fileOutputStream;
 
+		XnRecordMedium m_destType;
 		XnChar m_strFileName[XN_FILE_MAX_PATH];
 		FILE* m_pOutFile;
 		XnNodeHandle m_hRecorder;

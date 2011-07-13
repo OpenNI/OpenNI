@@ -24,7 +24,7 @@
 //---------------------------------------------------------------------------
 #include <XnOS.h>
 #include <errno.h>
-#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX || XN_PLATFORM == XN_PLATFORM_ANDROID_ARM)
 	#include <sys/wait.h>
 #else
 	#include <wait.h>

@@ -331,3 +331,25 @@ XN_C_API XnInt32 xnOSStrCaseCmp(const XnChar* cpFirstString, const XnChar* cpSec
 	return strcasecmp(cpFirstString, cpSecondString);
 }
 
+XN_C_API XnStatus XN_C_DECL xnOSGetEnvironmentVariable(const XnChar* strEnv, XnChar* strDest, XnUInt32 nDestSize)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XN_VALIDATE_INPUT_PTR(strEnv);
+	XN_VALIDATE_INPUT_PTR(strDest);
+
+	char* strRes = getenv(strEnv);
+	if (strRes == NULL)
+	{
+		return (XN_STATUS_OS_ENV_VAR_NOT_FOUND);
+	}
+	
+	nRetVal = xnOSStrCopy(strDest, strRes, nDestSize);
+	XN_IS_STATUS_OK(nRetVal);
+	
+	return (XN_STATUS_OK);
+}
+
+
+
+

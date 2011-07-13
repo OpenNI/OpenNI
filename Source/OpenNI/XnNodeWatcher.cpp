@@ -150,7 +150,7 @@ XnStatus NodeWatcher::NotifyStateImpl()
 
 	if (bExSerCap)
 	{
-		nRetVal = xnNotifyExState(m_node, &m_notifications, m_pCookie);
+		nRetVal = xnNotifyExState(m_node.GetHandle(), &m_notifications, m_pCookie);
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
@@ -246,7 +246,7 @@ void GeneratorWatcher::Unregister()
 
 	if (m_generator.IsCapabilitySupported(XN_CAPABILITY_EXTENDED_SERIALIZATION))
 	{
-		xnUnregisterExNotifications(m_generator);
+		xnUnregisterExNotifications(m_generator.GetHandle());
 	}
 
 	NodeWatcher::Unregister();

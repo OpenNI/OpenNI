@@ -31,6 +31,22 @@ namespace OpenNI
 		private bool success;
 	}
 
+    public class CalibrationProgressEventArgs : UserEventArgs
+    {
+
+        public CalibrationProgressEventArgs(UserID id, CalibrationStatus status)
+            : base(id)
+        {
+            this.status = status;
+        }
+        public CalibrationStatus Status
+        {
+            get { return status; }
+            set { status = value; }
+        }
+        private CalibrationStatus status;
+    }
+
     public class SkeletonCapability : Capability
     {
 		internal SkeletonCapability(ProductionNode node)
@@ -42,6 +58,8 @@ namespace OpenNI
 
             this.internalCalibrationStart = new SafeNativeMethods.XnCalibrationStart(this.InternalCalibrationStart);
             this.internalCalibrationEnd = new SafeNativeMethods.XnCalibrationEnd(this.InternalCalibrationEnd);
+            this.internalCalibrationInProgress = new SafeNativeMethods.XnCalibrationInProgress(this.InternalCalibrationInProgress);
+            this.internalCalibrationComplete = new SafeNativeMethods.XnCalibrationComplete(this.InternalCalibrationComplete);
         }
 
         public bool IsJointAvailable(SkeletonJoint joint)
@@ -210,7 +228,7 @@ namespace OpenNI
             {
                 if (this.calibrationStartEvent == null)
                 {
-                    int status = SafeNativeMethods.xnRegisterCalibrationCallbacks(this.InternalObject, internalCalibrationStart, null, IntPtr.Zero, out calibrationStartHandle);
+                    int status = SafeNativeMethods.xnRegisterToCalibrationStart(this.InternalObject, internalCalibrationStart, IntPtr.Zero, out calibrationStartHandle);
                     WrapperUtils.ThrowOnError(status);
                 }
                 this.calibrationStartEvent += value;
@@ -221,7 +239,7 @@ namespace OpenNI
 
                 if (this.calibrationStartEvent == null)
                 {
-                    SafeNativeMethods.xnUnregisterCalibrationCallbacks(this.InternalObject, this.calibrationStartHandle);
+                    SafeNativeMethods.xnUnregisterFromCalibrationStart(this.InternalObject, this.calibrationStartHandle);
                 }
             }
         }
@@ -237,7 +255,8 @@ namespace OpenNI
 
         #region Calibration End
 		private event EventHandler<CalibrationEndEventArgs> calibrationEndEvent;
-		public event EventHandler<CalibrationEndEventArgs> CalibrationEnd
+        [Obsolete("use SkeletonCapability.CalibrationComplete instead")]
+        public event EventHandler<CalibrationEndEventArgs> CalibrationEnd
         {
             add
             {
@@ -266,6 +285,72 @@ namespace OpenNI
         }
         private SafeNativeMethods.XnCalibrationEnd internalCalibrationEnd;
         private IntPtr calibrationEndHandle;
+        #endregion
+
+        #region Calibration In Progress
+        private event EventHandler<CalibrationProgressEventArgs> calibrationInProgressEvent;
+        public event EventHandler<CalibrationProgressEventArgs> CalibrationInProgress
+        {
+            add
+            {
+                if (this.calibrationInProgressEvent == null)
+                {
+                    int status = SafeNativeMethods.xnRegisterToCalibrationInProgress(this.InternalObject, internalCalibrationInProgress, IntPtr.Zero, out calibrationInProgressHandle);
+                    WrapperUtils.ThrowOnError(status);
+                }
+                this.calibrationInProgressEvent += value;
+            }
+            remove
+            {
+                this.calibrationInProgressEvent -= value;
+
+                if (this.calibrationInProgressEvent == null)
+                {
+                    SafeNativeMethods.xnUnregisterFromCalibrationInProgress(this.InternalObject, this.calibrationInProgressHandle);
+                }
+            }
+        }
+        private void InternalCalibrationInProgress(IntPtr hNode, UserID id, CalibrationStatus status, IntPtr pCookie)
+        {
+            EventHandler<CalibrationProgressEventArgs> handlers = this.calibrationInProgressEvent;
+            if (handlers != null)
+                handlers(this.node, new CalibrationProgressEventArgs(id, status));
+        }
+        private SafeNativeMethods.XnCalibrationInProgress internalCalibrationInProgress;
+        private IntPtr calibrationInProgressHandle;
+        #endregion
+
+        #region Calibration Complete
+        private event EventHandler<CalibrationProgressEventArgs> calibrationCompleteEvent;
+        public event EventHandler<CalibrationProgressEventArgs> CalibrationComplete
+        {
+            add
+            {
+                if (this.calibrationCompleteEvent == null)
+                {
+                    int status = SafeNativeMethods.xnRegisterToCalibrationComplete(this.InternalObject, internalCalibrationComplete, IntPtr.Zero, out calibrationCompleteHandle);
+                    WrapperUtils.ThrowOnError(status);
+                }
+                this.calibrationCompleteEvent += value;
+            }
+            remove
+            {
+                this.calibrationCompleteEvent -= value;
+
+                if (this.calibrationCompleteEvent == null)
+                {
+                    SafeNativeMethods.xnUnregisterFromCalibrationComplete(this.InternalObject, this.calibrationCompleteHandle);
+                }
+            }
+        }
+        private void InternalCalibrationComplete(IntPtr hNode, UserID id, CalibrationStatus status, IntPtr pCookie)
+        {
+            EventHandler<CalibrationProgressEventArgs> handlers = this.calibrationCompleteEvent;
+            if (handlers != null)
+                handlers(this.node, new CalibrationProgressEventArgs(id, status));
+        }
+        private SafeNativeMethods.XnCalibrationComplete internalCalibrationComplete;
+        private IntPtr calibrationCompleteHandle;
         #endregion
     }
 }

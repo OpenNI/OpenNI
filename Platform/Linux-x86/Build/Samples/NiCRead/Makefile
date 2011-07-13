@@ -7,5 +7,5 @@ SRC_FILES = ../../../../../Samples/NiCRead/*.c
 EXE_NAME = Sample-NiCRead
 USED_LIBS = OpenNI
 
-include ../../CommonMakefile
+include ../../CommonCppMakefile
 

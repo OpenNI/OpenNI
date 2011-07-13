@@ -31,6 +31,7 @@ import os
 import re
 import sys
 import shutil
+import stat
 
 #-------------Functions--------------------------------------------------------#
 
@@ -90,7 +91,10 @@ def fix_file(arg,dirname,fname):
     "Fixes paths for all the files in fname"
     for filename in fname:
         filePath = dirname + "/" + filename
-        ext = ['cpp','h','.ini','cs']
+        if os.path.isdir(filePath):
+            continue
+
+        ext = ['cpp','h','ini','cs','java']
         if filename == "Makefile" or filename.partition(".")[2] in ext:
             #print "Fixing: " + filePath
             tempName=filePath+'~~~'
@@ -100,10 +104,12 @@ def fix_file(arg,dirname,fname):
                 olds = s
                 s = re.sub(r"../../../Bin",r"../Bin",s)
                 s = re.sub(r"../../../../../Include",r"../../Include /usr/include/ni",s)
-                s = re.sub(r"../../../../../Samples/.*/",r"",s)
+                s = re.sub(r"../../../../../Samples/[\w.]+/",r"",s)
                 s = re.sub(r"../../../../Data/SamplesConfig.xml",r"../../Config/SamplesConfig.xml",s)
                 s = re.sub(r"../../Res/",r"../Res/",s)
-                s = re.sub(r"include ../../CommonMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonMakefile",s)
+                s = re.sub(r"include ../../CommonCppMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonCppMakefile",s)
+                s = re.sub(r"include ../../CommonCSMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonCSMakefile",s)
+                s = re.sub(r"include ../../CommonJavaMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonJavaMakefile",s)
 
                 output.write(s)
                 
@@ -115,13 +121,41 @@ def fix_file(arg,dirname,fname):
             input.close()
             os.remove(filePath)
             os.rename(tempName,filePath)
-
-use_4100=0
-if len(sys.argv) == 2:
-	if sys.argv[1] == '4100':
-		use_4100=1
+            
+def copy_install_script(platform, filePath, dest):
+    "Copies the install script and fixing it if needed"
+    input = open(filePath)
+    dest_name = os.path.join(dest, os.path.basename(filePath))
+    output = open(dest_name, 'w')
+    
+    for line in input:
+        if platform == 'CE4100':
+            line = re.sub(r"/var/lib/ni", r"/usr/etc/ni", line)
+            
+        output.write(line)
+        
+    input.close()
+    output.close()
+    os.chmod(dest_name, stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
+    
+def execute_check(cmd, name):
+    "Executes command and checks the return code. If it's not 0, stops redist."
+    ret = os.system(cmd)
+    if ret != 0:
+        print "failed to execute: " + cmd
+        print name + " Failed!"
+        logger.critical(name + " Failed!")
+        finish_script(1)
+        
 
 #------------Constants and globals---------------------------------------------#
+platform="x86"
+if len(sys.argv) >= 2:
+    platform = sys.argv[1]
+    if not platform == 'CE4100' and not platform == 'Arm' and not platform == 'x86':
+        print "Unknown platform!!"
+        finish_script(1)
+
 DateTimeSTR = strftime("%Y-%m-%d %H:%M:%S")
 DateSTR = strftime("%Y-%m-%d")
 SCRIPT_DIR = os.getcwd()
@@ -173,13 +207,9 @@ print "* Building OpenNI..."
 logger.info("Building OpenNI...")
 
 # Build
-result = os.system("gacutil -u OpenNI.net > " + SCRIPT_DIR + "/Output/gacutil.txt")
-if use_4100 == 1:
-#	result = os.system("cd ../Build; ./Make.4100 clean > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + "_clean.txt; cd ../CreateRedist")
-	result = os.system("cd ../Build; ./Make.4100 > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + ".txt; cd ../CreateRedist")
-else:
-	result = os.system("make clean -C ../Build > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + "_clean.txt")
-	result = os.system("make -C ../Build > " + SCRIPT_DIR + "/Output/Build" + PROJECT_NAME + ".txt")
+#execute_check("gacutil -u OpenNI.net > " + SCRIPT_DIR + "/Output/gacutil.txt", "Remove from GAC")
+result = os.system('make PLATFORM=' + platform + ' -C ../Build clean > ' + SCRIPT_DIR + '/Output/Build' + PROJECT_NAME + '_clean.txt')
+execute_check('make PLATFORM=' + platform + ' -C ../Build > ' + SCRIPT_DIR + '/Output/Build' + PROJECT_NAME + '.txt', "Building")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/Build" + PROJECT_NAME + ".txt").readlines()
@@ -200,12 +230,8 @@ os.chdir("../../../Source/DoxyGen");
 if os.path.exists("html"):
     os.system("rm -rf html")
 # Running doxygen
-os.system("mkdir html")
-result = os.system("doxygen Doxyfile > "+ SCRIPT_DIR + "/Output/EngineDoxy.txt")
-
-if result != 0:
-    print "Creating documentation failed!"
-    logger.critical("DoxyGen Failed!")
+os.makedirs("html")
+execute_check("doxygen Doxyfile > "+ SCRIPT_DIR + "/Output/EngineDoxy.txt", "Creating Documentation")
 
 # remove unneeded files
 os.system("rm -rf html/*.map html/*.md5 html/*.hhc html/*.hhk html/*.hhp")
@@ -223,6 +249,7 @@ if (os.path.exists("Redist")):
 os.makedirs("Redist")
 os.makedirs("Redist/Bin")
 os.makedirs("Redist/Lib")
+os.makedirs("Redist/Jar")
 os.makedirs("Redist/Include")
 os.makedirs("Redist/Documentation")
 os.makedirs("Redist/Samples")
@@ -251,17 +278,23 @@ shutil.copy("Bin/Release/libnimCodecs"+LIBS_TYPE, "Redist/Lib")
 shutil.copy("Bin/Release/libnimMockNodes"+LIBS_TYPE, "Redist/Lib")
 shutil.copy("Bin/Release/libnimRecorder"+LIBS_TYPE, "Redist/Lib")
 shutil.copy("Bin/Release/libOpenNI"+LIBS_TYPE, "Redist/Lib")
+shutil.copy("Bin/Release/libOpenNI.jni"+LIBS_TYPE, "Redist/Lib")
 
 #bin
 MonoDetected = 0
 shutil.copy("Bin/Release/niReg", "Redist/Bin")
 shutil.copy("Bin/Release/niLicense", "Redist/Bin")
-if use_4100 != 1:
-	if (os.path.exists("/usr/bin/gmcs")):
-	    shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Bin")
-	    shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Debug")
-	    shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Release")
-	    MonoDetected = 1
+if platform == 'x86':
+    if (os.path.exists("/usr/bin/gmcs")):
+        shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Bin")
+        shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Debug")
+        shutil.copy("Bin/Release/OpenNI.net.dll", "Redist/Samples/Bin/Release")
+        MonoDetected = 1
+        
+# java wrapper
+shutil.copy("Bin/Release/org.OpenNI.jar", "Redist/Jar")
+shutil.copy("Bin/Release/org.OpenNI.jar", "Redist/Samples/Bin/Debug")
+shutil.copy("Bin/Release/org.OpenNI.jar", "Redist/Samples/Bin/Release")
 
 #docs
 shutil.copytree("../../Source/DoxyGen/html", "Redist/Documentation/html")
@@ -274,14 +307,23 @@ for includeFile in os.listdir("../../Include"):
 shutil.copytree("../../Include/Linux-x86", "Redist/Include/Linux-x86")
 shutil.copytree("../../Include/Linux-Arm", "Redist/Include/Linux-Arm")
 shutil.copytree("../../Include/MacOSX", "Redist/Include/MacOSX")
-shutil.copy("Build/CommonMakefile", "Redist/Include")
+shutil.copy("Build/CommonCppMakefile", "Redist/Include")
+shutil.copy("Build/CommonCSMakefile", "Redist/Include")
+shutil.copy("Build/CommonJavaMakefile", "Redist/Include")
+shutil.copy("Build/CommonDefs.mak", "Redist/Include")
+shutil.copy("Build/CommonTargets.mak", "Redist/Include")
 
 # samples
 samples_list = os.listdir("Build/Samples")
 if '.svn' in samples_list:
     samples_list.remove('.svn')
 
-if use_4100 == 1:
+if platform == 'CE4100':
+    samples_list.remove('NiViewer')
+    samples_list.remove('NiSimpleViewer')
+
+if platform == 'Arm':
+    samples_list.remove('NiUserTracker')
     samples_list.remove('NiViewer')
     samples_list.remove('NiSimpleViewer')
 
@@ -327,6 +369,7 @@ print "* Creating Makefile..."
 logger.info("Creating Makefile...")
 
 MAKEFILE = open("Redist/Samples/Build/Makefile", 'w')
+MAKEFILE.write("-include Platform.$(PLATFORM)\n\n")
 MAKEFILE.write(".PHONY: all\n\n")
 MAKEFILE.write("NETPROJ = \n")
 
@@ -342,35 +385,32 @@ for sample in samples_list:
         MAKEFILE.write(sample + " ")
 MAKEFILE.write("\n\n")
 
-
-use_gles=""
-if use_4100 == 1:
-	use_gles=" GLES=1 "
-
 for sample in samples_list:
     MAKEFILE.write("\n")
     MAKEFILE.write(".PHONY: "+sample+"\n")
     MAKEFILE.write(sample+":\n")
-    MAKEFILE.write("\t$(MAKE) " + use_gles + " -C ../"+sample+"\n")
+    MAKEFILE.write("\t$(MAKE) -C ../"+sample+"\n")
+    
 # Close files
 MAKEFILE.close()
+
+# copy platform file
+platform_file = "Build/Platform." + platform
+if os.path.exists(platform_file):
+    shutil.copy(platform_file, "Redist/Samples/Build")
 
 #-------Copy install script---------------------------------------------------#
 print "* Copying install script..."
 logger.info("Copying install script...")
 
-shutil.copy("CreateRedist/install.sh", "Redist")
+copy_install_script(platform, "CreateRedist/install.sh", "Redist")
 
 #-------------Build Samples---------------------------------------------------#
 print "* Building Samples in release configuration......"
 logger.info("Building Samples in release configuration...")
 
 # Build project solution
-additional=""
-if use_4100 == 1:
-	additional = "TARGET_SYS_ROOT=/home/primesense/IntelCE-20/IntelCE-20.0.11052.243195/build_i686/staging_dir/ CXX=/home/primesense/IntelCE-20/IntelCE-20.0.11052.243195/build_i686/staging_dir/bin/i686-cm-linux-g++"
-
-result = os.system("make -C Redist/Samples/Build " + additional + " > "+SCRIPT_DIR+"/Output/BuildSmpRelease.txt")
+result = os.system("make PLATFORM=" + platform + " -C Redist/Samples/Build " + " > "+SCRIPT_DIR+"/Output/BuildSmpRelease.txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/BuildSmpRelease.txt").readlines()
@@ -388,7 +428,7 @@ print "* Building Samples in debug configuration......"
 logger.info("Building Samples in debug configuration...")
 
 # Build project solution
-result = os.system("make CFG=Debug -C Redist/Samples/Build " + additional + " > "+SCRIPT_DIR+"/Output/BuildSmpDebug.txt")
+result = os.system("make CFG=Debug -C Redist/Samples/Build > "+SCRIPT_DIR+"/Output/BuildSmpDebug.txt")
 
 # Get the build output
 lines = open(SCRIPT_DIR+"/Output/BuildSmpDebug.txt").readlines()
@@ -417,8 +457,10 @@ os.makedirs(SCRIPT_DIR+"/Final")
 
 if ostype == "Darwin":
     TAR_TARGET = "MacOSX"
-elif use_4100 == 1:
+elif platform == 'CE4100':
     TAR_TARGET = "CE4100"
+elif platform == 'Arm':
+    TAR_TARGET = "Arm"
 elif machinetype == "i686":
     TAR_TARGET = "Linux32"
 elif machinetype == "x86_64":

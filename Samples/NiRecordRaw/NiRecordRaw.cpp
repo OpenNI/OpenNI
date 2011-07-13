@@ -125,13 +125,10 @@ int main(int argc, char* argv[])
 	nRetVal = context.GetProductionNodeByName("MockRaw", rawGenerator);
 	XN_ASSERT(nRetVal == XN_STATUS_BAD_NODE_NAME);
 
-	nRetVal = context.OpenFileRecording(RECORDING_FILE_NAME);
+	Player player;
+	nRetVal = context.OpenFileRecording(RECORDING_FILE_NAME, player);
 	CHECK_RC(nRetVal, "Open file recording");
 	
-	Player player;
-	nRetVal = context.FindExistingNode(XN_NODE_TYPE_PLAYER, player);
-	CHECK_RC(nRetVal, "Get player node");
-
 	nRetVal = player.SetRepeat(FALSE);
 	CHECK_RC(nRetVal, "Turn repeat off");
 
@@ -153,8 +150,11 @@ int main(int argc, char* argv[])
 		}
 		printf("\n");
 	}
-	
-	context.Shutdown();
+
+	player.Release();
+	rawGenerator.Release();
+	recorder.Release();
+	context.Release();
 
 	return 0;
 }

@@ -152,6 +152,15 @@ namespace OpenNI
             WrapperUtils.ThrowOnError(status);
         }
 
+        public HandTouchingFOVEdgeCapability HandTouchingFOVEdgeCapability
+        {
+            get
+            {
+                return new HandTouchingFOVEdgeCapability(this);
+            }
+        }
+
+
         #region Hand Create
         private event EventHandler<HandCreateEventArgs> handCreateEvent;
 		public event EventHandler<HandCreateEventArgs> HandCreate
@@ -250,6 +259,5 @@ namespace OpenNI
         private SafeNativeMethods.XnHandDestroy internalHandDestroy;
         private IntPtr handDestroyHandle;
         #endregion
-
     }
 }

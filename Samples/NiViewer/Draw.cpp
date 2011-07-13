@@ -116,7 +116,7 @@ typedef struct DrawUserInput
 
 DrawUserInput g_DrawUserInput;
 
-float g_fMaxDepth;
+float g_fMaxDepth = 0;
 
 DrawConfigPreset g_Presets[PRESET_COUNT] = 
 {
@@ -526,11 +526,6 @@ void drawInit()
 	xnOSLoadFile("..\\..\\..\\..\\Data\\RGBViewer\\back.raw", TextureMapGetLine(&g_texBackground, 0), 1024*1024*3);
 
 	TextureMapUpdate(&g_texBackground);
-
-	if (getDepthGenerator() != NULL)
-	{
-		g_fMaxDepth = getDepthGenerator()->GetDeviceMaxDepth();
-	}
 
 	mouseInputRegisterForSelectionRectangle(drawSelectionChanged);
 	mouseInputRegisterForCursorMovement(drawCursorMoved);
@@ -1128,6 +1123,7 @@ void drawPointerMode(UIntPair* pPointer)
 	}
 
 	int nYLocation = WIN_SIZE_Y - 88;
+	glColor3f(1,0,0);
 	glRasterPos2i(10,nYLocation);
 	glPrintString(GLUT_BITMAP_HELVETICA_18, buf);
 	nYLocation -= 26;
@@ -1509,6 +1505,7 @@ void drawFrame()
 	const DepthMetaData* pDepthMD = getDepthMetaData();
 	if (isDepthOn())
 	{
+		g_fMaxDepth = getDepthGenerator()->GetDeviceMaxDepth();
 		TextureMapInit(&g_texDepth, pDepthMD->FullXRes(), pDepthMD->FullYRes(), 4, pDepthMD->XRes(), pDepthMD->YRes());
 		fixLocation(&g_DrawConfig.DepthLocation, pDepthMD->FullXRes(), pDepthMD->FullYRes());
 	}

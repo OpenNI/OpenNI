@@ -51,21 +51,25 @@
  *
  * @param	hNode	[in]	A handle to the node.
  */
-XN_C_API XnNodeInfo* xnGetNodeInfo(XnNodeHandle hNode);
+XN_C_API XnNodeInfo* XN_C_DECL xnGetNodeInfo(XnNodeHandle hNode);
 
 /**
  * @brief Gets the instance name of a node by its handle.
  *
  * @param	hNode	[in]	A handle to the node.
  */
-XN_C_API const XnChar* xnGetNodeName(XnNodeHandle hNode);
+XN_C_API const XnChar* XN_C_DECL xnGetNodeName(XnNodeHandle hNode);
 
 /**
- * @brief Gets the context a node belongs to.
+ * @brief Gets the context a node belongs to. The context ref count is increased. The user
+ * is responsible for releasing the context when it's no longer used.
  *
  * @param	hNode	[in]	A handle to the node.
  */
-XN_C_API XnContext* xnGetContextFromNodeHandle(XnNodeHandle hNode);
+XN_C_API XnContext* XN_C_DECL xnGetRefContextFromNodeHandle(XnNodeHandle hNode);
+
+typedef XnContext* XnContextPtr;
+XN_C_API XnContextPtr XN_API_DEPRECATED("Please use xnGetRefContextFromNodeHandle() instead") XN_C_DECL xnGetContextFromNodeHandle(XnNodeHandle hNode);
 
 /**
  * @brief Checks if a production node supports specific capability.
@@ -73,7 +77,7 @@ XN_C_API XnContext* xnGetContextFromNodeHandle(XnNodeHandle hNode);
  * @param	hInstance			[in]	A handle to the instance to be queried.
  * @param	strCapabilityName	[in]	The name of the capability to check.
  */
-XN_C_API XnBool xnIsCapabilitySupported(XnNodeHandle hInstance, const XnChar* strCapabilityName);
+XN_C_API XnBool XN_C_DECL xnIsCapabilitySupported(XnNodeHandle hInstance, const XnChar* strCapabilityName);
 
 /**
  * @brief Sets an integer property.
@@ -82,7 +86,7 @@ XN_C_API XnBool xnIsCapabilitySupported(XnNodeHandle hInstance, const XnChar* st
  * @param	strName		[in]	Property name
  * @param	nValue		[in]	New value
  */
-XN_C_API XnStatus xnSetIntProperty(XnNodeHandle hInstance, const XnChar* strName, XnUInt64 nValue);
+XN_C_API XnStatus XN_C_DECL xnSetIntProperty(XnNodeHandle hInstance, const XnChar* strName, XnUInt64 nValue);
 /**
  * @brief Sets a real property.
  *
@@ -90,7 +94,7 @@ XN_C_API XnStatus xnSetIntProperty(XnNodeHandle hInstance, const XnChar* strName
  * @param	strName		[in]	Property name
  * @param	dValue		[in]	New value
  */
-XN_C_API XnStatus xnSetRealProperty(XnNodeHandle hInstance, const XnChar* strName, XnDouble dValue);
+XN_C_API XnStatus XN_C_DECL xnSetRealProperty(XnNodeHandle hInstance, const XnChar* strName, XnDouble dValue);
 /**
  * @brief Sets a string property.
  *
@@ -98,7 +102,7 @@ XN_C_API XnStatus xnSetRealProperty(XnNodeHandle hInstance, const XnChar* strNam
  * @param	strName		[in]	Property name
  * @param	strValue	[in]	New value
  */
-XN_C_API XnStatus xnSetStringProperty(XnNodeHandle hInstance, const XnChar* strName, const XnChar* strValue);
+XN_C_API XnStatus XN_C_DECL xnSetStringProperty(XnNodeHandle hInstance, const XnChar* strName, const XnChar* strValue);
 /**
  * @brief Sets a buffer property.
  *
@@ -107,7 +111,7 @@ XN_C_API XnStatus xnSetStringProperty(XnNodeHandle hInstance, const XnChar* strN
  * @param	nBufferSize	[in]	The size of the buffer passed, in bytes.
  * @param	pBuffer		[in]	The data buffer.
  */
-XN_C_API XnStatus xnSetGeneralProperty(XnNodeHandle hInstance, const XnChar* strName, XnUInt32 nBufferSize, const void* pBuffer);
+XN_C_API XnStatus XN_C_DECL xnSetGeneralProperty(XnNodeHandle hInstance, const XnChar* strName, XnUInt32 nBufferSize, const void* pBuffer);
 
 /**
  * @brief Gets an integer property.
@@ -116,7 +120,7 @@ XN_C_API XnStatus xnSetGeneralProperty(XnNodeHandle hInstance, const XnChar* str
  * @param	strName		[in]	Property name
  * @param	pnValue		[out]	Current value
  */
-XN_C_API XnStatus xnGetIntProperty(XnNodeHandle hInstance, const XnChar* strName, XnUInt64* pnValue);
+XN_C_API XnStatus XN_C_DECL xnGetIntProperty(XnNodeHandle hInstance, const XnChar* strName, XnUInt64* pnValue);
 /**
  * @brief Gets a real property.
  *
@@ -124,7 +128,7 @@ XN_C_API XnStatus xnGetIntProperty(XnNodeHandle hInstance, const XnChar* strName
  * @param	strName		[in]	Property name
  * @param	pdValue		[out]	Current value
  */
-XN_C_API XnStatus xnGetRealProperty(XnNodeHandle hInstance, const XnChar* strName, XnDouble* pdValue);
+XN_C_API XnStatus XN_C_DECL xnGetRealProperty(XnNodeHandle hInstance, const XnChar* strName, XnDouble* pdValue);
 /**
  * @brief Gets a string property.
  *
@@ -133,7 +137,7 @@ XN_C_API XnStatus xnGetRealProperty(XnNodeHandle hInstance, const XnChar* strNam
  * @param	csValue		[out]	Current value 
  * @param	nBufSize	[in]	The size of the csValue buffer. 
  */
-XN_C_API XnStatus xnGetStringProperty(XnNodeHandle hInstance, const XnChar* strName, XnChar* csValue, XnUInt32 nBufSize);
+XN_C_API XnStatus XN_C_DECL xnGetStringProperty(XnNodeHandle hInstance, const XnChar* strName, XnChar* csValue, XnUInt32 nBufSize);
 /**
  * @brief Gets a buffer property.
  *
@@ -142,7 +146,7 @@ XN_C_API XnStatus xnGetStringProperty(XnNodeHandle hInstance, const XnChar* strN
  * @param	nBufferSize	[in]	The size of the buffer passed, in bytes.
  * @param	pBuffer		[in]	The data buffer to be filled.
  */
-XN_C_API XnStatus xnGetGeneralProperty(XnNodeHandle hInstance, const XnChar* strName, XnUInt32 nBufferSize, void* pBuffer);
+XN_C_API XnStatus XN_C_DECL xnGetGeneralProperty(XnNodeHandle hInstance, const XnChar* strName, XnUInt32 nBufferSize, void* pBuffer);
 
 /**
  * @brief Locks a node, not allowing any changes (any "set" function).
@@ -150,7 +154,7 @@ XN_C_API XnStatus xnGetGeneralProperty(XnNodeHandle hInstance, const XnChar* str
  * @param	hInstance	[in]	A handle to the node.
  * @param	phLock		[out]	A handle of the lock, that can be used to manage the lock.
  */
-XN_C_API XnStatus xnLockNodeForChanges(XnNodeHandle hInstance, XnLockHandle* phLock);
+XN_C_API XnStatus XN_C_DECL xnLockNodeForChanges(XnNodeHandle hInstance, XnLockHandle* phLock);
 
 /**
  * @brief Unlocks a previously locked node.
@@ -158,7 +162,7 @@ XN_C_API XnStatus xnLockNodeForChanges(XnNodeHandle hInstance, XnLockHandle* phL
  * @param	hInstance	[in]	A handle to the node.
  * @param	hLock		[in]	The handle of the lock, returned from @ref xnLockNodeForChanges().
  */
-XN_C_API XnStatus xnUnlockNodeForChanges(XnNodeHandle hInstance, XnLockHandle hLock);
+XN_C_API XnStatus XN_C_DECL xnUnlockNodeForChanges(XnNodeHandle hInstance, XnLockHandle hLock);
 
 /**
  * @brief Start changes request on a locked node, without releasing that lock. 
@@ -169,7 +173,7 @@ XN_C_API XnStatus xnUnlockNodeForChanges(XnNodeHandle hInstance, XnLockHandle hL
  * @param	hInstance	[in]	A handle to the node.
  * @param	hLock		[in]	The handle of the lock, returned from @ref xnLockNodeForChanges().
  */
-XN_C_API XnStatus xnLockedNodeStartChanges(XnNodeHandle hInstance, XnLockHandle hLock);
+XN_C_API XnStatus XN_C_DECL xnLockedNodeStartChanges(XnNodeHandle hInstance, XnLockHandle hLock);
 
 /**
  * @brief Ends changes request on a locked node. 
@@ -177,7 +181,7 @@ XN_C_API XnStatus xnLockedNodeStartChanges(XnNodeHandle hInstance, XnLockHandle 
  * @param	hInstance	[in]	A handle to the node.
  * @param	hLock		[in]	The handle of the lock, returned from @ref xnLockNodeForChanges().
  */
-XN_C_API XnStatus xnLockedNodeEndChanges(XnNodeHandle hInstance, XnLockHandle hLock);
+XN_C_API XnStatus XN_C_DECL xnLockedNodeEndChanges(XnNodeHandle hInstance, XnLockHandle hLock);
 
 /**
  * @brief Adds another node to the list of needed nodes for this node.
@@ -185,7 +189,7 @@ XN_C_API XnStatus xnLockedNodeEndChanges(XnNodeHandle hInstance, XnLockHandle hL
  * @param	hInstance	[in]	A handle to the node.
  * @param	hNeededNode	[in]	The node that is needed by hInstance.
  */
-XN_C_API XnStatus xnAddNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNode);
+XN_C_API XnStatus XN_C_DECL xnAddNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNode);
 
 /**
  * @brief Removes a needed node from the list of needed nodes. 
@@ -196,7 +200,7 @@ XN_C_API XnStatus xnAddNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNo
  * @param	hInstance	[in]	A handle to the node.
  * @param	hNeededNode	[in]	The node to be removed from the list.
  */
-XN_C_API XnStatus xnRemoveNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNode);
+XN_C_API XnStatus XN_C_DECL xnRemoveNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNode);
 
 /** @} */
 
@@ -221,7 +225,7 @@ XN_C_API XnStatus xnRemoveNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeede
  * @param	pQuery				[in]	Optional. Can be used to select which device to create. If not specified, this function may create any device node that is available.
  * @param	pErrors				[in]	Optional. If provided, will be filled with information about device nodes that could not be created.
  */
-XN_C_API XnStatus xnCreateDevice(XnContext* pContext, XnNodeHandle* phDevice, XnNodeQuery* pQuery, XnEnumerationErrors* pErrors);
+XN_C_API XnStatus XN_C_DECL xnCreateDevice(XnContext* pContext, XnNodeHandle* phDevice, XnNodeQuery* pQuery, XnEnumerationErrors* pErrors);
 
 /** @} */
 
@@ -249,7 +253,7 @@ XN_C_API XnStatus xnCreateDevice(XnContext* pContext, XnNodeHandle* phDevice, Xn
  * in such a case, the device name should be truncated to fit in the buffer, and pnBufferSize should be
  * updated to the required size.
  */
-XN_C_API XnStatus xnGetDeviceName(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
+XN_C_API XnStatus XN_C_DECL xnGetDeviceName(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
 
 /**
  * Gets a vendor-specific string.
@@ -262,7 +266,7 @@ XN_C_API XnStatus xnGetDeviceName(XnNodeHandle hInstance, XnChar* strBuffer, XnU
  * in such a case, the string should be truncated to fit in the buffer, and pnBufferSize should be
  * updated to the required size.
  */
-XN_C_API XnStatus xnGetVendorSpecificData(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
+XN_C_API XnStatus XN_C_DECL xnGetVendorSpecificData(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
 
 /**
  * Gets the serial number of the device.
@@ -275,7 +279,7 @@ XN_C_API XnStatus xnGetVendorSpecificData(XnNodeHandle hInstance, XnChar* strBuf
  * in such a case, the string should be truncated to fit in the buffer, and pnBufferSize should be
  * updated to the required size.
  */
-XN_C_API XnStatus xnGetSerialNumber(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
+XN_C_API XnStatus XN_C_DECL xnGetSerialNumber(XnNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize);
 
 /** @} */
 
@@ -304,7 +308,7 @@ XN_C_API XnStatus xnGetSerialNumber(XnNodeHandle hInstance, XnChar* strBuffer, X
  *
  * @returns The error state of this node.
  */
-XN_C_API XnStatus xnGetNodeErrorState(XnNodeHandle hInstance);
+XN_C_API XnStatus XN_C_DECL xnGetNodeErrorState(XnNodeHandle hInstance);
 
 /**
  * @brief Registers a callback function to error state changes.
@@ -314,7 +318,7 @@ XN_C_API XnStatus xnGetNodeErrorState(XnNodeHandle hInstance);
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromNodeErrorStateChange().
  */
-XN_C_API XnStatus xnRegisterToNodeErrorStateChange
+XN_C_API XnStatus XN_C_DECL xnRegisterToNodeErrorStateChange
 	(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
@@ -324,7 +328,7 @@ XN_C_API XnStatus xnRegisterToNodeErrorStateChange
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToNodeErrorStateChange().
  */
-XN_C_API void xnUnregisterFromNodeErrorStateChange
+XN_C_API void XN_C_DECL xnUnregisterFromNodeErrorStateChange
 	(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /** @} */
@@ -373,7 +377,7 @@ XN_C_API void xnUnregisterFromNodeErrorStateChange
  * @param	pnDefault			[out]	Default value
  * @param	pbIsAutoSupported	[out]	TRUE if auto adjustment is supported, FALSE otherwise
  */
-XN_C_API XnStatus xnGetGeneralIntRange(XnNodeHandle hNode, const XnChar* strCap, XnInt32* pnMin, XnInt32* pnMax, XnInt32* pnStep, XnInt32* pnDefault, XnBool* pbIsAutoSupported);
+XN_C_API XnStatus XN_C_DECL xnGetGeneralIntRange(XnNodeHandle hNode, const XnChar* strCap, XnInt32* pnMin, XnInt32* pnMax, XnInt32* pnStep, XnInt32* pnDefault, XnBool* pbIsAutoSupported);
 
 /**
  * @brief Gets the current value of this capability
@@ -382,7 +386,7 @@ XN_C_API XnStatus xnGetGeneralIntRange(XnNodeHandle hNode, const XnChar* strCap,
  * @param	strCap				[in]	Name of the capability
  * @param	pnValue				[out]	Current value
  */
-XN_C_API XnStatus xnGetGeneralIntValue(XnNodeHandle hNode, const XnChar* strCap, XnInt32* pnValue);
+XN_C_API XnStatus XN_C_DECL xnGetGeneralIntValue(XnNodeHandle hNode, const XnChar* strCap, XnInt32* pnValue);
 
 /**
  * @brief Sets the current value of this capability
@@ -391,7 +395,7 @@ XN_C_API XnStatus xnGetGeneralIntValue(XnNodeHandle hNode, const XnChar* strCap,
  * @param	strCap				[in]	Name of the capability
  * @param	nValue				[in]	Value to set
  */
-XN_C_API XnStatus xnSetGeneralIntValue(XnNodeHandle hNode, const XnChar* strCap, XnInt32 nValue);
+XN_C_API XnStatus XN_C_DECL xnSetGeneralIntValue(XnNodeHandle hNode, const XnChar* strCap, XnInt32 nValue);
 
 /**
  * @brief Registers a callback function to values changes.
@@ -402,7 +406,7 @@ XN_C_API XnStatus xnSetGeneralIntValue(XnNodeHandle hNode, const XnChar* strCap,
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromGeneralIntValueChange().
  */
-XN_C_API XnStatus xnRegisterToGeneralIntValueChange
+XN_C_API XnStatus XN_C_DECL xnRegisterToGeneralIntValueChange
 	(XnNodeHandle hNode, const XnChar* strCap, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
@@ -413,7 +417,7 @@ XN_C_API XnStatus xnRegisterToGeneralIntValueChange
  * @param	strCap		[in]	Name of the capability
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToGeneralIntValueChange().
  */
-XN_C_API void xnUnregisterFromGeneralIntValueChange
+XN_C_API void XN_C_DECL xnUnregisterFromGeneralIntValueChange
 	(XnNodeHandle hNode, const XnChar* strCap, XnCallbackHandle hCallback);
 
 /** @} */
@@ -444,7 +448,7 @@ XN_C_API void xnUnregisterFromGeneralIntValueChange
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a generator.
  */
-XN_C_API XnStatus xnStartGenerating(XnNodeHandle hInstance);
+XN_C_API XnStatus XN_C_DECL xnStartGenerating(XnNodeHandle hInstance);
 
 /** 
  * @brief Checks if this node is currently generating.
@@ -453,7 +457,7 @@ XN_C_API XnStatus xnStartGenerating(XnNodeHandle hInstance);
  *
  * @returns FALSE if this production node is not a generator.
  */
-XN_C_API XnBool xnIsGenerating(XnNodeHandle hInstance);
+XN_C_API XnBool XN_C_DECL xnIsGenerating(XnNodeHandle hInstance);
 
 /** 
  * @brief Stops generation of the output.
@@ -462,7 +466,7 @@ XN_C_API XnBool xnIsGenerating(XnNodeHandle hInstance);
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a generator.
  */
-XN_C_API XnStatus xnStopGenerating(XnNodeHandle hInstance);
+XN_C_API XnStatus XN_C_DECL xnStopGenerating(XnNodeHandle hInstance);
 
 /**
  * @brief Registers a callback function to be called when generation starts or stops.
@@ -472,7 +476,7 @@ XN_C_API XnStatus xnStopGenerating(XnNodeHandle hInstance);
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromGenerationRunningChange().
  */
-XN_C_API XnStatus xnRegisterToGenerationRunningChange
+XN_C_API XnStatus XN_C_DECL xnRegisterToGenerationRunningChange
 	(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
@@ -482,7 +486,7 @@ XN_C_API XnStatus xnRegisterToGenerationRunningChange
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToGenerationRunningChange().
  */
-XN_C_API void xnUnregisterFromGenerationRunningChange
+XN_C_API void XN_C_DECL xnUnregisterFromGenerationRunningChange
 	(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /// @}
@@ -503,7 +507,7 @@ XN_C_API void xnUnregisterFromGenerationRunningChange
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromNewDataAvailable().
  */
-XN_C_API XnStatus xnRegisterToNewDataAvailable
+XN_C_API XnStatus XN_C_DECL xnRegisterToNewDataAvailable
 	(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
@@ -513,7 +517,7 @@ XN_C_API XnStatus xnRegisterToNewDataAvailable
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToNewDataAvailable().
  */
-XN_C_API void xnUnregisterFromNewDataAvailable
+XN_C_API void XN_C_DECL xnUnregisterFromNewDataAvailable
 	(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /**
@@ -522,7 +526,7 @@ XN_C_API void xnUnregisterFromNewDataAvailable
  * @param	hInstance	[in]	A handle to the instance.
  * @param	pnTimestamp	[out]	[Optional] If not NULL, will be filled with that data timestamp.
  */
-XN_C_API XnBool xnIsNewDataAvailable(XnNodeHandle hInstance, XnUInt64* pnTimestamp);
+XN_C_API XnBool XN_C_DECL xnIsNewDataAvailable(XnNodeHandle hInstance, XnUInt64* pnTimestamp);
 
 /// @}
 
@@ -538,7 +542,7 @@ XN_C_API XnBool xnIsNewDataAvailable(XnNodeHandle hInstance, XnUInt64* pnTimesta
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a generator.
  */
-XN_C_API XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance);
+XN_C_API XnStatus XN_C_DECL xnWaitAndUpdateData(XnNodeHandle hInstance);
 
 /// @}
 
@@ -553,7 +557,7 @@ XN_C_API XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance);
  *
  * @param	hInstance	[in]	A handle to the instance.
  */
-XN_C_API XnBool xnIsDataNew(XnNodeHandle hInstance);
+XN_C_API XnBool XN_C_DECL xnIsDataNew(XnNodeHandle hInstance);
 
 /**
  * @brief Gets the current data.
@@ -562,7 +566,7 @@ XN_C_API XnBool xnIsDataNew(XnNodeHandle hInstance);
  *
  * @returns	NULL if this production node is not a generator.
  */
-XN_C_API const void* xnGetData(XnNodeHandle hInstance);
+XN_C_API const void* XN_C_DECL xnGetData(XnNodeHandle hInstance);
 
 /**
  * @brief Gets the size of current data, in bytes.
@@ -571,7 +575,7 @@ XN_C_API const void* xnGetData(XnNodeHandle hInstance);
  *
  * @returns	(XnUInt32)-1 if this production node is not a generator.
  */
-XN_C_API XnUInt32 xnGetDataSize(XnNodeHandle hInstance);
+XN_C_API XnUInt32 XN_C_DECL xnGetDataSize(XnNodeHandle hInstance);
 
 /**
  * @brief Gets the timestamp of current data, in microseconds.
@@ -580,7 +584,7 @@ XN_C_API XnUInt32 xnGetDataSize(XnNodeHandle hInstance);
  *
  * @returns	(XnUInt64)-1 if this production node is not a generator.
  */
-XN_C_API XnUInt64 xnGetTimestamp(XnNodeHandle hInstance);
+XN_C_API XnUInt64 XN_C_DECL xnGetTimestamp(XnNodeHandle hInstance);
 
 /**
  * @brief Gets the frame ID of current data.
@@ -589,7 +593,7 @@ XN_C_API XnUInt64 xnGetTimestamp(XnNodeHandle hInstance);
  *
  * @returns	(XnUInt32)-1 if this production node is not a generator.
  */
-XN_C_API XnUInt32 xnGetFrameID(XnNodeHandle hInstance);
+XN_C_API XnUInt32 XN_C_DECL xnGetFrameID(XnNodeHandle hInstance);
 
 /** @} */
 
@@ -614,14 +618,14 @@ XN_C_API XnUInt32 xnGetFrameID(XnNodeHandle hInstance);
  * @param	hInstance	[in]	A handle to the instance.
  * @param	bMirror		[in]	TRUE for mirroring output, FALSE otherwise.
  */
-XN_C_API XnStatus xnSetMirror(XnNodeHandle hInstance, XnBool bMirror);
+XN_C_API XnStatus XN_C_DECL xnSetMirror(XnNodeHandle hInstance, XnBool bMirror);
 
 /**
  * @brief Gets current mirroring configuration.
  *
  * @param	hInstance	[in]	A handle to the instance.
  */
-XN_C_API XnBool xnIsMirrored(XnNodeHandle hInstance);
+XN_C_API XnBool XN_C_DECL xnIsMirrored(XnNodeHandle hInstance);
 
 /**
  * @brief Registers a callback function to mirror changes.
@@ -631,7 +635,7 @@ XN_C_API XnBool xnIsMirrored(XnNodeHandle hInstance);
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromMirrorChange().
  */
-XN_C_API XnStatus xnRegisterToMirrorChange
+XN_C_API XnStatus XN_C_DECL xnRegisterToMirrorChange
 	(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
@@ -641,7 +645,7 @@ XN_C_API XnStatus xnRegisterToMirrorChange
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToMirrorChange().
  */
-XN_C_API void xnUnregisterFromMirrorChange
+XN_C_API void XN_C_DECL xnUnregisterFromMirrorChange
 	(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /** @} */
@@ -670,7 +674,7 @@ XN_C_API void xnUnregisterFromMirrorChange
  *
  * @returns TRUE if view point is supported, FALSE otherwise.
  */
-XN_C_API XnBool xnIsViewPointSupported(XnNodeHandle hInstance, XnNodeHandle hOther);
+XN_C_API XnBool XN_C_DECL xnIsViewPointSupported(XnNodeHandle hInstance, XnNodeHandle hOther);
 
 /**
  * @brief Sets the view point of this generator to look like as if placed at another generator location.
@@ -678,14 +682,14 @@ XN_C_API XnBool xnIsViewPointSupported(XnNodeHandle hInstance, XnNodeHandle hOth
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hOther		[in]	The view point to be set.
  */
-XN_C_API XnStatus xnSetViewPoint(XnNodeHandle hInstance, XnNodeHandle hOther);
+XN_C_API XnStatus XN_C_DECL xnSetViewPoint(XnNodeHandle hInstance, XnNodeHandle hOther);
 
 /**
  * @brief Sets the view point of this generator to its normal one.
  *
  * @param	hInstance	[in]	A handle to the instance.
  */
-XN_C_API XnStatus xnResetViewPoint(XnNodeHandle hInstance);
+XN_C_API XnStatus XN_C_DECL xnResetViewPoint(XnNodeHandle hInstance);
 
 /**
  * @brief Checks if current view point is as if coming from the other node view point.
@@ -693,7 +697,7 @@ XN_C_API XnStatus xnResetViewPoint(XnNodeHandle hInstance);
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hOther		[in]	The view point to be checked.
  */
-XN_C_API XnBool xnIsViewPointAs(XnNodeHandle hInstance, XnNodeHandle hOther);
+XN_C_API XnBool XN_C_DECL xnIsViewPointAs(XnNodeHandle hInstance, XnNodeHandle hOther);
 
 /**
  * @brief Registers a callback function to view point changes.
@@ -703,7 +707,7 @@ XN_C_API XnBool xnIsViewPointAs(XnNodeHandle hInstance, XnNodeHandle hOther);
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromViewPointChange().
  */
-XN_C_API XnStatus xnRegisterToViewPointChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_C_DECL xnRegisterToViewPointChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
 
 /**
  * @brief Unregisters a callback function which was registered using @ref xnRegisterToViewPointChange().
@@ -711,7 +715,7 @@ XN_C_API XnStatus xnRegisterToViewPointChange(XnNodeHandle hInstance, XnStateCha
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToViewPointChange().
  */
-XN_C_API void xnUnregisterFromViewPointChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromViewPointChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /** @} */
 
@@ -736,7 +740,7 @@ XN_C_API void xnUnregisterFromViewPointChange(XnNodeHandle hInstance, XnCallback
  *
  * @returns TRUE if frame sync to node is supported, FALSE otherwise.
  */
-XN_C_API XnBool xnCanFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
+XN_C_API XnBool XN_C_DECL xnCanFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
 
 /**
  * @brief Activates frame sync with the other node.
@@ -744,7 +748,7 @@ XN_C_API XnBool xnCanFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hOther		[in]	The node to sync to.
  */
-XN_C_API XnStatus xnFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
+XN_C_API XnStatus XN_C_DECL xnFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
 
 /**
  * @brief Stops frame sync with the other node.
@@ -752,7 +756,7 @@ XN_C_API XnStatus xnFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hOther		[in]	The node to sync to.
  */
-XN_C_API XnStatus xnStopFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
+XN_C_API XnStatus XN_C_DECL xnStopFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
 
 /**
  * @brief Checks if current view point is as if coming from the other node view point.
@@ -760,7 +764,7 @@ XN_C_API XnStatus xnStopFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOthe
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hOther		[in]	The node to be checked.
  */
-XN_C_API XnBool xnIsFrameSyncedWith(XnNodeHandle hInstance, XnNodeHandle hOther);
+XN_C_API XnBool XN_C_DECL xnIsFrameSyncedWith(XnNodeHandle hInstance, XnNodeHandle hOther);
 
 /**
  * @brief Registers a callback function to view point changes.
@@ -770,7 +774,7 @@ XN_C_API XnBool xnIsFrameSyncedWith(XnNodeHandle hInstance, XnNodeHandle hOther)
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromFrameSyncChange().
  */
-XN_C_API XnStatus xnRegisterToFrameSyncChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_C_DECL xnRegisterToFrameSyncChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
 
 /**
  * @brief Unregisters a callback function which was registered using @ref xnRegisterToFrameSyncChange().
@@ -778,7 +782,7 @@ XN_C_API XnStatus xnRegisterToFrameSyncChange(XnNodeHandle hInstance, XnStateCha
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToFrameSyncChange().
  */
-XN_C_API void xnUnregisterFromFrameSyncChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromFrameSyncChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /** @} */
 
@@ -801,7 +805,7 @@ XN_C_API void xnUnregisterFromFrameSyncChange(XnNodeHandle hInstance, XnCallback
  *
  * @returns	0 if this production node is not a map generator.
  */
-XN_C_API XnUInt32 xnGetSupportedMapOutputModesCount(XnNodeHandle hInstance);
+XN_C_API XnUInt32 XN_C_DECL xnGetSupportedMapOutputModesCount(XnNodeHandle hInstance);
 
 /** 
  * @brief Gets a list of all supported modes. The size of the array that should be passed can be obtained by calling @ref xnGetSupportedMapOutputModesCount().
@@ -813,7 +817,7 @@ XN_C_API XnUInt32 xnGetSupportedMapOutputModesCount(XnNodeHandle hInstance);
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a map generator.
  */
-XN_C_API XnStatus xnGetSupportedMapOutputModes(XnNodeHandle hInstance, XnMapOutputMode* aModes, XnUInt32* pnCount);
+XN_C_API XnStatus XN_C_DECL xnGetSupportedMapOutputModes(XnNodeHandle hInstance, XnMapOutputMode* aModes, XnUInt32* pnCount);
 
 /** 
  * @brief Sets the output mode. 
@@ -823,7 +827,7 @@ XN_C_API XnStatus xnGetSupportedMapOutputModes(XnNodeHandle hInstance, XnMapOutp
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a map generator.
  */
-XN_C_API XnStatus xnSetMapOutputMode(XnNodeHandle hInstance, const XnMapOutputMode* pOutputMode);
+XN_C_API XnStatus XN_C_DECL xnSetMapOutputMode(XnNodeHandle hInstance, const XnMapOutputMode* pOutputMode);
 
 /** 
  * @brief Gets the current output mode. 
@@ -833,7 +837,7 @@ XN_C_API XnStatus xnSetMapOutputMode(XnNodeHandle hInstance, const XnMapOutputMo
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a map generator.
  */
-XN_C_API XnStatus xnGetMapOutputMode(XnNodeHandle hInstance, XnMapOutputMode* pOutputMode);
+XN_C_API XnStatus XN_C_DECL xnGetMapOutputMode(XnNodeHandle hInstance, XnMapOutputMode* pOutputMode);
 
 /**
  * @brief Registers a callback function to mode changes.
@@ -845,7 +849,7 @@ XN_C_API XnStatus xnGetMapOutputMode(XnNodeHandle hInstance, XnMapOutputMode* pO
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a map generator.
  */
-XN_C_API XnStatus xnRegisterToMapOutputModeChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
+XN_C_API XnStatus XN_C_DECL xnRegisterToMapOutputModeChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
 /**
@@ -854,7 +858,7 @@ XN_C_API XnStatus xnRegisterToMapOutputModeChange(XnNodeHandle hInstance, XnStat
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToMapOutputModeChange.
  */
-XN_C_API void xnUnregisterFromMapOutputModeChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromMapOutputModeChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /**
  * @brief Gets the number of bytes per pixel for this map generator.
@@ -863,7 +867,7 @@ XN_C_API void xnUnregisterFromMapOutputModeChange(XnNodeHandle hInstance, XnCall
  *
  * @returns	(XnUInt32)-1 if this production node is not a map generator.
  */
-XN_C_API XnUInt32 xnGetBytesPerPixel(XnNodeHandle hInstance);
+XN_C_API XnUInt32 XN_C_DECL xnGetBytesPerPixel(XnNodeHandle hInstance);
 
 /** @} */
 
@@ -892,7 +896,7 @@ XN_C_API XnUInt32 xnGetBytesPerPixel(XnNodeHandle hInstance);
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node does not support the Cropping capability.
  */
-XN_C_API XnStatus xnSetCropping(XnNodeHandle hInstance, const XnCropping* pCropping);
+XN_C_API XnStatus XN_C_DECL xnSetCropping(XnNodeHandle hInstance, const XnCropping* pCropping);
 
 /** 
  * @brief Gets current cropping configuration.
@@ -902,7 +906,7 @@ XN_C_API XnStatus xnSetCropping(XnNodeHandle hInstance, const XnCropping* pCropp
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node does not support the Cropping capability.
  */
-XN_C_API XnStatus xnGetCropping(XnNodeHandle hInstance, XnCropping* pCropping);
+XN_C_API XnStatus XN_C_DECL xnGetCropping(XnNodeHandle hInstance, XnCropping* pCropping);
 
 /**
  * @brief Registers a callback function to cropping changes.
@@ -912,7 +916,7 @@ XN_C_API XnStatus xnGetCropping(XnNodeHandle hInstance, XnCropping* pCropping);
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromCroppingChange().
  */
-XN_C_API XnStatus xnRegisterToCroppingChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
+XN_C_API XnStatus XN_C_DECL xnRegisterToCroppingChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
 /**
@@ -921,7 +925,7 @@ XN_C_API XnStatus xnRegisterToCroppingChange(XnNodeHandle hInstance, XnStateChan
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from xnRegisterToCroppingChange().
  */
-XN_C_API void xnUnregisterFromCroppingChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromCroppingChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /** @} */
 
@@ -943,7 +947,7 @@ XN_C_API void xnUnregisterFromCroppingChange(XnNodeHandle hInstance, XnCallbackH
  * @param	hGenerator	[in]	A handle to the instance.
  * @param	nFrequency	[in]	The frequency to be used.
  */
-XN_C_API XnStatus xnSetPowerLineFrequency(XnNodeHandle hGenerator, XnPowerLineFrequency nFrequency);
+XN_C_API XnStatus XN_C_DECL xnSetPowerLineFrequency(XnNodeHandle hGenerator, XnPowerLineFrequency nFrequency);
 
 /** 
  * @brief Gets the power line frequency.
@@ -951,7 +955,7 @@ XN_C_API XnStatus xnSetPowerLineFrequency(XnNodeHandle hGenerator, XnPowerLineFr
  * @param	hGenerator	[in]	A handle to the instance.
  * @returns (XnUInt32)-1 if node does not support this capability
  */
-XN_C_API XnPowerLineFrequency xnGetPowerLineFrequency(XnNodeHandle hGenerator);
+XN_C_API XnPowerLineFrequency XN_C_DECL xnGetPowerLineFrequency(XnNodeHandle hGenerator);
 
 /**
  * @brief Registers a callback function to power line frequency changes.
@@ -961,7 +965,7 @@ XN_C_API XnPowerLineFrequency xnGetPowerLineFrequency(XnNodeHandle hGenerator);
  * @param	pCookie		[in]	A user cookie that will be passed to the callback function.
  * @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromPowerLineFrequencyChange().
  */
-XN_C_API XnStatus xnRegisterToPowerLineFrequencyChange
+XN_C_API XnStatus XN_C_DECL xnRegisterToPowerLineFrequencyChange
 	(XnNodeHandle hGenerator, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
@@ -971,7 +975,7 @@ XN_C_API XnStatus xnRegisterToPowerLineFrequencyChange
  * @param	hGenerator	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToPowerLineFrequencyChange().
  */
-XN_C_API void xnUnregisterFromPowerLineFrequencyChange
+XN_C_API void XN_C_DECL xnUnregisterFromPowerLineFrequencyChange
 	(XnNodeHandle hGenerator, XnCallbackHandle hCallback);
 
 /** @} */
@@ -996,7 +1000,7 @@ XN_C_API void xnUnregisterFromPowerLineFrequencyChange
  * @param	pQuery				[in]	Optional. Can be used to select which depth generator to create. If not specified, this function may create any depth generator that is available.
  * @param	pErrors				[in]	Optional. If provided, will be filled with information about depth generators that could not be created.
  */
-XN_C_API XnStatus xnCreateDepthGenerator(
+XN_C_API XnStatus XN_C_DECL xnCreateDepthGenerator(
 	XnContext* pContext,
 	XnNodeHandle* phDepthGenerator,
 	XnNodeQuery* pQuery, 
@@ -1009,7 +1013,7 @@ XN_C_API XnStatus xnCreateDepthGenerator(
  *
  * @returns	-1 if this production node is not a depth generator.
  */
-XN_C_API XnDepthPixel xnGetDeviceMaxDepth(XnNodeHandle hInstance);
+XN_C_API XnDepthPixel XN_C_DECL xnGetDeviceMaxDepth(XnNodeHandle hInstance);
 
 /** 
  * @brief Gets the Field-Of-View of the depth generator, in radians.
@@ -1019,7 +1023,7 @@ XN_C_API XnDepthPixel xnGetDeviceMaxDepth(XnNodeHandle hInstance);
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a depth generator.
  */
-XN_C_API XnStatus xnGetDepthFieldOfView(XnNodeHandle hInstance, XnFieldOfView* pFOV);
+XN_C_API XnStatus XN_C_DECL xnGetDepthFieldOfView(XnNodeHandle hInstance, XnFieldOfView* pFOV);
 
 /**
  * @brief Registers a callback function to field of view changes.
@@ -1031,7 +1035,7 @@ XN_C_API XnStatus xnGetDepthFieldOfView(XnNodeHandle hInstance, XnFieldOfView* p
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node does not support the User Position capability.
  */
-XN_C_API XnStatus xnRegisterToDepthFieldOfViewChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
+XN_C_API XnStatus XN_C_DECL xnRegisterToDepthFieldOfViewChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
 /**
@@ -1040,7 +1044,7 @@ XN_C_API XnStatus xnRegisterToDepthFieldOfViewChange(XnNodeHandle hInstance, XnS
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToDepthFieldOfViewChange.
  */
-XN_C_API void xnUnregisterFromDepthFieldOfViewChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromDepthFieldOfViewChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /**
  * @brief Converts a list of points from projective coordinates to real world coordinates.
@@ -1052,7 +1056,7 @@ XN_C_API void xnUnregisterFromDepthFieldOfViewChange(XnNodeHandle hInstance, XnC
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a depth generator.
  */
-XN_C_API XnStatus xnConvertProjectiveToRealWorld(
+XN_C_API XnStatus XN_C_DECL xnConvertProjectiveToRealWorld(
 	XnNodeHandle hInstance, XnUInt32 nCount, const XnPoint3D* aProjective, XnPoint3D* aRealWorld);
 
 /**
@@ -1065,7 +1069,7 @@ XN_C_API XnStatus xnConvertProjectiveToRealWorld(
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not a depth generator.
  */
-XN_C_API XnStatus xnConvertRealWorldToProjective(
+XN_C_API XnStatus XN_C_DECL xnConvertRealWorldToProjective(
 	XnNodeHandle hInstance, XnUInt32 nCount, const XnPoint3D* aRealWorld, XnPoint3D* aProjective);
 
 /** 
@@ -1075,7 +1079,7 @@ XN_C_API XnStatus xnConvertRealWorldToProjective(
  *
  * @returns	NULL if this production node is not a depth generator.
  */
-XN_C_API XnDepthPixel* xnGetDepthMap(XnNodeHandle hInstance);
+XN_C_API XnDepthPixel* XN_C_DECL xnGetDepthMap(XnNodeHandle hInstance);
 
 /**
  * @brief Gets the current depth-map meta data.
@@ -1083,7 +1087,7 @@ XN_C_API XnDepthPixel* xnGetDepthMap(XnNodeHandle hInstance);
  * @param	hInstance	[in]		A handle to the instance.
  * @param	pMetaData	[in]		The struct to be filled.
  */
-XN_C_API void xnGetDepthMetaData(XnNodeHandle hInstance, XnDepthMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnGetDepthMetaData(XnNodeHandle hInstance, XnDepthMetaData* pMetaData);
 
 /** @} */
 
@@ -1106,7 +1110,7 @@ XN_C_API void xnGetDepthMetaData(XnNodeHandle hInstance, XnDepthMetaData* pMetaD
  *
  * @returns	0 if this production node does not support the User Position capability.
  */
-XN_C_API XnUInt32 xnGetSupportedUserPositionsCount(XnNodeHandle hInstance);
+XN_C_API XnUInt32 XN_C_DECL xnGetSupportedUserPositionsCount(XnNodeHandle hInstance);
 
 /** 
  * @brief Sets the current user position. 
@@ -1117,7 +1121,7 @@ XN_C_API XnUInt32 xnGetSupportedUserPositionsCount(XnNodeHandle hInstance);
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node does not support the User Position capability.
  */
-XN_C_API XnStatus xnSetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, const XnBoundingBox3D* pPosition);
+XN_C_API XnStatus XN_C_DECL xnSetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, const XnBoundingBox3D* pPosition);
 
 /** 
  * @brief Gets the current user position. 
@@ -1128,7 +1132,7 @@ XN_C_API XnStatus xnSetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, con
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node does not support the User Position capability.
  */
-XN_C_API XnStatus xnGetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, XnBoundingBox3D* pPosition);
+XN_C_API XnStatus XN_C_DECL xnGetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, XnBoundingBox3D* pPosition);
 
 /**
  * @brief Registers a callback function to user position changes.
@@ -1140,7 +1144,7 @@ XN_C_API XnStatus xnGetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, XnB
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node does not support the User Position capability.
  */
-XN_C_API XnStatus xnRegisterToUserPositionChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
+XN_C_API XnStatus XN_C_DECL xnRegisterToUserPositionChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
 /**
@@ -1149,7 +1153,7 @@ XN_C_API XnStatus xnRegisterToUserPositionChange(XnNodeHandle hInstance, XnState
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToUserPositionChange.
  */
-XN_C_API void xnUnregisterFromUserPositionChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromUserPositionChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /** @} */
 
@@ -1174,7 +1178,7 @@ XN_C_API void xnUnregisterFromUserPositionChange(XnNodeHandle hInstance, XnCallb
  * @param	pQuery				[in]	Optional. Can be used to select which image generator to create. If not specified, this function may create any image generator that is available.
  * @param	pErrors				[in]	Optional. If provided, will be filled with information about image generators that could not be created.
  */
-XN_C_API XnStatus xnCreateImageGenerator(
+XN_C_API XnStatus XN_C_DECL xnCreateImageGenerator(
 	XnContext* pContext,
 	XnNodeHandle* phImageGenerator,
 	XnNodeQuery* pQuery, 
@@ -1189,7 +1193,7 @@ XN_C_API XnStatus xnCreateImageGenerator(
  *
  * @returns	NULL if this production node is not an image generator.
  */
-XN_C_API XnRGB24Pixel* xnGetRGB24ImageMap(XnNodeHandle hInstance);
+XN_C_API XnRGB24Pixel* XN_C_DECL xnGetRGB24ImageMap(XnNodeHandle hInstance);
 
 /** 
  * @brief Gets the current YUV422 image-map. 
@@ -1199,7 +1203,7 @@ XN_C_API XnRGB24Pixel* xnGetRGB24ImageMap(XnNodeHandle hInstance);
  *
  * @returns	NULL if this production node is not an image generator.
  */
-XN_C_API XnYUV422DoublePixel* xnGetYUV422ImageMap(XnNodeHandle hInstance);
+XN_C_API XnYUV422DoublePixel* XN_C_DECL xnGetYUV422ImageMap(XnNodeHandle hInstance);
 
 /** 
  * @brief Gets the current Grayscale8 image-map. 
@@ -1209,7 +1213,7 @@ XN_C_API XnYUV422DoublePixel* xnGetYUV422ImageMap(XnNodeHandle hInstance);
  *
  * @returns	NULL if this production node is not an image generator.
  */
-XN_C_API XnGrayscale8Pixel* xnGetGrayscale8ImageMap(XnNodeHandle hInstance);
+XN_C_API XnGrayscale8Pixel* XN_C_DECL xnGetGrayscale8ImageMap(XnNodeHandle hInstance);
 
 /** 
  * @brief Gets the current Grayscale16 image-map. 
@@ -1219,7 +1223,7 @@ XN_C_API XnGrayscale8Pixel* xnGetGrayscale8ImageMap(XnNodeHandle hInstance);
  *
  * @returns	NULL if this production node is not an image generator.
  */
-XN_C_API XnGrayscale16Pixel* xnGetGrayscale16ImageMap(XnNodeHandle hInstance);
+XN_C_API XnGrayscale16Pixel* XN_C_DECL xnGetGrayscale16ImageMap(XnNodeHandle hInstance);
 
 /** 
  * @brief Gets the current image-map as a byte buffer. 
@@ -1233,7 +1237,7 @@ XN_C_API XnGrayscale16Pixel* xnGetGrayscale16ImageMap(XnNodeHandle hInstance);
  *
  * @returns	NULL if this production node is not an image generator.
  */
-XN_C_API XnUInt8* xnGetImageMap(XnNodeHandle hInstance);
+XN_C_API XnUInt8* XN_C_DECL xnGetImageMap(XnNodeHandle hInstance);
 
 /**
  * @brief Checks if a specific pixel format is supported.
@@ -1241,7 +1245,7 @@ XN_C_API XnUInt8* xnGetImageMap(XnNodeHandle hInstance);
  * @param	hInstance	[in]		A handle to the instance.
  * @param	Format		[in]		The format to check for.
  */
-XN_C_API XnBool xnIsPixelFormatSupported(XnNodeHandle hInstance, XnPixelFormat Format);
+XN_C_API XnBool XN_C_DECL xnIsPixelFormatSupported(XnNodeHandle hInstance, XnPixelFormat Format);
 
 /**
  * @brief Sets the pixel format of the image map.
@@ -1251,7 +1255,7 @@ XN_C_API XnBool xnIsPixelFormatSupported(XnNodeHandle hInstance, XnPixelFormat F
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node is not an image generator.
  */
-XN_C_API XnStatus xnSetPixelFormat(XnNodeHandle hInstance, XnPixelFormat Format);
+XN_C_API XnStatus XN_C_DECL xnSetPixelFormat(XnNodeHandle hInstance, XnPixelFormat Format);
 
 /**
  * @brief Gets current pixel format.
@@ -1260,7 +1264,7 @@ XN_C_API XnStatus xnSetPixelFormat(XnNodeHandle hInstance, XnPixelFormat Format)
  *
  * @returns	-1 if this production node is not an image generator.
  */
-XN_C_API XnPixelFormat xnGetPixelFormat(XnNodeHandle hInstance);
+XN_C_API XnPixelFormat XN_C_DECL xnGetPixelFormat(XnNodeHandle hInstance);
 
 /**
  * @brief Registers a callback function to pixel format changes.
@@ -1272,7 +1276,7 @@ XN_C_API XnPixelFormat xnGetPixelFormat(XnNodeHandle hInstance);
  *
  * @returns	XN_STATUS_INVALID_OPERATION if this production node does not support the User Position capability.
  */
-XN_C_API XnStatus xnRegisterToPixelFormatChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
+XN_C_API XnStatus XN_C_DECL xnRegisterToPixelFormatChange(XnNodeHandle hInstance, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
 /**
@@ -1281,7 +1285,7 @@ XN_C_API XnStatus xnRegisterToPixelFormatChange(XnNodeHandle hInstance, XnStateC
  * @param	hInstance	[in]	A handle to the instance.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToPixelFormatChange.
  */
-XN_C_API void xnUnregisterFromPixelFormatChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromPixelFormatChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /**
  * @brief Gets the current image-map meta data.
@@ -1289,7 +1293,7 @@ XN_C_API void xnUnregisterFromPixelFormatChange(XnNodeHandle hInstance, XnCallba
  * @param	hInstance	[in]		A handle to the instance.
  * @param	pMetaData	[in]		The struct to be filled.
  */
-XN_C_API void xnGetImageMetaData(XnNodeHandle hInstance, XnImageMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnGetImageMetaData(XnNodeHandle hInstance, XnImageMetaData* pMetaData);
 
 /** @} */
 
@@ -1313,7 +1317,7 @@ XN_C_API void xnGetImageMetaData(XnNodeHandle hInstance, XnImageMetaData* pMetaD
  * @param	pQuery				[in]	Optional. Can be used to select which IR generator to create. If not specified, this function may create any IR generator that is available.
  * @param	pErrors				[in]	Optional. If provided, will be filled with information about IR generators that could not be created.
  */
-XN_C_API XnStatus xnCreateIRGenerator(
+XN_C_API XnStatus XN_C_DECL xnCreateIRGenerator(
 	XnContext* pContext,
 	XnNodeHandle* phIRGenerator,
 	XnNodeQuery* pQuery, 
@@ -1327,7 +1331,7 @@ XN_C_API XnStatus xnCreateIRGenerator(
  *
  * @returns	NULL if this production node is not an IR generator.
  */
-XN_C_API XnIRPixel* xnGetIRMap(XnNodeHandle hInstance);
+XN_C_API XnIRPixel* XN_C_DECL xnGetIRMap(XnNodeHandle hInstance);
 
 /**
  * @brief Gets the current IR-map meta data.
@@ -1335,7 +1339,7 @@ XN_C_API XnIRPixel* xnGetIRMap(XnNodeHandle hInstance);
  * @param	hInstance	[in]		A handle to the instance.
  * @param	pMetaData	[in]		The struct to be filled.
  */
-XN_C_API void xnGetIRMetaData(XnNodeHandle hInstance, XnIRMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnGetIRMetaData(XnNodeHandle hInstance, XnIRMetaData* pMetaData);
 
 /** @} */
 
@@ -1359,7 +1363,7 @@ XN_C_API void xnGetIRMetaData(XnNodeHandle hInstance, XnIRMetaData* pMetaData);
  * @param	pQuery					[in]	Optional. Can be used to select which Gesture node to create. If not specified, this function may create any gesture node that is available.
  * @param	pErrors					[in]	Optional. If provided, will be filled with information about gesture nodes that could not be created.
  */
-XN_C_API XnStatus xnCreateGestureGenerator(
+XN_C_API XnStatus XN_C_DECL xnCreateGestureGenerator(
 	XnContext* pContext,
 	XnNodeHandle* phGestureGenerator,
 	XnNodeQuery* pQuery, 
@@ -1373,14 +1377,14 @@ XN_C_API XnStatus xnCreateGestureGenerator(
  * @param	strGesture	[in]		The name of the gesture to look for
  * @param	pArea		[in]		The area in which to look for the gesture (in Real-World coordinates)
  */
-XN_C_API XnStatus xnAddGesture(XnNodeHandle hInstance, const XnChar* strGesture, XnBoundingBox3D* pArea);
+XN_C_API XnStatus XN_C_DECL xnAddGesture(XnNodeHandle hInstance, const XnChar* strGesture, XnBoundingBox3D* pArea);
 /**
  * @brief Turn off gesture.  The generator will no longer look for this gesture
  *
  * @param	hInstance	[in]		A handle to the instance
  * @param	strGesture	[in]		The name of the gesture to not look for anymore
  */
-XN_C_API XnStatus xnRemoveGesture(XnNodeHandle hInstance, const XnChar* strGesture);
+XN_C_API XnStatus XN_C_DECL xnRemoveGesture(XnNodeHandle hInstance, const XnChar* strGesture);
 /**
  * @brief Get the names of the gestures that are currently active
  * 
@@ -1388,15 +1392,16 @@ XN_C_API XnStatus xnRemoveGesture(XnNodeHandle hInstance, const XnChar* strGestu
  * @param	pstrGestures	[out]		Preallocated memory, for the gesture names
  * @param	nGestures		[in,out]	The size of the preallocated memory. Changed to number of gestures
  */
-XN_C_API XnStatus xnGetActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
+XN_C_API XnStatus XN_C_DECL xnGetActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
 /**
  * @brief Get the names of the gestures that are currently active
  * 
  * @param	hInstance		[in]		A handle to the instance
  * @param	pstrGestures	[out]		Preallocated memory, for the gesture names
+ * @param	nNameLength		[in]		Memory size for each gesture name
  * @param	nGestures		[in,out]	The size of the preallocated memory. Changed to number of gestures
  */
-XN_C_API XnStatus xnGetAllActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
+XN_C_API XnStatus XN_C_DECL xnGetAllActiveGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
 /**
  * @brief Get the names of all gestures available
  * 
@@ -1404,29 +1409,30 @@ XN_C_API XnStatus xnGetAllActiveGestures(XnNodeHandle hInstance, XnChar** pstrGe
  * @param	pstrGestures	[out]		Preallocated memory, for the gesture names
  * @param	nGestures		[in,out]	The size of the preallocated memory. Changed to number of gestures
  */
-XN_C_API XnStatus xnEnumerateGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
+XN_C_API XnStatus XN_C_DECL xnEnumerateGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
 /**
  * @brief Get the names of all gestures available
  * 
  * @param	hInstance		[in]		A handle to the instance
  * @param	pstrGestures	[out]		Preallocated memory, for the gesture names
+ * @param	nNameLength		[in]		Memory size for each gesture name
  * @param	nGestures		[in,out]	The size of the preallocated memory. Changed to number of gestures
  */
-XN_C_API XnStatus xnEnumerateAllGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
+XN_C_API XnStatus XN_C_DECL xnEnumerateAllGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
 /**
  * @brief Check if a specific gesture is available in this generator
  * 
  * @param	hInstance	[in]		A handle to the instance
  * @param	strGesture	[in]		Name of the gesture to check
  */
-XN_C_API XnBool xnIsGestureAvailable(XnNodeHandle hInstance, const XnChar* strGesture);
+XN_C_API XnBool XN_C_DECL xnIsGestureAvailable(XnNodeHandle hInstance, const XnChar* strGesture);
 /**
  * @brief Check if the specific gesture supports 'in progress' callbacks
  * 
  * @param	hInstance	[in]		A handle to the instance
  * @param	strGesture	[in]		Name of the gesture to check
  */
-XN_C_API XnBool xnIsGestureProgressSupported(XnNodeHandle hInstance, const XnChar* strGesture);
+XN_C_API XnBool XN_C_DECL xnIsGestureProgressSupported(XnNodeHandle hInstance, const XnChar* strGesture);
 /**
  * @brief Register to all gesture callbacks.
  * 
@@ -1436,14 +1442,14 @@ XN_C_API XnBool xnIsGestureProgressSupported(XnNodeHandle hInstance, const XnCha
  * @param	pCookie			[in]	User's cookie, to be delivered to the callbacks
  * @param	phCallback		[out]	The handle to these callbacks, to allow unregistration
  */
-XN_C_API XnStatus xnRegisterGestureCallbacks(XnNodeHandle hInstance, XnGestureRecognized RecognizedCB, XnGestureProgress ProgressCB, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_C_DECL xnRegisterGestureCallbacks(XnNodeHandle hInstance, XnGestureRecognized RecognizedCB, XnGestureProgress ProgressCB, void* pCookie, XnCallbackHandle* phCallback);
 /**
  * @brief Unregister from gesture callbacks
  * 
  * @param	hInstance	[in]		A handle to the instance
  * @param	hCallback	[in]		The handle received from registration
  */
-XN_C_API void xnUnregisterGestureCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterGestureCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 /**
  * @brief Register to when gestures are added or removed
  * 
@@ -1452,15 +1458,47 @@ XN_C_API void xnUnregisterGestureCallbacks(XnNodeHandle hInstance, XnCallbackHan
  * @param	pCookie		[in]		User's cookie, to be delivered to the callbacks
  * @param	phCallback	[out]		The handle to these callbacks, to allow unregistration
  */
-XN_C_API XnStatus xnRegisterToGestureChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_C_DECL xnRegisterToGestureChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
 /**
  * @brief Unregister from when gestures are added or removed
  * 
  * @param	hInstance	[in]		A handle to the instance
  * @param	hCallback	[in]		The handle received from registration
  */
-XN_C_API void xnUnregisterFromGestureChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromGestureChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
+/**
+ * @brief Register to when a gesture is in progress
+ *
+ * @param	hInstance	[in]		A handle to the instance
+ * @param	handler		[in]		The callback to be called when the gesture is in progress
+ * @param	pCookie		[in]		User's cookie, to be delivered to the callback
+ * @param	phCallback	[out]		The handle to the callback, to allow unregistration
+ */
+XN_C_API XnStatus XN_C_DECL xnRegisterToGestureIntermediateStageCompleted(XnNodeHandle hInstance, XnGestureIntermediateStageCompleted handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+ * @brief Unregister from when a gesture is in progress
+ * 
+ * @param	hInstance	[in]		A handle to the instance
+ * @param	hCallback	[in]		The handle received from registration
+ */
+XN_C_API void XN_C_DECL xnUnregisterFromGestureIntermediateStageCompleted(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+/**
+ * @brief Register to when a gesture is ready for its next stage (specific to the gesture)
+ *
+ * @param	hInstance	[in]		A handle to the instance
+ * @param	handler		[in]		The callback to be called when the gesture is ready for its next stage
+ * @param	pCookie		[in]		User's cookie, to be delivered to the callback
+ * @param	phCallback	[out]		The handle to this callback, to allow unregistration
+ */
+XN_C_API XnStatus XN_C_DECL xnRegisterToGestureReadyForNextIntermediateStage(XnNodeHandle hInstance, XnGestureReadyForNextIntermediateStage handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+ * @brief Unregister from when a gesture is ready for its next stage
+ * 
+ * @param	hInstance	[in]		A handle to the instance
+ * @param	hCallback	[in]		The handle received from registration
+ */
+XN_C_API void XN_C_DECL xnUnregisterFromGestureReadyForNextIntermediateStage(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 /** @} */
 
 //---------------------------------------------------------------------------
@@ -1483,7 +1521,7 @@ XN_C_API void xnUnregisterFromGestureChange(XnNodeHandle hInstance, XnCallbackHa
  * @param	pQuery				[in]	Optional. Can be used to select which scene analyzer to create. If not specified, this function may create any scene analyzer that is available.
  * @param	pErrors				[in]	Optional. If provided, will be filled with information about scene analyzers that could not be created.
  */
-XN_C_API XnStatus xnCreateSceneAnalyzer(
+XN_C_API XnStatus XN_C_DECL xnCreateSceneAnalyzer(
 	XnContext* pContext,
 	XnNodeHandle* phSceneAnalyzer,
 	XnNodeQuery* pQuery, 
@@ -1495,14 +1533,14 @@ XN_C_API XnStatus xnCreateSceneAnalyzer(
  * 
  * @param	hInstance	[in]		A handle to the instance
  */
-XN_C_API const XnLabel* xnGetLabelMap(XnNodeHandle hInstance);
+XN_C_API const XnLabel* XN_C_DECL xnGetLabelMap(XnNodeHandle hInstance);
 /**
  * @brief Gets a description of the floor, if it was found.
  * 
  * @param	hInstance	[in]		A handle to the instance
  * @param	pPlane		[out]		A description of the floor
  */
-XN_C_API XnStatus xnGetFloor(XnNodeHandle hInstance, XnPlane3D* pPlane);
+XN_C_API XnStatus XN_C_DECL xnGetFloor(XnNodeHandle hInstance, XnPlane3D* pPlane);
 
 /**
  * @brief Gets the current scene meta data.
@@ -1510,7 +1548,7 @@ XN_C_API XnStatus xnGetFloor(XnNodeHandle hInstance, XnPlane3D* pPlane);
  * @param	hInstance	[in]		A handle to the instance.
  * @param	pMetaData	[in]		The struct to be filled.
  */
-XN_C_API void xnGetSceneMetaData(XnNodeHandle hInstance, XnSceneMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnGetSceneMetaData(XnNodeHandle hInstance, XnSceneMetaData* pMetaData);
 
 /** @} */
 
@@ -1534,7 +1572,7 @@ XN_C_API void xnGetSceneMetaData(XnNodeHandle hInstance, XnSceneMetaData* pMetaD
  * @param	pQuery				[in]	Optional. Can be used to select which user generator to create. If not specified, this function may create any user generator that is available.
  * @param	pErrors				[in]	Optional. If provided, will be filled with information about user generators that could not be created.
  */
-XN_C_API XnStatus xnCreateUserGenerator(
+XN_C_API XnStatus XN_C_DECL xnCreateUserGenerator(
 	XnContext* pContext,
 	XnNodeHandle* phUserGenerator,
 	XnNodeQuery* pQuery, 
@@ -1546,7 +1584,7 @@ XN_C_API XnStatus xnCreateUserGenerator(
  *
  * @param	hInstance	[in]		A handle to the instance
  */
-XN_C_API XnUInt16 xnGetNumberOfUsers(XnNodeHandle hInstance);
+XN_C_API XnUInt16 XN_C_DECL xnGetNumberOfUsers(XnNodeHandle hInstance);
 /**
  * @brief Get the current users
  *
@@ -1554,7 +1592,7 @@ XN_C_API XnUInt16 xnGetNumberOfUsers(XnNodeHandle hInstance);
  * @param	pUsers		[out]		Preallocated memory for the users
  * @param	pnUsers		[in,out]	The size of the preallocated memory. Changes to the number of users
  */
-XN_C_API XnStatus xnGetUsers(XnNodeHandle hInstance, XnUserID* pUsers, XnUInt16* pnUsers);
+XN_C_API XnStatus XN_C_DECL xnGetUsers(XnNodeHandle hInstance, XnUserID* pUsers, XnUInt16* pnUsers);
 /**
  * @brief Get the center of mass of a user
  *
@@ -1562,7 +1600,7 @@ XN_C_API XnStatus xnGetUsers(XnNodeHandle hInstance, XnUserID* pUsers, XnUInt16*
  * @param	user		[in]		The user for which to get the center of mass
  * @param	pCoM		[out]		The center of mass
  */
-XN_C_API XnStatus xnGetUserCoM(XnNodeHandle hInstance, XnUserID user, XnPoint3D* pCoM);
+XN_C_API XnStatus XN_C_DECL xnGetUserCoM(XnNodeHandle hInstance, XnUserID user, XnPoint3D* pCoM);
 /**
  * @brief Get the pixels that belong to a user.
  *
@@ -1575,7 +1613,7 @@ XN_C_API XnStatus xnGetUserCoM(XnNodeHandle hInstance, XnUserID user, XnPoint3D*
  * @param	user		[in]		The user for which to get the pixels
  * @param	pScene		[out]		XnSceneMetaData object, that holds the pixels of the user
  */
-XN_C_API XnStatus xnGetUserPixels(XnNodeHandle hInstance, XnUserID user, XnSceneMetaData* pScene);
+XN_C_API XnStatus XN_C_DECL xnGetUserPixels(XnNodeHandle hInstance, XnUserID user, XnSceneMetaData* pScene);
 /**
  * @brief Register to user callbacks
  *
@@ -1585,15 +1623,47 @@ XN_C_API XnStatus xnGetUserPixels(XnNodeHandle hInstance, XnUserID user, XnScene
  * @param	pCookie		[in]		User's cookie, to be delivered to the callbacks
  * @param	phCallback	[out]		The handle to these callbacks, to allow unregistration
  */
-XN_C_API XnStatus xnRegisterUserCallbacks(XnNodeHandle hInstance, XnUserHandler NewUserCB, XnUserHandler LostUserCB, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_C_DECL xnRegisterUserCallbacks(XnNodeHandle hInstance, XnUserHandler NewUserCB, XnUserHandler LostUserCB, void* pCookie, XnCallbackHandle* phCallback);
 /**
  * @brief Unregister from user callbacks
  *
  * @param	hInstance	[in]		A handle to the instance
  * @param	hCallback	[in]		The handle received from registration
  */
-XN_C_API void xnUnregisterUserCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterUserCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
+/**
+ * @brief Register to when the user exits the scene (but not lost yet)
+ *
+ * @param	hInstance	[in]		A handle to the instance
+ * @param	handler		[in]		Callback to be called when a user leaves the scene
+ * @param	pCookie		[in]		User's cookie, to be delivered to the callbacks
+ * @param	phCallback	[out]		The handle to this callback, to allow unregistration
+ */
+XN_C_API XnStatus XN_C_DECL xnRegisterToUserExit(XnNodeHandle hInstance, XnUserHandler handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+ * @brief Unregister from when a user exits the scene
+ *
+ * @param	hInstance	[in]		A handle to the instance
+ * @param	hCallback	[in]		The handle received from registration
+ */
+XN_C_API void XN_C_DECL xnUnregisterFromUserExit(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+/**
+ * @brief Register to when a user re-enters the scene after exiting
+ *
+ * @param	hInstance	[in]		A handle to the instance
+ * @param	handler		[in]		Callback to be called when a user leaves the scene
+ * @param	pCookie		[in]		User's cookie, to be delivered to the callbacks
+ * @param	phCallback	[out]		The handle to this callback, to allow unregistration
+ */
+XN_C_API XnStatus XN_C_DECL xnRegisterToUserReEnter(XnNodeHandle hInstance, XnUserHandler handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+ * @brief Unregister from when a user re-enters the scene
+ *
+ * @param	hInstance	[in]		A handle to the instance
+ * @param	hCallback	[in]		The handle received from registration
+ */
+XN_C_API void XN_C_DECL xnUnregisterFromUserReEnter(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 /** @} */
 
 //---------------------------------------------------------------------------
@@ -1614,21 +1684,21 @@ XN_C_API void xnUnregisterUserCallbacks(XnNodeHandle hInstance, XnCallbackHandle
  * @param	hInstance	[in]		A handle to the instance
  * @param	eJoint		[in]		The joint to check
  */
-XN_C_API XnBool xnIsJointAvailable(XnNodeHandle hInstance, XnSkeletonJoint eJoint);
+XN_C_API XnBool XN_C_DECL xnIsJointAvailable(XnNodeHandle hInstance, XnSkeletonJoint eJoint);
 /**
 * @brief Check if generator supports a specific profile.
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	eProfile	[in]		The profile to check
 */
-XN_C_API XnBool xnIsProfileAvailable(XnNodeHandle hInstance, XnSkeletonProfile eProfile);
+XN_C_API XnBool XN_C_DECL xnIsProfileAvailable(XnNodeHandle hInstance, XnSkeletonProfile eProfile);
 /**
 * @brief Set the profile. this will set some joints to be active, and others to be inactive.
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	eProfile	[in]		The profile to set
 */
-XN_C_API XnStatus xnSetSkeletonProfile(XnNodeHandle hInstance, XnSkeletonProfile eProfile);
+XN_C_API XnStatus XN_C_DECL xnSetSkeletonProfile(XnNodeHandle hInstance, XnSkeletonProfile eProfile);
 /**
 * @brief Change the state of a specific joint, to be active or inactive
 *
@@ -1636,14 +1706,14 @@ XN_C_API XnStatus xnSetSkeletonProfile(XnNodeHandle hInstance, XnSkeletonProfile
 * @param	eJoint		[in]		The joint
 * @param	bState		[in]		The new state
 */
-XN_C_API XnStatus xnSetJointActive(XnNodeHandle hInstance, XnSkeletonJoint eJoint, XnBool bState);
+XN_C_API XnStatus XN_C_DECL xnSetJointActive(XnNodeHandle hInstance, XnSkeletonJoint eJoint, XnBool bState);
 /**
 * @brief Check if joint is currently active
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	eJoint		[in]		The joint to check
 */
-XN_C_API XnBool xnIsJointActive(XnNodeHandle hInstance, XnSkeletonJoint eJoint);
+XN_C_API XnBool XN_C_DECL xnIsJointActive(XnNodeHandle hInstance, XnSkeletonJoint eJoint);
 /**
 * @brief Register to joint configuration changes - when joints are activated and deactivated
 *
@@ -1652,14 +1722,14 @@ XN_C_API XnBool xnIsJointActive(XnNodeHandle hInstance, XnSkeletonJoint eJoint);
 * @param	pCookie		[in]		User's cookie, to be delivered to the callbacks
 * @param	phCallback	[out]		The handle to these callbacks, to allow unregistration
 */
-XN_C_API XnStatus xnRegisterToJointConfigurationChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_C_DECL xnRegisterToJointConfigurationChange(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
 /**
 * @brief Unregister from joint configuration changes
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	hCallback	[in]		The handle received from registration
 */
-XN_C_API void xnUnregisterFromJointConfigurationChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromJointConfigurationChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 /**
 * @brief Get all active joints
 *
@@ -1667,7 +1737,7 @@ XN_C_API void xnUnregisterFromJointConfigurationChange(XnNodeHandle hInstance, X
 * @param	pJoints		[out]		Preallocated memory for the joints
 * @param	pnJoints	[in,out]	The size of the preallocated memory. Changed to the number of the active joints.
 */
-XN_C_API XnStatus xnEnumerateActiveJoints(XnNodeHandle hInstance, XnSkeletonJoint* pJoints, XnUInt16* pnJoints);
+XN_C_API XnStatus XN_C_DECL xnEnumerateActiveJoints(XnNodeHandle hInstance, XnSkeletonJoint* pJoints, XnUInt16* pnJoints);
 /**
 * @brief Get a specific joint's full information
 *
@@ -1676,7 +1746,7 @@ XN_C_API XnStatus xnEnumerateActiveJoints(XnNodeHandle hInstance, XnSkeletonJoin
 * @param	eJoint		[in]		The interesting joint
 * @param	pJoint		[out]		The joint's full information
 */
-XN_C_API XnStatus xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointTransformation* pJoint);
+XN_C_API XnStatus XN_C_DECL xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointTransformation* pJoint);
 /**
 * @brief Get a specific joint's position
 *
@@ -1685,7 +1755,7 @@ XN_C_API XnStatus xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, XnSk
 * @param	eJoint		[in]		The interesting joint
 * @param	pJoint		[out]		The joint's current position
 */
-XN_C_API XnStatus xnGetSkeletonJointPosition(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointPosition* pJoint);
+XN_C_API XnStatus XN_C_DECL xnGetSkeletonJointPosition(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointPosition* pJoint);
 /**
 * @brief Get a specific joint's orientation
 *
@@ -1694,28 +1764,28 @@ XN_C_API XnStatus xnGetSkeletonJointPosition(XnNodeHandle hInstance, XnUserID us
 * @param	eJoint		[in]		The interesting joint
 * @param	pJoint		[out]		The joint's current orientation
 */
-XN_C_API XnStatus xnGetSkeletonJointOrientation(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointOrientation* pJoint);
+XN_C_API XnStatus XN_C_DECL xnGetSkeletonJointOrientation(XnNodeHandle hInstance, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointOrientation* pJoint);
 /**
  * @brief Check if skeleton is being tracked
  *
  * @param	hInstance	[in]		A handle to the instance
  * @param	user		[in]		Id of the user to check
  */
-XN_C_API XnBool xnIsSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnBool XN_C_DECL xnIsSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Check if skeleton is being calibrated
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	user		[in]		Id of the user to check
 */
-XN_C_API XnBool xnIsSkeletonCalibrated(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnBool XN_C_DECL xnIsSkeletonCalibrated(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Check if skeleton is being calibrated
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	user		[in]		Id of the user to check
 */
-XN_C_API XnBool xnIsSkeletonCalibrating(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnBool XN_C_DECL xnIsSkeletonCalibrating(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Request calibration when possible
 *
@@ -1723,14 +1793,14 @@ XN_C_API XnBool xnIsSkeletonCalibrating(XnNodeHandle hInstance, XnUserID user);
 * @param	user		[in]		Id of the user to check
 * @param	bForce		[in]		Disregard previous calibration
 */
-XN_C_API XnStatus xnRequestSkeletonCalibration(XnNodeHandle hInstance, XnUserID user, XnBool bForce);
+XN_C_API XnStatus XN_C_DECL xnRequestSkeletonCalibration(XnNodeHandle hInstance, XnUserID user, XnBool bForce);
 /**
 * @brief stop calibration
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	user		[in]		Id of the user to check
 */
-XN_C_API XnStatus xnAbortSkeletonCalibration(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnStatus XN_C_DECL xnAbortSkeletonCalibration(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Save the calibration data to file
 *
@@ -1738,7 +1808,7 @@ XN_C_API XnStatus xnAbortSkeletonCalibration(XnNodeHandle hInstance, XnUserID us
 * @param	user		[in]	the user for which the calibration is saved
 * @param	strFileName	[in]	The file to which to save the calibration data
 */
-XN_C_API XnStatus xnSaveSkeletonCalibrationDataToFile(XnNodeHandle hInstance, XnUserID user, const XnChar* strFileName);
+XN_C_API XnStatus XN_C_DECL xnSaveSkeletonCalibrationDataToFile(XnNodeHandle hInstance, XnUserID user, const XnChar* strFileName);
 /**
 * @brief Load previously saved calibration data from file
 *
@@ -1746,7 +1816,7 @@ XN_C_API XnStatus xnSaveSkeletonCalibrationDataToFile(XnNodeHandle hInstance, Xn
 * @param	user		[in]	the user to be assigned the calibration data
 * @param	strFileName	[in]	The file from which to load the calibration data.
 */
-XN_C_API XnStatus xnLoadSkeletonCalibrationDataFromFile(XnNodeHandle hInstance, XnUserID user, const XnChar* strFileName);
+XN_C_API XnStatus XN_C_DECL xnLoadSkeletonCalibrationDataFromFile(XnNodeHandle hInstance, XnUserID user, const XnChar* strFileName);
 /**
  * @brief Save the calibration data
  *
@@ -1754,7 +1824,7 @@ XN_C_API XnStatus xnLoadSkeletonCalibrationDataFromFile(XnNodeHandle hInstance, 
  * @param	user		[in]	the user for which the calibration is saved
  * @param	nSlot		[in]	The slot to use for saving the calibration data
  */
-XN_C_API XnStatus xnSaveSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot);
+XN_C_API XnStatus XN_C_DECL xnSaveSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot);
 /**
 * @brief Load previously saved calibration data.
 *
@@ -1762,62 +1832,62 @@ XN_C_API XnStatus xnSaveSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID
 * @param	user		[in]	the user to be assigned the calibration data
 * @param	nSlot		[in]	The slot to use for saving the calibration data.
 */
-XN_C_API XnStatus xnLoadSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot);
+XN_C_API XnStatus XN_C_DECL xnLoadSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot);
 /**
 * @brief Clear the requested slot from any saved calibration data.
 *
 * @param	hInstance	[in]	A handle to the instance
 * @param	nSlot		[in]	The slot to clear
 */
-XN_C_API XnStatus xnClearSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot);
+XN_C_API XnStatus XN_C_DECL xnClearSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot);
 /**
 * @brief Check if a specific slot already holds calibration data
 *
 * @param	hInstance	[in]	A handle to the instance
 * @param	nSlot		[in]	The slot to check
 */
-XN_C_API XnBool xnIsSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot);
+XN_C_API XnBool XN_C_DECL xnIsSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot);
 /**
 * @brief Start tracking a skeleton
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	user		[in]		Id of the user to check
 */
-XN_C_API XnStatus xnStartSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnStatus XN_C_DECL xnStartSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Stop tracking a skeleton
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	user		[in]		Id of the user to check
 */
-XN_C_API XnStatus xnStopSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnStatus XN_C_DECL xnStopSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Reset the skeleton - discard calibration
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	user		[in]		Id of the user to check
 */
-XN_C_API XnStatus xnResetSkeleton(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnStatus XN_C_DECL xnResetSkeleton(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Check if a specific pose is required for calibration
 *
 * @param	hInstance	[in]		A handle to the instance
 */
-XN_C_API XnBool xnNeedPoseForSkeletonCalibration(XnNodeHandle hInstance);
+XN_C_API XnBool XN_C_DECL xnNeedPoseForSkeletonCalibration(XnNodeHandle hInstance);
 /**
 * @brief Get the pose that is required for calibration
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	strPose		[in]		Name of the required pose
 */
-XN_C_API XnStatus xnGetSkeletonCalibrationPose(XnNodeHandle hInstance, XnChar* strPose);
+XN_C_API XnStatus XN_C_DECL xnGetSkeletonCalibrationPose(XnNodeHandle hInstance, XnChar* strPose);
 /**
 * @brief Set the skeleton's smoothing factor
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	fFactor		[in]		The smoothing factor
 */
-XN_C_API XnStatus xnSetSkeletonSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
+XN_C_API XnStatus XN_C_DECL xnSetSkeletonSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
 /**
 * @brief Register to calibration callbacks.
 *
@@ -1827,15 +1897,63 @@ XN_C_API XnStatus xnSetSkeletonSmoothing(XnNodeHandle hInstance, XnFloat fFactor
 * @param	pCookie				[in]		User's cookie, to be delivered to the callbacks
 * @param	phCallback			[out]		The handle to these callbacks, to allow unregistration
 */
-XN_C_API XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, XnCalibrationStart CalibrationStartCB, XnCalibrationEnd CalibrationEndCB, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_API_DEPRECATED("Please use RegisterToCalibrationStart/Complete") XN_C_DECL xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, XnCalibrationStart CalibrationStartCB, XnCalibrationEnd CalibrationEndCB, void* pCookie, XnCallbackHandle* phCallback);
 /**
 * @brief Unregister from calibration callbacks
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	hCallback	[in]		The handle received from registration
 */
-XN_C_API void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_API_DEPRECATED("Please use UnregisterFromCalibrationStart/Complete") XN_C_DECL xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+/**
+* @brief Register to calibration start callback
+*
+* @param	hInstance	[in]	A handle to the instance
+* @param	handler		[in]	Callback to be called when calibration starts
+* @param	pCookie		[in]	User's cookie, to be delivered to the callback
+* @param	phCallback	[out]	the handle to this callback, to allow unregistration
+*/
+XN_C_API XnStatus XN_C_DECL xnRegisterToCalibrationStart(XnNodeHandle hInstance, XnCalibrationStart handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+* @brief Unregister from calibration start callback
+*
+* @param	[in]	hInstance	A handle to the instance
+* @param	[in]	hCallback	The handle received from registration
+*/
+XN_C_API void XN_C_DECL xnUnregisterFromCalibrationStart(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
+/**
+* @brief Register to calibration status while calibration is in progress
+*
+* @param	hInstance			[in]		A handle to the instance
+* @param	handler				[in]		Callback to be called when calibration is in progress
+* @param	pCookie				[in]		User's cookie, to be delivered to the callbacks
+* @param	phCallback			[out]		The handle to this callback, to allow unregistration
+*/
+XN_C_API XnStatus XN_C_DECL xnRegisterToCalibrationInProgress(XnNodeHandle hInstance, XnCalibrationInProgress handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+* @brief Unregister from calibration status while in progress
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	hCallback	[in]		The handle received from registration
+*/
+XN_C_API void XN_C_DECL xnUnregisterFromCalibrationInProgress(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+/**
+* @brief Register to when calibration is complete, with status
+*
+* @param	hInstance			[in]		A handle to the instance
+* @param	handler				[in]		Callback to be called when calibration is complete
+* @param	pCookie				[in]		User's cookie, to be delivered to the callbacks
+* @param	phCallback			[out]		The handle to this callback, to allow unregistration
+*/
+XN_C_API XnStatus XN_C_DECL xnRegisterToCalibrationComplete(XnNodeHandle hInstance, XnCalibrationComplete handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+* @brief Unregister from calibration complete with status
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	hCallback	[in]		The handle received from registration
+*/
+XN_C_API void XN_C_DECL xnUnregisterFromCalibrationComplete(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 /** @} */
 
 //---------------------------------------------------------------------------
@@ -1855,7 +1973,7 @@ XN_C_API void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbac
 *
 * @param	hInstance	[in]		A handle to the instance
 */
-XN_C_API XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance);
+XN_C_API XnUInt32 XN_C_DECL xnGetNumberOfPoses(XnNodeHandle hInstance);
 /**
 * @brief Get the names of the supported poses
 *
@@ -1863,15 +1981,16 @@ XN_C_API XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance);
 * @param	pstrPoses	[out]		Pre-allocated memory for the names of the supported poses
 * @param	pnPoses		[in,out]	In input - size of the preallocated memory, in output - the number of pose names
 */
-XN_C_API XnStatus xnGetAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32* pnPoses);
+XN_C_API XnStatus XN_C_DECL xnGetAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32* pnPoses);
 /**
 * @brief Get the names of the supported poses
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	pstrPoses	[out]		Pre-allocated memory for the names of the supported poses
+* @param	nNameLength	[in]		Memory size for each pose name
 * @param	pnPoses		[in,out]	In input - size of the preallocated memory, in output - the number of pose names
 */
-XN_C_API XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses);
+XN_C_API XnStatus XN_C_DECL xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses);
 /**
 * @brief Start detection of a specific pose for a specific user
 *
@@ -1879,14 +1998,14 @@ XN_C_API XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPo
 * @param	strPose		[in]		Name of requested pose
 * @param	user		[in]		Id of user
 */
-XN_C_API XnStatus xnStartPoseDetection(XnNodeHandle hInstance,const  XnChar* strPose, XnUserID user);
+XN_C_API XnStatus XN_C_DECL xnStartPoseDetection(XnNodeHandle hInstance,const  XnChar* strPose, XnUserID user);
 /**
 * @brief Stop detection of poses for a specific user
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	user		[in]		Id of user
 */
-XN_C_API XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnStatus XN_C_DECL xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Register to callbacks for pose events
 *
@@ -1896,14 +2015,65 @@ XN_C_API XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user);
 * @param	pCookie					[in]	User's cookie, to be delivered to the callbacks
 * @param	phCallback				[out]	The handle to these callbacks, to allow unregistration
 */
-XN_C_API XnStatus xnRegisterToPoseCallbacks(XnNodeHandle hInstance, XnPoseDetectionCallback PoseDetectionStartCB, XnPoseDetectionCallback PoseDetectionEndCB, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_API_DEPRECATED("Please use PoseDetected and/or OutOfPose callbacks") XN_C_DECL xnRegisterToPoseCallbacks(XnNodeHandle hInstance, XnPoseDetectionCallback PoseDetectionStartCB, XnPoseDetectionCallback PoseDetectionEndCB, void* pCookie, XnCallbackHandle* phCallback);
 /**
 * @brief Unregister from pose events
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	hCallback	[in]		The handle received from registration
 */
-XN_C_API void xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_API_DEPRECATED("Please use PoseDetected and/or OutOfPose callbacks") XN_C_DECL xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+
+/**
+* @brief Register to callback when a user is in pose
+*
+* @param	hInstance	[in]	A handle to the instance
+* @param	handler		[in]	Callback to be called when the pose is detected
+* @param	pCookie		[in]	User's cookie, to be delivered to the callback
+* @param	phCallback	[out]	the handle to this callback, to allow unregistration
+*/
+XN_C_API XnStatus xnRegisterToPoseDetected(XnNodeHandle hInstance, XnPoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+* @brief Unregister from pose detected callback
+*
+* @param	[in]	hInstance	A handle to the instance
+* @param	[in]	hCallback	The handle received from registration
+*/
+XN_C_API void xnUnregisterFromPoseDetected(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+
+/**
+* @brief Register to callback when a use is no longer in pose
+*
+* @param	hInstance	[in]	A handle to the instance
+* @param	handler		[in]	Callback to be called when user isn't in pose anymore
+* @param	pCookie		[in]	User's cookie, to be delivered to the callback
+* @param	phCallback	[out]	the handle to this callback, to allow unregistration
+*/
+XN_C_API XnStatus xnRegisterToOutOfPose(XnNodeHandle hInstance, XnPoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+* @brief Unregister from out of pose callback
+*
+* @param	[in]	hInstance	A handle to the instance
+* @param	[in]	hCallback	The handle received from registration
+*/
+XN_C_API void xnUnregisterFromOutOfPose(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+
+/**
+* @brief Register to callback for status when pose is detected
+*
+* @param	hInstance				[in]	A handle to the instance
+* @param	handler					[in]	Function to be called when pose detection is in progress
+* @param	pCookie					[in]	User's cookie, to be delivered to the callbacks
+* @param	phCallback				[out]	The handle to these callbacks, to allow unregistration
+*/
+XN_C_API XnStatus XN_C_DECL xnRegisterToPoseDetectionInProgress(XnNodeHandle hInstance, XnPoseDetectionInProgress handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+* @brief Unregister from pose status callback
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	hCallback	[in]		The handle received from registration
+*/
+XN_C_API void XN_C_DECL xnUnregisterFromPoseDetectionInProgress(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /** @} */
 
@@ -1927,7 +2097,7 @@ XN_C_API void xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHa
  * @param	pQuery					[in]	Optional. Can be used to select which hands generator to create. If not specified, this function may create any hands generator that is available.
  * @param	pErrors					[in]	Optional. If provided, will be filled with information about hands generators that could not be created.
  */
-XN_C_API XnStatus xnCreateHandsGenerator(
+XN_C_API XnStatus XN_C_DECL xnCreateHandsGenerator(
 	XnContext* pContext,
 	XnNodeHandle* phHandsGenerator,
 	XnNodeQuery* pQuery, 
@@ -1944,42 +2114,70 @@ XN_C_API XnStatus xnCreateHandsGenerator(
 * @param	pCookie		[in]		User's cookie, to be delivered to the callbacks
 * @param	phCallback	[out]		The handle to these callbacks, to allow unregistration
 */
-XN_C_API XnStatus xnRegisterHandCallbacks(XnNodeHandle hInstance, XnHandCreate CreateCB, XnHandUpdate UpdateCB, XnHandDestroy DestroyCB, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API XnStatus XN_C_DECL xnRegisterHandCallbacks(XnNodeHandle hInstance, XnHandCreate CreateCB, XnHandUpdate UpdateCB, XnHandDestroy DestroyCB, void* pCookie, XnCallbackHandle* phCallback);
 /**
 * @brief Unregister from hands callbacks
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	hCallback	[in]		The handle received from registration
 */
-XN_C_API void xnUnregisterHandCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API void XN_C_DECL xnUnregisterHandCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 /**
 * @brief Stop tracking a specific hand
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	user		[in]		The hand to stop tracking
 */
-XN_C_API XnStatus xnStopTracking(XnNodeHandle hInstance, XnUserID user);
+XN_C_API XnStatus XN_C_DECL xnStopTracking(XnNodeHandle hInstance, XnUserID user);
 /**
 * @brief Stop tracking all hands
 *
 * @param	hInstance	[in]		A handle to the instance
 */
-XN_C_API XnStatus xnStopTrackingAll(XnNodeHandle hInstance);
+XN_C_API XnStatus XN_C_DECL xnStopTrackingAll(XnNodeHandle hInstance);
 /**
 * @brief Start tracking at a specific position
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	pPosition	[in]		The position at which there is a new hand
 */
-XN_C_API XnStatus xnStartTracking(XnNodeHandle hInstance, const XnPoint3D* pPosition);
+XN_C_API XnStatus XN_C_DECL xnStartTracking(XnNodeHandle hInstance, const XnPoint3D* pPosition);
 /**
 * @brief Change smoothing factor
 *
 * @param	hInstance	[in]		A handle to the instance
 * @param	fFactor		[in]		Smoothing factor, in the range 0..1. 0 Means no smoothing, 1 means infinite smoothing. Inside the range is generator dependent.
 */
-XN_C_API XnStatus xnSetTrackingSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
+XN_C_API XnStatus XN_C_DECL xnSetTrackingSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
+/** @} */
 
+//---------------------------------------------------------------------------
+// Hand Touching FOV Edge Capability
+//---------------------------------------------------------------------------
+
+/** 
+* @ingroup user
+* @defgroup touchingEdge Hand Touching FOV Edge Capability
+* The Touching FOV Edge capability (@ref XN_CAPABILITY_HAND_TOUCHING_FOV_EDGE) allows callbacks when a hand (from hands generator) is touching the edge of the FOV
+* @{
+*/
+
+/**
+* @brief Register to when a hand is approaching the edge of the FOV
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	handler		[in]		Callback to be called when a hand is approaching the FOV
+* @param	pCookie		[in]		User's cookie, to be delivered to the callbacks
+* @param	phCallback	[out]		The handle to these callbacks, to allow unregistration
+*/
+XN_C_API XnStatus XN_C_DECL xnRegisterToHandTouchingFOVEdge(XnNodeHandle hInstance, XnHandTouchingFOVEdge handler, void* pCookie, XnCallbackHandle* phCallback);
+/**
+* @brief Unregister from hand approaching the edge of the FOV
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	hCallback	[in]		The handle received from registration
+*/
+XN_C_API void XN_C_DECL xnUnregisterFromHandTouchingFOVEdge(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 /** @} */
 
 //---------------------------------------------------------------------------
@@ -2002,20 +2200,20 @@ XN_C_API XnStatus xnSetTrackingSmoothing(XnNodeHandle hInstance, XnFloat fFactor
  * @param	pQuery					[in]	Optional. Can be used to select which audio generator to create. If not specified, this function may create any audio generator that is available.
  * @param	pErrors					[in]	Optional. If provided, will be filled with information about audio generators that could not be created.
  */
-XN_C_API XnStatus xnCreateAudioGenerator(
+XN_C_API XnStatus XN_C_DECL xnCreateAudioGenerator(
 	XnContext* pContext,
 	XnNodeHandle* phAudioGenerator,
 	XnNodeQuery* pQuery, 
 	XnEnumerationErrors* pErrors
 	);
 
-XN_C_API XnUChar* xnGetAudioBuffer(XnNodeHandle hInstance);
-XN_C_API XnUInt32 xnGetSupportedWaveOutputModesCount(XnNodeHandle hInstance);
-XN_C_API XnStatus xnGetSupportedWaveOutputModes(XnNodeHandle hInstance, XnWaveOutputMode* aSupportedModes, XnUInt32* pnCount);
-XN_C_API XnStatus xnSetWaveOutputMode(XnNodeHandle hInstance, const XnWaveOutputMode* OutputMode);
-XN_C_API XnStatus xnGetWaveOutputMode(XnNodeHandle hInstance, XnWaveOutputMode* OutputMode);
-XN_C_API XnStatus xnRegisterToWaveOutputModeChanges(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
-XN_C_API void xnUnregisterFromWaveOutputModeChanges(XnNodeHandle hInstance, XnCallbackHandle hCallback);
+XN_C_API XnUChar* XN_C_DECL xnGetAudioBuffer(XnNodeHandle hInstance);
+XN_C_API XnUInt32 XN_C_DECL xnGetSupportedWaveOutputModesCount(XnNodeHandle hInstance);
+XN_C_API XnStatus XN_C_DECL xnGetSupportedWaveOutputModes(XnNodeHandle hInstance, XnWaveOutputMode* aSupportedModes, XnUInt32* pnCount);
+XN_C_API XnStatus XN_C_DECL xnSetWaveOutputMode(XnNodeHandle hInstance, const XnWaveOutputMode* OutputMode);
+XN_C_API XnStatus XN_C_DECL xnGetWaveOutputMode(XnNodeHandle hInstance, XnWaveOutputMode* OutputMode);
+XN_C_API XnStatus XN_C_DECL xnRegisterToWaveOutputModeChanges(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
+XN_C_API void XN_C_DECL xnUnregisterFromWaveOutputModeChanges(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /**
  * @brief Gets the current audio meta data.
@@ -2023,7 +2221,7 @@ XN_C_API void xnUnregisterFromWaveOutputModeChanges(XnNodeHandle hInstance, XnCa
  * @param	hInstance	[in]		A handle to the instance.
  * @param	pMetaData	[in]		The struct to be filled.
  */
-XN_C_API void xnGetAudioMetaData(XnNodeHandle hInstance, XnAudioMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnGetAudioMetaData(XnNodeHandle hInstance, XnAudioMetaData* pMetaData);
 
 /** @} */
 
@@ -2037,11 +2235,11 @@ XN_C_API void xnGetAudioMetaData(XnNodeHandle hInstance, XnAudioMetaData* pMetaD
  * @{
  */
 
-XN_C_API XnStatus xnMockDepthSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnDepthPixel* pData);
-XN_C_API XnStatus xnMockImageSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnUInt8* pData);
-XN_C_API XnStatus xnMockIRSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnIRPixel* pData);
-XN_C_API XnStatus xnMockAudioSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnUInt8* pData);
-XN_C_API XnStatus xnMockRawSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const void* pData);
+XN_C_API XnStatus XN_C_DECL xnMockDepthSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnDepthPixel* pData);
+XN_C_API XnStatus XN_C_DECL xnMockImageSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnUInt8* pData);
+XN_C_API XnStatus XN_C_DECL xnMockIRSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnIRPixel* pData);
+XN_C_API XnStatus XN_C_DECL xnMockAudioSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const XnUInt8* pData);
+XN_C_API XnStatus XN_C_DECL xnMockRawSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, const void* pData);
 
 /** @} */
 
@@ -2057,11 +2255,11 @@ XN_C_API XnStatus xnMockRawSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, Xn
  * @{
  */
 
-XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHandle hInitializerNode, XnNodeHandle* phCodec);
-XN_C_API XnCodecID xnGetCodecID(XnNodeHandle hCodec);
-XN_C_API XnStatus xnEncodeData(XnNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, 
+XN_C_API XnStatus XN_C_DECL xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHandle hInitializerNode, XnNodeHandle* phCodec);
+XN_C_API XnCodecID XN_C_DECL xnGetCodecID(XnNodeHandle hCodec);
+XN_C_API XnStatus XN_C_DECL xnEncodeData(XnNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, 
 							   void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten);
-XN_C_API XnStatus xnDecodeData(XnNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, 
+XN_C_API XnStatus XN_C_DECL xnDecodeData(XnNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, 
 							   void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten);
 
 /** @} */
@@ -2084,7 +2282,7 @@ XN_C_API XnStatus xnDecodeData(XnNodeHandle hCodec, const void* pSrc, XnUInt32 n
  * @param	strFormatName	[in]	Optional. The name of the format the recorded file will be in. If NULL, file will be in ONI format.
  * @param	phRecorder		[out]	A pointer to the created recorder handle.
  */
-XN_C_API XnStatus xnCreateRecorder(XnContext* pContext, const XnChar* strFormatName, XnNodeHandle* phRecorder);
+XN_C_API XnStatus XN_C_DECL xnCreateRecorder(XnContext* pContext, const XnChar* strFormatName, XnNodeHandle* phRecorder);
 
 /**
  * @brief Tells the recorder where to record.
@@ -2093,7 +2291,16 @@ XN_C_API XnStatus xnCreateRecorder(XnContext* pContext, const XnChar* strFormatN
  * @param	destType	[in]	The type of medium to record to. Currently only XN_RECORD_MEDIUM_FILE is supported.
  * @param	strDest		[in]	Recording destination. If destType is XN_RECORD_MEDIUM_FILE, this specifies a file name.
  */
-XN_C_API XnStatus xnSetRecorderDestination(XnNodeHandle hRecorder, XnRecordMedium destType, const XnChar* strDest);
+XN_C_API XnStatus XN_C_DECL xnSetRecorderDestination(XnNodeHandle hRecorder, XnRecordMedium destType, const XnChar* strDest);
+
+/**
+ * @brief Returns the recoder's destination
+ *
+ * @param	hRecorder	[in]	A handle to the recorder
+ * @param	pDestType	[out]	The type of medium the recorder is set to record.
+ * @param	strDest		[out]	Recording destination. If destType is XN_RECORD_MEDIUM_FILE, this specifies a file name.
+ */
+XN_C_API XnStatus XN_C_DECL xnGetRecorderDestination(XnNodeHandle hRecorder, XnRecordMedium* pDestType, XnChar* strDest, XnUInt32 nBufSize);
 
 /**
  * @brief Adds a node to recording and start recording it. This function must be called on each node that is to be 
@@ -2105,7 +2312,7 @@ XN_C_API XnStatus xnSetRecorderDestination(XnNodeHandle hRecorder, XnRecordMediu
  *								(See @ref XnCodecIDs.h). If XN_CODEC_NULL is specified, a default compression 
  *								will be chosen according to the node type.
  */
-XN_C_API XnStatus xnAddNodeToRecording(XnNodeHandle hRecorder, XnNodeHandle hNode, XnCodecID compression);
+XN_C_API XnStatus XN_C_DECL xnAddNodeToRecording(XnNodeHandle hRecorder, XnNodeHandle hNode, XnCodecID compression);
 
 /**
  * @brief Removes node from recording and stop recording it. This function can be called on a node that was added to 
@@ -2114,21 +2321,21 @@ XN_C_API XnStatus xnAddNodeToRecording(XnNodeHandle hRecorder, XnNodeHandle hNod
  * @param	hRecorder	[in]	A handle to the recorder.
  * @param	hNode		[in]	The node to remove from recording.
  */
-XN_C_API XnStatus xnRemoveNodeFromRecording(XnNodeHandle hRecorder, XnNodeHandle hNode);
+XN_C_API XnStatus XN_C_DECL xnRemoveNodeFromRecording(XnNodeHandle hRecorder, XnNodeHandle hNode);
 
 /**
  * @brief Records one frame of data from each node that was added to the recorder with @ref xnAddNodeToRecording.
  *
  * @param	hRecorder	[in]	A handle to the recorder.
  */
-XN_C_API XnStatus xnRecord(XnNodeHandle hRecorder);
+XN_C_API XnStatus XN_C_DECL xnRecord(XnNodeHandle hRecorder);
 
 /**
  * @brief Gets a string representation of the recording format.
  *
  * @param	hRecorder	[in]	A handle to the recorder.
  */
-XN_C_API const XnChar* xnGetRecorderFormat(XnNodeHandle hRecorder);
+XN_C_API const XnChar* XN_C_DECL xnGetRecorderFormat(XnNodeHandle hRecorder);
 
 /** @} */
 
@@ -2151,7 +2358,7 @@ XN_C_API const XnChar* xnGetRecorderFormat(XnNodeHandle hRecorder);
  * @param	strFormatName	[in]	The name of the recording format that the created player should play.
  * @param	phPlayer		[out]	Pointer to the created player handle.
  */
-XN_C_API XnStatus xnCreatePlayer(XnContext* pContext, const XnChar* strFormatName, XnNodeHandle* phPlayer);
+XN_C_API XnStatus XN_C_DECL xnCreatePlayer(XnContext* pContext, const XnChar* strFormatName, XnNodeHandle* phPlayer);
 
 /**
  * @brief Determines whether the player will automatically rewind to the beginning of the recording when reaching the end.
@@ -2162,7 +2369,7 @@ XN_C_API XnStatus xnCreatePlayer(XnContext* pContext, const XnChar* strFormatNam
  * @remark If bRepeat is set to TRUE, the player will automatically rewind when reaching the end.
  * @remark If bRepeat is set to FALSE, the player will stop playing when reaching the end, and will raise the event that was registered with @ref xnRegisterToEndOfFileReached(). In this state, @ref xnIsPlayerAtEOF() returns TRUE.
  */
-XN_C_API XnStatus xnSetPlayerRepeat(XnNodeHandle hPlayer, XnBool bRepeat);
+XN_C_API XnStatus XN_C_DECL xnSetPlayerRepeat(XnNodeHandle hPlayer, XnBool bRepeat);
 
 /**
  * @brief Sets the source for the player, i.e. where the played events will come from. 
@@ -2175,7 +2382,7 @@ XN_C_API XnStatus xnSetPlayerRepeat(XnNodeHandle hPlayer, XnBool bRepeat);
  *
  * @sa xnGetPlayerSource()
  */
-XN_C_API XnStatus xnSetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium sourceType, const XnChar* strSource);
+XN_C_API XnStatus XN_C_DECL xnSetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium sourceType, const XnChar* strSource);
 
 /**
  * @brief Gets the player's source, i.e where the played events come from.
@@ -2187,7 +2394,7 @@ XN_C_API XnStatus xnSetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium sourceT
  *
  * @sa xnSetPlayerSource()
  */
-XN_C_API XnStatus xnGetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium* pSourceType, XnChar* strSource, XnUInt32 nBufSize);
+XN_C_API XnStatus XN_C_DECL xnGetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium* pSourceType, XnChar* strSource, XnUInt32 nBufSize);
 
 /**
  * @brief Reads the next data element from the player. 
@@ -2196,7 +2403,7 @@ XN_C_API XnStatus xnGetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium* pSourc
  *
  * @param	hPlayer	[in]	A handle to the player.
  */
-XN_C_API XnStatus xnPlayerReadNext(XnNodeHandle hPlayer);
+XN_C_API XnStatus XN_C_DECL xnPlayerReadNext(XnNodeHandle hPlayer);
 
 /**
  * @brief Seeks the player to a specific timestamp, so that playing will continue from that point onwards.
@@ -2215,7 +2422,7 @@ XN_C_API XnStatus xnPlayerReadNext(XnNodeHandle hPlayer);
  *		<tr><td>XN_PLAYER_SEEK_END</td><td>nTimeOffset specifies a period of time to move, relative to the end of the recording. This must be a negative value.</td></tr>
  *	</table>
  */
-XN_C_API XnStatus xnSeekPlayerToTimeStamp(XnNodeHandle hPlayer, XnInt64 nTimeOffset, XnPlayerSeekOrigin origin);
+XN_C_API XnStatus XN_C_DECL xnSeekPlayerToTimeStamp(XnNodeHandle hPlayer, XnInt64 nTimeOffset, XnPlayerSeekOrigin origin);
 
 /**
  * @brief Seeks the player to a specific frame of a specific played node, so that playing will continue from that frame onwards.
@@ -2236,7 +2443,7 @@ XN_C_API XnStatus xnSeekPlayerToTimeStamp(XnNodeHandle hPlayer, XnInt64 nTimeOff
  *
  * @note You can get different results using this function for different values of strNodeName, because the frame numbers of different nodes are not necessarily in sync.
  */
-XN_C_API XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer, const XnChar* strNodeName, XnInt32 nFrameOffset, XnPlayerSeekOrigin origin);
+XN_C_API XnStatus XN_C_DECL xnSeekPlayerToFrame(XnNodeHandle hPlayer, const XnChar* strNodeName, XnInt32 nFrameOffset, XnPlayerSeekOrigin origin);
 
 /**
  * @brief Reports the current timestamp of a player, i.e. the amount of time passed since the beginning of the recording.
@@ -2244,7 +2451,7 @@ XN_C_API XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer, const XnChar* strNod
  * @param	hPlayer		[in]	A handle to the player.
  * @param	pnTimestamp	[out]	A pointer to the retrieved timestamp in microseconds.
  */
-XN_C_API XnStatus xnTellPlayerTimestamp(XnNodeHandle hPlayer, XnUInt64* pnTimestamp);
+XN_C_API XnStatus XN_C_DECL xnTellPlayerTimestamp(XnNodeHandle hPlayer, XnUInt64* pnTimestamp);
 
 /**
  * @brief Reports the current frame number of a specific node played by a player.
@@ -2255,7 +2462,7 @@ XN_C_API XnStatus xnTellPlayerTimestamp(XnNodeHandle hPlayer, XnUInt64* pnTimest
  *
  * @remark Different nodes that belong to the player can have different frame numbers, because the nodes are not necessarily in sync.
  */
-XN_C_API XnStatus xnTellPlayerFrame(XnNodeHandle hPlayer, const XnChar* strNodeName, XnUInt32* pnFrame);
+XN_C_API XnStatus XN_C_DECL xnTellPlayerFrame(XnNodeHandle hPlayer, const XnChar* strNodeName, XnUInt32* pnFrame);
 
 /**
  * @brief Retrieves the number of frames of a specific node played by a player.
@@ -2264,7 +2471,7 @@ XN_C_API XnStatus xnTellPlayerFrame(XnNodeHandle hPlayer, const XnChar* strNodeN
  * @param	strNodeName	[in]	The name of the node for which to retrieve the number of frames.
  * @param	pnFrames	[out]	A pointer to the retrieved number of frames.
  */
-XN_C_API XnStatus xnGetPlayerNumFrames(XnNodeHandle hPlayer, const XnChar* strNodeName, XnUInt32* pnFrames);
+XN_C_API XnStatus XN_C_DECL xnGetPlayerNumFrames(XnNodeHandle hPlayer, const XnChar* strNodeName, XnUInt32* pnFrames);
 
 /**
  * @brief Gets the name of the format supported by a player.
@@ -2272,7 +2479,7 @@ XN_C_API XnStatus xnGetPlayerNumFrames(XnNodeHandle hPlayer, const XnChar* strNo
  * @param	hPlayer	[in]	A handle to the player.
  * @returns	The name of the format supported by the player, or NULL if hPlayer is NULL.
  */
-XN_C_API const XnChar* xnGetPlayerSupportedFormat(XnNodeHandle hPlayer);
+XN_C_API const XnChar* XN_C_DECL xnGetPlayerSupportedFormat(XnNodeHandle hPlayer);
 
 /**
  * @brief Retrieves a list of the nodes played by a player.
@@ -2283,7 +2490,7 @@ XN_C_API const XnChar* xnGetPlayerSupportedFormat(XnNodeHandle hPlayer);
  * @remark This function fills the pointer that is pointed to by ppList with a newly allocated node info list
  * of the played nodes. This list must later be freed by the caller with @ref xnNodeInfoListFree().
  */
-XN_C_API XnStatus xnEnumeratePlayerNodes(XnNodeHandle hPlayer, XnNodeInfoList** ppList);
+XN_C_API XnStatus XN_C_DECL xnEnumeratePlayerNodes(XnNodeHandle hPlayer, XnNodeInfoList** ppList);
 
 /**
  * @brief Checks whether the player is at the end-of-file marker.
@@ -2293,7 +2500,7 @@ XN_C_API XnStatus xnEnumeratePlayerNodes(XnNodeHandle hPlayer, XnNodeInfoList** 
  *
  * @sa xnSetPlayerRepeat()
  */
-XN_C_API XnBool xnIsPlayerAtEOF(XnNodeHandle hPlayer);
+XN_C_API XnBool XN_C_DECL xnIsPlayerAtEOF(XnNodeHandle hPlayer);
 
 /**
  * @brief Registers a callback function to be called when end-of-file is reached.
@@ -2305,7 +2512,7 @@ XN_C_API XnBool xnIsPlayerAtEOF(XnNodeHandle hPlayer);
  *
  * @sa xnSetPlayerRepeat()
  */
-XN_C_API XnStatus xnRegisterToEndOfFileReached
+XN_C_API XnStatus XN_C_DECL xnRegisterToEndOfFileReached
 	(XnNodeHandle hPlayer, XnStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback);
 
@@ -2315,7 +2522,7 @@ XN_C_API XnStatus xnRegisterToEndOfFileReached
  * @param	hInstance	[in]	A handle to the player.
  * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToEndOfFileReached().
  */
-XN_C_API void xnUnregisterFromEndOfFileReached
+XN_C_API void XN_C_DECL xnUnregisterFromEndOfFileReached
 	(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
 /**
@@ -2329,7 +2536,7 @@ XN_C_API void xnUnregisterFromEndOfFileReached
  * @param	hInstance	[in]	A handle to the player.
  * @param	dSpeed		[in]	The speed ratio (see function description).
  */
-XN_C_API XnStatus xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed);
+XN_C_API XnStatus XN_C_DECL xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed);
 
 /**
  * @brief Gets the playback speed. see @ref xnSetPlaybackSpeed() for more details.
@@ -2337,7 +2544,27 @@ XN_C_API XnStatus xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed);
  * @param	hInstance	[in]	A handle to the player.
  * @returns speed ratio, or -1.0 if this node is not a player.
  */
-XN_C_API XnDouble xnGetPlaybackSpeed(XnNodeHandle hInstance);
+XN_C_API XnDouble XN_C_DECL xnGetPlaybackSpeed(XnNodeHandle hInstance);
+
+/** @} */
+
+//---------------------------------------------------------------------------
+// ScriptNode
+//---------------------------------------------------------------------------
+
+/**
+ * @ingroup prd_node
+ * @defgroup script_node Script Node
+ * A Script node is a @ref node that allows running scripts, and acts as a lifetime manager for nodes created
+ * by that script.
+ * @{
+ */
+
+XN_C_API XnStatus XN_C_DECL xnCreateScriptNode(XnContext* pContext, const XnChar* strFormat, XnNodeHandle* phScript);
+XN_C_API const XnChar* XN_C_DECL xnScriptNodeGetSupportedFormat(XnNodeHandle hScript);
+XN_C_API XnStatus XN_C_DECL xnLoadScriptFromFile(XnNodeHandle hScript, const XnChar* strFileName);
+XN_C_API XnStatus XN_C_DECL xnLoadScriptFromString(XnNodeHandle hScript, const XnChar* strScript);
+XN_C_API XnStatus XN_C_DECL xnScriptNodeRun(XnNodeHandle hScript, XnEnumerationErrors* pErrors);
 
 /** @} */
 

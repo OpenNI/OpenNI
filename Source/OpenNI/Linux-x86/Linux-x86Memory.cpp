@@ -44,8 +44,13 @@ XN_C_API void* xnOSMalloc(const XnSizeT nAllocSize)
 XN_C_API void* xnOSMallocAligned(const XnSizeT nAllocSize, const XnSizeT nAlignment)
 {
 	void* pResult = NULL;
+	
+#ifndef XN_PLATFORM_LINUX_NO_POSIX_MEMALIGN
 	if (0 != posix_memalign(&pResult, nAlignment, nAllocSize))
 		return NULL;
+#else
+	pResult = memalign(nAlignment, nAllocSize);
+#endif
 		
 	return pResult;
 }

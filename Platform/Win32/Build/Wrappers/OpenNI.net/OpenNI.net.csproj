@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{2FE4F6DE-12C8-41EE-9588-EB91CB6112FE}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -108,6 +108,9 @@
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\HandsGenerator.cs">
       <Link>Nodes\HandsGenerator.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\HandTouchingFOVEdgeCapability.cs">
+      <Link>Capabilities\HandTouchingFOVEdgeCapability.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\ImageGenerator.cs">
       <Link>Nodes\ImageGenerator.cs</Link>
     </Compile>
@@ -183,6 +186,9 @@
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\SceneMetaData.cs">
       <Link>MetaData\SceneMetaData.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\ScriptNode.cs">
+      <Link>Nodes\ScriptNode.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\SkeletonCapability.cs">
       <Link>Capabilities\SkeletonCapability.cs</Link>
     </Compile>
@@ -203,6 +209,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\..\Wrappers\OpenNI.net\PublisherPolicy.config">
+      <Link>PublisherPolicy.config</Link>
+    </None>
     <None Include="app.config" />
     <None Include="OpenNI.snk" />
   </ItemGroup>

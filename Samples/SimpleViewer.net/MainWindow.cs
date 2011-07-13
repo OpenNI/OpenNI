@@ -16,7 +16,7 @@ namespace SimpleViewer.net
 		{
 			InitializeComponent();
 
-			this.context = new Context(SAMPLE_XML_FILE);
+			this.context = Context.CreateFromXmlFile(SAMPLE_XML_FILE, out scriptNode);
 			this.depth = context.FindExistingNode(NodeType.Depth) as DepthGenerator;
 			if (this.depth == null)
 			{
@@ -152,6 +152,7 @@ namespace SimpleViewer.net
 		private readonly string SAMPLE_XML_FILE = @"../../../../Data/SamplesConfig.xml";
 
 		private Context context;
+		private ScriptNode scriptNode;
 		private DepthGenerator depth;
 		private Thread readerThread;
 		private bool shouldRun;
