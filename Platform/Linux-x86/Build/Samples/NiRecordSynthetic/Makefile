@@ -7,5 +7,5 @@ SRC_FILES = ../../../../../Samples/NiRecordSynthetic/*.cpp
 EXE_NAME = Sample-NiRecordSynthetic
 USED_LIBS = OpenNI
 
-include ../../CommonCppMakefile
+include ../../Common/CommonCppMakefile
 

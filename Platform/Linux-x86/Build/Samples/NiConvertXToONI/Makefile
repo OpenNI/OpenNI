@@ -7,5 +7,5 @@ SRC_FILES = ../../../../../Samples/NiConvertXToONI/*.cpp
 EXE_NAME = Sample-NiConvertXToONI
 USED_LIBS = OpenNI
 
-include ../../CommonCppMakefile
+include ../../Common/CommonCppMakefile
 

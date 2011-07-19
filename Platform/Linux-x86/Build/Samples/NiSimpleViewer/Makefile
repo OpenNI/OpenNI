@@ -16,5 +16,5 @@ endif
 
 USED_LIBS += OpenNI
 
-include ../../CommonCppMakefile
+include ../../Common/CommonCppMakefile
 

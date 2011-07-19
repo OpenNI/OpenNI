@@ -107,9 +107,9 @@ def fix_file(arg,dirname,fname):
                 s = re.sub(r"../../../../../Samples/[\w.]+/",r"",s)
                 s = re.sub(r"../../../../Data/SamplesConfig.xml",r"../../Config/SamplesConfig.xml",s)
                 s = re.sub(r"../../Res/",r"../Res/",s)
-                s = re.sub(r"include ../../CommonCppMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonCppMakefile",s)
-                s = re.sub(r"include ../../CommonCSMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonCSMakefile",s)
-                s = re.sub(r"include ../../CommonJavaMakefile",r"LIB_DIRS += ../../Lib\ninclude ../../Include/CommonJavaMakefile",s)
+                s = re.sub(r"include ../../Common/CommonCppMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonCppMakefile",s)
+                s = re.sub(r"include ../../Common/CommonCSMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonCSMakefile",s)
+                s = re.sub(r"include ../../Common/CommonJavaMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonJavaMakefile",s)
 
                 output.write(s)
                 
@@ -121,6 +121,24 @@ def fix_file(arg,dirname,fname):
             input.close()
             os.remove(filePath)
             os.rename(tempName,filePath)
+
+def fix_platform_specific_files(arg,dirname,fname):
+    "Fixes Platform-specific file"
+    for filename in fname:
+        filePath = dirname + "/" + filename
+        if os.path.isdir(filePath):
+            continue
+
+        if filename.find("Platform") != -1:
+            tempName=filePath+'~~~'
+            input = open(filePath)
+            output = open(tempName,'w')
+            for s in input:
+                if  -1 == s.find("export CXX") and -1 == s.find("export TARGET_SYS_ROOT"):
+                    output.write(s)
+            output.close();
+            os.remove(filePath);
+            os.rename(tempName, filePath)
             
 def copy_install_script(platform, filePath, dest):
     "Copies the install script and fixing it if needed"
@@ -307,11 +325,7 @@ for includeFile in os.listdir("../../Include"):
 shutil.copytree("../../Include/Linux-x86", "Redist/Include/Linux-x86")
 shutil.copytree("../../Include/Linux-Arm", "Redist/Include/Linux-Arm")
 shutil.copytree("../../Include/MacOSX", "Redist/Include/MacOSX")
-shutil.copy("Build/CommonCppMakefile", "Redist/Include")
-shutil.copy("Build/CommonCSMakefile", "Redist/Include")
-shutil.copy("Build/CommonJavaMakefile", "Redist/Include")
-shutil.copy("Build/CommonDefs.mak", "Redist/Include")
-shutil.copy("Build/CommonTargets.mak", "Redist/Include")
+shutil.copytree("Build/Common", "Redist/Samples/Build/Common")
 
 # samples
 samples_list = os.listdir("Build/Samples")
@@ -369,7 +383,7 @@ print "* Creating Makefile..."
 logger.info("Creating Makefile...")
 
 MAKEFILE = open("Redist/Samples/Build/Makefile", 'w')
-MAKEFILE.write("-include Platform.$(PLATFORM)\n\n")
+MAKEFILE.write("include Common/CommonDefs.mak\n\n")
 MAKEFILE.write(".PHONY: all\n\n")
 MAKEFILE.write("NETPROJ = \n")
 
@@ -393,11 +407,6 @@ for sample in samples_list:
     
 # Close files
 MAKEFILE.close()
-
-# copy platform file
-platform_file = "Build/Platform." + platform
-if os.path.exists(platform_file):
-    shutil.copy(platform_file, "Redist/Samples/Build")
 
 #-------Copy install script---------------------------------------------------#
 print "* Copying install script..."
@@ -447,6 +456,10 @@ for sample in samples_list:
    os.system("rm -rf Redist/Samples/"+sample+"/Debug")
    os.system("rm -rf Redist/Samples/"+sample+"/Release")
 
+#--------Fixing Platform Specific Files----------------------------------------#
+print "* Fixing Platform-Specific Files..."
+logger.info("Fixing Platform-Specific Files...")
+os.path.walk("Redist/Samples/Build",fix_platform_specific_files,'')
 
 #-------------Create TAR-------------------------------------------------------#
 print "* Creating tar......"

@@ -28,7 +28,7 @@ CP = cp
 RM = rm
 
 # platform specific args
--include Platform.$(PLATFORM)
+-include Common/Platform.$(PLATFORM)
 
 # Bin directory
 BIN_DIR = ../Bin

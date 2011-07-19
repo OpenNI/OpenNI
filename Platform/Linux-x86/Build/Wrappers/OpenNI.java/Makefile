@@ -5,7 +5,7 @@ SRC_FILES = \
 
 JAR_NAME = org.OpenNI
 
-include ../../CommonJavaMakefile
+include ../../Common/CommonJavaMakefile
 
 
 

@@ -10,7 +10,4 @@ SRC_FILES = \
 LIB_NAME = OpenNI.jni
 USED_LIBS = OpenNI
 
-include ../../CommonCppMakefile
-
-
-
+include ../../Common/CommonCppMakefile

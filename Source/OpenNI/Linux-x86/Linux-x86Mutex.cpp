@@ -87,9 +87,24 @@ XnStatus xnOSNamedMutexCreate(XnMutex* pMutex, const XnChar* csMutexName)
 	xnLogError(XN_MASK_OS, "Named mutex is not implemented for this platform!");
 	return XN_STATUS_OS_MUTEX_CREATION_FAILED;
 #else
+
+	// remove bad chars from name
+	XnChar strMutexOSName[XN_FILE_MAX_PATH];
+	int i = 0;
+	for (; (i < XN_FILE_MAX_PATH) && (csMutexName[i] != '\0'); ++i)
+		strMutexOSName[i] = csMutexName[i] == '/' ? '_' : csMutexName[i];
+
+	if (i == XN_FILE_MAX_PATH)
+	{
+		xnLogWarning(XN_MASK_OS, "Mutex name is too long!");
+		return XN_STATUS_OS_MUTEX_CREATION_FAILED;
+	}
+
+	strMutexOSName[i] = '\0';
+
 	// tanslate mutex name to key file name
 	XnUInt32 nBytesWritten;
-	xnOSStrFormat(pMutex->csSemFileName, XN_FILE_MAX_PATH, &nBytesWritten, "/tmp/XnCore.Mutex.%s.key", csMutexName);
+	xnOSStrFormat(pMutex->csSemFileName, XN_FILE_MAX_PATH, &nBytesWritten, "/tmp/XnCore.Mutex.%s.key", strMutexOSName);
 	
 	// open this file (we hold it open until mutex is closed. That way it cannot be deleted as long
 	// as any process is holding the mutex, and the mutex can be destroyed if the file can be deleted).

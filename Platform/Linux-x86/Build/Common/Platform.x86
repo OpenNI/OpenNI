@@ -17,6 +17,9 @@ ifeq "$(CFG)" "Release"
 	else
 		ifeq ($(SSE_GENERATION), 3)
 			CFLAGS += -msse3
+			ifeq ($(SSSE3_ENABLED), 1)
+				CFLAGS += -mssse3
+			endif
 		else
 			($error "Only SSE2 and SSE3 are supported")
 		endif

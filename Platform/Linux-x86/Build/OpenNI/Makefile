@@ -25,6 +25,6 @@ ifneq ("$(OSTYPE)","Darwin")
 endif
 DEFINES = XN_EXPORTS
 
-include ../CommonCppMakefile
+include ../Common/CommonCppMakefile
 
 
