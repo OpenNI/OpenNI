@@ -1750,7 +1750,6 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetAllActiveGestures(JNIE
 
 	for (int i = 0; i < nCount; ++i)
 	{
-		env->ReleaseStringUTFChars(jGestures[i], nativeGestures[i]);
 		delete []nativeGestures[i];
 	}
 	delete []jGestures;
@@ -1790,7 +1789,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnEnumerateAllGestures(JNIE
 
 	for (int i = 0; i < nCount; ++i)
 	{
-		env->ReleaseStringUTFChars(jGestures[i], nativeGestures[i]);
+		delete []nativeGestures[i];
 	}
 	delete []jGestures;
 	delete []nativeGestures;
@@ -1813,7 +1812,6 @@ void XN_CALLBACK_TYPE GestureRecognizedHandler(XnNodeHandle hNode, const XnChar*
 	JNIEnvSupplier supplier;
 	jstring gestureName = supplier.GetEnv()->NewStringUTF(strGesture);
 	supplier.GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, gestureName, CreatePoint3D(supplier.GetEnv(), pIDPosition), CreatePoint3D(supplier.GetEnv(), pEndPosition));
-	supplier.GetEnv()->ReleaseStringUTFChars(gestureName, strGesture);
 }
 void XN_CALLBACK_TYPE GestureProgressHandler(XnNodeHandle hNode, const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie)
 {
@@ -1821,7 +1819,6 @@ void XN_CALLBACK_TYPE GestureProgressHandler(XnNodeHandle hNode, const XnChar* s
 	JNIEnvSupplier supplier;
 	jstring gestureName = supplier.GetEnv()->NewStringUTF(strGesture);
 	supplier.GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, gestureName, CreatePoint3D(supplier.GetEnv(), pPosition), fProgress);
-	supplier.GetEnv()->ReleaseStringUTFChars(gestureName, strGesture);
 }
 jint RegisterGestureRecognized(JNIEnv* env, jlong hNode, jobject obj, jstring cb, jobject phCallback)
 {
@@ -1869,7 +1866,6 @@ void XN_CALLBACK_TYPE GesturePositionRecognizedHandler(XnNodeHandle hNode, const
 	JNIEnvSupplier supplier;
 	jstring gestureName = supplier.GetEnv()->NewStringUTF(strGesture);
 	supplier.GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, gestureName, CreatePoint3D(supplier.GetEnv(), pPosition));
-	supplier.GetEnv()->ReleaseStringUTFChars(gestureName, strGesture);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToGestureIntermediateStageCompleted(JNIEnv *env, jclass, jlong hNode, jobject obj, jstring cb, jobject phCallback)
@@ -2310,7 +2306,6 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetAllAvailablePoses(JNIE
 
 	for (XnUInt32 i = 0; i < nCount; ++i)
 	{
-		env->ReleaseStringUTFChars(jPoses[i], nativePoses[i]);
 		delete []nativePoses[i];
 	}
 	delete []jPoses;
@@ -2332,7 +2327,6 @@ void XN_CALLBACK_TYPE PoseDetectionHandler(XnNodeHandle hNode, const XnChar* str
 	JNIEnvSupplier supplier;
 	jstring jPose = supplier.GetEnv()->NewStringUTF(strPose);
 	supplier.GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, jPose, user);
-	supplier.GetEnv()->ReleaseStringUTFChars(jPose, strPose);
 }
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToPoseDetected(JNIEnv* env, jclass, jlong hNode, jobject obj, jstring cb,jobject phCallback)
 {
@@ -2367,7 +2361,6 @@ void XN_CALLBACK_TYPE PoseDetectionInProgressHandler(XnNodeHandle hNode, const X
 	JNIEnvSupplier supplier;
 	jstring jPose = supplier.GetEnv()->NewStringUTF(strPose);
 	supplier.GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, jPose, user, eStatus);
-	supplier.GetEnv()->ReleaseStringUTFChars(jPose, strPose);
 }
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToPoseDetectionInProgress(JNIEnv* env, jclass, jlong hNode, jobject obj, jstring cb, jobject phCallback)
 {
