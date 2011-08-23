@@ -287,7 +287,7 @@ jobject CreateJointPosition(JNIEnv* pEnv, const XnSkeletonJointPosition* pPositi
 }
 jobject CreateJointOrientation(JNIEnv* pEnv, const XnSkeletonJointOrientation* pOrientation)
 {
-	jclass cls = pEnv->FindClass("org/OpenNI/SkeletonJointOrienation");
+	jclass cls = pEnv->FindClass("org/OpenNI/SkeletonJointOrientation");
 	jmethodID ctor = pEnv->GetMethodID(cls, "<init>", "(FFFFFFFFFF)V");
 
 	return pEnv->NewObject(cls, ctor, pOrientation->orientation.elements[0], pOrientation->orientation.elements[1], pOrientation->orientation.elements[2], pOrientation->orientation.elements[3], pOrientation->orientation.elements[4], pOrientation->orientation.elements[5], pOrientation->orientation.elements[6], pOrientation->orientation.elements[7], pOrientation->orientation.elements[8], pOrientation->fConfidence);
