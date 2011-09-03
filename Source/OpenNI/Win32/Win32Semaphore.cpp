@@ -44,7 +44,7 @@ XN_C_API XnStatus xnOSCreateSemaphore(XN_SEMAPHORE_HANDLE* pSemaphoreHandle, XnU
 
 XN_C_API XnStatus xnOSLockSemaphore(XN_SEMAPHORE_HANDLE hSemaphore, XnUInt32 nMilliseconds)
 {
-	XN_RET_IF_NULL(hSemaphore, XN_STATUS_OS_INVALID_MUTEX);
+	XN_RET_IF_NULL(hSemaphore, XN_STATUS_OS_INVALID_SEMAPHORE);
 	DWORD nRetVal = WaitForSingleObject(hSemaphore, nMilliseconds);
 
 	switch (nRetVal)
@@ -64,7 +64,7 @@ XN_C_API XnStatus xnOSLockSemaphore(XN_SEMAPHORE_HANDLE hSemaphore, XnUInt32 nMi
 
 XN_C_API XnStatus xnOSUnlockSemaphore(XN_SEMAPHORE_HANDLE hSemaphore)
 {
-	XN_RET_IF_NULL(hSemaphore, XN_STATUS_OS_INVALID_MUTEX);
+	XN_RET_IF_NULL(hSemaphore, XN_STATUS_OS_INVALID_SEMAPHORE);
 	if (!ReleaseSemaphore(hSemaphore, 1, NULL))
 	{
 		xnLogError(XN_MASK_OS, "Failed to release semaphore. Last error was %u.", GetLastError());
@@ -77,7 +77,7 @@ XN_C_API XnStatus xnOSUnlockSemaphore(XN_SEMAPHORE_HANDLE hSemaphore)
 XN_C_API XnStatus xnOSCloseSemaphore(XN_SEMAPHORE_HANDLE* pSemaphoreHandle)
 {
 	XN_VALIDATE_INPUT_PTR(pSemaphoreHandle);
-	XN_RET_IF_NULL(*pSemaphoreHandle, XN_STATUS_OS_INVALID_MUTEX);
+	XN_RET_IF_NULL(*pSemaphoreHandle, XN_STATUS_OS_INVALID_SEMAPHORE);
 	if (!CloseHandle(*pSemaphoreHandle))
 	{
 		xnLogError(XN_MASK_OS, "Failed to release semaphore. Last error was %u.", GetLastError());

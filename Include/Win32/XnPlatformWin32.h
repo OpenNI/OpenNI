@@ -26,20 +26,23 @@
 // Prerequisites
 //---------------------------------------------------------------------------
 #ifndef WINVER						// Allow use of features specific to Windows XP or later
-#define WINVER 0x0501
+	#define WINVER 0x0501
 #endif
 #ifndef _WIN32_WINNT				// Allow use of features specific to Windows XP or later
-#define _WIN32_WINNT 0x0501
+	#define _WIN32_WINNT 0x0501
 #endif						
 #ifndef _WIN32_WINDOWS				// Allow use of features specific to Windows 98 or later
-#define _WIN32_WINDOWS 0x0410
+	#define _WIN32_WINDOWS 0x0410
 #endif
 #ifndef _WIN32_IE					// Allow use of features specific to IE 6.0 or later
-#define _WIN32_IE 0x0600
+	#define _WIN32_IE 0x0600
 #endif
 #define WIN32_LEAN_AND_MEAN			// Exclude rarely-used stuff from Windows headers
 
-#define _CRT_SECURE_NO_DEPRECATE 1	// Undeprecate CRT functions
+// Undeprecate CRT functions
+#ifndef _CRT_SECURE_NO_DEPRECATE 
+	#define _CRT_SECURE_NO_DEPRECATE 1
+#endif
 
 //---------------------------------------------------------------------------
 // Includes

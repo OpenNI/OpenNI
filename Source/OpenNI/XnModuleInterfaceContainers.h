@@ -245,9 +245,13 @@ public:
 	{
 		xnOSMemSet(&Hands, 0, sizeof(Hands));
 		Hands.pGeneratorInterface = &Generator;
+		xnOSMemSet(&HandTouchingFOVEdge, 0, sizeof(HandTouchingFOVEdge));
+		Hands.pHandTouchingFOVEdgeInterface = &HandTouchingFOVEdge;
 		HierarchyType.Set(XN_NODE_TYPE_HANDS, TRUE);
 	}
 	XnModuleHandsGeneratorInterface Hands;
+
+	XnModuleHandTouchingFOVEdgeCapabilityInterface HandTouchingFOVEdge;
 };
 
 class XnAudioGeneratorInterfaceContainer : public XnGeneratorInterfaceContainer
@@ -276,6 +280,20 @@ public:
 	}
 
 	XnModuleCodecInterface Codec;
+};
+
+class XnScriptNodeInterfaceContainer : public XnProductionNodeInterfaceContainer
+{
+public:
+	XnScriptNodeInterfaceContainer()
+	{
+		xnOSMemSet(&Script, 0, sizeof(Script));
+		Script.pProductionNode = &ProductionNode;
+
+		HierarchyType.Set(XN_NODE_TYPE_SCRIPT, TRUE);
+	}
+
+	XnModuleScriptNodeInterface Script;
 };
 
 #endif // __XN_MODULE_INTERFACE_CONTAINERS_H__

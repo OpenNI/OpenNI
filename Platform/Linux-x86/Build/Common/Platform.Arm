@@ -1,0 +1,6 @@
+export CXX=/home/primesense/DiGMi/BeagleBoard/Kernel/OE/angstrom-dev/cross/armv7a/bin/arm-angstrom-linux-gnueabi-g++
+export GLES=1
+
+ifeq "$(CFG)" "Release"
+    CFLAGS += -mcpu=cortex-a8 -mfpu=neon -ftree-vectorize -mfloat-abi=softfp -ffast-math -fsingle-precision-constant
+endif

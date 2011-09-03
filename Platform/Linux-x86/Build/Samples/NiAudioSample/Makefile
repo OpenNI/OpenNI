@@ -7,5 +7,5 @@ SRC_FILES = ../../../../../Samples/NiAudioSample/*.cpp
 EXE_NAME = Sample-NiAudioSample
 USED_LIBS = OpenNI
 
-include ../../CommonMakefile
+include ../../Common/CommonCppMakefile
 

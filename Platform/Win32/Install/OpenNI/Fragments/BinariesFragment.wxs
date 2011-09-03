@@ -34,6 +34,12 @@
         <Component Id="OpenNI" Guid="*">
           <File Id="filF374558A6F08B598A4FA106496D94FA6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\OpenNI$(var.PlatformSuffix).dll" />
         </Component>
+        <Component Id="OpenNIjar" Guid="*">
+          <File Id="filF374558A6F08B598A4FA106496D94JAR" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\org.OpenNI.jar" />
+        </Component>
+        <Component Id="OpenNIjnidll" Guid="*">
+          <File Id="filF374558A6F08B598A4FA106496D94JNI" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\OpenNI.jni$(var.PlatformSuffix).dll" />
+        </Component>        
       </Directory>
       <Directory Id="dir80E123015D0DE85FDA6E8AE3782EF58C" Name="Driver">
         <Component Id="dpinstamd64" Guid="*">
@@ -84,6 +90,8 @@
       <ComponentRef Id="nimRecorder"/>
       <ComponentRef Id="niReg"/>
       <ComponentRef Id="OpenNI"/>
+      <ComponentRef Id="OpenNIjar"/>
+      <ComponentRef Id="OpenNIjnidll"/>      
       <ComponentRef Id="dpinstamd64"/>
       <ComponentRef Id="dpinstx86"/>
       <ComponentRef Id="dpinst"/>

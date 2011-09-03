@@ -26,7 +26,11 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/ipc.h>
+#include <XnLog.h>
+
+#ifndef XN_PLATFORM_LINUX_NO_SYSV
 #include <sys/sem.h>
+#endif
 
 //---------------------------------------------------------------------------
 // Types
@@ -79,9 +83,28 @@ XnStatus xnOSNamedMutexCreate(XnMutex* pMutex, const XnChar* csMutexName)
 	XnStatus nRetVal = XN_STATUS_OK;
 	int rc;
 
+#ifdef XN_PLATFORM_LINUX_NO_SYSV
+	xnLogError(XN_MASK_OS, "Named mutex is not implemented for this platform!");
+	return XN_STATUS_OS_MUTEX_CREATION_FAILED;
+#else
+
+	// remove bad chars from name
+	XnChar strMutexOSName[XN_FILE_MAX_PATH];
+	int i = 0;
+	for (; (i < XN_FILE_MAX_PATH) && (csMutexName[i] != '\0'); ++i)
+		strMutexOSName[i] = csMutexName[i] == '/' ? '_' : csMutexName[i];
+
+	if (i == XN_FILE_MAX_PATH)
+	{
+		xnLogWarning(XN_MASK_OS, "Mutex name is too long!");
+		return XN_STATUS_OS_MUTEX_CREATION_FAILED;
+	}
+
+	strMutexOSName[i] = '\0';
+
 	// tanslate mutex name to key file name
 	XnUInt32 nBytesWritten;
-	xnOSStrFormat(pMutex->csSemFileName, XN_FILE_MAX_PATH, &nBytesWritten, "/tmp/XnCore.Mutex.%s.key", csMutexName);
+	xnOSStrFormat(pMutex->csSemFileName, XN_FILE_MAX_PATH, &nBytesWritten, "/tmp/XnCore.Mutex.%s.key", strMutexOSName);
 	
 	// open this file (we hold it open until mutex is closed. That way it cannot be deleted as long
 	// as any process is holding the mutex, and the mutex can be destroyed if the file can be deleted).
@@ -154,6 +177,7 @@ XnStatus xnOSNamedMutexCreate(XnMutex* pMutex, const XnChar* csMutexName)
 		xnOSCloseMutex(&pMutex);
 		return (XN_STATUS_OS_MUTEX_CREATION_FAILED);
 	}
+#endif
 
 	return (XN_STATUS_OK);
 }
@@ -226,6 +250,8 @@ XN_C_API XnStatus xnOSCloseMutex(XN_MUTEX_HANDLE* pMutexHandle)
 	// check the kind of mutex
 	if (pMutex->bIsNamed)
 	{
+#ifndef XN_PLATFORM_LINUX_NO_SYSV
+
 		// decrement second sem
 		struct sembuf op;
 		op.sem_num = 1;
@@ -249,6 +275,7 @@ XN_C_API XnStatus xnOSCloseMutex(XN_MUTEX_HANDLE* pMutexHandle)
 		
 		// in any case, close the file
 		close(pMutex->hSemFile);
+#endif
 	}
 	else
 	{
@@ -275,21 +302,25 @@ XN_C_API XnStatus xnOSLockMutex(const XN_MUTEX_HANDLE MutexHandle, XnUInt32 nMil
 	// Make sure the actual mutex handle isn't NULL
 	XN_RET_IF_NULL(MutexHandle, XN_STATUS_OS_INVALID_MUTEX);
 
+#ifndef XN_PLATFORM_LINUX_NO_SYSV
 	struct sembuf op;
 	// try to decrease it by 1 (if it's 0, we'll wait)
 	op.sem_num = 0;
 	op.sem_op = -1;
 	op.sem_flg = SEM_UNDO;
+#endif
 
 	if (nMilliseconds == XN_WAIT_INFINITE)
 	{
 		// lock via the OS
 		if (MutexHandle->bIsNamed)
 		{
+#ifndef XN_PLATFORM_LINUX_NO_SYSV
 			if (0 != semop(MutexHandle->NamedSem, &op, 1))
 			{
 				rc = errno;
 			}
+#endif
 		}
 		else
 		{
@@ -303,6 +334,7 @@ XN_C_API XnStatus xnOSLockMutex(const XN_MUTEX_HANDLE MutexHandle, XnUInt32 nMil
 		// lock via the OS
 		if (MutexHandle->bIsNamed)
 		{
+#ifndef XN_PLATFORM_LINUX_NO_SYSV
 			nRetVal = xnOSGetTimeout(&time, nMilliseconds);
 			if (nRetVal != XN_STATUS_OK)
 			{
@@ -317,6 +349,7 @@ XN_C_API XnStatus xnOSLockMutex(const XN_MUTEX_HANDLE MutexHandle, XnUInt32 nMil
 			{
 				rc = errno;
 			}
+#endif
 		}
 		else
 		{
@@ -361,6 +394,7 @@ XN_C_API XnStatus xnOSUnLockMutex(const XN_MUTEX_HANDLE MutexHandle)
 	// unlock via the OS
 	if (MutexHandle->bIsNamed)
 	{
+#ifndef XN_PLATFORM_LINUX_NO_SYSV
 		struct sembuf op;
 		op.sem_num = 0;
 		op.sem_op = 1; // increase by 1
@@ -370,6 +404,7 @@ XN_C_API XnStatus xnOSUnLockMutex(const XN_MUTEX_HANDLE MutexHandle)
 		{
 			rc = errno;
 		}
+#endif
 	}
 	else
 	{

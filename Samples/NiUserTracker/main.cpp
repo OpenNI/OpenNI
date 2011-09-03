@@ -31,8 +31,10 @@
 // Globals
 //---------------------------------------------------------------------------
 xn::Context g_Context;
+xn::ScriptNode g_scriptNode;
 xn::DepthGenerator g_DepthGenerator;
 xn::UserGenerator g_UserGenerator;
+xn::Player g_Player;
 
 XnBool g_bNeedPose = FALSE;
 XnChar g_strPose[20] = "";
@@ -72,7 +74,11 @@ XnBool g_bQuit = false;
 
 void CleanupExit()
 {
-	g_Context.Shutdown();
+	g_scriptNode.Release();
+	g_DepthGenerator.Release();
+	g_UserGenerator.Release();
+	g_Player.Release();
+	g_Context.Release();
 
 	exit (1);
 }
@@ -112,6 +118,29 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& c
 void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(xn::SkeletonCapability& capability, XnUserID nId, XnBool bSuccess, void* pCookie)
 {
 	if (bSuccess)
+	{
+		// Calibration succeeded
+		printf("Calibration complete, start tracking user %d\n", nId);
+		g_UserGenerator.GetSkeletonCap().StartTracking(nId);
+	}
+	else
+	{
+		// Calibration failed
+		printf("Calibration failed for user %d\n", nId);
+		if (g_bNeedPose)
+		{
+			g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_strPose, nId);
+		}
+		else
+		{
+			g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, TRUE);
+		}
+	}
+}
+
+void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& capability, XnUserID nId, XnCalibrationStatus eStatus, void* pCookie)
+{
+	if (eStatus == XN_CALIBRATION_STATUS_OK)
 	{
 		// Calibration succeeded
 		printf("Calibration complete, start tracking user %d\n", nId);
@@ -299,7 +328,7 @@ int main(int argc, char **argv)
 	{
 		nRetVal = g_Context.Init();
 		CHECK_RC(nRetVal, "Init");
-		nRetVal = g_Context.OpenFileRecording(argv[1]);
+		nRetVal = g_Context.OpenFileRecording(argv[1], g_Player);
 		if (nRetVal != XN_STATUS_OK)
 		{
 			printf("Can't open recording %s: %s\n", argv[1], xnGetStatusString(nRetVal));
@@ -309,7 +338,7 @@ int main(int argc, char **argv)
 	else
 	{
 		xn::EnumerationErrors errors;
-		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, &errors);
+		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, g_scriptNode, &errors);
 		if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
 		{
 			XnChar strError[1024];
@@ -333,14 +362,18 @@ int main(int argc, char **argv)
 		CHECK_RC(nRetVal, "Find user generator");
 	}
 
-	XnCallbackHandle hUserCallbacks, hCalibrationCallbacks, hPoseCallbacks;
+	XnCallbackHandle hUserCallbacks, hCalibrationStart, hCalibrationComplete, hPoseDetected, hCalibrationInProgress, hPoseInProgress;
 	if (!g_UserGenerator.IsCapabilitySupported(XN_CAPABILITY_SKELETON))
 	{
 		printf("Supplied user generator doesn't support skeleton\n");
 		return 1;
 	}
-	g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks);
-	g_UserGenerator.GetSkeletonCap().RegisterCalibrationCallbacks(UserCalibration_CalibrationStart, UserCalibration_CalibrationEnd, NULL, hCalibrationCallbacks);
+	nRetVal = g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks);
+	CHECK_RC(nRetVal, "Register to user callbacks");
+	nRetVal = g_UserGenerator.GetSkeletonCap().RegisterToCalibrationStart(UserCalibration_CalibrationStart, NULL, hCalibrationStart);
+	CHECK_RC(nRetVal, "Register to calibration start");
+	nRetVal = g_UserGenerator.GetSkeletonCap().RegisterToCalibrationComplete(UserCalibration_CalibrationComplete, NULL, hCalibrationComplete);
+	CHECK_RC(nRetVal, "Register to calibration complete");
 
 	if (g_UserGenerator.GetSkeletonCap().NeedPoseForCalibration())
 	{
@@ -350,11 +383,18 @@ int main(int argc, char **argv)
 			printf("Pose required, but not supported\n");
 			return 1;
 		}
-		g_UserGenerator.GetPoseDetectionCap().RegisterToPoseCallbacks(UserPose_PoseDetected, NULL, NULL, hPoseCallbacks);
+		nRetVal = g_UserGenerator.GetPoseDetectionCap().RegisterToPoseDetected(UserPose_PoseDetected, NULL, hPoseDetected);
+		CHECK_RC(nRetVal, "Register to Pose Detected");
 		g_UserGenerator.GetSkeletonCap().GetCalibrationPose(g_strPose);
 	}
 
 	g_UserGenerator.GetSkeletonCap().SetSkeletonProfile(XN_SKEL_PROFILE_ALL);
+
+	nRetVal = g_UserGenerator.GetSkeletonCap().RegisterToCalibrationInProgress(MyCalibrationInProgress, NULL, hCalibrationInProgress);
+	CHECK_RC(nRetVal, "Register to calibration in progress");
+
+	nRetVal = g_UserGenerator.GetPoseDetectionCap().RegisterToPoseInProgress(MyPoseInProgress, NULL, hPoseInProgress);
+	CHECK_RC(nRetVal, "Register to pose in progress");
 
 	nRetVal = g_Context.StartGeneratingAll();
 	CHECK_RC(nRetVal, "StartGenerating");

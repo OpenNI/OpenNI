@@ -12,7 +12,7 @@ SRC_FILES = \
 LIB_NAME = nimCodecs
 USED_LIBS = OpenNI
 
-include ../../CommonMakefile
+include ../../Common/CommonCppMakefile
 
 
 

@@ -12,6 +12,7 @@ It includes the following chapters:
 - @subpage cmdutils
 - @subpage samples
 - @subpage additional
+- @subpage legal
 */
 
 
@@ -293,8 +294,9 @@ additional licenses in run-time to the context using the @ref xnAddLicense() fun
 
 @page conc_refcount Reference Counting
 
-OpenNI uses reference counting for nodes. This is needed because several nodes might depend on the same
-node. When a node is created, it has a reference count of 1, and the node handle is returned to the
+OpenNI uses reference counting for objects that might be shared between several components of the application.
+Those objects include the context itself, all types of production nodes, and Node Info objects.
+When a node is created, it has a reference count of 1, and the node handle is returned to the
 creator. The creator can increase the ref count by calling @ref xnProductionNodeAddRef() or @ref xn::ProductionNode::AddRef().
 Once someone holding a node does not need it anymore, it may call @ref xnProductionNodeRelease() or @ref xn::ProductionNode::Release().
 If a node's reference count reaches 0, the node will be removed from context and destroyed.
@@ -308,14 +310,29 @@ it is forbidden for an application to use the node handle once it was unreferenc
 	</td></tr>
 </table>
 
+Initializing context from a script file (XML), using the @ref xnInitFromXmlFileEx() function, usually creates 
+some nodes (depending on the script). The function returns a node which is the owner of all created nodes. 
+Once this node is destroyed, all nodes created from the script will be release as well (unless the application 
+holds another reference to them).
+
+<table>
+	<tr><th>Note:</th></tr>
+	<tr><td>
+There is also a deprecated function named @ref xnInitFromXmlFile(). This function lets the context own all
+created nodes. The problem is there is no way of releasing those nodes except for calling @ref xnShutdown(), 
+which destroys everything in the context. This method is obsolete and should not be used. It only exists
+for backwards compatibility (this was the only API up to version 1.1).
+	</td></tr>
+</table>
+
 Please note that referencing a <b>Node Info</b> object of an existing node also counts as a reference to this
 node. For example, if the application called @ref xnEnumerateExistingNodes() (@ref xn::Context::EnumerateExistingNodes()),
 and received a <i>Node Info List</i> that contains this node, then the node reference count was increased by 1.
 The application must free the list in order to unref each node in that list. This can be done by calling
 @ref xnNodeInfoListFree() (in C++, the destructor of @ref xn::NodeInfoList does this for you).
 
-In any case, shutting down OpenNI by calling @ref xnShutdown() (@ref xn::Context::Shutdown()) destroys all nodes,
-even ones that have a reference count higher than 1.
+Object oriented wrappers, like C++ and .NET, perform all reference operations for the client (they add ref in
+c`tor, copy c`tor, or assignment operator, and release ref in d`tor).
 
 @page conc_generation Data Generation
 
@@ -578,7 +595,7 @@ output executable.
 
 Therefore, in order for the sample application to execute correctly in Debug mode, you should modify 
 the Working Directory to be the sub-folder into which the executable is located.
-You can also use Visual Studio's macro $(TargetDir) instead of setting an actual path.
+You can also use Visual Studio's macro \$(TargetDir) instead of setting an actual path.
 
 Note: Use "Project Properties"->"Debugging"->"Working Directory" to set the value.
 			</td>
@@ -1065,6 +1082,24 @@ The type can be one of the following:
 In addition the "Node" element can optionally have a "name" string attribute which will hold the requested
 name of the created node.
 
+@subsection xmlrecorder Recorder
+
+The "ProductionNodes" element may contain an element called "Recorder" telling it to record data from other
+nodes that were created in the xml script. Note that these nodes must be named explicitly.
+
+For example, if two nodes were defined, named Image1 and Depth1, and we'd like to record their data into a 
+file called MyFile.oni:
+
+@code
+    <Node type="Recorder">
+      <Configuration>
+        <RecorderDestination name="MyFile.oni"/>
+        <AddNodeToRecording name="Image1" codec="JPEG"/>
+        <AddNodeToRecording name="Depth1" codec="16zT"/>
+      </Configuration>
+    </Node>
+@endcode
+
 @subsubsection xmlquery Queries
 
 The "Node" element can also declare a query that will be used when enumerating for this node. It is done
@@ -1078,6 +1113,8 @@ by adding a "Query" element to the "Node" element, which can have the following 
 		under a "MapOutputMode" object, containing three attributes: "xRes", "yRes" and "fps".
 - @b "MinUserPositions", specifying the minimum number of user positions supported by a depth generator that
 		has the "UserPosition" capability.
+- @b "ExistingNodeOnly", specifying that only existing nodes (e.g. nodes that were already created) will enumerate.
+- @b "NonExistingNodeOnly", specifying that only non-existing nodes (e.g. nodes that were not created yet) will enumerate.
 - @b "NeededNodes", specifying only production trees that contains specific nodes are valid. Those nodes are declared
 		using a sub-element named "Node".
 
@@ -1569,4 +1606,12 @@ OpenNI has a framework, allowing:
 Those utilities are also available to any application using OpenNI. OpenNI guarentees backwards compatibility
 for this framework (up to a certain extent, as opposed to OpenNI actual API, which guarentees full backwards
 compatibility).
+*/
+
+
+
+/**
+@page legal Legal Stuff
+
+"This software is based in part on the work of the Independent JPEG Group"
 */

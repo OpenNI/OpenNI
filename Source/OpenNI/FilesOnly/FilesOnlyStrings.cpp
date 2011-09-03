@@ -172,6 +172,12 @@ XN_C_API XnStatus xnOSStrCopy(XnChar* cpDestString, const XnChar* cpSrcString, c
 	return (XN_STATUS_OK);
 }
 
+XN_C_API XnUInt32 xnOSStrLen(const XnChar* cpString)
+{
+	XN_VALIDATE_PTR(cpString, 0);
+	return (XnUInt32)strlen(cpString);
+}
+
 XN_C_API XnStatus xnOSStrNCopy(XnChar* cpDestString, const XnChar* cpSrcString, const XnUInt32 nCopyLength, const XnUInt32 nDestLength)
 {
 	// Validate the input/output pointers (to make sure none of them is NULL)

@@ -10,5 +10,5 @@ SRC_FILES = \
 LIB_NAME = nimMockNodes
 USED_LIBS = OpenNI
 
-include ../../CommonMakefile
+include ../../Common/CommonCppMakefile
 

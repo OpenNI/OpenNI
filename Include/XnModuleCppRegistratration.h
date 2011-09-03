@@ -45,11 +45,11 @@ inline XnModuleNodeHandle __ModuleNodeToHandle(xn::ModuleProductionNode* pNode)
 
 #define __XN_EXPORT_NODE_COMMON(ExportedClass, ExportedName, Type)											\
 	/** Create a static global instance. */																	\
-	static ExportedClass ExportedName;																		\
+	static ExportedClass* ExportedName = new ExportedClass();												\
 																											\
 	void XN_CALLBACK_TYPE _CONCAT(ExportedClass,GetDescription)(XnProductionNodeDescription* pDescription)	\
 	{																										\
-		ExportedName.GetDescription(pDescription);															\
+		ExportedName->GetDescription(pDescription);															\
 	}																										\
 																											\
 	XnStatus XN_CALLBACK_TYPE _CONCAT(ExportedClass,EnumerateProductionTrees)								\
@@ -58,7 +58,7 @@ inline XnModuleNodeHandle __ModuleNodeToHandle(xn::ModuleProductionNode* pNode)
 		Context context(pContext);																			\
 		NodeInfoList list(pTreesList);																		\
 		EnumerationErrors errors(pErrors);																	\
-		return ExportedName.EnumerateProductionTrees(context, list, pErrors == NULL ? NULL : &errors);		\
+		return ExportedName->EnumerateProductionTrees(context, list, pErrors == NULL ? NULL : &errors);		\
 	}																										\
 																											\
 	XnStatus XN_CALLBACK_TYPE _CONCAT(ExportedClass,Create)(XnContext* pContext,							\
@@ -75,7 +75,7 @@ inline XnModuleNodeHandle __ModuleNodeToHandle(xn::ModuleProductionNode* pNode)
 		}																									\
 		ModuleProductionNode* pNode;																		\
 		Context context(pContext);																			\
-		XnStatus nRetVal = ExportedName.Create(context, strInstanceName, strCreationInfo,					\
+		XnStatus nRetVal = ExportedName->Create(context, strInstanceName, strCreationInfo,					\
 			pNeeded, strConfigurationDir, &pNode);															\
 		if (nRetVal != XN_STATUS_OK)																		\
 		{																									\
@@ -90,7 +90,7 @@ inline XnModuleNodeHandle __ModuleNodeToHandle(xn::ModuleProductionNode* pNode)
 	void XN_CALLBACK_TYPE _CONCAT(ExportedClass,Destroy)(XnModuleNodeHandle hInstance)						\
 	{																										\
 		ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;										\
-		ExportedName.Destroy(pNode);																		\
+		ExportedName->Destroy(pNode);																		\
 	}																										\
 																											\
     void XN_CALLBACK_TYPE _CONCAT(ExportedClass,GetExportedInterface)(										\
@@ -109,32 +109,26 @@ inline XnModuleNodeHandle __ModuleNodeToHandle(xn::ModuleProductionNode* pNode)
 #define _XN_EXPORT_NODE_COMMON(ExportedClass, Type)						\
 	__XN_EXPORT_NODE_COMMON(ExportedClass, _g_##ExportedClass, Type)
 
-#define _XN_VALIDATE_CAPABILITY_INTERFACE_RET(capInterface, retVal)		\
-	if (capInterface == NULL)											\
-		return retVal;
-
-#define _XN_VALIDATE_CAPABILITY_INTERFACE(capInterface)		\
-	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(capInterface, XN_STATUS_INVALID_OPERATION)
-
 //---------------------------------------------------------------------------
 // Forward Declarations
 //---------------------------------------------------------------------------
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetProductionNodeInterface(XnModuleProductionNodeInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetDeviceInterface(XnModuleDeviceInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetGeneratorInterface(XnModuleGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetMapGeneratorInterface(XnModuleMapGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetDepthGeneratorInterface(XnModuleDepthGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetImageGeneratorInterface(XnModuleImageGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetIRGeneratorInterface(XnModuleIRGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetUserGeneratorInterface(XnModuleUserGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetHandsGeneratorInterface(XnModuleHandsGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetGestureGeneratorInterface(XnModuleGestureGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetSceneAnalyzerInterface(XnModuleSceneAnalyzerInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetAudioGeneratorInterface(XnModuleAudioGeneratorInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetRecorderInterface(XnModuleRecorderInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetPlayerInterface(XnModulePlayerInterface* pInterface);
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetCodecInterface(XnModuleCodecInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetProductionNodeInterface(XnModuleProductionNodeInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetDeviceInterface(XnModuleDeviceInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetGeneratorInterface(XnModuleGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetMapGeneratorInterface(XnModuleMapGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetDepthGeneratorInterface(XnModuleDepthGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetImageGeneratorInterface(XnModuleImageGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetIRGeneratorInterface(XnModuleIRGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetUserGeneratorInterface(XnModuleUserGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetHandsGeneratorInterface(XnModuleHandsGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetGestureGeneratorInterface(XnModuleGestureGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetSceneAnalyzerInterface(XnModuleSceneAnalyzerInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetAudioGeneratorInterface(XnModuleAudioGeneratorInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetRecorderInterface(XnModuleRecorderInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetPlayerInterface(XnModulePlayerInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetCodecInterface(XnModuleCodecInterface* pInterface);
+void XN_CALLBACK_TYPE __ModuleGetScriptNodeInterface(XnModuleScriptNodeInterface* pInterface);
 
 //---------------------------------------------------------------------------
 // Utility Macros
@@ -169,6 +163,8 @@ static GetInterfaceFuncPtr __ModuleGetGetInterfaceFunc(XnProductionNodeType type
 		return (GetInterfaceFuncPtr)__ModuleGetHandsGeneratorInterface;
 	else if (xnIsTypeDerivedFrom(type, XN_NODE_TYPE_CODEC))
 		return (GetInterfaceFuncPtr)__ModuleGetCodecInterface;
+	else if (xnIsTypeDerivedFrom(type, XN_NODE_TYPE_SCRIPT))
+		return (GetInterfaceFuncPtr)__ModuleGetScriptNodeInterface;
 	// and continue with abstract ones
 	else if (xnIsTypeDerivedFrom(type, XN_NODE_TYPE_MAP_GENERATOR))
 		return (GetInterfaceFuncPtr)__ModuleGetMapGeneratorInterface;
@@ -241,6 +237,9 @@ static GetInterfaceFuncPtr __ModuleGetGetInterfaceFunc(XnProductionNodeType type
 
 #define XN_EXPORT_CODEC(ExportedClass)										\
 	_XN_EXPORT_NODE_COMMON(ExportedClass, XN_NODE_TYPE_CODEC)
+
+#define XN_EXPORT_SCRIPT(ExportedClass)										\
+	_XN_EXPORT_NODE_COMMON(ExportedClass, XN_NODE_TYPE_SCRIPT)
 
 //---------------------------------------------------------------------------
 // Exported C functions

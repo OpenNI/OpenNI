@@ -89,7 +89,7 @@ XnStatus play(Context& context, AudioGenerator* aGens, XnUInt32 nNodes)
 	MMRESULT mmRes = waveOutOpen(&hWaveOut, WAVE_MAPPER, &wf, NULL, NULL, CALLBACK_NULL);
 	if (mmRes != MMSYSERR_NOERROR)
 	{
-		printf("Warning: Failed opening wave out device. Audio will not be played!\n");
+		printf("Warning: Failed opening wave out device. Audio could not be played!\n");
 		return -1;
 	}
 
@@ -165,6 +165,23 @@ XnStatus play(Context& context, AudioGenerator* aGens, XnUInt32 nNodes)
 
 		nAudioNextBuffer = (nAudioNextBuffer + 1) % NUMBER_OF_AUDIO_BUFFERS;
 	}
+
+	// stop playback
+	if (MMSYSERR_NOERROR != waveOutReset(hWaveOut))
+	{
+		printf("Warning: Failed stopping wave out device.!\n");
+		return -1;
+	}
+
+	// close device
+	waveOutClose(hWaveOut);
+
+	// release memory
+	for (int i = 0; i < NUMBER_OF_AUDIO_BUFFERS; ++i)
+	{
+		delete[] pAudioBuffers[i].lpData;
+	}
+	delete pAudioBuffers;
 
 #endif
 
@@ -262,7 +279,9 @@ int main(int argc, char* argv[])
 	}
 #endif
 
-	nRetVal = context.InitFromXmlFile(SAMPLE_XML_PATH);
+	ScriptNode scriptNode;
+
+	nRetVal = context.InitFromXmlFile(SAMPLE_XML_PATH, scriptNode);
 	if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
 	{
 		XnChar strError[1024];
@@ -307,7 +326,10 @@ int main(int argc, char* argv[])
 		nRetVal = record(context, gens, nNodes);
 	}
 
-	context.Shutdown();
+	scriptNode.Release();
+	for (int i = 0; i < nSupportedNodes; ++i)
+		gens[i].Release();
+	context.Release();
 
 	return nRetVal;
 }

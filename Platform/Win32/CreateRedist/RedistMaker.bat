@@ -1,9 +1,9 @@
 @echo off
 
 set MAJOR_VERSION=1
-set MINOR_VERSION=1
-set MAINTENANCE_VERSION=0
-set BUILD_VERSION=41
+set MINOR_VERSION=3
+set MAINTENANCE_VERSION=2
+set BUILD_VERSION=3
 
 @echo ************************
 @echo *** ONI Redist Maker ***
@@ -76,7 +76,7 @@ goto END
 @echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @echo !!! An error occured while copying a file !!!
 @echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-pause
+
 exit /b 1
 goto END
 
@@ -85,7 +85,7 @@ goto END
 @echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @echo !!! An error occured while running a script !!!
 @echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-pause
+
 exit /b 1
 goto END
 

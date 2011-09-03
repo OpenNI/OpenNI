@@ -74,6 +74,7 @@ private:
 	XnStatus LoadAllModules();
 	XnStatus LoadModule(const XnChar* strFileName, const XnChar* strConfigDir);
 	XnStatus AddModuleGenerators(const XnChar* strModuleFile, XN_LIB_HANDLE hLib, const XnChar* strConfigDir);
+	XnStatus AddOpenNIGenerators();
 	XnStatus LoadSpecificInterface(XnVersion& moduleOpenNIVersion, XnProductionNodeType Type, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
 	XnStatus LoadDeviceNode(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
 	XnStatus LoadDepthGenerator(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
@@ -88,6 +89,7 @@ private:
 	XnStatus LoadPlayer(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
 	XnStatus LoadDeprecatedPlayer(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
 	XnStatus LoadCodec(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
+	XnStatus LoadScriptNode(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
 	XnStatus LoadProductionNode(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
 	XnStatus LoadGenerator(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
 	XnStatus LoadMapGenerator(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer);
@@ -107,6 +109,7 @@ private:
 	XnStatus ValidateRecorderInterface(XnVersion& moduleOpenNIVersion, XnModuleRecorderInterface* pInterface);
 	XnStatus ValidatePlayerInterface(XnVersion& moduleOpenNIVersion, XnModulePlayerInterface* pInterface);
 	XnStatus ValidateCodecInterface(XnVersion& moduleOpenNIVersion, XnModuleCodecInterface* pInterface);
+	XnStatus ValidateScriptNodeInterface(XnVersion& moduleOpenNIVersion, XnModuleScriptNodeInterface* pInterface);
 	XnStatus ValidateNodeNotifications(XnVersion& moduleOpenNIVersion, XnNodeNotifications* pNodeNotifications);
 
 	XnStatus ValidateFunctionGroup(const XnChar* strName, void* aFunctions[], XnUInt32 nSize);

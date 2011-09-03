@@ -43,6 +43,16 @@ extern XnBool g_bDrawSkeleton;
 extern XnBool g_bPrintID;
 extern XnBool g_bPrintState;
 
+#include <map>
+std::map<XnUInt32, std::pair<XnCalibrationStatus, XnPoseDetectionStatus> > m_Errors;
+void XN_CALLBACK_TYPE MyCalibrationInProgress(xn::SkeletonCapability& capability, XnUserID id, XnCalibrationStatus calibrationError, void* pCookie)
+{
+	m_Errors[id].first = calibrationError;
+}
+void XN_CALLBACK_TYPE MyPoseInProgress(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID id, XnPoseDetectionStatus poseError, void* pCookie)
+{
+	m_Errors[id].second = poseError;
+}
 
 #define MAX_DEPTH 10000
 float g_pDepthHist[MAX_DEPTH];
@@ -147,9 +157,54 @@ void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 #else
 	GLfloat verts[4] = {pt[0].X, pt[0].Y, pt[1].X, pt[1].Y};
 	glVertexPointer(2, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 2);
+	glDrawArrays(GL_LINES, 0, 2);
 	glFlush();
 #endif
+}
+
+const XnChar* GetCalibrationErrorString(XnCalibrationStatus error)
+{
+	switch (error)
+	{
+	case XN_CALIBRATION_STATUS_OK:
+		return "OK";
+	case XN_CALIBRATION_STATUS_NO_USER:
+		return "NoUser";
+	case XN_CALIBRATION_STATUS_ARM:
+		return "Arm";
+	case XN_CALIBRATION_STATUS_LEG:
+		return "Leg";
+	case XN_CALIBRATION_STATUS_HEAD:
+		return "Head";
+	case XN_CALIBRATION_STATUS_TORSO:
+		return "Torso";
+	case XN_CALIBRATION_STATUS_TOP_FOV:
+		return "Top FOV";
+	case XN_CALIBRATION_STATUS_SIDE_FOV:
+		return "Side FOV";
+	case XN_CALIBRATION_STATUS_POSE:
+		return "Pose";
+	default:
+		return "Unknown";
+	}
+}
+const XnChar* GetPoseErrorString(XnPoseDetectionStatus error)
+{
+	switch (error)
+	{
+	case XN_POSE_DETECTION_STATUS_OK:
+		return "OK";
+	case XN_POSE_DETECTION_STATUS_NO_USER:
+		return "NoUser";
+	case XN_POSE_DETECTION_STATUS_TOP_FOV:
+		return "Top FOV";
+	case XN_POSE_DETECTION_STATUS_SIDE_FOV:
+		return "Side FOV";
+	case XN_POSE_DETECTION_STATUS_ERROR:
+		return "General error";
+	default:
+		return "Unknown";
+	}
 }
 
 
@@ -317,12 +372,12 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			else if (g_UserGenerator.GetSkeletonCap().IsCalibrating(aUsers[i]))
 			{
 				// Calibrating
-				sprintf(strLabel, "%d - Calibrating...", aUsers[i]);
+				sprintf(strLabel, "%d - Calibrating [%s]", aUsers[i], GetCalibrationErrorString(m_Errors[aUsers[i]].first));
 			}
 			else
 			{
 				// Nothing
-				sprintf(strLabel, "%d - Looking for pose", aUsers[i]);
+				sprintf(strLabel, "%d - Looking for pose [%s]", aUsers[i], GetPoseErrorString(m_Errors[aUsers[i]].second));
 			}
 
 

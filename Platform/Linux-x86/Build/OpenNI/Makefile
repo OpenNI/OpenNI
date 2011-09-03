@@ -19,12 +19,12 @@ ifeq ("$(OSTYPE)","Darwin")
 endif
 
 LIB_NAME = OpenNI
-USED_LIBS = usb-1.0 dl
+USED_LIBS = usb-1.0 dl pthread
 ifneq ("$(OSTYPE)","Darwin")
-	USED_LIBS += rt
+	USED_LIBS += rt 
 endif
 DEFINES = XN_EXPORTS
 
-include ../CommonMakefile
+include ../Common/CommonCppMakefile
 
 

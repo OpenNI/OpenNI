@@ -44,7 +44,7 @@
  * @param	pContext	[in]	OpenNI context.
  * @param	pLicense	[in]	A license key.
  */
-XN_C_API XnStatus xnAddLicense(XnContext* pContext, const XnLicense* pLicense);
+XN_C_API XnStatus XN_C_DECL xnAddLicense(XnContext* pContext, const XnLicense* pLicense);
 
 /** 
  * Enumerates all licenses currently registered. The list of licenses should later be freed
@@ -54,7 +54,7 @@ XN_C_API XnStatus xnAddLicense(XnContext* pContext, const XnLicense* pLicense);
  * @param	paLicenses		[out]	An array of license pointers.
  * @param	pnCount			[out]	The number of licenses in the array.
  */
-XN_C_API XnStatus xnEnumerateLicenses(
+XN_C_API XnStatus XN_C_DECL xnEnumerateLicenses(
 	 XnContext* pContext,
 	 XnLicense** paLicenses,
 	 XnUInt32* pnCount
@@ -65,7 +65,7 @@ XN_C_API XnStatus xnEnumerateLicenses(
  *
  * @param	aLicenses	[in]	The list to free.
  */
-XN_C_API void xnFreeLicensesList(XnLicense* aLicenses);
+XN_C_API void XN_C_DECL xnFreeLicensesList(XnLicense* aLicenses);
 
 /** @} */
 

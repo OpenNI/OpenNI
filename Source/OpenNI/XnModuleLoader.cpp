@@ -30,6 +30,7 @@
 #include "XnTypeManager.h"
 #include <XnArray.h>
 #include <XnAlgorithms.h>
+#include "xnInternalFuncs.h"
 
 #if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 #include <XnModuleCFunctions.h>
@@ -141,23 +142,11 @@ XnStatus resolveModulesFile(XnChar* strFileName, XnUInt32 nBufSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-	#ifdef _M_X64
-		nRetVal = xnOSExpandEnvironmentStrings("%OPEN_NI_INSTALL_PATH64%\\Data\\modules.xml", strFileName, nBufSize);
-		XN_IS_STATUS_OK(nRetVal);
-	#else
-		nRetVal = xnOSExpandEnvironmentStrings("%OPEN_NI_INSTALL_PATH%\\Data\\modules.xml", strFileName, nBufSize);
-		XN_IS_STATUS_OK(nRetVal);
-	#endif
-#elif (CE4100)
-	nRetVal = xnOSStrCopy(strFileName, "/usr/etc/ni/modules.xml", nBufSize);
+	nRetVal = xnGetOpenNIConfFilesPath(strFileName, nBufSize);
 	XN_IS_STATUS_OK(nRetVal);
-#elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
-	nRetVal = xnOSStrCopy(strFileName, "/var/lib/ni/modules.xml", nBufSize);
+
+	nRetVal = xnOSStrAppend(strFileName, "modules.xml", nBufSize);
 	XN_IS_STATUS_OK(nRetVal);
-#elif XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
-	#error "Module Loader is not supported on this platform!"
-#endif
 
 	return (XN_STATUS_OK);
 }
@@ -256,6 +245,11 @@ XnStatus XnModuleLoader::LoadAllModules()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
+	// first load OpenNI itself
+	nRetVal = AddOpenNIGenerators();
+	XN_IS_STATUS_OK(nRetVal);
+
+	// now load modules
 	TiXmlDocument doc;
 	nRetVal = loadModulesFile(doc);
 	XN_IS_STATUS_OK(nRetVal);
@@ -356,6 +350,19 @@ XnStatus XnModuleLoader::AddModuleGenerators(const XnChar* strModuleFile, XN_LIB
 
 	// add it
 	nRetVal = AddModule(&openNIModule, strConfigDir, strModuleFile);
+	XN_IS_STATUS_OK(nRetVal);
+
+	return XN_STATUS_OK;
+}
+
+XnStatus XnModuleLoader::AddOpenNIGenerators()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XnOpenNIModuleInterface* pOpenNIModule = GetOpenNIModuleInterface();
+
+	// add it
+	nRetVal = AddModule(pOpenNIModule, NULL, "OpenNI");
 	XN_IS_STATUS_OK(nRetVal);
 
 	return XN_STATUS_OK;
@@ -554,6 +561,11 @@ XnStatus XnModuleLoader::LoadSpecificInterface(XnVersion& moduleOpenNIVersion, X
 	else if (pHierarchy->IsSet(XN_NODE_TYPE_CODEC))
 	{
 		nRetVal = LoadCodec(moduleOpenNIVersion, pExportedInterface, pInterfaceContainer);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_SCRIPT))
+	{
+		nRetVal = LoadScriptNode(moduleOpenNIVersion, pExportedInterface, pInterfaceContainer);
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
@@ -907,6 +919,29 @@ XnStatus XnModuleLoader::LoadCodec(XnVersion& moduleOpenNIVersion, XnModuleExpor
 	// everything is OK. Allocate and store it
 	XnCodecInterfaceContainer* pContainer;
 	XN_VALIDATE_NEW(pContainer, XnCodecInterfaceContainer);
+	*pContainer = Interface;
+
+	pInterfaceContainer = pContainer;
+
+	return (XN_STATUS_OK);
+}
+
+XnStatus XnModuleLoader::LoadScriptNode(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pExportedInterface, XnProductionNodeInterfaceContainer*& pInterfaceContainer)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XnScriptNodeInterfaceContainer Interface;
+
+	// fill it up
+	pExportedInterface->GetInterface.Script(&Interface.Script);
+
+	// validate interface
+	nRetVal = ValidateScriptNodeInterface(moduleOpenNIVersion, &Interface.Script);
+	XN_IS_STATUS_OK(nRetVal);
+
+	// everything is OK. Allocate and store it
+	XnScriptNodeInterfaceContainer* pContainer;
+	XN_VALIDATE_NEW(pContainer, XnScriptNodeInterfaceContainer);
 	*pContainer = Interface;
 
 	pInterfaceContainer = pContainer;
@@ -1289,6 +1324,20 @@ XnStatus XnModuleLoader::ValidateCodecInterface(XnVersion& moduleOpenNIVersion, 
 	return (XN_STATUS_OK);
 }
 
+XnStatus XnModuleLoader::ValidateScriptNodeInterface(XnVersion& moduleOpenNIVersion, XnModuleScriptNodeInterface* pInterface)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	nRetVal = ValidateProductionNodeInterface(moduleOpenNIVersion, pInterface->pProductionNode);
+	XN_IS_STATUS_OK(nRetVal);
+
+	XN_VALIDATE_FUNC_NOT_NULL(pInterface, GetSupportedFormat);
+	XN_VALIDATE_FUNC_NOT_NULL(pInterface, LoadScriptFromFile);
+	XN_VALIDATE_FUNC_NOT_NULL(pInterface, LoadScriptFromString);
+	XN_VALIDATE_FUNC_NOT_NULL(pInterface, Run);
+
+	return (XN_STATUS_OK);
+}
 
 XnStatus XnModuleLoader::ValidateNodeNotifications(XnVersion& moduleOpenNIVersion, XnNodeNotifications* pNodeNotifications)
 {

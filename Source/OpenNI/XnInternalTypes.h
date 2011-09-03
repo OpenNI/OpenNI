@@ -29,6 +29,7 @@
 #include <XnStringsHash.h>
 #include <XnFPSCalculator.h>
 #include <XnBitSet.h>
+#include <XnDump.h>
 
 #define XN_OPEN_NI_XML_ROOT_NAME	"OpenNI"
 
@@ -115,6 +116,8 @@ struct XnInternalNodeData
 	XnBool* pbMetaDataIsNewFlag;
 	xn::NodePrivateData* pPrivateData;
 	XnBool bWasDataRead; // Changes to TRUE on the first UpdateData() called.
+	XN_CRITICAL_SECTION_HANDLE hLock;
+	XnBool bIsOwnedByContext;
 };
 
 struct XnGestureRecognizedParams
@@ -151,6 +154,7 @@ XN_DECLARE_STRINGS_HASH(XnInternalNodeData*, XnNodesMap)
 XN_DECLARE_DEFAULT_HASH(const XnNodeInfo*, XnValue, XnProductionNodesSet)
 
 XN_DECLARE_EVENT_1ARG(XnErrorStateChangedEvent, IXnErrorStateChangedEvent, XnStatus, errorState)
+XN_DECLARE_EVENT_1ARG(XnContextShuttingDownEvent, IXnContextShuttingDownEvent, XnContext*, pContext);
 
 class XnModuleLoader;
 
@@ -167,6 +171,11 @@ struct XnContext
 	XN_EVENT_HANDLE hNewDataEvent;
 	XnUInt32 nLastLockID;
 	XnFPSData readFPS;
+	XnUInt32 nRefCount;
+	XN_CRITICAL_SECTION_HANDLE hLock;
+	XnNodeInfoList* pOwnedNodes;
+	XnDump dumpRefCount;
+	XnContextShuttingDownEvent* pShutdownEvent;
 };
 
 struct XnNodeInfo

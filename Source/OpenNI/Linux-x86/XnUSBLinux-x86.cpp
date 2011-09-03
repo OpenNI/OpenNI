@@ -23,7 +23,13 @@
 // Includes
 //---------------------------------------------------------------------------
 #include <XnUSB.h>
+
+#if (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM)
+#include <libusb.h>
+#else
 #include <libusb-1.0/libusb.h>
+#endif
+
 #include "XnUSBLinux-x86.h"
 #include "../XnUSBInternal.h"
 #include <XnOS.h>
