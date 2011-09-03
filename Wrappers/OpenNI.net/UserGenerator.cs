@@ -31,6 +31,16 @@ namespace OpenNI
 		public UserLostEventArgs(UserID id) : base(id) { }
 	}
 
+    public class UserExitEventArgs : UserEventArgs
+    {
+        public UserExitEventArgs(UserID id) : base(id) { }
+    }
+
+    public class UserReEnterEventArgs : UserEventArgs
+    {
+        public UserReEnterEventArgs(UserID id) : base(id) { }
+    }
+
 	public class UserGenerator : Generator
     {
 		public UserGenerator(Context context, IntPtr nodeHandle, bool addRef) : 
@@ -38,6 +48,8 @@ namespace OpenNI
         {
             this.internalNewUser = new SafeNativeMethods.XnUserHandler(this.InternalNewUser);
             this.internalLostUser = new SafeNativeMethods.XnUserHandler(this.InternalLostUser);
+            this.internalUserExit = new SafeNativeMethods.XnUserHandler(this.InternalUserExit);
+            this.internalUserReEnter = new SafeNativeMethods.XnUserHandler(this.InternalUserReEnter);
         }
 
         public UserGenerator(Context context, Query query, EnumerationErrors errors) :
@@ -181,6 +193,72 @@ namespace OpenNI
         }
         private SafeNativeMethods.XnUserHandler internalLostUser;
         private IntPtr lostUserHandle;
+        #endregion
+
+        #region User Exit
+        private event EventHandler<UserExitEventArgs> userExitEvent;
+        public event EventHandler<UserExitEventArgs> UserExit
+        {
+            add
+            {
+                if (this.userExitEvent == null)
+                {
+                    int status = SafeNativeMethods.xnRegisterToUserExit(this.InternalObject, this.internalUserExit, IntPtr.Zero, out userExitHandle);
+                    WrapperUtils.ThrowOnError(status);
+                }
+                this.userExitEvent += value;
+            }
+            remove
+            {
+                this.userExitEvent -= value;
+
+                if (this.userExitEvent == null)
+                {
+                    SafeNativeMethods.xnUnregisterFromUserExit(this.InternalObject, this.userExitHandle);
+                }
+            }
+        }
+        private void InternalUserExit(IntPtr hNode, UserID id, IntPtr pCookie)
+        {
+            EventHandler<UserExitEventArgs> handlers = this.userExitEvent;
+            if (handlers != null)
+                handlers(this, new UserExitEventArgs(id));
+        }
+        private SafeNativeMethods.XnUserHandler internalUserExit;
+        private IntPtr userExitHandle;
+        #endregion
+
+        #region User ReEnter
+        private event EventHandler<UserReEnterEventArgs> userReEnterEvent;
+        public event EventHandler<UserReEnterEventArgs> UserReEnter
+        {
+            add
+            {
+                if (this.userReEnterEvent == null)
+                {
+                    int status = SafeNativeMethods.xnRegisterToUserReEnter(this.InternalObject, this.internalUserReEnter, IntPtr.Zero, out userReEnterHandle);
+                    WrapperUtils.ThrowOnError(status);
+                }
+                this.userReEnterEvent += value;
+            }
+            remove
+            {
+                this.userReEnterEvent -= value;
+
+                if (this.userReEnterEvent == null)
+                {
+                    SafeNativeMethods.xnUnregisterFromUserReEnter(this.InternalObject, this.userReEnterHandle);
+                }
+            }
+        }
+        private void InternalUserReEnter(IntPtr hNode, UserID id, IntPtr pCookie)
+        {
+            EventHandler<UserReEnterEventArgs> handlers = this.userReEnterEvent;
+            if (handlers != null)
+                handlers(this, new UserReEnterEventArgs(id));
+        }
+        private SafeNativeMethods.XnUserHandler internalUserReEnter;
+        private IntPtr userReEnterHandle;
         #endregion
     }
 }

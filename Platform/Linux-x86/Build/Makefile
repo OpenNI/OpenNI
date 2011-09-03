@@ -27,13 +27,13 @@ endif
 CP = cp
 RM = rm
 
+# platform specific args
+-include Common/Platform.$(PLATFORM)
+
 # Bin directory
 BIN_DIR = ../Bin
 # output directory
 OUT_DIR = $(BIN_DIR)/$(CFG)
-
-# platform specific args
--include Platform.$(PLATFORM)
 
 # list all modules
 ALL_MODULES = \
@@ -49,11 +49,16 @@ ALL_UTILS = \
 ALL_MONO_PROJS = \
 	Wrappers/OpenNI.net
 
+ALL_JAVA_PROJS = \
+	Wrappers/OpenNI.jni \
+	Wrappers/OpenNI.java
+	
 # list all core projects
 ALL_CORE_PROJS = \
 	OpenNI \
 	$(ALL_MODULES) \
-	$(ALL_UTILS)
+	$(ALL_UTILS) \
+	$(ALL_JAVA_PROJS)
 
 # list all samples
 CORE_SAMPLES = \
@@ -65,9 +70,13 @@ CORE_SAMPLES = \
 	Samples/NiSimpleCreate \
 	Samples/NiCRead \
 	Samples/NiAudioSample \
-	Samples/NiUserTracker
 	
-ifneq "$(PLATFORM)" "CE4100"	
+ifneq "$(PLATFORM)" "Arm"
+	CORE_SAMPLES += \
+		Samples/NiUserTracker
+endif
+	
+ifeq "$(PLATFORM)" "x86"	
 	CORE_SAMPLES += \
 		Samples/NiViewer \
 		Samples/NiSimpleViewer
@@ -79,9 +88,15 @@ MONO_SAMPLES = \
 MONO_FORMS_SAMPLES = \
 	Samples/SimpleViewer.net \
 	Samples/UserTracker.net
+	
+JAVA_SAMPLES = \
+	Samples/SimpleRead.java \
+	Samples/SimpleViewer.java \
+	Samples/UserTracker.java \
 
 ALL_SAMPLES = \
-	$(CORE_SAMPLES)
+	$(CORE_SAMPLES) \
+	$(JAVA_SAMPLES)
 
 # list all projects that are build
 ALL_BUILD_PROJS = \
@@ -91,7 +106,7 @@ ALL_BUILD_PROJS = \
 ALL_PROJS = \
 	$(ALL_BUILD_PROJS)
 
-ifneq "$(PLATFORM)" "CE4100"
+ifeq "$(PLATFORM)" "x86"
 	# check if mono is installed
 	ifneq "$(realpath /usr/bin/gmcs)" ""
 		ALL_PROJS += $(ALL_MONO_PROJS)
@@ -136,6 +151,8 @@ Modules/nimRecorder: OpenNI
 Utils/niReg: OpenNI
 Utils/niLicense: OpenNI
 Wrappers/OpenNI.net: OpenNI
+Wrappers/OpenNI.jni: OpenNI
+Wrappers/OpenNI.java: Wrappers/OpenNI.jni
 Samples/NiSimpleRead: OpenNI
 Samples/NiViewer: OpenNI
 Samples/NiBackRecorder: OpenNI
@@ -148,6 +165,9 @@ Samples/NiSimpleViewer: OpenNI
 Samples/SimpleRead.net: Wrappers/OpenNI.net
 Samples/SimpleViewer.net: Wrappers/OpenNI.net
 Samples/UserTracker.net: Wrappers/OpenNI.net
+Samples/SimpleRead.java: Wrappers/OpenNI.java
+Samples/SimpleViewer.java: Wrappers/OpenNI.java
+Samples/UserTracker.java: Wrappers/OpenNI.java
 
 # clean is cleaning all projects
 clean: $(ALL_PROJS_CLEAN)

@@ -26,20 +26,27 @@
 
 using namespace xn;
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsCapabilitySupported(XnModuleNodeHandle hInstance, const XnChar* strCapabilityName)
+#define _XN_VALIDATE_CAPABILITY_INTERFACE_RET(capInterface, retVal)		\
+	if (capInterface == NULL)											\
+		return retVal;
+
+#define _XN_VALIDATE_CAPABILITY_INTERFACE(capInterface)		\
+	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(capInterface, XN_STATUS_INVALID_OPERATION)
+
+XnBool XN_CALLBACK_TYPE __ModuleIsCapabilitySupported(XnModuleNodeHandle hInstance, const XnChar* strCapabilityName)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->IsCapabilitySupported(strCapabilityName);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleInitNotifications(XnModuleNodeHandle hInstance, XnNodeNotifications* pNotifications, void* pCookie)
+XnStatus XN_CALLBACK_TYPE __ModuleInitNotifications(XnModuleNodeHandle hInstance, XnNodeNotifications* pNotifications, void* pCookie)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleExtendedSerializationInterface* pInterface = pNode->GetExtendedSerializationInterface();
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->NotifyExState(pNotifications, pCookie);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleStopNotifications(XnModuleNodeHandle hInstance)
+void XN_CALLBACK_TYPE __ModuleStopNotifications(XnModuleNodeHandle hInstance)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleExtendedSerializationInterface* pInterface = pNode->GetExtendedSerializationInterface();
@@ -47,7 +54,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleStopNotifications(XnModuleNodeHand
 	pInterface->UnregisterExNotifications();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetLockState(XnModuleNodeHandle hInstance, XnBool bLocked)
+XnStatus XN_CALLBACK_TYPE __ModuleSetLockState(XnModuleNodeHandle hInstance, XnBool bLocked)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleLockAwareInterface* pInterface = pNode->GetLockAwareInterface();
@@ -55,7 +62,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetLockState(XnModuleNodeHandl
 	return pInterface->SetLockState(bLocked);
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleGetLockState(XnModuleNodeHandle hInstance)
+XnBool XN_CALLBACK_TYPE __ModuleGetLockState(XnModuleNodeHandle hInstance)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleLockAwareInterface* pInterface = pNode->GetLockAwareInterface();
@@ -63,7 +70,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleGetLockState(XnModuleNodeHandle 
 	return pInterface->GetLockState();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToLockChange(XnModuleNodeHandle hInstance, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToLockChange(XnModuleNodeHandle hInstance, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleLockAwareInterface* pInterface = pNode->GetLockAwareInterface();
@@ -71,7 +78,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToLockChange(XnModuleN
 	return pInterface->RegisterToLockChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromLockChange(XnModuleNodeHandle hInstance, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromLockChange(XnModuleNodeHandle hInstance, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleLockAwareInterface* pInterface = pNode->GetLockAwareInterface();
@@ -79,7 +86,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromLockChange(XnModuleN
 	pInterface->UnregisterFromLockChange(hCallback);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetErrorState(XnModuleNodeHandle hInstance)
+XnStatus XN_CALLBACK_TYPE __ModuleGetErrorState(XnModuleNodeHandle hInstance)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleErrorStateInterface* pInterface = pNode->GetErrorStateInterface();
@@ -87,7 +94,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetErrorState(XnModuleNodeHand
 	return pInterface->GetErrorState();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToErrorStateChange(XnModuleNodeHandle hInstance, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToErrorStateChange(XnModuleNodeHandle hInstance, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleErrorStateInterface* pInterface = pNode->GetErrorStateInterface();
@@ -95,7 +102,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToErrorStateChange(XnM
 	return pInterface->RegisterToErrorStateChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromErrorStateChange(XnModuleNodeHandle hInstance, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromErrorStateChange(XnModuleNodeHandle hInstance, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleErrorStateInterface* pInterface = pNode->GetErrorStateInterface();
@@ -103,7 +110,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromErrorStateChange(XnM
 	pInterface->UnregisterFromErrorStateChange(hCallback);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntGetRange(XnModuleNodeHandle hInstance, const XnChar* strCap, XnInt32* pnMin, XnInt32* pnMax, XnInt32* pnStep, XnInt32* pnDefault, XnBool* pbIsAutoSupported)
+XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntGetRange(XnModuleNodeHandle hInstance, const XnChar* strCap, XnInt32* pnMin, XnInt32* pnMax, XnInt32* pnStep, XnInt32* pnDefault, XnBool* pbIsAutoSupported)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleGeneralIntInterface* pInterface = pNode->GetGeneralIntInterface(strCap);
@@ -111,7 +118,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntGetRange(XnModuleNod
 	return pInterface->GetRange(strCap, *pnMin, *pnMax, *pnStep, *pnDefault, *pbIsAutoSupported);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntGet(XnModuleNodeHandle hInstance, const XnChar* strCap, XnInt32* pnValue)
+XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntGet(XnModuleNodeHandle hInstance, const XnChar* strCap, XnInt32* pnValue)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleGeneralIntInterface* pInterface = pNode->GetGeneralIntInterface(strCap);
@@ -119,7 +126,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntGet(XnModuleNodeHand
 	return pInterface->Get(strCap, *pnValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntSet(XnModuleNodeHandle hInstance, const XnChar* strCap, XnInt32 nValue)
+XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntSet(XnModuleNodeHandle hInstance, const XnChar* strCap, XnInt32 nValue)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	ModuleGeneralIntInterface* pInterface = pNode->GetGeneralIntInterface(strCap);
@@ -127,7 +134,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntSet(XnModuleNodeHand
 	return pInterface->Set(strCap, nValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntRegisterToValueChange
+XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntRegisterToValueChange
 	(XnModuleNodeHandle hInstance, const XnChar* strCap, XnModuleStateChangedHandler handler,
 	void* pCookie, XnCallbackHandle* phCallback)
 {
@@ -137,7 +144,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGeneralIntRegisterToValueChang
 	return pInterface->RegisterToValueChange(strCap, handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGeneralIntUnregisterFromValueChange
+void XN_CALLBACK_TYPE __ModuleGeneralIntUnregisterFromValueChange
 	(XnModuleNodeHandle hInstance, const XnChar* strCap, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
@@ -146,209 +153,209 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGeneralIntUnregisterFromValueChang
 	pInterface->UnregisterFromValueChange(strCap, hCallback);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetIntProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnUInt64 nValue)
+XnStatus XN_CALLBACK_TYPE __ModuleSetIntProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnUInt64 nValue)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->SetIntProperty(strName, nValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetRealProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnDouble dValue)
+XnStatus XN_CALLBACK_TYPE __ModuleSetRealProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnDouble dValue)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->SetRealProperty(strName, dValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetStringProperty(XnModuleNodeHandle hInstance, const XnChar* strName, const XnChar* strValue)
+XnStatus XN_CALLBACK_TYPE __ModuleSetStringProperty(XnModuleNodeHandle hInstance, const XnChar* strName, const XnChar* strValue)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->SetStringProperty(strName, strValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetGeneralProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnUInt32 nBufferSize, const void* pBuffer)
+XnStatus XN_CALLBACK_TYPE __ModuleSetGeneralProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnUInt32 nBufferSize, const void* pBuffer)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->SetGeneralProperty(strName, nBufferSize, pBuffer);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetIntProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnUInt64* pnValue)
+XnStatus XN_CALLBACK_TYPE __ModuleGetIntProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnUInt64* pnValue)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->GetIntProperty(strName, *pnValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetRealProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnDouble* pdValue)
+XnStatus XN_CALLBACK_TYPE __ModuleGetRealProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnDouble* pdValue)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->GetRealProperty(strName, *pdValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetStringProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnChar* csValue, XnUInt32 nBufSize)
+XnStatus XN_CALLBACK_TYPE __ModuleGetStringProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnChar* csValue, XnUInt32 nBufSize)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->GetStringProperty(strName, csValue, nBufSize);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetGeneralProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnUInt32 nBufferSize, void* pBuffer)
+XnStatus XN_CALLBACK_TYPE __ModuleGetGeneralProperty(XnModuleNodeHandle hInstance, const XnChar* strName, XnUInt32 nBufferSize, void* pBuffer)
 {
 	ModuleProductionNode* pNode = (ModuleProductionNode*)hInstance;
 	return pNode->GetGeneralProperty(strName, nBufferSize, pBuffer);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetOutputStream(XnModuleNodeHandle hInstance, void *pCookie, XnRecorderOutputStreamInterface *pStream)
+XnStatus XN_CALLBACK_TYPE __ModuleSetOutputStream(XnModuleNodeHandle hInstance, void *pCookie, XnRecorderOutputStreamInterface *pStream)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->SetOutputStream(pCookie, pStream);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetInputStream(XnModuleNodeHandle hInstance, void *pStreamCookie, XnPlayerInputStreamInterface *pStream)
+XnStatus XN_CALLBACK_TYPE __ModuleSetInputStream(XnModuleNodeHandle hInstance, void *pStreamCookie, XnPlayerInputStreamInterface *pStream)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->SetInputStream(pStreamCookie, pStream);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleReadNext(XnModuleNodeHandle hInstance)
+XnStatus XN_CALLBACK_TYPE __ModuleReadNext(XnModuleNodeHandle hInstance)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->ReadNext();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetRepeat(XnModuleNodeHandle hInstance, XnBool bRepeat)
+XnStatus XN_CALLBACK_TYPE __ModuleSetRepeat(XnModuleNodeHandle hInstance, XnBool bRepeat)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->SetRepeat(bRepeat);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSeekToTimeStamp(XnModuleNodeHandle hInstance, XnInt64 nTimeOffset, XnPlayerSeekOrigin origin)
+XnStatus XN_CALLBACK_TYPE __ModuleSeekToTimeStamp(XnModuleNodeHandle hInstance, XnInt64 nTimeOffset, XnPlayerSeekOrigin origin)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->SeekToTimeStamp(nTimeOffset, origin);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSeekToFrame(XnModuleNodeHandle hInstance, const XnChar* strNodeName, XnInt32 nFrameOffset, XnPlayerSeekOrigin origin)
+XnStatus XN_CALLBACK_TYPE __ModuleSeekToFrame(XnModuleNodeHandle hInstance, const XnChar* strNodeName, XnInt32 nFrameOffset, XnPlayerSeekOrigin origin)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->SeekToFrame(strNodeName, nFrameOffset, origin);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleTellTimestamp(XnModuleNodeHandle hInstance, XnUInt64* pnTimestamp)
+XnStatus XN_CALLBACK_TYPE __ModuleTellTimestamp(XnModuleNodeHandle hInstance, XnUInt64* pnTimestamp)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->TellTimestamp(*pnTimestamp);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleTellFrame(XnModuleNodeHandle hInstance, const XnChar* strNodeName, XnUInt32* pnFrame)
+XnStatus XN_CALLBACK_TYPE __ModuleTellFrame(XnModuleNodeHandle hInstance, const XnChar* strNodeName, XnUInt32* pnFrame)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->TellFrame(strNodeName, *pnFrame);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetNumFrames(XnModuleNodeHandle hInstance, const XnChar* strNodeName, XnUInt32* pnFrames)
+XnStatus XN_CALLBACK_TYPE __ModuleGetNumFrames(XnModuleNodeHandle hInstance, const XnChar* strNodeName, XnUInt32* pnFrames)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->GetNumFrames(strNodeName, *pnFrames);
 }
 
-XN_C_API_EXPORT const XnChar* XN_CALLBACK_TYPE __ModuleGetSupportedFormat(XnModuleNodeHandle hInstance)
+const XnChar* XN_CALLBACK_TYPE __ModuleGetSupportedFormat(XnModuleNodeHandle hInstance)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->GetSupportedFormat();
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsEOF(XnModuleNodeHandle hGenerator)
+XnBool XN_CALLBACK_TYPE __ModuleIsEOF(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->IsEOF();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToEndOfFileReached(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToEndOfFileReached(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->RegisterToEndOfFileReached(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromEndOfFileReached(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromEndOfFileReached(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	pNode->UnregisterFromEndOfFileReached(hCallback);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetNodeNotifications(XnModuleNodeHandle hInstance, void *pNodeNotificationsCookie, XnNodeNotifications *pNodeNotifications)
+XnStatus XN_CALLBACK_TYPE __ModuleSetNodeNotifications(XnModuleNodeHandle hInstance, void *pNodeNotificationsCookie, XnNodeNotifications *pNodeNotifications)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModulePlayer* pNode = dynamic_cast<ModulePlayer*>(pProdNode);
 	return pNode->SetNodeNotifications(pNodeNotificationsCookie, pNodeNotifications);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleOnNodeAdded(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, XnProductionNodeType type, XnCodecID compression)
+XnStatus XN_CALLBACK_TYPE __ModuleOnNodeAdded(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, XnProductionNodeType type, XnCodecID compression)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->OnNodeAdded(strNodeName, type, compression);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleOnNodeRemoved(XnModuleNodeHandle hGenerator, const XnChar *strNodeName)
+XnStatus XN_CALLBACK_TYPE __ModuleOnNodeRemoved(XnModuleNodeHandle hGenerator, const XnChar *strNodeName)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->OnNodeRemoved(strNodeName);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleOnNodeIntPropChanged(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, const XnChar* strPropName, XnUInt64 nValue)
+XnStatus XN_CALLBACK_TYPE __ModuleOnNodeIntPropChanged(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, const XnChar* strPropName, XnUInt64 nValue)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->OnNodeIntPropChanged(strNodeName, strPropName, nValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleOnNodeRealPropChanged(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, const XnChar* strPropName, XnDouble dValue)
+XnStatus XN_CALLBACK_TYPE __ModuleOnNodeRealPropChanged(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, const XnChar* strPropName, XnDouble dValue)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->OnNodeRealPropChanged(strNodeName, strPropName, dValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleOnNodeStringPropChanged(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, const XnChar* strPropName, const XnChar* strValue)
+XnStatus XN_CALLBACK_TYPE __ModuleOnNodeStringPropChanged(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, const XnChar* strPropName, const XnChar* strValue)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->OnNodeStringPropChanged(strNodeName, strPropName, strValue);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleOnNodeGeneralPropChanged(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, const XnChar* strPropName, XnUInt32 nBufferSize, const void* pBuffer)
+XnStatus XN_CALLBACK_TYPE __ModuleOnNodeGeneralPropChanged(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, const XnChar* strPropName, XnUInt32 nBufferSize, const void* pBuffer)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->OnNodeGeneralPropChanged(strNodeName, strPropName, nBufferSize, pBuffer);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleOnNodeNewData(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void *pData, XnUInt32 nSize)
+XnStatus XN_CALLBACK_TYPE __ModuleOnNodeNewData(XnModuleNodeHandle hGenerator, const XnChar *strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void *pData, XnUInt32 nSize)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->OnNodeNewData(strNodeName, nTimeStamp, nFrame, pData, nSize);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleOnNodeStateReady(XnModuleNodeHandle hGenerator, const XnChar *strNodeName)
+XnStatus XN_CALLBACK_TYPE __ModuleOnNodeStateReady(XnModuleNodeHandle hGenerator, const XnChar *strNodeName)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleRecorder* pNode = dynamic_cast<ModuleRecorder*>(pProdNode);
 	return pNode->OnNodeStateReady(strNodeName);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetDeviceName(XnModuleNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
+XnStatus XN_CALLBACK_TYPE __ModuleGetDeviceName(XnModuleNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModuleDevice* pNode = dynamic_cast<ModuleDevice*>(pProdNode);
@@ -357,7 +364,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetDeviceName(XnModuleNodeHand
 	return pInterface->GetDeviceName(strBuffer, *pnBufferSize);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetVendorSpecificData(XnModuleNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
+XnStatus XN_CALLBACK_TYPE __ModuleGetVendorSpecificData(XnModuleNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModuleDevice* pNode = dynamic_cast<ModuleDevice*>(pProdNode);
@@ -366,7 +373,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetVendorSpecificData(XnModule
 	return pInterface->GetVendorSpecificData(strBuffer, *pnBufferSize);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSerialNumber(XnModuleNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
+XnStatus XN_CALLBACK_TYPE __ModuleGetSerialNumber(XnModuleNodeHandle hInstance, XnChar* strBuffer, XnUInt32* pnBufferSize)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hInstance;
 	ModuleDevice* pNode = dynamic_cast<ModuleDevice*>(pProdNode);
@@ -375,7 +382,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSerialNumber(XnModuleNodeHa
 	return pInterface->GetSerialNumber(strBuffer, *pnBufferSize);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetMirror(XnModuleNodeHandle hGenerator, XnBool bMirror)
+XnStatus XN_CALLBACK_TYPE __ModuleSetMirror(XnModuleNodeHandle hGenerator, XnBool bMirror)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -384,7 +391,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetMirror(XnModuleNodeHandle h
 	return pInterface->SetMirror(bMirror);
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsMirrored(XnModuleNodeHandle hGenerator)
+XnBool XN_CALLBACK_TYPE __ModuleIsMirrored(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -393,7 +400,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsMirrored(XnModuleNodeHandle hG
 	return pInterface->IsMirrored();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToMirrorChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToMirrorChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -402,7 +409,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToMirrorChange(XnModul
 	return pInterface->RegisterToMirrorChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromMirrorChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromMirrorChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -411,7 +418,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromMirrorChange(XnModul
 	pInterface->UnregisterFromMirrorChange(hCallback);
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsViewPointSupported(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
+XnBool XN_CALLBACK_TYPE __ModuleIsViewPointSupported(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -421,7 +428,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsViewPointSupported(XnModuleNod
 	return pInterface->IsViewPointSupported(node);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetViewPoint(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
+XnStatus XN_CALLBACK_TYPE __ModuleSetViewPoint(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -431,7 +438,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetViewPoint(XnModuleNodeHandl
 	return pInterface->SetViewPoint(node);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleResetViewPoint(XnModuleNodeHandle hGenerator)
+XnStatus XN_CALLBACK_TYPE __ModuleResetViewPoint(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -440,7 +447,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleResetViewPoint(XnModuleNodeHan
 	return pInterface->ResetViewPoint();
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsViewPointAs(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
+XnBool XN_CALLBACK_TYPE __ModuleIsViewPointAs(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -450,7 +457,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsViewPointAs(XnModuleNodeHandle
 	return pInterface->IsViewPointAs(node);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToViewPointChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToViewPointChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -459,7 +466,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToViewPointChange(XnMo
 	return pInterface->RegisterToViewPointChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromViewPointChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromViewPointChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -468,7 +475,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromViewPointChange(XnMo
 	pInterface->UnregisterFromViewPointChange(hCallback);
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleCanFrameSyncWith(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
+XnBool XN_CALLBACK_TYPE __ModuleCanFrameSyncWith(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -478,7 +485,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleCanFrameSyncWith(XnModuleNodeHan
 	return pInterface->CanFrameSyncWith(node);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleFrameSyncWith(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
+XnStatus XN_CALLBACK_TYPE __ModuleFrameSyncWith(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -488,7 +495,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleFrameSyncWith(XnModuleNodeHand
 	return pInterface->FrameSyncWith(node);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStopFrameSyncWith(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
+XnStatus XN_CALLBACK_TYPE __ModuleStopFrameSyncWith(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -498,7 +505,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStopFrameSyncWith(XnModuleNode
 	return pInterface->StopFrameSyncWith(node);
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsFrameSyncedWith(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
+XnBool XN_CALLBACK_TYPE __ModuleIsFrameSyncedWith(XnModuleNodeHandle hGenerator, XnNodeHandle hNode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -508,7 +515,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsFrameSyncedWith(XnModuleNodeHa
 	return pInterface->IsFrameSyncedWith(node);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToFrameSyncChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToFrameSyncChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -517,7 +524,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToFrameSyncChange(XnMo
 	return pInterface->RegisterToFrameSyncChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromFrameSyncChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromFrameSyncChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
@@ -526,98 +533,98 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromFrameSyncChange(XnMo
 	pInterface->UnregisterFromFrameSyncChange(hCallback);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStartGenerating(XnModuleNodeHandle hGenerator)
+XnStatus XN_CALLBACK_TYPE __ModuleStartGenerating(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->StartGenerating();
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsGenerating(XnModuleNodeHandle hGenerator)
+XnBool XN_CALLBACK_TYPE __ModuleIsGenerating(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->IsGenerating();
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleStopGenerating(XnModuleNodeHandle hGenerator)
+void XN_CALLBACK_TYPE __ModuleStopGenerating(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	pNode->StopGenerating();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToGenerationRunningChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToGenerationRunningChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->RegisterToGenerationRunningChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromGenerationRunningChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromGenerationRunningChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	pNode->UnregisterFromGenerationRunningChange(hCallback);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToNewDataAvailable(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToNewDataAvailable(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->RegisterToNewDataAvailable(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromNewDataAvailable(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromNewDataAvailable(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	pNode->UnregisterFromNewDataAvailable(hCallback);
 }
 	
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsNewDataAvailable(XnModuleNodeHandle hGenerator, XnUInt64* pnTimestamp)
+XnBool XN_CALLBACK_TYPE __ModuleIsNewDataAvailable(XnModuleNodeHandle hGenerator, XnUInt64* pnTimestamp)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->IsNewDataAvailable(*pnTimestamp);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleUpdateData(XnModuleNodeHandle hGenerator)
+XnStatus XN_CALLBACK_TYPE __ModuleUpdateData(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->UpdateData();
 }
 
-XN_C_API_EXPORT const void* XN_CALLBACK_TYPE __ModuleGetData(XnModuleNodeHandle hGenerator)
+const void* XN_CALLBACK_TYPE __ModuleGetData(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->GetData();
 }
 
-XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetDataSize(XnModuleNodeHandle hGenerator)
+XnUInt32 XN_CALLBACK_TYPE __ModuleGetDataSize(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->GetDataSize();
 }
 
-XN_C_API_EXPORT XnUInt64 XN_CALLBACK_TYPE __ModuleGetTimestamp(XnModuleNodeHandle hGenerator)
+XnUInt64 XN_CALLBACK_TYPE __ModuleGetTimestamp(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->GetTimestamp();
 }
 
-XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetFrameID(XnModuleNodeHandle hGenerator)
+XnUInt32 XN_CALLBACK_TYPE __ModuleGetFrameID(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGenerator* pNode = dynamic_cast<ModuleGenerator*>(pProdNode);
 	return pNode->GetFrameID();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetCropping(XnModuleNodeHandle hGenerator, const XnCropping* pCropping)
+XnStatus XN_CALLBACK_TYPE __ModuleSetCropping(XnModuleNodeHandle hGenerator, const XnCropping* pCropping)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
@@ -626,7 +633,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetCropping(XnModuleNodeHandle
 	return pInterface->SetCropping(*pCropping);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetCropping(XnModuleNodeHandle hGenerator, XnCropping* pCropping)
+XnStatus XN_CALLBACK_TYPE __ModuleGetCropping(XnModuleNodeHandle hGenerator, XnCropping* pCropping)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
@@ -635,7 +642,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetCropping(XnModuleNodeHandle
 	return pInterface->GetCropping(*pCropping);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToCroppingChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToCroppingChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
@@ -644,7 +651,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToCroppingChange(XnMod
 	return pInterface->RegisterToCroppingChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromCroppingChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromCroppingChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
@@ -653,7 +660,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromCroppingChange(XnMod
 	pInterface->UnregisterFromCroppingChange(hCallback);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetPowerLineFrequency(XnModuleNodeHandle hGenerator, XnPowerLineFrequency nFrequency)
+XnStatus XN_CALLBACK_TYPE __ModuleSetPowerLineFrequency(XnModuleNodeHandle hGenerator, XnPowerLineFrequency nFrequency)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
@@ -662,7 +669,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetPowerLineFrequency(XnModule
 	return pInterface->SetPowerLineFrequency(nFrequency);
 }
 
-XN_C_API_EXPORT XnPowerLineFrequency XN_CALLBACK_TYPE __ModuleGetPowerLineFrequency(XnModuleNodeHandle hGenerator)
+XnPowerLineFrequency XN_CALLBACK_TYPE __ModuleGetPowerLineFrequency(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
@@ -671,7 +678,7 @@ XN_C_API_EXPORT XnPowerLineFrequency XN_CALLBACK_TYPE __ModuleGetPowerLineFreque
 	return pInterface->GetPowerLineFrequency();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPowerLineFrequencyChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPowerLineFrequencyChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
@@ -680,7 +687,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPowerLineFrequencyCh
 	return pInterface->RegisterToPowerLineFrequencyChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromPowerLineFrequencyChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromPowerLineFrequencyChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
@@ -689,56 +696,56 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromPowerLineFrequencyCh
 	pInterface->UnregisterFromPowerLineFrequencyChange(hCallback);
 }
 
-XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetSupportedMapOutputModesCount(XnModuleNodeHandle hGenerator)
+XnUInt32 XN_CALLBACK_TYPE __ModuleGetSupportedMapOutputModesCount(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
 	return pNode->GetSupportedMapOutputModesCount();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSupportedMapOutputModes(XnModuleNodeHandle hGenerator, XnMapOutputMode* aModes, XnUInt32* pnCount)
+XnStatus XN_CALLBACK_TYPE __ModuleGetSupportedMapOutputModes(XnModuleNodeHandle hGenerator, XnMapOutputMode* aModes, XnUInt32* pnCount)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
 	return pNode->GetSupportedMapOutputModes(aModes, *pnCount);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetMapOutputMode(XnModuleNodeHandle hGenerator, const XnMapOutputMode* pOutputMode)
+XnStatus XN_CALLBACK_TYPE __ModuleSetMapOutputMode(XnModuleNodeHandle hGenerator, const XnMapOutputMode* pOutputMode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
 	return pNode->SetMapOutputMode(*pOutputMode);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetMapOutputMode(XnModuleNodeHandle hGenerator, XnMapOutputMode* pOutputMode)
+XnStatus XN_CALLBACK_TYPE __ModuleGetMapOutputMode(XnModuleNodeHandle hGenerator, XnMapOutputMode* pOutputMode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
 	return pNode->GetMapOutputMode(*pOutputMode);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToMapOutputModeChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToMapOutputModeChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
 	return pNode->RegisterToMapOutputModeChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromMapOutputModeChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromMapOutputModeChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
 	pNode->UnregisterFromMapOutputModeChange(hCallback);
 }
 
-XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetBytesPerPixel(XnModuleNodeHandle hGenerator)
+XnUInt32 XN_CALLBACK_TYPE __ModuleGetBytesPerPixel(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleMapGenerator* pNode = dynamic_cast<ModuleMapGenerator*>(pProdNode);
 	return pNode->GetBytesPerPixel();
 }
 
-XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetSupportedUserPositionsCount(XnModuleNodeHandle hGenerator)
+XnUInt32 XN_CALLBACK_TYPE __ModuleGetSupportedUserPositionsCount(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
@@ -747,7 +754,7 @@ XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetSupportedUserPositionsCount
 	return pInterface->GetSupportedUserPositionsCount();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetUserPosition(XnModuleNodeHandle hGenerator, XnUInt32 nIndex, const XnBoundingBox3D* pPosition)
+XnStatus XN_CALLBACK_TYPE __ModuleSetUserPosition(XnModuleNodeHandle hGenerator, XnUInt32 nIndex, const XnBoundingBox3D* pPosition)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
@@ -756,7 +763,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetUserPosition(XnModuleNodeHa
 	return pInterface->SetUserPosition(nIndex, *pPosition);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetUserPosition(XnModuleNodeHandle hGenerator, XnUInt32 nIndex, XnBoundingBox3D* pPosition)
+XnStatus XN_CALLBACK_TYPE __ModuleGetUserPosition(XnModuleNodeHandle hGenerator, XnUInt32 nIndex, XnBoundingBox3D* pPosition)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
@@ -765,7 +772,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetUserPosition(XnModuleNodeHa
 	return pInterface->GetUserPosition(nIndex, *pPosition);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToUserPositionChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToUserPositionChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
@@ -774,7 +781,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToUserPositionChange(X
 	return pInterface->RegisterToUserPositionChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromUserPositionChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromUserPositionChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
@@ -783,215 +790,256 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromUserPositionChange(X
 	pInterface->UnregisterFromUserPositionChange(hCallback);
 }
 
-XN_C_API_EXPORT XnDepthPixel XN_CALLBACK_TYPE __ModuleGetDeviceMaxDepth(XnModuleNodeHandle hGenerator)
+XnDepthPixel XN_CALLBACK_TYPE __ModuleGetDeviceMaxDepth(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
 	return pNode->GetDeviceMaxDepth();
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetFieldOfView(XnModuleNodeHandle hGenerator, XnFieldOfView* pFOV)
+void XN_CALLBACK_TYPE __ModuleGetFieldOfView(XnModuleNodeHandle hGenerator, XnFieldOfView* pFOV)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
 	pNode->GetFieldOfView(*pFOV);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToFieldOfViewChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToFieldOfViewChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
 	return pNode->RegisterToFieldOfViewChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromFieldOfViewChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromFieldOfViewChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
 	pNode->UnregisterFromFieldOfViewChange(hCallback);
 }
 
-XN_C_API_EXPORT XnDepthPixel* XN_CALLBACK_TYPE __ModuleGetDepthMap(XnModuleNodeHandle hGenerator)
+XnDepthPixel* XN_CALLBACK_TYPE __ModuleGetDepthMap(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleDepthGenerator* pNode = dynamic_cast<ModuleDepthGenerator*>(pProdNode);
 	return pNode->GetDepthMap();
 }
 
-XN_C_API_EXPORT XnUInt8* XN_CALLBACK_TYPE __ModuleGetImageMap(XnModuleNodeHandle hGenerator)
+XnUInt8* XN_CALLBACK_TYPE __ModuleGetImageMap(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleImageGenerator* pNode = dynamic_cast<ModuleImageGenerator*>(pProdNode);
 	return pNode->GetImageMap();
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsPixelFormatSupported(XnModuleNodeHandle hGenerator, XnPixelFormat Format)
+XnBool XN_CALLBACK_TYPE __ModuleIsPixelFormatSupported(XnModuleNodeHandle hGenerator, XnPixelFormat Format)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleImageGenerator* pNode = dynamic_cast<ModuleImageGenerator*>(pProdNode);
 	return pNode->IsPixelFormatSupported(Format);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetPixelFormat(XnModuleNodeHandle hGenerator, XnPixelFormat Format)
+XnStatus XN_CALLBACK_TYPE __ModuleSetPixelFormat(XnModuleNodeHandle hGenerator, XnPixelFormat Format)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleImageGenerator* pNode = dynamic_cast<ModuleImageGenerator*>(pProdNode);
 	return pNode->SetPixelFormat(Format);
 }
 
-XN_C_API_EXPORT XnPixelFormat XN_CALLBACK_TYPE __ModuleGetPixelFormat(XnModuleNodeHandle hGenerator)
+XnPixelFormat XN_CALLBACK_TYPE __ModuleGetPixelFormat(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleImageGenerator* pNode = dynamic_cast<ModuleImageGenerator*>(pProdNode);
 	return pNode->GetPixelFormat();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPixelFormatChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPixelFormatChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleImageGenerator* pNode = dynamic_cast<ModuleImageGenerator*>(pProdNode);
 	return pNode->RegisterToPixelFormatChange(handler, pCookie, *phCallback);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromPixelFormatChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromPixelFormatChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleImageGenerator* pNode = dynamic_cast<ModuleImageGenerator*>(pProdNode);
 	pNode->UnregisterFromPixelFormatChange(hCallback);
 }
 
-XN_C_API_EXPORT XnIRPixel* XN_CALLBACK_TYPE __ModuleGetIRMap(XnModuleNodeHandle hGenerator)
+XnIRPixel* XN_CALLBACK_TYPE __ModuleGetIRMap(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleIRGenerator* pNode = dynamic_cast<ModuleIRGenerator*>(pProdNode);
 	return pNode->GetIRMap();
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleAddGesture(XnModuleNodeHandle hGenerator, const XnChar* strGesture, XnBoundingBox3D* pArea)
+XnStatus XN_CALLBACK_TYPE __ModuleAddGesture(XnModuleNodeHandle hGenerator, const XnChar* strGesture, XnBoundingBox3D* pArea)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->AddGesture(strGesture, pArea);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRemoveGesture(XnModuleNodeHandle hGenerator, const XnChar* strGesture)
+XnStatus XN_CALLBACK_TYPE __ModuleRemoveGesture(XnModuleNodeHandle hGenerator, const XnChar* strGesture)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->RemoveGesture(strGesture);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetActiveGestures(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt16* pnGestures)
+XnStatus XN_CALLBACK_TYPE __ModuleGetActiveGestures(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt16* pnGestures)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->GetActiveGestures(pstrGestures, *pnGestures);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetAllActiveGestures(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
+XnStatus XN_CALLBACK_TYPE __ModuleGetAllActiveGestures(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->GetAllActiveGestures(pstrGestures, nNameLength, *pnGestures);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleEnumerateGestures(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt16* pnGestures)
+XnStatus XN_CALLBACK_TYPE __ModuleEnumerateGestures(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt16* pnGestures)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->EnumerateGestures(pstrGestures, *pnGestures);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleEnumerateAllGestures(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
+XnStatus XN_CALLBACK_TYPE __ModuleEnumerateAllGestures(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->EnumerateAllGestures(pstrGestures, nNameLength, *pnGestures);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsGestureAvailable(XnModuleNodeHandle hGenerator, const XnChar* strGesture)
+XnBool XN_CALLBACK_TYPE __ModuleIsGestureAvailable(XnModuleNodeHandle hGenerator, const XnChar* strGesture)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->IsGestureAvailable(strGesture);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsGestureProgressSupported(XnModuleNodeHandle hGenerator, const XnChar* strGesture)
+XnBool XN_CALLBACK_TYPE __ModuleIsGestureProgressSupported(XnModuleNodeHandle hGenerator, const XnChar* strGesture)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->IsGestureProgressSupported(strGesture);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterGestureCallbacks(XnModuleNodeHandle hGenerator, XnModuleGestureRecognized RecognizedCB, XnModuleGestureProgress ProgressCB, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterGestureCallbacks(XnModuleNodeHandle hGenerator, XnModuleGestureRecognized RecognizedCB, XnModuleGestureProgress ProgressCB, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->RegisterGestureCallbacks(RecognizedCB, ProgressCB, pCookie, *phCallback);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterGestureCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterGestureCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	pNode->UnregisterGestureCallbacks(hCallback);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToGestureChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToGestureChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	return pNode->RegisterToGestureChange(handler, pCookie, *phCallback);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromGestureChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromGestureChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
 	pNode->UnregisterFromGestureChange(hCallback);
 }
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToGestureIntermediateStageCompleted(XnModuleNodeHandle hGenerator, XnModuleGestureIntermediateStageCompleted handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
+	return pNode->RegisterToGestureIntermediateStageCompleted(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromGestureIntermediateStageCompleted(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
+	pNode->UnregisterFromGestureIntermediateStageCompleted(hCallback);
+}
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToGestureReadyForNextIntermediateStage(XnModuleNodeHandle hGenerator, XnModuleGestureReadyForNextIntermediateStage handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
+	return pNode->RegisterToGestureReadyForNextIntermediateStage(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromGestureReadyForNextIntermediateStage(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleGestureGenerator* pNode = dynamic_cast<ModuleGestureGenerator*>(pProdNode);
+	pNode->UnregisterFromGestureReadyForNextIntermediateStage(hCallback);
+}
 
-XN_C_API_EXPORT const XnLabel* XN_CALLBACK_TYPE __ModuleGetLabelMap(XnModuleNodeHandle hGenerator)
+const XnLabel* XN_CALLBACK_TYPE __ModuleGetLabelMap(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleSceneAnalyzer* pNode = dynamic_cast<ModuleSceneAnalyzer*>(pProdNode);
 	return pNode->GetLabelMap();
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetFloor(XnModuleNodeHandle hGenerator, XnPlane3D* pPlane)
+XnStatus XN_CALLBACK_TYPE __ModuleGetFloor(XnModuleNodeHandle hGenerator, XnPlane3D* pPlane)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleSceneAnalyzer* pNode = dynamic_cast<ModuleSceneAnalyzer*>(pProdNode);
 	return pNode->GetFloor(*pPlane);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterHandCallbacks(XnModuleNodeHandle hGenerator, XnModuleHandCreate CreateCB, XnModuleHandUpdate UpdateCB, XnModuleHandDestroy DestroyCB, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterHandCallbacks(XnModuleNodeHandle hGenerator, XnModuleHandCreate CreateCB, XnModuleHandUpdate UpdateCB, XnModuleHandDestroy DestroyCB, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleHandsGenerator* pNode = dynamic_cast<ModuleHandsGenerator*>(pProdNode);
 	return pNode->RegisterHandCallbacks(CreateCB, UpdateCB, DestroyCB, pCookie, *phCallback);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterHandCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterHandCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleHandsGenerator* pNode = dynamic_cast<ModuleHandsGenerator*>(pProdNode);
 	pNode->UnregisterHandCallbacks(hCallback);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStopTracking(XnModuleNodeHandle hGenerator, XnUserID user)
+XnStatus XN_CALLBACK_TYPE __ModuleStopTracking(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleHandsGenerator* pNode = dynamic_cast<ModuleHandsGenerator*>(pProdNode);
 	return pNode->StopTracking(user);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStopTrackingAll(XnModuleNodeHandle hGenerator)
+XnStatus XN_CALLBACK_TYPE __ModuleStopTrackingAll(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleHandsGenerator* pNode = dynamic_cast<ModuleHandsGenerator*>(pProdNode);
 	return pNode->StopTrackingAll();
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStartTracking(XnModuleNodeHandle hGenerator, const XnPoint3D* pPosition)
+XnStatus XN_CALLBACK_TYPE __ModuleStartTracking(XnModuleNodeHandle hGenerator, const XnPoint3D* pPosition)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleHandsGenerator* pNode = dynamic_cast<ModuleHandsGenerator*>(pProdNode);
 	return pNode->StartTracking(*pPosition);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetTrackingSmoothing(XnModuleNodeHandle hGenerator, XnFloat fSmoothingFactor)
+XnStatus XN_CALLBACK_TYPE __ModuleSetTrackingSmoothing(XnModuleNodeHandle hGenerator, XnFloat fSmoothingFactor)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleHandsGenerator* pNode = dynamic_cast<ModuleHandsGenerator*>(pProdNode);
 	return pNode->SetSmoothing(fSmoothingFactor);
 }
 
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsJointAvailable(XnModuleNodeHandle hGenerator, XnSkeletonJoint eJoint)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToHandTouchingFOVEdgeCallback(XnModuleNodeHandle hGenerator, XnModuleHandTouchingFOVEdge handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleHandsGenerator* pNode = dynamic_cast<ModuleHandsGenerator*>(pProdNode);
+	ModuleHandTouchingFOVEdgeInterface* pInterface = pNode->GetHandTouchingFOVEdgeInterface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
+	return pInterface->RegisterToHandTouchingFOVEdge(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromHandTouchingFOVEdgeCallback(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleHandsGenerator* pNode = dynamic_cast<ModuleHandsGenerator*>(pProdNode);
+	ModuleHandTouchingFOVEdgeInterface* pInterface = pNode->GetHandTouchingFOVEdgeInterface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, );
+	pInterface->UnregisterFromHandTouchingFOVEdge(hCallback);
+}
+
+XnBool XN_CALLBACK_TYPE __ModuleIsJointAvailable(XnModuleNodeHandle hGenerator, XnSkeletonJoint eJoint)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -999,7 +1047,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsJointAvailable(XnModuleNodeHan
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, FALSE);
 	return pInterface->IsJointAvailable(eJoint);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsProfileAvailable(XnModuleNodeHandle hGenerator, XnSkeletonProfile eProfile)
+XnBool XN_CALLBACK_TYPE __ModuleIsProfileAvailable(XnModuleNodeHandle hGenerator, XnSkeletonProfile eProfile)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1007,7 +1055,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsProfileAvailable(XnModuleNodeH
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, FALSE);
 	return pInterface->IsProfileAvailable(eProfile);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetSkeletonProfile(XnModuleNodeHandle hGenerator, XnSkeletonProfile eProfile)
+XnStatus XN_CALLBACK_TYPE __ModuleSetSkeletonProfile(XnModuleNodeHandle hGenerator, XnSkeletonProfile eProfile)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1015,7 +1063,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetSkeletonProfile(XnModuleNod
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->SetSkeletonProfile(eProfile);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetJointActive(XnModuleNodeHandle hGenerator, XnSkeletonJoint eJoint, XnBool bState)
+XnStatus XN_CALLBACK_TYPE __ModuleSetJointActive(XnModuleNodeHandle hGenerator, XnSkeletonJoint eJoint, XnBool bState)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1023,7 +1071,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetJointActive(XnModuleNodeHan
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->SetJointActive(eJoint, bState);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsJointActive(XnModuleNodeHandle hGenerator, XnSkeletonJoint eJoint)
+XnBool XN_CALLBACK_TYPE __ModuleIsJointActive(XnModuleNodeHandle hGenerator, XnSkeletonJoint eJoint)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1031,7 +1079,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsJointActive(XnModuleNodeHandle
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, FALSE);
 	return pInterface->IsJointActive(eJoint);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToJointConfigurationChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToJointConfigurationChange(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1039,7 +1087,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToJointConfigurationCh
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->RegisterToJointConfigurationChange(handler, pCookie, *phCallback);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromJointConfigurationChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromJointConfigurationChange(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1047,7 +1095,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromJointConfigurationCh
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface,);
 	pInterface->UnregisterFromJointConfigurationChange(hCallback);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleEnumerateActiveJoints(XnModuleNodeHandle hGenerator, XnSkeletonJoint* pJoints, XnUInt16* pnJoints)
+XnStatus XN_CALLBACK_TYPE __ModuleEnumerateActiveJoints(XnModuleNodeHandle hGenerator, XnSkeletonJoint* pJoints, XnUInt16* pnJoints)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1055,7 +1103,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleEnumerateActiveJoints(XnModule
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->EnumerateActiveJoints(pJoints, *pnJoints);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJoint(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointTransformation* pJoint)
+XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJoint(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointTransformation* pJoint)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1063,7 +1111,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJoint(XnModuleNodeH
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->GetSkeletonJoint(user, eJoint, *pJoint);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJointPosition(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointPosition* pJoint)
+XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJointPosition(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointPosition* pJoint)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1071,7 +1119,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJointPosition(XnMod
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->GetSkeletonJointPosition(user, eJoint, *pJoint);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJointOrientation(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointOrientation* pJoint)
+XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJointOrientation(XnModuleNodeHandle hGenerator, XnUserID user, XnSkeletonJoint eJoint, XnSkeletonJointOrientation* pJoint)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1079,7 +1127,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonJointOrientation(Xn
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->GetSkeletonJointOrientation(user, eJoint, *pJoint);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonTracking(XnModuleNodeHandle hGenerator, XnUserID user)
+XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonTracking(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1087,7 +1135,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonTracking(XnModuleNodeH
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, FALSE);
 	return pInterface->IsTracking(user);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonCalibrated(XnModuleNodeHandle hGenerator, XnUserID user)
+XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonCalibrated(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1095,7 +1143,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonCalibrated(XnModuleNod
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, FALSE);
 	return pInterface->IsCalibrated(user);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonCalibrating(XnModuleNodeHandle hGenerator, XnUserID user)
+XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonCalibrating(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1104,7 +1152,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsSkeletonCalibrating(XnModuleNo
 	return pInterface->IsCalibrating(user);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRequestSkeletonCalibration(XnModuleNodeHandle hGenerator, XnUserID user, XnBool bForce)
+XnStatus XN_CALLBACK_TYPE __ModuleRequestSkeletonCalibration(XnModuleNodeHandle hGenerator, XnUserID user, XnBool bForce)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1112,7 +1160,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRequestSkeletonCalibration(XnM
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->RequestCalibration(user, bForce);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleAbortSkeletonCalibration(XnModuleNodeHandle hGenerator, XnUserID user)
+XnStatus XN_CALLBACK_TYPE __ModuleAbortSkeletonCalibration(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1120,7 +1168,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleAbortSkeletonCalibration(XnMod
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->AbortCalibration(user);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSaveCalibrationDataToFile(XnModuleNodeHandle hGenerator, XnUserID user, const XnChar* strFileName)
+XnStatus XN_CALLBACK_TYPE __ModuleSaveCalibrationDataToFile(XnModuleNodeHandle hGenerator, XnUserID user, const XnChar* strFileName)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1128,7 +1176,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSaveCalibrationDataToFile(XnMo
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->SaveCalibrationDataToFile(user, strFileName);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleLoadCalibrationDataFromFile(XnModuleNodeHandle hGenerator, XnUserID user, const XnChar* strFileName)
+XnStatus XN_CALLBACK_TYPE __ModuleLoadCalibrationDataFromFile(XnModuleNodeHandle hGenerator, XnUserID user, const XnChar* strFileName)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1136,7 +1184,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleLoadCalibrationDataFromFile(Xn
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->LoadCalibrationDataFromFile(user, strFileName);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSaveCalibrationData(XnModuleNodeHandle hGenerator, XnUserID user, XnUInt32 nSlot)
+XnStatus XN_CALLBACK_TYPE __ModuleSaveCalibrationData(XnModuleNodeHandle hGenerator, XnUserID user, XnUInt32 nSlot)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1144,7 +1192,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSaveCalibrationData(XnModuleNo
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->SaveCalibrationData(user, nSlot);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleLoadCalibrationData(XnModuleNodeHandle hGenerator, XnUserID user, XnUInt32 nSlot)
+XnStatus XN_CALLBACK_TYPE __ModuleLoadCalibrationData(XnModuleNodeHandle hGenerator, XnUserID user, XnUInt32 nSlot)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1152,7 +1200,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleLoadCalibrationData(XnModuleNo
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->LoadCalibrationData(user, nSlot);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleClearCalibrationData(XnModuleNodeHandle hGenerator, XnUInt32 nSlot)
+XnStatus XN_CALLBACK_TYPE __ModuleClearCalibrationData(XnModuleNodeHandle hGenerator, XnUInt32 nSlot)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1160,7 +1208,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleClearCalibrationData(XnModuleN
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->ClearCalibrationData(nSlot);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsCalibrationData(XnModuleNodeHandle hGenerator, XnUInt32 nSlot)
+XnBool XN_CALLBACK_TYPE __ModuleIsCalibrationData(XnModuleNodeHandle hGenerator, XnUInt32 nSlot)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1168,7 +1216,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleIsCalibrationData(XnModuleNodeHa
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, FALSE);
 	return pInterface->IsCalibrationData(nSlot);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStartSkeletonTracking(XnModuleNodeHandle hGenerator, XnUserID user)
+XnStatus XN_CALLBACK_TYPE __ModuleStartSkeletonTracking(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1176,7 +1224,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStartSkeletonTracking(XnModule
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->StartTracking(user);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStopSkeletonTracking(XnModuleNodeHandle hGenerator, XnUserID user)
+XnStatus XN_CALLBACK_TYPE __ModuleStopSkeletonTracking(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1184,7 +1232,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStopSkeletonTracking(XnModuleN
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->StopTracking(user);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleResetSkeleton(XnModuleNodeHandle hGenerator, XnUserID user)
+XnStatus XN_CALLBACK_TYPE __ModuleResetSkeleton(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1192,7 +1240,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleResetSkeleton(XnModuleNodeHand
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->Reset(user);
 }
-XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleNeedPoseForSkeletonCalibration(XnModuleNodeHandle hGenerator)
+XnBool XN_CALLBACK_TYPE __ModuleNeedPoseForSkeletonCalibration(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1200,7 +1248,7 @@ XN_C_API_EXPORT XnBool XN_CALLBACK_TYPE __ModuleNeedPoseForSkeletonCalibration(X
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, FALSE);
 	return pInterface->NeedPoseForCalibration();
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonCalibrationPose(XnModuleNodeHandle hGenerator, XnChar* strPose)
+XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonCalibrationPose(XnModuleNodeHandle hGenerator, XnChar* strPose)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1208,7 +1256,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSkeletonCalibrationPose(XnM
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->GetCalibrationPose(strPose);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetSkeletonSmoothing(XnModuleNodeHandle hGenerator, XnFloat fSmoothingFactor)
+XnStatus XN_CALLBACK_TYPE __ModuleSetSkeletonSmoothing(XnModuleNodeHandle hGenerator, XnFloat fSmoothingFactor)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1216,7 +1264,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetSkeletonSmoothing(XnModuleN
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->SetSmoothing(fSmoothingFactor);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterCalibrationCallbacks(XnModuleNodeHandle hGenerator, XnModuleCalibrationStart CalibrationStartCB, XnModuleCalibrationEnd CalibrationEndCB, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterCalibrationCallbacks(XnModuleNodeHandle hGenerator, XnModuleCalibrationStart CalibrationStartCB, XnModuleCalibrationEnd CalibrationEndCB, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1224,7 +1272,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterCalibrationCallbacks(X
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->RegisterCalibrationCallbacks(CalibrationStartCB, CalibrationEndCB, pCookie, *phCallback);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterCalibrationCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterCalibrationCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1232,8 +1280,58 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterCalibrationCallbacks(XnM
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface,);
 	pInterface->UnregisterCalibrationCallbacks(hCallback);
 }
+
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToCalibrationStartCallback(XnModuleNodeHandle hGenerator, XnModuleCalibrationStart handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModuleSkeletonInterface* pInterface = pNode->GetSkeletonInterface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
+	return pInterface->RegisterToCalibrationStart(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromCalibrationStartCallback(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModuleSkeletonInterface* pInterface = pNode->GetSkeletonInterface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface,);
+	pInterface->UnregisterFromCalibrationStart(hCallback);
+}
+
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToCalibrationInProgressCallback(XnModuleNodeHandle hGenerator, XnModuleCalibrationInProgress handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModuleSkeletonInterface* pInterface = pNode->GetSkeletonInterface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
+	return pInterface->RegisterToCalibrationInProgress(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromCalibrationInProgressCallback(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModuleSkeletonInterface* pInterface = pNode->GetSkeletonInterface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface,);
+	pInterface->UnregisterFromCalibrationInProgress(hCallback);
+}
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToCalibrationCompleteCallback(XnModuleNodeHandle hGenerator, XnModuleCalibrationComplete handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModuleSkeletonInterface* pInterface = pNode->GetSkeletonInterface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
+	return pInterface->RegisterToCalibrationComplete(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromCalibrationCompleteCallback(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModuleSkeletonInterface* pInterface = pNode->GetSkeletonInterface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface,);
+	pInterface->UnregisterFromCalibrationComplete(hCallback);
+}
 ///
-XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetNumberOfPoses(XnModuleNodeHandle hGenerator)
+XnUInt32 XN_CALLBACK_TYPE __ModuleGetNumberOfPoses(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1241,7 +1339,7 @@ XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetNumberOfPoses(XnModuleNodeH
 	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface, 0);
 	return pInterface->GetNumberOfPoses();
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetAvailablePoses(XnModuleNodeHandle hGenerator, XnChar** pstrPoses, XnUInt32* pnPoses)
+XnStatus XN_CALLBACK_TYPE __ModuleGetAvailablePoses(XnModuleNodeHandle hGenerator, XnChar** pstrPoses, XnUInt32* pnPoses)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1249,7 +1347,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetAvailablePoses(XnModuleNode
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->GetAvailablePoses(pstrPoses, *pnPoses);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetAllAvailablePoses(XnModuleNodeHandle hGenerator, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses)
+XnStatus XN_CALLBACK_TYPE __ModuleGetAllAvailablePoses(XnModuleNodeHandle hGenerator, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1258,7 +1356,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetAllAvailablePoses(XnModuleN
 	return pInterface->GetAllAvailablePoses(pstrPoses, nNameLength, *pnPoses);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStartPoseDetection(XnModuleNodeHandle hGenerator, const XnChar* strPose, XnUserID user)
+XnStatus XN_CALLBACK_TYPE __ModuleStartPoseDetection(XnModuleNodeHandle hGenerator, const XnChar* strPose, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1266,7 +1364,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStartPoseDetection(XnModuleNod
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->StartPoseDetection(strPose, user);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStopPoseDetection(XnModuleNodeHandle hGenerator, XnUserID user)
+XnStatus XN_CALLBACK_TYPE __ModuleStopPoseDetection(XnModuleNodeHandle hGenerator, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1275,7 +1373,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleStopPoseDetection(XnModuleNode
 	return pInterface->StopPoseDetection(user);
 }
 
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPoseCallbacks(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback PoseDetectionStartCB, XnModulePoseDetectionCallback PoseDetectionEndCB, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPoseCallbacks(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback PoseDetectionStartCB, XnModulePoseDetectionCallback PoseDetectionEndCB, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1283,7 +1381,7 @@ XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPoseCallbacks(XnModu
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->RegisterToPoseDetectionCallbacks(PoseDetectionStartCB, PoseDetectionEndCB, pCookie, *phCallback);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromPoseCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromPoseCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
@@ -1292,118 +1390,225 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromPoseCallbacks(XnModu
 	pInterface->UnregisterFromPoseDetectionCallbacks(hCallback);
 }
 
-XN_C_API_EXPORT XnUInt16 XN_CALLBACK_TYPE __ModuleGetNumberOfUsers(XnModuleNodeHandle hGenerator)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPoseDetected(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModulePoseDetectionInteface* pInterface = pNode->GetPoseDetectionInteface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
+	return pInterface->RegisterToPoseDetected(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromPoseDetected(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModulePoseDetectionInteface* pInterface = pNode->GetPoseDetectionInteface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface,);
+	pInterface->UnregisterFromPoseDetected(hCallback);
+}
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToOutOfPose(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModulePoseDetectionInteface* pInterface = pNode->GetPoseDetectionInteface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
+	return pInterface->RegisterToOutOfPose(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromOutOfPose(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModulePoseDetectionInteface* pInterface = pNode->GetPoseDetectionInteface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface,);
+	pInterface->UnregisterFromOutOfPose(hCallback);
+}
+
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPoseInProgressCallback(XnModuleNodeHandle hGenerator, XnModulePoseDetectionInProgressCallback handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModulePoseDetectionInteface* pInterface = pNode->GetPoseDetectionInteface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
+	return pInterface->RegisterToPoseDetectionInProgress(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromPoseInProgressCallback(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModulePoseDetectionInteface* pInterface = pNode->GetPoseDetectionInteface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE_RET(pInterface,);
+	pInterface->UnregisterFromPoseDetectionInProgress(hCallback);
+}
+
+
+XnUInt16 XN_CALLBACK_TYPE __ModuleGetNumberOfUsers(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
 	return pNode->GetNumberOfUsers();
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetUsers(XnModuleNodeHandle hGenerator, XnUserID* pUsers, XnUInt16* pnUsers)
+XnStatus XN_CALLBACK_TYPE __ModuleGetUsers(XnModuleNodeHandle hGenerator, XnUserID* pUsers, XnUInt16* pnUsers)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
 	return pNode->GetUsers(pUsers, *pnUsers);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetUserCoM(XnModuleNodeHandle hGenerator, XnUserID user, XnPoint3D* pCoM)
+XnStatus XN_CALLBACK_TYPE __ModuleGetUserCoM(XnModuleNodeHandle hGenerator, XnUserID user, XnPoint3D* pCoM)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
 	return pNode->GetCoM(user, *pCoM);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetUserPixels(XnModuleNodeHandle hGenerator, XnUserID user, XnSceneMetaData* pScene)
+XnStatus XN_CALLBACK_TYPE __ModuleGetUserPixels(XnModuleNodeHandle hGenerator, XnUserID user, XnSceneMetaData* pScene)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
 	return pNode->GetUserPixels(user, pScene);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterUserCallbacks(XnModuleNodeHandle hGenerator, XnModuleUserHandler NewUserCB, XnModuleUserHandler LostUserCB, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterUserCallbacks(XnModuleNodeHandle hGenerator, XnModuleUserHandler NewUserCB, XnModuleUserHandler LostUserCB, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
 	return pNode->RegisterUserCallbacks(NewUserCB, LostUserCB, pCookie, *phCallback);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterUserCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterUserCallbacks(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
 	pNode->UnregisterUserCallbacks(hCallback);
 }
 
-XN_C_API_EXPORT XnUChar* XN_CALLBACK_TYPE __ModuleGetAudioBuffer(XnModuleNodeHandle hGenerator)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToUserExitCallback(XnModuleNodeHandle hGenerator, XnModuleUserHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	return pNode->RegisterToUserExit(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromUserExitCallback(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	pNode->UnregisterFromUserExit(hCallback);
+}
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToUserReEnterCallback(XnModuleNodeHandle hGenerator, XnModuleUserHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	return pNode->RegisterToUserReEnter(handler, pCookie, *phCallback);
+}
+void XN_CALLBACK_TYPE __ModuleUnregisterFromUserReEnterCallback(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	pNode->UnregisterFromUserReEnter(hCallback);
+}
+
+
+XnUChar* XN_CALLBACK_TYPE __ModuleGetAudioBuffer(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleAudioGenerator* pNode = dynamic_cast<ModuleAudioGenerator*>(pProdNode);
 	return pNode->GetAudioBuffer();
 }
-XN_C_API_EXPORT XnUInt32 XN_CALLBACK_TYPE __ModuleGetSupportedWaveOutputModesCount(XnModuleNodeHandle hGenerator)
+XnUInt32 XN_CALLBACK_TYPE __ModuleGetSupportedWaveOutputModesCount(XnModuleNodeHandle hGenerator)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleAudioGenerator* pNode = dynamic_cast<ModuleAudioGenerator*>(pProdNode);
 	return pNode->GetSupportedWaveOutputModesCount();
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetSupportedWaveOutputModes(XnModuleNodeHandle hGenerator, XnWaveOutputMode* aSupportedModes, XnUInt32* pnCount)
+XnStatus XN_CALLBACK_TYPE __ModuleGetSupportedWaveOutputModes(XnModuleNodeHandle hGenerator, XnWaveOutputMode* aSupportedModes, XnUInt32* pnCount)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleAudioGenerator* pNode = dynamic_cast<ModuleAudioGenerator*>(pProdNode);
 	return pNode->GetSupportedWaveOutputModes(aSupportedModes, *pnCount);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleSetWaveOutputMode(XnModuleNodeHandle hGenerator, const XnWaveOutputMode* pOutputMode)
+XnStatus XN_CALLBACK_TYPE __ModuleSetWaveOutputMode(XnModuleNodeHandle hGenerator, const XnWaveOutputMode* pOutputMode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleAudioGenerator* pNode = dynamic_cast<ModuleAudioGenerator*>(pProdNode);
 	return pNode->SetWaveOutputMode(*pOutputMode);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleGetWaveOutputMode(XnModuleNodeHandle hGenerator, XnWaveOutputMode* pOutputMode)
+XnStatus XN_CALLBACK_TYPE __ModuleGetWaveOutputMode(XnModuleNodeHandle hGenerator, XnWaveOutputMode* pOutputMode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleAudioGenerator* pNode = dynamic_cast<ModuleAudioGenerator*>(pProdNode);
 	return pNode->GetWaveOutputMode(*pOutputMode);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleRegisterToWaveOutputModeChanges(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+XnStatus XN_CALLBACK_TYPE __ModuleRegisterToWaveOutputModeChanges(XnModuleNodeHandle hGenerator, XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleAudioGenerator* pNode = dynamic_cast<ModuleAudioGenerator*>(pProdNode);
 	return pNode->RegisterToWaveOutputModeChanges(handler, pCookie, *phCallback);
 }
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleUnregisterFromWaveOutputModeChanges(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
+void XN_CALLBACK_TYPE __ModuleUnregisterFromWaveOutputModeChanges(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
 	ModuleAudioGenerator* pNode = dynamic_cast<ModuleAudioGenerator*>(pProdNode);
 	pNode->UnregisterFromWaveOutputModeChanges(hCallback);
 }
 
-XN_C_API_EXPORT XnCodecID XN_CALLBACK_TYPE __ModuleGetCodecID(XnModuleNodeHandle hCodec)
+XnCodecID XN_CALLBACK_TYPE __ModuleGetCodecID(XnModuleNodeHandle hCodec)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hCodec;
 	ModuleCodec* pCodec = dynamic_cast<ModuleCodec*>(pProdNode);
 	return pCodec->GetCodecID();
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleCodecInit(XnModuleNodeHandle hCodec, XnNodeHandle hNode)
+XnStatus XN_CALLBACK_TYPE __ModuleCodecInit(XnModuleNodeHandle hCodec, XnNodeHandle hNode)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hCodec;
 	ModuleCodec* pCodec = dynamic_cast<ModuleCodec*>(pProdNode);
 	return pCodec->Init(ProductionNode(hNode));
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleCompressData(XnModuleNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten)
+XnStatus XN_CALLBACK_TYPE __ModuleCompressData(XnModuleNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hCodec;
 	ModuleCodec* pCodec = dynamic_cast<ModuleCodec*>(pProdNode);
 	return pCodec->CompressData(pSrc, nSrcSize, pDst, nDstSize, pnBytesWritten);
 }
-XN_C_API_EXPORT XnStatus XN_CALLBACK_TYPE __ModuleDecompressData(XnModuleNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten)
+XnStatus XN_CALLBACK_TYPE __ModuleDecompressData(XnModuleNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hCodec;
 	ModuleCodec* pCodec = dynamic_cast<ModuleCodec*>(pProdNode);
 	return pCodec->DecompressData(pSrc, nSrcSize, pDst, nDstSize, pnBytesWritten);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetExtendedSerializationInterface(XnModuleExtendedSerializationInterface* pInterface)
+const XnChar* XN_CALLBACK_TYPE __ModuleScriptGetSupportedFormat(XnModuleNodeHandle hScript)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hScript;
+	ModuleScriptNode* pScript = dynamic_cast<ModuleScriptNode*>(pProdNode);
+	return pScript->GetSupportedFormat();
+}
+
+XnStatus XN_CALLBACK_TYPE __ModuleLoadScriptFromFile(XnModuleNodeHandle hScript, const XnChar* strFileName)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hScript;
+	ModuleScriptNode* pScript = dynamic_cast<ModuleScriptNode*>(pProdNode);
+	return pScript->LoadScriptFromFile(strFileName);
+}
+
+XnStatus XN_CALLBACK_TYPE __ModuleLoadScriptFromString(XnModuleNodeHandle hScript, const XnChar* strScript)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hScript;
+	ModuleScriptNode* pScript = dynamic_cast<ModuleScriptNode*>(pProdNode);
+	return pScript->LoadScriptFromString(strScript);
+}
+
+XnStatus XN_CALLBACK_TYPE __ModuleScriptRun(XnModuleNodeHandle hScript, XnNodeInfoList* pCreatedNodes, XnEnumerationErrors* pErrors)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hScript;
+	ModuleScriptNode* pScript = dynamic_cast<ModuleScriptNode*>(pProdNode);
+	NodeInfoList createdNodes(pCreatedNodes);
+	EnumerationErrors errors(pErrors);
+	return pScript->Run(createdNodes, errors);
+}
+
+void XN_CALLBACK_TYPE __ModuleGetExtendedSerializationInterface(XnModuleExtendedSerializationInterface* pInterface)
 {
 	pInterface->InitNotifications = __ModuleInitNotifications;
 	pInterface->StopNotifications = __ModuleStopNotifications;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetLockAwareInterface(XnModuleLockAwareInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetLockAwareInterface(XnModuleLockAwareInterface* pInterface)
 {
 	pInterface->SetLockState = __ModuleSetLockState;
 	pInterface->GetLockState = __ModuleGetLockState;
@@ -1411,14 +1616,14 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetLockAwareInterface(XnModuleLock
 	pInterface->UnregisterFromLockChange = __ModuleUnregisterFromLockChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetErrorStateInterface(XnModuleErrorStateInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetErrorStateInterface(XnModuleErrorStateInterface* pInterface)
 {
 	pInterface->GetErrorState = __ModuleGetErrorState;
 	pInterface->RegisterToErrorStateChange = __ModuleRegisterToErrorStateChange;
 	pInterface->UnregisterFromErrorStateChange = __ModuleUnregisterFromErrorStateChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetGeneralIntInterface(XnModuleGeneralIntInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetGeneralIntInterface(XnModuleGeneralIntInterface* pInterface)
 {
 	pInterface->GetRange = __ModuleGeneralIntGetRange;
 	pInterface->Get = __ModuleGeneralIntGet;
@@ -1427,7 +1632,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetGeneralIntInterface(XnModuleGen
 	pInterface->UnregisterFromValueChange = __ModuleGeneralIntUnregisterFromValueChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetProductionNodeInterface(XnModuleProductionNodeInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetProductionNodeInterface(XnModuleProductionNodeInterface* pInterface)
 {
 	pInterface->IsCapabilitySupported = __ModuleIsCapabilitySupported;
 	pInterface->SetIntProperty = __ModuleSetIntProperty;
@@ -1445,20 +1650,20 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetProductionNodeInterface(XnModul
 	__ModuleGetGeneralIntInterface(pInterface->pGeneralIntInterface);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetDeviceIdentificationInterface(XnModuleDeviceIdentificationInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetDeviceIdentificationInterface(XnModuleDeviceIdentificationInterface* pInterface)
 {
 	pInterface->GetDeviceName = __ModuleGetDeviceName;
 	pInterface->GetVendorSpecificData = __ModuleGetVendorSpecificData;
 	pInterface->GetSerialNumber = __ModuleGetSerialNumber;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetDeviceInterface(XnModuleDeviceInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetDeviceInterface(XnModuleDeviceInterface* pInterface)
 {
 	__ModuleGetProductionNodeInterface(pInterface->pProductionNode);
 	__ModuleGetDeviceIdentificationInterface(pInterface->pDeviceIdentificationInterface);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetMirrorInterface(XnModuleMirrorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetMirrorInterface(XnModuleMirrorInterface* pInterface)
 {
 	pInterface->SetMirror = __ModuleSetMirror;
 	pInterface->IsMirrored = __ModuleIsMirrored;
@@ -1466,7 +1671,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetMirrorInterface(XnModuleMirrorI
 	pInterface->UnregisterFromMirrorChange = __ModuleUnregisterFromMirrorChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetAlternativeViewPointInterface(XnModuleAlternativeViewPointInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetAlternativeViewPointInterface(XnModuleAlternativeViewPointInterface* pInterface)
 {
 	pInterface->IsViewPointSupported = __ModuleIsViewPointSupported;
 	pInterface->SetViewPoint = __ModuleSetViewPoint;
@@ -1476,7 +1681,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetAlternativeViewPointInterface(X
 	pInterface->UnregisterFromViewPointChange = __ModuleUnregisterFromViewPointChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetFrameSyncInterface(XnModuleFrameSyncInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetFrameSyncInterface(XnModuleFrameSyncInterface* pInterface)
 {
 	pInterface->CanFrameSyncWith = __ModuleCanFrameSyncWith;
 	pInterface->FrameSyncWith = __ModuleFrameSyncWith;
@@ -1486,7 +1691,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetFrameSyncInterface(XnModuleFram
 	pInterface->UnregisterFromFrameSyncChange = __ModuleUnregisterFromFrameSyncChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetGeneratorInterface(XnModuleGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetGeneratorInterface(XnModuleGeneratorInterface* pInterface)
 {
 	__ModuleGetProductionNodeInterface(pInterface->pProductionNodeInterface);
 	pInterface->StartGenerating = __ModuleStartGenerating;
@@ -1507,7 +1712,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetGeneratorInterface(XnModuleGene
 	__ModuleGetFrameSyncInterface(pInterface->pFrameSyncInterface);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetNodeNotificationsInterface(XnNodeNotifications *pInterface)
+void XN_CALLBACK_TYPE __ModuleGetNodeNotificationsInterface(XnNodeNotifications *pInterface)
 {
 	pInterface->OnNodeAdded = __ModuleOnNodeAdded;
 	pInterface->OnNodeRemoved = __ModuleOnNodeRemoved;
@@ -1519,14 +1724,14 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetNodeNotificationsInterface(XnNo
 	pInterface->OnNodeNewData = __ModuleOnNodeNewData;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetRecorderInterface(XnModuleRecorderInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetRecorderInterface(XnModuleRecorderInterface* pInterface)
 {
 	pInterface->SetOutputStream = __ModuleSetOutputStream;
 	__ModuleGetProductionNodeInterface(pInterface->pProductionNode);
 	__ModuleGetNodeNotificationsInterface(pInterface->pNodeNotifications);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetPlayerInterface(XnModulePlayerInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetPlayerInterface(XnModulePlayerInterface* pInterface)
 {
 	__ModuleGetProductionNodeInterface(pInterface->pProductionNode);
 	pInterface->SetInputStream = __ModuleSetInputStream;
@@ -1544,7 +1749,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetPlayerInterface(XnModulePlayerI
 	pInterface->UnregisterFromEndOfFileReached = __ModuleUnregisterFromEndOfFileReached;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetCroppingInterface(XnModuleCroppingInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetCroppingInterface(XnModuleCroppingInterface* pInterface)
 {
 	pInterface->SetCropping = __ModuleSetCropping;
 	pInterface->GetCropping = __ModuleGetCropping;
@@ -1552,7 +1757,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetCroppingInterface(XnModuleCropp
 	pInterface->UnregisterFromCroppingChange = __ModuleUnregisterFromCroppingChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetAntiFlickerInterface(XnModuleAntiFlickerInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetAntiFlickerInterface(XnModuleAntiFlickerInterface* pInterface)
 {
 	pInterface->SetPowerLineFrequency = __ModuleSetPowerLineFrequency;
 	pInterface->GetPowerLineFrequency = __ModuleGetPowerLineFrequency;
@@ -1560,7 +1765,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetAntiFlickerInterface(XnModuleAn
 	pInterface->UnregisterFromPowerLineFrequencyChange = __ModuleUnregisterFromPowerLineFrequencyChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetMapGeneratorInterface(XnModuleMapGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetMapGeneratorInterface(XnModuleMapGeneratorInterface* pInterface)
 {
 	__ModuleGetGeneratorInterface(pInterface->pGeneratorInterface);
 	pInterface->GetSupportedMapOutputModesCount = __ModuleGetSupportedMapOutputModesCount;
@@ -1574,7 +1779,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetMapGeneratorInterface(XnModuleM
 	__ModuleGetAntiFlickerInterface(pInterface->pAntiFlickerInterface);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetUserPositionInterface(XnModuleUserPositionCapabilityInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetUserPositionInterface(XnModuleUserPositionCapabilityInterface* pInterface)
 {
 	pInterface->GetSupportedUserPositionsCount = __ModuleGetSupportedUserPositionsCount;
 	pInterface->SetUserPosition = __ModuleSetUserPosition;
@@ -1583,7 +1788,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetUserPositionInterface(XnModuleU
 	pInterface->UnregisterFromUserPositionChange = __ModuleUnregisterFromUserPositionChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetDepthGeneratorInterface(XnModuleDepthGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetDepthGeneratorInterface(XnModuleDepthGeneratorInterface* pInterface)
 {
 	__ModuleGetMapGeneratorInterface(pInterface->pMapInterface);
 	pInterface->GetDeviceMaxDepth = __ModuleGetDeviceMaxDepth;
@@ -1594,7 +1799,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetDepthGeneratorInterface(XnModul
 	__ModuleGetUserPositionInterface(pInterface->pUserPositionInterface);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetImageGeneratorInterface(XnModuleImageGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetImageGeneratorInterface(XnModuleImageGeneratorInterface* pInterface)
 {
 	__ModuleGetMapGeneratorInterface(pInterface->pMapInterface);
 	pInterface->GetImageMap = __ModuleGetImageMap;
@@ -1605,13 +1810,13 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetImageGeneratorInterface(XnModul
 	pInterface->UnregisterFromPixelFormatChange = __ModuleUnregisterFromPixelFormatChange;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetIRGeneratorInterface(XnModuleIRGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetIRGeneratorInterface(XnModuleIRGeneratorInterface* pInterface)
 {
 	__ModuleGetMapGeneratorInterface(pInterface->pMapInterface);
 	pInterface->GetIRMap = __ModuleGetIRMap;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetGestureGeneratorInterface(XnModuleGestureGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetGestureGeneratorInterface(XnModuleGestureGeneratorInterface* pInterface)
 {
 	__ModuleGetGeneratorInterface(pInterface->pGeneratorInterface);
 	pInterface->AddGesture = __ModuleAddGesture;
@@ -1626,16 +1831,21 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetGestureGeneratorInterface(XnMod
 	pInterface->UnregisterGestureCallbacks = __ModuleUnregisterGestureCallbacks;
 	pInterface->RegisterToGestureChange = __ModuleRegisterToGestureChange;
 	pInterface->UnregisterFromGestureChange = __ModuleUnregisterFromGestureChange;
+
+	pInterface->RegisterToGestureIntermediateStageCompleted = __ModuleRegisterToGestureIntermediateStageCompleted;
+	pInterface->UnregisterFromGestureIntermediateStageCompleted = __ModuleUnregisterFromGestureIntermediateStageCompleted;
+	pInterface->RegisterToGestureReadyForNextIntermediateStage = __ModuleRegisterToGestureReadyForNextIntermediateStage;
+	pInterface->UnregisterFromGestureReadyForNextIntermediateStage = __ModuleUnregisterFromGestureReadyForNextIntermediateStage;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetSceneAnalyzerInterface(XnModuleSceneAnalyzerInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetSceneAnalyzerInterface(XnModuleSceneAnalyzerInterface* pInterface)
 {
 	__ModuleGetMapGeneratorInterface(pInterface->pMapInterface);
 	pInterface->GetLabelMap = __ModuleGetLabelMap;
 	pInterface->GetFloor = __ModuleGetFloor;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetSkeletonInterface(XnModuleSkeletonCapabilityInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetSkeletonInterface(XnModuleSkeletonCapabilityInterface* pInterface)
 {
 	pInterface->IsJointAvailable = __ModuleIsJointAvailable;
 	pInterface->IsProfileAvailable = __ModuleIsProfileAvailable;
@@ -1667,9 +1877,17 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetSkeletonInterface(XnModuleSkele
 	pInterface->SetSmoothing = __ModuleSetSkeletonSmoothing;
 	pInterface->RegisterCalibrationCallbacks = __ModuleRegisterCalibrationCallbacks;
 	pInterface->UnregisterCalibrationCallbacks = __ModuleUnregisterCalibrationCallbacks;
+
+	pInterface->RegisterToCalibrationInProgress = __ModuleRegisterToCalibrationInProgressCallback;
+	pInterface->UnregisterFromCalibrationInProgress = __ModuleUnregisterFromCalibrationInProgressCallback;
+	pInterface->RegisterToCalibrationComplete = __ModuleRegisterToCalibrationCompleteCallback;
+	pInterface->UnregisterFromCalibrationComplete = __ModuleUnregisterFromCalibrationCompleteCallback;
+
+	pInterface->RegisterToCalibrationStart = __ModuleRegisterToCalibrationStartCallback;
+	pInterface->UnregisterFromCalibrationStart = __ModuleUnregisterFromCalibrationStartCallback;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetPoseDetectionInterface(XnModulePoseDetectionCapabilityInterface* pInteface)
+void XN_CALLBACK_TYPE __ModuleGetPoseDetectionInterface(XnModulePoseDetectionCapabilityInterface* pInteface)
 {
 	pInteface->GetNumberOfPoses = __ModuleGetNumberOfPoses;
 	pInteface->GetAvailablePoses = __ModuleGetAvailablePoses;
@@ -1678,9 +1896,17 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetPoseDetectionInterface(XnModule
 	pInteface->StopPoseDetection = __ModuleStopPoseDetection;
 	pInteface->RegisterToPoseCallbacks = __ModuleRegisterToPoseCallbacks;
 	pInteface->UnregisterFromPoseCallbacks = __ModuleUnregisterFromPoseCallbacks;
+
+	pInteface->RegisterToPoseDetectionInProgress = __ModuleRegisterToPoseInProgressCallback;
+	pInteface->UnregisterFromPoseDetectionInProgress = __ModuleUnregisterFromPoseInProgressCallback;
+
+	pInteface->RegisterToPoseDetected = __ModuleRegisterToPoseDetected;
+	pInteface->UnregisterFromPoseDetected = __ModuleUnregisterFromPoseDetected;
+	pInteface->RegisterToOutOfPose = __ModuleRegisterToOutOfPose;
+	pInteface->UnregisterFromOutOfPose = __ModuleUnregisterFromOutOfPose;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetUserGeneratorInterface(XnModuleUserGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetUserGeneratorInterface(XnModuleUserGeneratorInterface* pInterface)
 {
 	__ModuleGetGeneratorInterface(pInterface->pGeneratorInterface);
 
@@ -1693,9 +1919,19 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetUserGeneratorInterface(XnModule
 
 	__ModuleGetSkeletonInterface(pInterface->pSkeletonInterface);
 	__ModuleGetPoseDetectionInterface(pInterface->pPoseDetectionInterface);
+
+	pInterface->RegisterToUserExit = __ModuleRegisterToUserExitCallback;
+	pInterface->UnregisterFromUserExit = __ModuleUnregisterFromUserExitCallback;
+	pInterface->RegisterToUserReEnter = __ModuleRegisterToUserReEnterCallback;
+	pInterface->UnregisterFromUserReEnter = __ModuleUnregisterFromUserReEnterCallback;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetHandsGeneratorInterface(XnModuleHandsGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetHandTouchingFOVEdgeInterface(XnModuleHandTouchingFOVEdgeCapabilityInterface* pInterface)
+{
+	pInterface->RegisterToHandTouchingFOVEdge = __ModuleRegisterToHandTouchingFOVEdgeCallback;
+	pInterface->UnregisterFromHandTouchingFOVEdge = __ModuleUnregisterFromHandTouchingFOVEdgeCallback;
+}
+void XN_CALLBACK_TYPE __ModuleGetHandsGeneratorInterface(XnModuleHandsGeneratorInterface* pInterface)
 {
 	__ModuleGetGeneratorInterface(pInterface->pGeneratorInterface);
 
@@ -1705,9 +1941,11 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetHandsGeneratorInterface(XnModul
 	pInterface->RegisterHandCallbacks = __ModuleRegisterHandCallbacks;
 	pInterface->UnregisterHandCallbacks = __ModuleUnregisterHandCallbacks;
 	pInterface->SetSmoothing = __ModuleSetTrackingSmoothing;
+
+	__ModuleGetHandTouchingFOVEdgeInterface(pInterface->pHandTouchingFOVEdgeInterface);
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetAudioGeneratorInterface(XnModuleAudioGeneratorInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetAudioGeneratorInterface(XnModuleAudioGeneratorInterface* pInterface)
 {
 	__ModuleGetGeneratorInterface(pInterface->pGeneratorInterface);
 
@@ -1720,7 +1958,7 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetAudioGeneratorInterface(XnModul
 	pInterface->UnregisterFromWaveOutputModeChanges = __ModuleUnregisterFromWaveOutputModeChanges;
 }
 
-XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetCodecInterface(XnModuleCodecInterface* pInterface)
+void XN_CALLBACK_TYPE __ModuleGetCodecInterface(XnModuleCodecInterface* pInterface)
 {
 	__ModuleGetProductionNodeInterface(pInterface->pProductionNode);
 
@@ -1728,6 +1966,16 @@ XN_C_API_EXPORT void XN_CALLBACK_TYPE __ModuleGetCodecInterface(XnModuleCodecInt
 	pInterface->Init = __ModuleCodecInit;
 	pInterface->CompressData = __ModuleCompressData;
 	pInterface->DecompressData = __ModuleDecompressData;
+}
+
+void XN_CALLBACK_TYPE __ModuleGetScriptNodeInterface(XnModuleScriptNodeInterface* pInterface)
+{
+	__ModuleGetProductionNodeInterface(pInterface->pProductionNode);
+
+	pInterface->GetSupportedFormat = __ModuleScriptGetSupportedFormat;
+	pInterface->LoadScriptFromFile = __ModuleLoadScriptFromFile;
+	pInterface->LoadScriptFromString = __ModuleLoadScriptFromString;
+	pInterface->Run = __ModuleScriptRun;
 }
 
 #endif /* XN_MODULE_C_FUNCTIONS_H_ */

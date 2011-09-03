@@ -12,6 +12,6 @@ SRC_FILES = \
 LIB_NAME = nimRecorder
 USED_LIBS = OpenNI
 
-include ../../CommonMakefile
+include ../../Common/CommonCppMakefile
 
 

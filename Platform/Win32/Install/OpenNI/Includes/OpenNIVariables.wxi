@@ -5,10 +5,10 @@
   It's not enough to just include newer files.
   -->
   <?define MajorVersion=1?>
-  <?define MinorVersion=1?>
-  <?define MaintenanceVersion=0?>
+  <?define MinorVersion=3?>
+  <?define MaintenanceVersion=2?>
   <!-- BuildVersion is NOT used by WiX in the upgrade procedure -->
-  <?define BuildVersion=41?>
+  <?define BuildVersion=3?>
   <!-- Full version number to display -->
   <?define VersionNumber="$(var.MajorVersion).$(var.MinorVersion).$(var.MaintenanceVersion).$(var.BuildVersion)"?>
    
@@ -20,7 +20,7 @@
 
   <?define MinOpenNIVersion="1.0.0"?>
   
-  <?define BinaryOnlyRedist=False?>
+  <?define BinaryOnlyRedist=True?>
    
   <?if $(var.Platform)="x86"?>
     <?define PlatformSuffix=""?>    

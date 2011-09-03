@@ -25,23 +25,23 @@
 #include "XnPlatform.h"
 
 // Memory
-XN_C_API void* xnOSMalloc(const XnSizeT nAllocSize);
-XN_C_API void* xnOSMallocAligned(const XnSizeT nAllocSize, const XnSizeT nAlignment);
-XN_C_API void* xnOSCalloc(const XnSizeT nAllocNum, const XnSizeT nAllocSize);
-XN_C_API void* xnOSCallocAligned(const XnSizeT nAllocNum, const XnSizeT nAllocSize, const XnSizeT nAlignment);
-XN_C_API void* xnOSRealloc(void* pMemory, const XnSizeT nAllocSize);
-XN_C_API void* xnOSReallocAligned(void* pMemory, const XnSizeT nAllocSize, const XnSizeT nAlignment);
-XN_C_API void* xnOSRecalloc(void* pMemory, const XnSizeT nAllocNum, const XnSizeT nAllocSize);
-XN_C_API void xnOSFree(const void* pMemBlock);
-XN_C_API void xnOSFreeAligned(const void* pMemBlock);
-XN_C_API void xnOSMemCopy(void* pDest, const void* pSource, XnSizeT nCount);
-XN_C_API XnInt32 xnOSMemCmp(const void *pBuf1, const void *pBuf2, XnSizeT nCount);
-XN_C_API void xnOSMemSet(void* pDest, XnUInt8 nValue, XnSizeT nCount);
-XN_C_API void xnOSMemMove(void* pDest, const void* pSource, XnSizeT nCount);
-XN_C_API XnUInt64 xnOSEndianSwapUINT64(XnUInt64 nValue);
-XN_C_API XnUInt32 xnOSEndianSwapUINT32(XnUInt32 nValue);
-XN_C_API XnUInt16 xnOSEndianSwapUINT16(XnUInt16 nValue);
-XN_C_API XnFloat xnOSEndianSwapFLOAT(XnFloat fValue);
+XN_C_API void* XN_C_DECL xnOSMalloc(const XnSizeT nAllocSize);
+XN_C_API void* XN_C_DECL xnOSMallocAligned(const XnSizeT nAllocSize, const XnSizeT nAlignment);
+XN_C_API void* XN_C_DECL xnOSCalloc(const XnSizeT nAllocNum, const XnSizeT nAllocSize);
+XN_C_API void* XN_C_DECL xnOSCallocAligned(const XnSizeT nAllocNum, const XnSizeT nAllocSize, const XnSizeT nAlignment);
+XN_C_API void* XN_C_DECL xnOSRealloc(void* pMemory, const XnSizeT nAllocSize);
+XN_C_API void* XN_C_DECL xnOSReallocAligned(void* pMemory, const XnSizeT nAllocSize, const XnSizeT nAlignment);
+XN_C_API void* XN_C_DECL xnOSRecalloc(void* pMemory, const XnSizeT nAllocNum, const XnSizeT nAllocSize);
+XN_C_API void XN_C_DECL xnOSFree(const void* pMemBlock);
+XN_C_API void XN_C_DECL xnOSFreeAligned(const void* pMemBlock);
+XN_C_API void XN_C_DECL xnOSMemCopy(void* pDest, const void* pSource, XnSizeT nCount);
+XN_C_API XnInt32 XN_C_DECL xnOSMemCmp(const void *pBuf1, const void *pBuf2, XnSizeT nCount);
+XN_C_API void XN_C_DECL xnOSMemSet(void* pDest, XnUInt8 nValue, XnSizeT nCount);
+XN_C_API void XN_C_DECL xnOSMemMove(void* pDest, const void* pSource, XnSizeT nCount);
+XN_C_API XnUInt64 XN_C_DECL xnOSEndianSwapUINT64(XnUInt64 nValue);
+XN_C_API XnUInt32 XN_C_DECL xnOSEndianSwapUINT32(XnUInt32 nValue);
+XN_C_API XnUInt16 XN_C_DECL xnOSEndianSwapUINT16(XnUInt16 nValue);
+XN_C_API XnFloat XN_C_DECL xnOSEndianSwapFLOAT(XnFloat fValue);
 
 
 #endif // __XNOSMEMORY_H__

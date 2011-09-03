@@ -53,6 +53,60 @@ namespace OpenNI
 		private string pose;
 		private UserID id;
 	}
+    public class OutOfPoseEventArgs : EventArgs
+    {
+        public OutOfPoseEventArgs(string pose, UserID id)
+        {
+            this.pose = pose;
+            this.id = id;
+        }
+
+        public string Pose
+        {
+            get { return pose; }
+            set { pose = value; }
+        }
+
+        public UserID ID
+        {
+            get { return id; }
+            set { id = value; }
+        }
+
+        private string pose;
+        private UserID id;
+    }
+
+    public class PoseInProgressEventArgs : EventArgs
+    {
+        public PoseInProgressEventArgs(string pose, UserID id, PoseDetectionStatus status)
+        {
+            this.pose = pose;
+            this.id = id;
+            this.status = status;
+        }
+
+        public string Pose
+        {
+            get { return pose; }
+            set { pose = value; }
+        }
+
+        public UserID ID
+        {
+            get { return id; }
+            set { id = value; }
+        }
+        public PoseDetectionStatus Status
+        {
+            get { return status; }
+            set { status = value; }
+        }
+
+        private string pose;
+        private UserID id;
+        private PoseDetectionStatus status;
+    }
 
     public class PoseDetectionCapability : Capability
     {
@@ -61,6 +115,8 @@ namespace OpenNI
         {
             this.internalPoseDetected = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseDetected);
             this.internalPoseEnded = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalPoseEnded);
+            this.internalOutOfPose = new SafeNativeMethods.XnPoseDetectionCallback(this.InternalOutOfPose);
+            this.internalPoseDetectionInProgress = new SafeNativeMethods.XnPoseDetectionInProgress(this.InternalPoseDetectionInProgress);
         }
 
         public int NumberOfPoses
@@ -125,7 +181,7 @@ namespace OpenNI
             {
                 if (this.poseDetectedEvent == null)
                 {
-                    int status = SafeNativeMethods.xnRegisterToPoseCallbacks(this.InternalObject, internalPoseDetected, null, IntPtr.Zero, out poseDetectedHandle);
+                    int status = SafeNativeMethods.xnRegisterToPoseDetected(this.InternalObject, internalPoseDetected, IntPtr.Zero, out poseDetectedHandle);
                     WrapperUtils.ThrowOnError(status);
                 }
                 this.poseDetectedEvent += value;
@@ -136,7 +192,7 @@ namespace OpenNI
 
                 if (this.poseDetectedEvent == null)
                 {
-                    SafeNativeMethods.xnUnregisterFromPoseCallbacks(this.InternalObject, this.poseDetectedHandle);
+                    SafeNativeMethods.xnUnregisterFromPoseDetected(this.InternalObject, this.poseDetectedHandle);
                 }
             }
         }
@@ -152,7 +208,8 @@ namespace OpenNI
 
         #region Pose Ended
         private event EventHandler<PoseEndedEventArgs> poseEndedEvent;
-		public event EventHandler<PoseEndedEventArgs> PoseEnded
+        [Obsolete("use PoseDetectionCapability.OutOfPose instead")]
+        public event EventHandler<PoseEndedEventArgs> PoseEnded
         {
             add
             {
@@ -181,6 +238,72 @@ namespace OpenNI
         }
         private SafeNativeMethods.XnPoseDetectionCallback internalPoseEnded;
         private IntPtr poseEndedHandle;
+        #endregion
+
+        #region Out of Pose
+        private event EventHandler<OutOfPoseEventArgs> outOfPoseEvent;
+        public event EventHandler<OutOfPoseEventArgs> OutOfPose
+        {
+            add
+            {
+                if (this.outOfPoseEvent == null)
+                {
+                    int status = SafeNativeMethods.xnRegisterToOutOfPose(this.InternalObject, this.internalOutOfPose, IntPtr.Zero, out outOfPoseHandle);
+                    WrapperUtils.ThrowOnError(status);
+                }
+                this.outOfPoseEvent += value;
+            }
+            remove
+            {
+                this.outOfPoseEvent -= value;
+
+                if (this.outOfPoseEvent == null)
+                {
+                    SafeNativeMethods.xnUnregisterFromOutOfPose(this.InternalObject, this.outOfPoseHandle);
+                }
+            }
+        }
+        private void InternalOutOfPose(IntPtr hNode, string pose, UserID id, IntPtr pCookie)
+        {
+            EventHandler<OutOfPoseEventArgs> handlers = this.outOfPoseEvent;
+            if (handlers != null)
+                handlers(this.node, new OutOfPoseEventArgs(pose, id));
+        }
+        private SafeNativeMethods.XnPoseDetectionCallback internalOutOfPose;
+        private IntPtr outOfPoseHandle;
+        #endregion
+
+        #region Pose In Progress
+        private event EventHandler<PoseInProgressEventArgs> poseDetectionInProgressEvent;
+        public event EventHandler<PoseInProgressEventArgs> PoseDetectionInProgress
+        {
+            add
+            {
+                if (this.poseDetectionInProgressEvent == null)
+                {
+                    int status = SafeNativeMethods.xnRegisterToPoseDetectionInProgress(this.InternalObject, this.internalPoseDetectionInProgress, IntPtr.Zero, out poseDetectionInProgressHandle);
+                    WrapperUtils.ThrowOnError(status);
+                }
+                this.poseDetectionInProgressEvent += value;
+            }
+            remove
+            {
+                this.poseDetectionInProgressEvent -= value;
+
+                if (this.poseDetectionInProgressEvent == null)
+                {
+                    SafeNativeMethods.xnUnregisterFromPoseDetectionInProgress(this.InternalObject, this.poseDetectionInProgressHandle);
+                }
+            }
+        }
+        private void InternalPoseDetectionInProgress(IntPtr hNode, string pose, UserID id, PoseDetectionStatus status, IntPtr pCookie)
+        {
+            EventHandler<PoseInProgressEventArgs> handlers = this.poseDetectionInProgressEvent;
+            if (handlers != null)
+                handlers(this.node, new PoseInProgressEventArgs(pose, id, status));
+        }
+        private SafeNativeMethods.XnPoseDetectionInProgress internalPoseDetectionInProgress;
+        private IntPtr poseDetectionInProgressHandle;
         #endregion
 
     }

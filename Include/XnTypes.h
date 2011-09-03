@@ -49,6 +49,9 @@
 /** The name of the OpenNI recording format. **/
 #define XN_FORMAT_NAME_ONI	"oni"
 
+/** The name of the OpenNI XML script format. **/
+#define XN_SCRIPT_FORMAT_XML	"xml"
+
 /** represents playback speed which does not consider file timestamps. **/
 #define XN_PLAYBACK_SPEED_FASTEST	0.0
 
@@ -83,10 +86,13 @@ typedef struct XnInternalNodeData* XnNodeHandle;
  */
 typedef XnUInt32 XnLockHandle;
 
-
-typedef XnInt32 XnProductionNodeType;
 /**
  * Type of the production node.
+ */
+typedef XnInt32 XnProductionNodeType;
+
+/**
+ * Predefined types of production nodes.
  */
 typedef enum XnPredefinedProductionNodeType
 {
@@ -133,6 +139,7 @@ typedef enum XnPredefinedProductionNodeType
 	XN_NODE_TYPE_PRODUCTION_NODE = 13,
 	XN_NODE_TYPE_GENERATOR = 14,
 	XN_NODE_TYPE_MAP_GENERATOR = 15,
+	XN_NODE_TYPE_SCRIPT = 16,
 
 	XN_NODE_TYPE_FIRST_EXTENSION,
 
@@ -234,6 +241,8 @@ typedef void (XN_CALLBACK_TYPE* XnErrorStateChangedHandler)(XnStatus errorState,
  **/
 typedef void (XN_CALLBACK_TYPE* XnFreeHandler)(const void* pData);
 
+typedef void (XN_CALLBACK_TYPE* XnContextShuttingDownHandler)(XnContext* pContext, void* pCookie);
+
 /** Handle to a registered callback function. **/
 typedef void* XnCallbackHandle;
 
@@ -309,9 +318,15 @@ typedef XnUInt16 XnLabel;
 #define XN_CAPABILITY_FOCUS						"Focus"
 #define XN_CAPABILITY_LOW_LIGHT_COMPENSATION	"LowLightCompensation"
 #define XN_CAPABILITY_ANTI_FLICKER				"AntiFlicker"
+#define XN_CAPABILITY_HAND_TOUCHING_FOV_EDGE	"Hands::HandTouchingFOVEdge"
+
+// Backwards compatibility - typo was fixed
 #define XN_CAPABILITY_ANTI_FILCKER				XN_CAPABILITY_ANTI_FLICKER
 
+// deprecated pragma is only supported in Visual Studio
+#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 #pragma deprecated("XN_CAPABILITY_ANTI_FILCKER")
+#endif
 
 //---------------------------------------------------------------------------
 // Generators API Structs
@@ -623,6 +638,41 @@ typedef enum XnSkeletonProfile
 	XN_SKEL_PROFILE_HEAD_HANDS	= 5,
 } XnSkeletonProfile;
 
+/** Possible statuses for pose detection */
+typedef enum XnPoseDetectionStatus
+{
+	XN_POSE_DETECTION_STATUS_OK			= 0,
+	XN_POSE_DETECTION_STATUS_NO_USER	= 1,
+	XN_POSE_DETECTION_STATUS_TOP_FOV	= 2,
+	XN_POSE_DETECTION_STATUS_SIDE_FOV	= 3,
+	XN_POSE_DETECTION_STATUS_ERROR		= 4,
+} XnPoseDetectionStatus;
+
+/** Possible statuses for calibration */
+typedef enum XnCalibrationStatus
+{
+	XN_CALIBRATION_STATUS_OK		= 0,
+	XN_CALIBRATION_STATUS_NO_USER	= 1,
+	XN_CALIBRATION_STATUS_ARM		= 2,
+	XN_CALIBRATION_STATUS_LEG		= 3,
+	XN_CALIBRATION_STATUS_HEAD		= 4,
+	XN_CALIBRATION_STATUS_TORSO		= 5,
+	XN_CALIBRATION_STATUS_TOP_FOV	= 6,
+	XN_CALIBRATION_STATUS_SIDE_FOV	= 7,
+	XN_CALIBRATION_STATUS_POSE		= 8,
+} XnCalibrationStatus;
+
+typedef enum XnDirection
+{
+	XN_DIRECTION_ILLEGAL	= 0,
+	XN_DIRECTION_LEFT		= 1,
+	XN_DIRECTION_RIGHT		= 2,
+	XN_DIRECTION_UP			= 3,
+	XN_DIRECTION_DOWN		= 4,
+	XN_DIRECTION_FORWARD	= 5,
+	XN_DIRECTION_BACKWARD	= 6,
+} XnDirection;
+
 // User
 /**
  * Callback for a general user-related event. It is used for either creation or destruction of users.
@@ -666,6 +716,17 @@ typedef void (XN_CALLBACK_TYPE* XnHandUpdate)(XnNodeHandle hNode, XnUserID user,
  */
 typedef void (XN_CALLBACK_TYPE* XnHandDestroy)(XnNodeHandle hNode, XnUserID user, XnFloat fTime, void* pCookie);
 
+/**
+ * Callback for when a hand reaches the edge of the FOV
+ *
+ * @param	hNode		[in]	A handle to the hand generator that raised this event.
+ * @param	user		[in]	The id of the hand that reached FOV
+ * @param	pPosition	[in]	The current position of the hand
+ * @param	fTime		[in]	Timestamp, in seconds
+ * @param	eDir		[in]	The direction of the edge that is being reached
+ * @param	pCookie		[in]	A user-provided cookie that was given when reigstering to this event
+ */
+typedef void (XN_CALLBACK_TYPE* XnHandTouchingFOVEdge)(XnNodeHandle hNode, XnUserID user, const XnPoint3D* pPosition, XnFloat fTime, XnDirection eDir, void* pCookie);
 // Gesture Module
 /**
  * Callback for the recognition of a gesture
@@ -688,6 +749,9 @@ typedef void (XN_CALLBACK_TYPE* XnGestureRecognized)(XnNodeHandle hNode, const X
  */
 typedef void (XN_CALLBACK_TYPE* XnGestureProgress)(XnNodeHandle hNode, const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie);
 
+typedef void (XN_CALLBACK_TYPE* XnGestureIntermediateStageCompleted)(XnNodeHandle hNode, const XnChar* strGesture, const XnPoint3D* pPosition, void* pCookie);
+typedef void (XN_CALLBACK_TYPE* XnGestureReadyForNextIntermediateStage)(XnNodeHandle hNode, const XnChar* strGesture, const XnPoint3D* pPosition, void* pCookie);
+
 // Skeleton
 /**
  * Callback for indication that a specific user's skeleton is now starting the calibration process
@@ -707,6 +771,9 @@ typedef void (XN_CALLBACK_TYPE* XnCalibrationStart)(XnNodeHandle hNode, XnUserID
  */
 typedef void (XN_CALLBACK_TYPE* XnCalibrationEnd)(XnNodeHandle hNode, XnUserID user, XnBool bSuccess, void* pCookie);
 
+typedef void (XN_CALLBACK_TYPE* XnCalibrationInProgress)(XnNodeHandle hNode, XnUserID user, XnCalibrationStatus calibrationError, void* pCookie);
+typedef void (XN_CALLBACK_TYPE* XnCalibrationComplete)(XnNodeHandle hNode, XnUserID user, XnCalibrationStatus calibrationError, void* pCookie);
+
 // Pose Detection
 /**
  * Callback for indication that a specific user has entered a pose, or left it.
@@ -717,6 +784,8 @@ typedef void (XN_CALLBACK_TYPE* XnCalibrationEnd)(XnNodeHandle hNode, XnUserID u
  * @param	pCookie		[in]	A user-provided cookie that was given when registering to this event.
  */
 typedef void (XN_CALLBACK_TYPE* XnPoseDetectionCallback)(XnNodeHandle hNode, const XnChar* strPose, XnUserID user, void* pCookie);
+
+typedef void (XN_CALLBACK_TYPE* XnPoseDetectionInProgress)(XnNodeHandle hNode, const XnChar* strPose, XnUserID user, XnPoseDetectionStatus poseDetectionError, void* pCookie);
 
 //---------------------------------------------------------------------------
 // Recorder Types

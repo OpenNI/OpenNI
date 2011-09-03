@@ -59,6 +59,7 @@ unsigned int g_nTexMapY = 0;
 unsigned int g_nViewState = DEFAULT_DISPLAY_MODE;
 
 Context g_context;
+ScriptNode g_scriptNode;
 DepthGenerator g_depth;
 ImageGenerator g_image;
 DepthMetaData g_depthMD;
@@ -245,7 +246,7 @@ int main(int argc, char* argv[])
 	XnStatus rc;
 
 	EnumerationErrors errors;
-	rc = g_context.InitFromXmlFile(SAMPLE_XML_PATH, &errors);
+	rc = g_context.InitFromXmlFile(SAMPLE_XML_PATH, g_scriptNode, &errors);
 	if (rc == XN_STATUS_NO_NODE_PRESENT)
 	{
 		XnChar strError[1024];
@@ -260,7 +261,18 @@ int main(int argc, char* argv[])
 	}
 
 	rc = g_context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_depth);
+	if (rc != XN_STATUS_OK)
+	{
+		printf("No depth node exists! Check your XML.");
+		return 1;
+	}
+
 	rc = g_context.FindExistingNode(XN_NODE_TYPE_IMAGE, g_image);
+	if (rc != XN_STATUS_OK)
+	{
+		printf("No image node exists! Check your XML.");
+		return 1;
+	}
 
 	g_depth.GetMetaData(g_depthMD);
 	g_image.GetMetaData(g_imageMD);

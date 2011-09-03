@@ -23,7 +23,6 @@
 // Includes
 //---------------------------------------------------------------------------
 #include <XnOS.h>
-#include <glob.h>
 #include <libgen.h>
 #include <errno.h>
 #include <limits.h>
@@ -32,6 +31,9 @@
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
+#ifndef XN_PLATFORM_LINUX_NO_GLOB
+#include <glob.h>
+
 XN_C_API XnStatus xnOSGetFileList(const XnChar* cpSearchPattern, const XnChar* cpPrefixPath, XnChar cpFileList[][XN_FILE_MAX_PATH], const XnUInt32 nMaxFiles, XnUInt32* pnFoundFiles)
 {
 	// Validate the input/output pointers (to make sure none of them is NULL)
@@ -73,6 +75,15 @@ XN_C_API XnStatus xnOSGetFileList(const XnChar* cpSearchPattern, const XnChar* c
 	// All is good...
 	return (XN_STATUS_OK);
 }
+#else
+
+XN_C_API XnStatus xnOSGetFileList(const XnChar* cpSearchPattern, const XnChar* cpPrefixPath, XnChar cpFileList[][XN_FILE_MAX_PATH], const XnUInt32 nMaxFiles, XnUInt32* pnFoundFiles)
+{
+	XN_ASSERT(FALSE);
+	return XN_STATUS_OS_FILE_NOT_FOUND;
+}
+
+#endif
 
 XN_C_API XnStatus xnOSOpenFile(const XnChar* cpFileName, const XnUInt32 nFlags, XN_FILE_HANDLE* pFile)
 {

@@ -7,5 +7,5 @@ SRC_FILES = ../../../../../Samples/NiBackRecorder/*.cpp
 EXE_NAME = Sample-NiBackRecorder
 USED_LIBS = OpenNI
 
-include ../../CommonMakefile
+include ../../Common/CommonCppMakefile
 

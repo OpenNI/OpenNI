@@ -154,7 +154,7 @@
           <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]" />
           <RegistryValue Type="string" Name="Version" Value="$(var.VersionNumber)"/>
         </RegistryKey>
-
+        
         <RegistryKey Root="HKCR" Key=".oni" Action="createAndRemoveOnUninstall" >
           <RegistryValue Type="string" Value="NIRecording"/>
         </RegistryKey>
@@ -177,11 +177,19 @@
     <!-- Install OpenNI.net-->
     <DirectoryRef Id="TARGETDIR" >
       <Component Id="OpenNINET" Guid="60718C69-87CB-45C0-A8A0-1B60E072D20A" DiskId="1">
-        <File Id="OpenNINET" Name="OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\OpenNI.Net.dll" />
+        <File Id="OpenNINET" Name="OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\OpenNI.Net.dll" />
       </Component>
-      <Component Id="OpenNIPolicy" Guid="ED633D34-ADC1-4b87-B3F6-930B8D600E0C" DiskId="1">
-        <File Id="OpenNIPolicy" Name="Policy.1.1.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\Policy.1.1.OpenNI.Net.dll" />
-        <File Id="OpenNIPolicyConfig" Name="PublisherPolicy.config" KeyPath="no" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\PublisherPolicy.config" />
+      <Component Id="OpenNIPolicy1.1" Guid="ED633D34-ADC1-4b87-B3F6-930B8D600E0C" DiskId="1">
+        <File Id="OpenNIPolicy1.1" Name="Policy.1.1.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\Policy.1.1.OpenNI.Net.dll" />
+        <File Id="OpenNIPolicyConfig1.1" Name="PublisherPolicy1.1.config" KeyPath="no" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\PublisherPolicy1.1.config" />
+      </Component>
+      <Component Id="OpenNIPolicy1.2" Guid="5CF88226-1671-4081-88BB-798791A6060A" DiskId="1">
+        <File Id="OpenNIPolicy1.2" Name="Policy.1.2.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\Policy.1.2.OpenNI.Net.dll" />
+        <File Id="OpenNIPolicyConfig1.2" Name="PublisherPolicy1.2.config" KeyPath="no" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\PublisherPolicy1.2.config" />
+      </Component>
+      <Component Id="OpenNIPolicy1.3" Guid="5CF88226-1671-4081-88BB-798791A60613" DiskId="1">
+        <File Id="OpenNIPolicy1.3" Name="Policy.1.3.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\Policy.1.3.OpenNI.Net.dll" />
+        <File Id="OpenNIPolicyConfig1.3" Name="PublisherPolicy1.3.config" KeyPath="no" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\PublisherPolicy1.3.config" />
       </Component>
     </DirectoryRef>
     
@@ -202,7 +210,7 @@
                             Name="OPEN_NI_BIN$(var.PlatformSuffix)"
                             Permanent="no"
                             System="yes"
-                            Value="[INSTALLLOCATION]bin$(var.PlatformSuffix)"/>
+                            Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)"/>
 
         <Environment Id="OPENNIINCLUDE"
                             Action="set"
@@ -219,8 +227,12 @@
                             Permanent="no"
                             System="yes"
                             Value="[INSTALLLOCATION]Lib$(var.PlatformSuffix)"/>
-
-        <Environment Id="Path" Action="set" Part="last" Name="Path" Permanent="yes" System="yes" Value="[INSTALLLOCATION]bin$(var.PlatformSuffix)"/>
+        
+        <Environment Id="ClassPath" Action="set" Part="last" Name="CLASSPATH" Permanent="yes" System="yes"
+                           Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)\org.OpenNI.jar"/>
+        
+        <Environment Id="Path" Action="set" Part="last" Name="Path" Permanent="yes" System="yes"
+                     Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)"/>
                 
       </Component>
       
@@ -282,18 +294,30 @@
       ]]>
     </CustomAction>
 
-    <!-- Set Environment for the current process  -->
+    <!-- Remove OpenNI path from the env PATH  -->
     <CustomAction Id="SetRemoveOpenNIPathData" Property="RemoveOpenNIPath" Value="[INSTALLLOCATIONBin]|[%Path]"/>
     <CustomAction Id="RemoveOpenNIPath" Script="vbscript" Execute="deferred" Impersonate="no"  Win64="$(var.Win64)">
       <![CDATA[
       strArgs = Session.Property("CustomActionData")      
       Args = Split( strArgs, "|" )      
-      str = Replace(Args(1),Args(0),"")      
+      str = Replace(Args(1),Args(0),"")            
       set WSHShell = CreateObject("WScript.Shell")
       WSHShell.Environment.item("PATH") = str
       ]]>
-    </CustomAction>                    
-    
+    </CustomAction>
+
+    <!-- Remove OpenNI path from the env CLASSPATH  -->
+    <CustomAction Id="SetRemoveOpenNIClassPathData" Property="RemoveOpenNIClassPath" Value="[INSTALLLOCATIONBin]org.OpenNI.jar|[%CLASSPATH]"/>
+    <CustomAction Id="RemoveOpenNIClassPath" Script="vbscript" Execute="deferred" Impersonate="no"  Win64="$(var.Win64)">
+      <![CDATA[
+      strArgs = Session.Property("CustomActionData")      
+      Args = Split( strArgs, "|" )      
+      str = Replace(Args(1),Args(0),"")      
+      set WSHShell = CreateObject("WScript.Shell")      
+      WSHShell.Environment.item("CLASSPATH") = str      
+      ]]>
+    </CustomAction>
+
     <!-- Set the components defined in our fragment files that will be used for our feature  -->
     <Feature Id="OpenNIFeature" Title="!(loc.ProductName)" Level="1" >
       <?if $(var.BinaryOnlyRedist)="False"?>
@@ -309,7 +333,9 @@
       <ComponentRef Id="ApplicationShortcut" />
       <ComponentRef Id="RegistryEntries" />
       <ComponentRef Id="OpenNINET"/>
-      <ComponentRef Id="OpenNIPolicy"/>
+      <ComponentRef Id="OpenNIPolicy1.1"/>
+      <ComponentRef Id="OpenNIPolicy1.2"/>
+      <ComponentRef Id="OpenNIPolicy1.3"/>
       <ComponentRef Id="EnviromentVars"/>
       <ComponentRef Id="RemoveLogDir"/>
     </Feature>
@@ -324,6 +350,9 @@
 
       <Custom Action="SetRemoveOpenNIPathData" Before="RemoveOpenNIPath">REMOVE ~= "ALL" </Custom>
       <Custom Action="RemoveOpenNIPath" Before="InstallFinalize">REMOVE ~= "ALL" </Custom>
+
+      <Custom Action="SetRemoveOpenNIClassPathData" Before="RemoveOpenNIClassPath">REMOVE ~= "ALL" </Custom>
+      <Custom Action="RemoveOpenNIClassPath" Before="InstallFinalize">REMOVE ~= "ALL" </Custom>
             
       <Custom Action="SetOpenNIPathData" Before="OpenNIPath"/>
       <Custom Action="OpenNIPath" Before="PublishProduct"/>
