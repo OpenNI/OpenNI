@@ -56,35 +56,39 @@ namespace Sample
 	public:
 		XnStatus Create(xn::Context& context, xn::Query* pQuery = NULL, xn::EnumerationErrors* pErrors = NULL)
 		{
-			return xnCreateAnyProductionTree(context.GetUnderlyingObject(), XN_NODE_TYPE_ROTATING_DEVICE, 
+			XnNodeHandle hNode;
+			XnStatus nRetVal = XN_STATUS_OK;
+			nRetVal = xnCreateAnyProductionTree(context.GetUnderlyingObject(), XN_NODE_TYPE_ROTATING_DEVICE, 
 				pQuery == NULL ? NULL : pQuery->GetUnderlyingObject(),
-				&m_hNode,
+				&hNode,
 				pErrors == NULL ? NULL : pErrors->GetUnderlying());
+			TakeOwnership(hNode);
+			return XN_STATUS_OK;
 		}
 
 		XnStatus PlayBeep()
 		{
-			return xnPlayBeep(m_hNode);
+			return xnPlayBeep(GetHandle());
 		}
 
 		XnStatus SetViewAngle(XnDouble dAngle)
 		{
-			return xnSetViewAngle(m_hNode, dAngle);
+			return xnSetViewAngle(GetHandle(), dAngle);
 		}
 
 		XnDouble GetViewAngle()
 		{
-			return xnGetViewAngle(m_hNode);
+			return xnGetViewAngle(GetHandle());
 		}
 
 		XnStatus RegisterToViewAngleChange(xn::StateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 		{
-			return xn::_RegisterToStateChange(xnRegisterToViewAngleChange, m_hNode, handler, pCookie, hCallback);
+			return xn::_RegisterToStateChange(xnRegisterToViewAngleChange, GetHandle(), handler, pCookie, hCallback);
 		}
 
 		void UnregisterFromViewAngleChange(XnCallbackHandle hCallback)
 		{
-			xn::_UnregisterFromStateChange(xnUnregisterFromViewAngleChange, m_hNode, hCallback);
+			xn::_UnregisterFromStateChange(xnUnregisterFromViewAngleChange, GetHandle(), hCallback);
 		}
 	};
 }

@@ -10,4 +10,4 @@ USED_LIBS = OpenNI.net
 CSFLAGS = -unsafe
 NET_WIN_FORMS = 1
 
-include ../../CommonMakefile
+include ../../Common/CommonCSMakefile

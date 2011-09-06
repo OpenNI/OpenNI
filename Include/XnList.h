@@ -713,6 +713,11 @@ protected:
 			Translator::FreeValue(val);															\
 			return XN_STATUS_OK;																\
 		}																						\
+		inline XnStatus Remove(Type const& value)												\
+		{																						\
+			Iterator it = Find(value);															\
+			return Remove(it);																	\
+		}																						\
 		inline Iterator begin() { return XnList::begin(); }										\
 		inline ConstIterator begin() const { return XnList::begin(); }							\
 		inline Iterator end() { return XnList::end(); }											\

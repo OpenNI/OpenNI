@@ -550,7 +550,9 @@ int main(int argc, char** argv)
 		printf("Missed %d of %d image frames (%5.2f%%)\n", nMissedImageFrames, (nMissedImageFrames+nImageFrames), (nMissedImageFrames*100.0)/(nMissedImageFrames+nImageFrames));
 	}
 
-	context.Shutdown();
+	imageGenerator.Release();
+	depthGenerator.Release();
+	context.Release();
 
 	return 0;
 }

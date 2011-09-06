@@ -31,7 +31,7 @@ const XnUInt32 RecorderNode::RECORD_MAX_SIZE = 20 * 1024;
 /*PAYLOAD_DATA_SIZE is set to support a resolution of 1600x1200 with 24 bits per pixel with the worst case
   of compression.
 */
-const XnUInt32 RecorderNode::PAYLOAD_DATA_SIZE = 1600 * 1200 * 3;
+const XnUInt32 RecorderNode::PAYLOAD_DATA_SIZE = (XnUInt32)(1600 * 1200 * 3 * 1.2);
 
 RecorderNode::RecorderNode(xn::Context &context) : 
 	m_pStreamCookie(NULL),

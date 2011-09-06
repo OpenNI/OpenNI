@@ -214,7 +214,6 @@ void closeSample(int errCode)
 {
 	captureStop(0);
 	closeDevice();
-	g_Context.Shutdown();
 
 	if (errCode != ERR_OK)
 	{

@@ -43,7 +43,8 @@ XnRecorderOutputStreamInterface RecorderImpl::s_fileOutputStream =
 
 RecorderImpl::RecorderImpl() : 
 	m_hRecorder(NULL),
-	m_pOutFile(NULL)
+	m_pOutFile(NULL),
+	m_destType(XN_RECORD_MEDIUM_FILE)
 {
 	xnOSMemSet(m_strFileName, 0, sizeof(m_strFileName));
 }
@@ -91,7 +92,7 @@ XnStatus RecorderImpl::AddNode(ProductionNode &node, XnCodecID compression)
 	}
 
 	NodeWatchersMap::ConstIterator it = m_nodeWatchersMap.end();
-	if (m_nodeWatchersMap.Find(node, it) == XN_STATUS_OK)
+	if (m_nodeWatchersMap.Find(node.GetHandle(), it) == XN_STATUS_OK)
 	{
 		return XN_STATUS_NODE_ALREADY_RECORDED;
 	}
@@ -112,7 +113,7 @@ XnStatus RecorderImpl::AddNode(ProductionNode &node, XnCodecID compression)
 		return nRetVal;
 	}
 
-	nRetVal = NotifyNodeAdded(node, type, compression);
+	nRetVal = NotifyNodeAdded(node.GetHandle(), type, compression);
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = pNodeWatcher->NotifyState();
 	if (nRetVal != XN_STATUS_OK)
@@ -121,7 +122,7 @@ XnStatus RecorderImpl::AddNode(ProductionNode &node, XnCodecID compression)
 		return nRetVal;
 	}
 
-	nRetVal = m_nodeWatchersMap.Set(node, pNodeWatcher);
+	nRetVal = m_nodeWatchersMap.Set(node.GetHandle(), pNodeWatcher);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		XN_DELETE(pNodeWatcher);
@@ -138,7 +139,7 @@ XnStatus RecorderImpl::RemoveNode(ProductionNode &node)
 		return XN_STATUS_BAD_PARAM;		
 	}
 
-	XnStatus nRetVal = NotifyNodeRemoved(node);
+	XnStatus nRetVal = NotifyNodeRemoved(node.GetHandle());
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = RemoveNodeImpl(node);
 	XN_IS_STATUS_OK(nRetVal);
@@ -157,12 +158,13 @@ XnStatus RecorderImpl::AddRawNode(const XnChar* strNodeName)
 
 	XnNodeHandle hNode = NULL;
 	NodeWatcher* pNodeWatcher = NULL;
-	if ((xnGetNodeHandleByName(m_hRecorder->pContext, strNodeName, &hNode) == XN_STATUS_OK) &&
+	if ((xnGetRefNodeHandleByName(m_hRecorder->pContext, strNodeName, &hNode) == XN_STATUS_OK) &&
 		(m_nodeWatchersMap.Get(hNode, pNodeWatcher) == XN_STATUS_OK))
 	{
 		//There's a node by that name and we're already watching it
 		xnLogWarning(XN_MASK_OPEN_NI, "Attempted to add a raw node by name of '%s' but there is already another node by that name that is being recorded", strNodeName);
 		XN_ASSERT(FALSE);
+		xnProductionNodeRelease(hNode);
 		return XN_STATUS_INVALID_OPERATION;
 	}
 
@@ -266,7 +268,7 @@ XnStatus RecorderImpl::SetRawNodeNewData(const XnChar* strNodeName, XnUInt64 nTi
 XnStatus RecorderImpl::RemoveNodeImpl(ProductionNode &node)
 {
 	NodeWatcher* pNodeWatcher = NULL;
-	XnNodeHandle hNode = node;
+	XnNodeHandle hNode = node.GetHandle();
 	XnStatus nRetVal = m_nodeWatchersMap.Remove(hNode, pNodeWatcher);
 	XN_DELETE(pNodeWatcher);
 	XN_IS_STATUS_OK(nRetVal);
@@ -314,6 +316,7 @@ XnStatus RecorderImpl::SetDestination(XnRecordMedium destType, const XnChar* str
 				XN_LOG_WARNING_RETURN(XN_STATUS_INVALID_OPERATION, XN_MASK_OPEN_NI, "Recorder destination is already set!");
 			}
 
+			m_destType = destType;
 			nRetVal = xnOSStrCopy(m_strFileName, strDest, sizeof(m_strFileName));
 			XN_IS_STATUS_OK(nRetVal);
 			nRetVal = ModuleRecorder().SetOutputStream(ModuleHandle(), this, &s_fileOutputStream);
@@ -323,6 +326,25 @@ XnStatus RecorderImpl::SetDestination(XnRecordMedium destType, const XnChar* str
 		default:
 			XN_ASSERT(FALSE);
 			return XN_STATUS_BAD_PARAM;
+	}
+
+	return XN_STATUS_OK;
+}
+
+XnStatus RecorderImpl::GetDestination(XnRecordMedium& destType, XnChar* strDest, XnUInt32 nBufSize)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	switch (m_destType)
+	{
+		case XN_RECORD_MEDIUM_FILE:
+			destType = m_destType;
+			nRetVal = xnOSStrCopy(strDest, m_strFileName, nBufSize);
+			XN_IS_STATUS_OK(nRetVal);
+			break;
+
+		default:
+			XN_ASSERT(FALSE);
+			return XN_STATUS_ERROR;
 	}
 
 	return XN_STATUS_OK;

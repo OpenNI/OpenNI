@@ -23,6 +23,8 @@
 // Includes
 //---------------------------------------------------------------------------
 #include <XnOS.h>
+
+#ifndef XN_PLATFORM_LINUX_NO_GLIBC
 #include <execinfo.h>
 
 //---------------------------------------------------------------------------
@@ -65,3 +67,13 @@ XN_C_API XnStatus xnOSGetCurrentCallStack(XnUInt32 nFramesToSkip, XnChar** astrF
 
 	return XN_STATUS_OK;
 }
+
+#else
+
+XN_C_API XnStatus xnOSGetCurrentCallStack(XnUInt32 nFramesToSkip, XnChar** astrFrames, XnUInt32 nMaxNameLength, XnUInt32* pnFrames)
+{
+	*pnFrames = 0;
+	return (XN_STATUS_OK);
+}
+
+#endif

@@ -44,10 +44,10 @@ public:
 
 	XnStatus RegisterNewType(const XnChar* strName, XnProductionNodeType baseType, XnProductionNodeType* pNewType);
 
-	XnStatus GetTypeName(XnProductionNodeType type, const XnChar** pstrName);
-	XnStatus GetTypeByName(const XnChar* strName, XnProductionNodeType* pType);
-	XnStatus IsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base, XnBool* pbIsDerived);
-	XnStatus GetTypeHierarchy(XnProductionNodeType type, const XnBitSet*& pHierarchy);
+	XnStatus GetTypeName(XnProductionNodeType type, const XnChar** pstrName) const;
+	XnStatus GetTypeByName(const XnChar* strName, XnProductionNodeType* pType) const;
+	XnStatus IsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base, XnBool* pbIsDerived) const;
+	XnStatus GetTypeHierarchy(XnProductionNodeType type, const XnBitSet*& pHierarchy) const;
 
 private:
 	TypeManager();

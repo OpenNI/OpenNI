@@ -12,7 +12,8 @@ namespace SimpleRead.net
 		{
 			string SAMPLE_XML_FILE = @"../../../../Data/SamplesConfig.xml";
 
-			Context context = new Context(SAMPLE_XML_FILE);
+			ScriptNode scriptNode;
+			Context context = Context.CreateFromXmlFile(SAMPLE_XML_FILE, out scriptNode);
 
 			DepthGenerator depth = context.FindExistingNode(NodeType.Depth) as DepthGenerator;
 			if (depth == null)

@@ -47,7 +47,7 @@ typedef XnInt32 XnProfilingHandle;
 * @param	nProfilingInterval	[in]	The number of milliseconds between profiler printings. A value
 *										of zero means profiling is off.
 */
-XN_C_API XnStatus xnProfilingInit(XnUInt32 nProfilingInterval = 0);
+XN_C_API XnStatus XN_C_DECL xnProfilingInit(XnUInt32 nProfilingInterval = 0);
 
 /**
 * Initializes using INI file.
@@ -55,17 +55,17 @@ XN_C_API XnStatus xnProfilingInit(XnUInt32 nProfilingInterval = 0);
 * @param	cpINIFileName	[in]	Name of INI file.
 * @param	cpSectionName	[in]	Name of section in INI file.
 */
-XN_C_API XnStatus xnProfilingInitFromINI(const XnChar* cpINIFileName, const XnChar* cpSectionName);
+XN_C_API XnStatus XN_C_DECL xnProfilingInitFromINI(const XnChar* cpINIFileName, const XnChar* cpSectionName);
 
 /**
 * Shuts down profiling.
 */
-XN_C_API XnStatus xnProfilingShutdown();
+XN_C_API XnStatus XN_C_DECL xnProfilingShutdown();
 
 /**
 * Returns TRUE if profiling is active, or FALSE otherwise.
 */
-XN_C_API XnBool xnProfilingIsActive();
+XN_C_API XnBool XN_C_DECL xnProfilingIsActive();
 
 /**
 * Start a profiled section. This function is not meant to be used directly. Please use the 
@@ -75,7 +75,7 @@ XN_C_API XnBool xnProfilingIsActive();
 * @param	bMT				[in]		TRUE if this section is multi-threaded, FALSE otherwise.
 * @param	pHandle			[out]		A handle to be used each time this section executes again.
 */
-XN_C_API XnStatus xnProfilingSectionStart(const char* csSectionName, XnBool bMT, XnProfilingHandle* pHandle);
+XN_C_API XnStatus XN_C_DECL xnProfilingSectionStart(const char* csSectionName, XnBool bMT, XnProfilingHandle* pHandle);
 
 /**
 * Ends a profiled section. This function is not meant to be used directly. Please use the 
@@ -83,7 +83,7 @@ XN_C_API XnStatus xnProfilingSectionStart(const char* csSectionName, XnBool bMT,
 *
 * @param	pHandle		[in]	A handle returned from xnProfilingSectionStart.
 */
-XN_C_API XnStatus xnProfilingSectionEnd(XnProfilingHandle* pHandle);
+XN_C_API XnStatus XN_C_DECL xnProfilingSectionEnd(XnProfilingHandle* pHandle);
 
 
 /**

@@ -7,5 +7,5 @@ SRC_FILES = ../../../../../Samples/NiSimpleRead/*.cpp
 EXE_NAME = Sample-NiSimpleRead
 USED_LIBS = OpenNI
 
-include ../../CommonMakefile
+include ../../Common/CommonCppMakefile
 

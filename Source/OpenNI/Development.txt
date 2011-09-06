@@ -37,10 +37,14 @@ to the module).
 		  which gets the struct declared in XnModuleInterface.h and fills it up.
 		- If this is a new capability, add a call to the new __ModuleGetXXXInterface function
 		  in the __ModuleGetXXXInterface function of the corresponding node.
+    - XnModuleCppRegistration.h
+	    - If this is a new node, add it to the __ModuleGetGetInterfaceFunc function.
 	- XnModuleInterfaceContainers.h
 		- If this is a new node, create a new interface container for it.
 		- If this is a new capability, add the struct to the corresponding node interface
 		  container. Don't forget to memset it and set a pointer to it in the ctor.
+	- XnTypeManager
+	    - If this is a new node, in TypeManager ctor, add the type.
 	- XnModuleLoader
 	    - If this is a new node, add Load and Validate methods for it. Add a call to
 		  the Load method in LoadSpecificInterface().

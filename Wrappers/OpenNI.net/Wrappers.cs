@@ -109,6 +109,11 @@ namespace OpenNI
 			}
 		}
 
+		protected internal void UnsafeReplaceInternalObject(IntPtr ptr)
+		{
+			this.ptr = ptr;
+		}
+
 		protected abstract void FreeObject(IntPtr ptr, bool disposing);
 
 		protected virtual void Dispose(bool disposing)
@@ -118,11 +123,6 @@ namespace OpenNI
 				FreeObject(this.ptr, disposing);
 				this.ptr = IntPtr.Zero;
 			}
-		}
-
-		internal void MarkAlreadyFreed()
-		{
-			this.ptr = IntPtr.Zero;
 		}
 
 		private IntPtr ptr;
@@ -251,10 +251,19 @@ namespace OpenNI
 		internal NodeWrapper(IntPtr hNode, bool addRef)
 			: base(hNode)
 		{
+			this.contextShuttingDownHandler = OnContextShuttingDown;
+
 			if (addRef)
 			{
 				WrapperUtils.ThrowOnError(SafeNativeMethods.xnProductionNodeAddRef(hNode));
 			}
+
+			IntPtr pContext = SafeNativeMethods.xnGetRefContextFromNodeHandle(hNode);
+			
+			int status = SafeNativeMethods.xnContextRegisterForShutdown(pContext, this.contextShuttingDownHandler, IntPtr.Zero, out this.hShutdownCallback);
+			WrapperUtils.ThrowOnError(status);
+
+			SafeNativeMethods.xnContextRelease(pContext);
 		}
 
 		public override bool Equals(object obj)
@@ -291,8 +300,23 @@ namespace OpenNI
 
 		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{
+			IntPtr pContext = SafeNativeMethods.xnGetRefContextFromNodeHandle(ptr);
+			SafeNativeMethods.xnContextUnregisterFromShutdown(pContext, this.hShutdownCallback);
+			SafeNativeMethods.xnContextRelease(pContext);
 			SafeNativeMethods.xnProductionNodeRelease(ptr);
 		}
+
+		private void OnContextShuttingDown(IntPtr pContext, IntPtr pCookie)
+		{
+			// the context is shutting down
+			// no need to unregister from shutting down event - the event is destroyed anyway
+			UnsafeReplaceInternalObject(IntPtr.Zero);
+
+			Dispose();
+		}
+
+		private SafeNativeMethods.XnContextShuttingDownHandler contextShuttingDownHandler;
+		private IntPtr hShutdownCallback;
 	};
 
 	public class Capability : NodeWrapper

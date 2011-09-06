@@ -29,10 +29,14 @@
 // Defines
 //---------------------------------------------------------------------------
 #define XN_MAX_CAPABILITIES_COUNT		100
+#define XN_MAX_NEEDED_NODES				100
 
 //---------------------------------------------------------------------------
 // Types
 //---------------------------------------------------------------------------
+
+
+
 struct XnNodeQuery
 {
 	XnChar strVendor[XN_MAX_NAME_LENGTH];
@@ -44,8 +48,9 @@ struct XnNodeQuery
 	XnMapOutputMode aSupportedMapOutputModes[XN_MAX_CAPABILITIES_COUNT];
 	XnUInt32 nSupportedMapOutputModes;
 	XnUInt32 nMinUserPositions;
-	XnBool bExistingNode;
-	const XnChar* astrNeededNodes[XN_MAX_CAPABILITIES_COUNT];
+	XnBool bExistingNodeOnly;
+	XnBool bNonExistingNodeOnly;
+	const XnChar* astrNeededNodes[XN_MAX_NEEDED_NODES];
 	XnUInt32 nNeededNodes;
 	XnChar strCreationInfo[XN_MAX_CREATION_INFO_LENGTH];
 };
@@ -127,7 +132,15 @@ XN_C_API XnStatus xnNodeQuerySetSupportedMinUserPositions(XnNodeQuery* pQuery, c
 XN_C_API XnStatus xnNodeQuerySetExistingNodeOnly(XnNodeQuery* pQuery, XnBool bExistingNode)
 {
 	XN_VALIDATE_INPUT_PTR(pQuery);
-	pQuery->bExistingNode = bExistingNode;
+	pQuery->bExistingNodeOnly = bExistingNode;
+	return (XN_STATUS_OK);
+}
+
+
+XN_C_API XnStatus XN_C_DECL xnNodeQuerySetNonExistingNodeOnly(XnNodeQuery* pQuery, XnBool bNonExistingNode)
+{
+	XN_VALIDATE_INPUT_PTR(pQuery);
+	pQuery->bNonExistingNodeOnly = bNonExistingNode;
 	return (XN_STATUS_OK);
 }
 
@@ -205,17 +218,10 @@ static XnBool xnIsMapOutputModeSupported(XnNodeHandle hNode, const XnMapOutputMo
 	return (FALSE);
 }
 
-static XnBool xnIsNodeMatch(XnContext* pContext, const XnNodeQuery* pQuery, XnNodeInfo* pNodeInfo)
+static XnBool xnIsInfoQueryMatch(const XnNodeQuery* pQuery, XnNodeInfo* pNodeInfo)
 {
-	// check existing node
-	XnNodeHandle hNode = xnNodeInfoGetHandle(pNodeInfo);
-	if (pQuery->bExistingNode && hNode == NULL)
-	{
-		return (FALSE);
-	}
-
 	const XnProductionNodeDescription* pDescription = xnNodeInfoGetDescription(pNodeInfo);
-
+	
 	// vendor
 	if (pQuery->strVendor[0] != '\0' && strcmp(pQuery->strVendor, pDescription->strVendor) != 0)
 	{
@@ -255,56 +261,81 @@ static XnBool xnIsNodeMatch(XnContext* pContext, const XnNodeQuery* pQuery, XnNo
 		return (FALSE);
 	}
 
-	// check if we need to create an instance, to check capabilities
-	XnBool bInstanceCreated = FALSE;
+	return (TRUE);
+}
 
+static XnBool xnIsNodeInstanceMatch(const XnNodeQuery* pQuery, XnNodeHandle hNode)
+{
+	for (XnUInt i = 0; i < pQuery->nSupportedCapabilities; ++i)
+	{
+		if (!xnIsCapabilitySupported(hNode, pQuery->astrSupportedCapabilities[i]))
+		{
+			return (FALSE);
+		}
+	}
+
+	for (XnUInt i = 0; i < pQuery->nSupportedMapOutputModes; ++i)
+	{
+		if (!xnIsMapOutputModeSupported(hNode, &pQuery->aSupportedMapOutputModes[i]))
+		{
+			return (FALSE);
+		}
+	}
+
+	if (pQuery->nMinUserPositions > 0 && xnGetSupportedUserPositionsCount(hNode) < pQuery->nMinUserPositions)
+	{
+		return (FALSE);
+	}
+
+	return (TRUE);
+}
+
+static XnBool xnIsNodeMatch(XnContext* pContext, const XnNodeQuery* pQuery, XnNodeInfo* pNodeInfo)
+{
+	// check existing node
+	XnNodeHandle hNode = xnNodeInfoGetRefHandle(pNodeInfo);
+	if (pQuery->bExistingNodeOnly && (hNode == NULL))
+	{
+		return (FALSE);
+	}
+
+	if (pQuery->bNonExistingNodeOnly && (hNode != NULL))
+	{
+		return (FALSE);
+	}
+
+	if (!xnIsInfoQueryMatch(pQuery, pNodeInfo))
+	{
+		if (hNode != NULL)
+		{
+			xnProductionNodeRelease(hNode);
+		}
+
+		return (FALSE);
+	}
+
+	// check if we need to create an instance, to check capabilities
 	if (pQuery->nSupportedCapabilities > 0 ||
 		pQuery->nSupportedMapOutputModes > 0 ||
 		pQuery->nMinUserPositions > 0)
 	{
 		if (hNode == NULL)
 		{
+			const XnProductionNodeDescription* pDescription = xnNodeInfoGetDescription(pNodeInfo);
 			xnLogVerbose(XN_MASK_OPEN_NI, "Creating node '%s' of type '%s' for querying...", pDescription->strName, xnProductionNodeTypeToString(pDescription->Type));
 			if (XN_STATUS_OK != xnCreateProductionTree(pContext, pNodeInfo, &hNode))
 			{
 				return (FALSE);
 			}
-
-			bInstanceCreated = TRUE;
 		}
 	}
 
-	XnBool bResult = TRUE;
+	XnBool bResult = xnIsNodeInstanceMatch(pQuery, hNode);
 
-	for (XnUInt i = 0; i < pQuery->nSupportedCapabilities; ++i)
+	// in any case, we need to release the node. if we created it, this will cause it to be destroyed. If we just took
+	// a reference to it, we need to release it.
+	if (hNode != NULL)
 	{
-		if (!xnIsCapabilitySupported(hNode, pQuery->astrSupportedCapabilities[i]))
-		{
-			bResult = FALSE;
-			break;
-		}
-	}
-
-	if (bResult)
-	{
-		for (XnUInt i = 0; i < pQuery->nSupportedMapOutputModes; ++i)
-		{
-			if (!xnIsMapOutputModeSupported(hNode, &pQuery->aSupportedMapOutputModes[i]))
-			{
-				bResult = FALSE;
-				break;
-			}
-		}
-	}
-
-	if (bResult && pQuery->nMinUserPositions > 0)
-	{
-		bResult = (xnGetSupportedUserPositionsCount(hNode) >= pQuery->nMinUserPositions);
-	}
-
-	if (bInstanceCreated)
-	{
-		// destroy it
 		xnProductionNodeRelease(hNode);
 	}
 

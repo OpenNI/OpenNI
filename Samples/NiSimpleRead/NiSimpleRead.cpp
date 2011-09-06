@@ -53,9 +53,10 @@ int main()
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	Context context;
+	ScriptNode scriptNode;
 	EnumerationErrors errors;
 
-	nRetVal = context.InitFromXmlFile(SAMPLE_XML_PATH, &errors);
+	nRetVal = context.InitFromXmlFile(SAMPLE_XML_PATH, scriptNode, &errors);
 
 	if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
 	{
@@ -97,7 +98,9 @@ int main()
 		printf("Frame %d Middle point is: %u. FPS: %f\n", depthMD.FrameID(), depthMD(depthMD.XRes() / 2, depthMD.YRes() / 2), xnFPSCalc(&xnFPS));
 	}
 
-	context.Shutdown();
+	depth.Release();
+	scriptNode.Release();
+	context.Release();
 
 	return 0;
 }

@@ -8,4 +8,4 @@ SRC_FILES = \
 	
 USED_LIBS = OpenNI.net
 
-include ../../CommonMakefile
+include ../../Common/CommonCSMakefile

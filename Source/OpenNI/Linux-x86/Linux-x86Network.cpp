@@ -347,7 +347,7 @@ XN_C_API XnStatus xnOSConnectSocket(XN_SOCKET_HANDLE Socket, XnUInt32 nMillisecs
 		if (FD_ISSET(Socket->Socket, &fdExceptHandles))
 		{
 			XnUInt32 nLastError = 0;
-			XnUInt32 nLastErrorSize = sizeof(nLastError);
+			socklen_t nLastErrorSize = sizeof(nLastError);
 			getsockopt(Socket->Socket, SOL_SOCKET, SO_ERROR, &nLastError, &nLastErrorSize);
 			XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED, XN_MASK_OS, "Connect failed with error: %u", nLastError);
 		}

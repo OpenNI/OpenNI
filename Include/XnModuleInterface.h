@@ -54,6 +54,8 @@ struct XnModuleRecorderInterface;
 struct XnModulePlayerInterface;
 struct XnModuleGeneratorInterface;
 struct XnModuleCodecInterface;
+struct XnModuleScriptNodeInterface;
+struct XnModuleMapGeneratorInterface;
 
 //---------------------------------------------------------------------------
 // Types
@@ -81,6 +83,9 @@ typedef void (XN_CALLBACK_TYPE* XnModuleStateChangedHandler)(void* pCookie);
 // User
 typedef void (XN_CALLBACK_TYPE* XnModuleUserHandler)(XnUserID user, void* pCookie);
 
+// Hand touching FOV edge
+typedef void (XN_CALLBACK_TYPE* XnModuleHandTouchingFOVEdge)(XnUserID user, const XnPoint3D* pPosition, XnFloat fTime, XnDirection eDir, void* pCookie);
+
 // UI
 typedef void (XN_CALLBACK_TYPE* XnModuleHandCreate)(XnUserID user, const XnPoint3D* pPosition, XnFloat fTime, void* pCookie);
 typedef void (XN_CALLBACK_TYPE* XnModuleHandUpdate)(XnUserID user, const XnPoint3D* pPosition, XnFloat fTime, void* pCookie);
@@ -89,13 +94,18 @@ typedef void (XN_CALLBACK_TYPE* XnModuleHandDestroy)(XnUserID user, XnFloat fTim
 // Gesture Module
 typedef void (XN_CALLBACK_TYPE* XnModuleGestureRecognized)(const XnChar* strGesture, const XnPoint3D* pIDPosition, const XnPoint3D* pEndPosition, void* pCookie);
 typedef void (XN_CALLBACK_TYPE* XnModuleGestureProgress)(const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie);
+typedef void (XN_CALLBACK_TYPE* XnModuleGestureIntermediateStageCompleted)(const XnChar* strGesture, const XnPoint3D* pPosition, void* pCookie);
+typedef void (XN_CALLBACK_TYPE* XnModuleGestureReadyForNextIntermediateStage)(const XnChar* strGesture, const XnPoint3D* pPosition, void* pCookie);
 
 // Skeleton
 typedef void (XN_CALLBACK_TYPE* XnModuleCalibrationStart)(XnUserID user, void* pCookie);
 typedef void (XN_CALLBACK_TYPE* XnModuleCalibrationEnd)(XnUserID user, XnBool bSuccess, void* pCookie);
+typedef void (XN_CALLBACK_TYPE* XnModuleCalibrationInProgress)(XnUserID user, XnCalibrationStatus calibrationError, void* pCookie);
+typedef void (XN_CALLBACK_TYPE* XnModuleCalibrationComplete)(XnUserID user, XnCalibrationStatus calibrationError, void* pCookie);
 
 // Pose Detection
 typedef void (XN_CALLBACK_TYPE* XnModulePoseDetectionCallback)(const XnChar* strPose, XnUserID user, void* pCookie);
+typedef void (XN_CALLBACK_TYPE* XnModulePoseDetectionInProgressCallback)(const XnChar* strPose, XnUserID user, XnPoseDetectionStatus poseError, void* pCookie);
 
 typedef struct XnModuleExportedProductionNodeInterface
 {
@@ -169,6 +179,7 @@ typedef struct XnModuleExportedProductionNodeInterface
 		void (XN_CALLBACK_TYPE* Recorder)(struct XnModuleRecorderInterface* pInterface);
 		void (XN_CALLBACK_TYPE* Player)(struct XnModulePlayerInterface* pInterface);
 		void (XN_CALLBACK_TYPE* Codec)(struct XnModuleCodecInterface* pInterface);
+		void (XN_CALLBACK_TYPE* Script)(struct XnModuleScriptNodeInterface* pInterface);
 
 		void (XN_CALLBACK_TYPE* General)(void* pInterface);
 	} GetInterface;
@@ -1163,6 +1174,12 @@ typedef struct XnModuleGestureGeneratorInterface
 
 	XnStatus (XN_CALLBACK_TYPE* GetAllActiveGestures)(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
 	XnStatus (XN_CALLBACK_TYPE* EnumerateAllGestures)(XnModuleNodeHandle hGenerator, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
+
+	XnStatus (XN_CALLBACK_TYPE* RegisterToGestureIntermediateStageCompleted)(XnModuleNodeHandle hGenerator, XnModuleGestureIntermediateStageCompleted GestureIntermediateStageCompletedCB, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromGestureIntermediateStageCompleted)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+	XnStatus (XN_CALLBACK_TYPE* RegisterToGestureReadyForNextIntermediateStage)(XnModuleNodeHandle hGenerator, XnModuleGestureReadyForNextIntermediateStage ReadyForNextIntermediateStageCB, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromGestureReadyForNextIntermediateStage)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+
 } XnModuleGestureGeneratorInterface;
 
 /** Scene Analyzer Interface. */
@@ -1177,6 +1194,12 @@ typedef struct XnModuleSceneAnalyzerInterface
 /**
 * A set of functions supported by user generators who supports the UI capability.
 */
+typedef struct XnModuleHandTouchingFOVEdgeCapabilityInterface
+{
+	XnStatus (XN_CALLBACK_TYPE* RegisterToHandTouchingFOVEdge)(XnModuleNodeHandle hGenerator, XnModuleHandTouchingFOVEdge, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromHandTouchingFOVEdge)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+} XnModuleHandTouchingFOVEdgeCapabilityInterface;
+
 typedef struct XnModuleHandsGeneratorInterface
 {
 	XnModuleGeneratorInterface* pGeneratorInterface;
@@ -1187,6 +1210,9 @@ typedef struct XnModuleHandsGeneratorInterface
 	XnStatus (XN_CALLBACK_TYPE* StopTrackingAll)(XnModuleNodeHandle hGenerator);
 	XnStatus (XN_CALLBACK_TYPE* StartTracking)(XnModuleNodeHandle hGenerator, const XnPoint3D* pPosition);
 	XnStatus (XN_CALLBACK_TYPE* SetSmoothing)(XnModuleNodeHandle hGenerator, XnFloat fSmoothingFactor);
+
+	XnModuleHandTouchingFOVEdgeCapabilityInterface* pHandTouchingFOVEdgeInterface;
+
 } XnModuleHandsGeneratorInterface;
 
 /**
@@ -1226,6 +1252,13 @@ typedef struct XnModuleSkeletonCapabilityInterface
 	XnStatus (XN_CALLBACK_TYPE* SaveCalibrationDataToFile)(XnModuleNodeHandle hGenerator, XnUserID user, const XnChar* strFileName);
 	XnStatus (XN_CALLBACK_TYPE* LoadCalibrationDataFromFile)(XnModuleNodeHandle hGenerator, XnUserID user, const XnChar* strFileName);
 
+	XnStatus (XN_CALLBACK_TYPE* RegisterToCalibrationInProgress)(XnModuleNodeHandle hGenerator, XnModuleCalibrationInProgress CalibrationInProgressCB, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromCalibrationInProgress)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+	XnStatus (XN_CALLBACK_TYPE* RegisterToCalibrationComplete)(XnModuleNodeHandle hGenerator, XnModuleCalibrationComplete CalibrationCompleteCB, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromCalibrationComplete)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+
+	XnStatus (XN_CALLBACK_TYPE* RegisterToCalibrationStart)(XnModuleNodeHandle hGenerator, XnModuleCalibrationStart handler, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromCalibrationStart)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
 } XnModuleSkeletonCapabilityInterface;
 
 typedef struct XnModulePoseDetectionCapabilityInterface
@@ -1238,6 +1271,14 @@ typedef struct XnModulePoseDetectionCapabilityInterface
 	void (XN_CALLBACK_TYPE* UnregisterFromPoseCallbacks)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
 
 	XnStatus (XN_CALLBACK_TYPE* GetAllAvailablePoses)(XnModuleNodeHandle hGenerator, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses);
+
+	XnStatus (XN_CALLBACK_TYPE* RegisterToPoseDetectionInProgress)(XnModuleNodeHandle hGenerator, XnModulePoseDetectionInProgressCallback PoseProgressCB, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromPoseDetectionInProgress)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+
+	XnStatus (XN_CALLBACK_TYPE* RegisterToPoseDetected)(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromPoseDetected)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+	XnStatus (XN_CALLBACK_TYPE* RegisterToOutOfPose)(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromOutOfPose)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
 } XnModulePoseDetectionCapabilityInterface;
 
 /** User generator Interface. */
@@ -1260,6 +1301,11 @@ typedef struct XnModuleUserGeneratorInterface
 	* Contains Pose Detection Capability interface
 	*/
 	XnModulePoseDetectionCapabilityInterface* pPoseDetectionInterface;
+
+	XnStatus (XN_CALLBACK_TYPE* RegisterToUserExit)(XnModuleNodeHandle hGenerator, XnModuleUserHandler UserExitCB, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromUserExit)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+	XnStatus (XN_CALLBACK_TYPE* RegisterToUserReEnter)(XnModuleNodeHandle hGenerator, XnModuleUserHandler UserReEnterCB, void* pCookie, XnCallbackHandle* phCallback);
+	void (XN_CALLBACK_TYPE* UnregisterFromUserReEnter)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
 
 } XnModuleUserGeneratorInterface;
 
@@ -1287,6 +1333,18 @@ typedef struct XnModuleCodecInterface
 	XnStatus (XN_CALLBACK_TYPE* Init)(XnModuleNodeHandle hCodec, XnNodeHandle hNode);
 	XnStatus (XN_CALLBACK_TYPE* CompressData)(XnModuleNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten);
 	XnStatus (XN_CALLBACK_TYPE* DecompressData)(XnModuleNodeHandle hCodec, const void* pSrc, XnUInt32 nSrcSize, void* pDst, XnUInt32 nDstSize, XnUInt* pnBytesWritten);
+
 } XnModuleCodecInterface;
+
+typedef struct XnModuleScriptNodeInterface
+{
+	XnModuleProductionNodeInterface* pProductionNode;
+
+	const XnChar* (XN_CALLBACK_TYPE* GetSupportedFormat)(XnModuleNodeHandle hScript);
+	XnStatus (XN_CALLBACK_TYPE* LoadScriptFromFile)(XnModuleNodeHandle hScript, const XnChar* strFileName);
+	XnStatus (XN_CALLBACK_TYPE* LoadScriptFromString)(XnModuleNodeHandle hScript, const XnChar* strScript);
+	XnStatus (XN_CALLBACK_TYPE* Run)(XnModuleNodeHandle hScript, XnNodeInfoList* pCreatedNodes, XnEnumerationErrors* pErrors);
+
+} XnModuleScriptNodeInterface;
 
 #endif // __XN_MODULE_INTERFACE_H__

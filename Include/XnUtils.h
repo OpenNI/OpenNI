@@ -49,7 +49,7 @@
  *
  * @param	pVersion	[out]	Current DLL version
  */
-XN_C_API XnStatus xnGetVersion(XnVersion* pVersion);
+XN_C_API XnStatus XN_C_DECL xnGetVersion(XnVersion* pVersion);
 
 /// @}
 
@@ -63,7 +63,7 @@ XN_C_API XnStatus xnGetVersion(XnVersion* pVersion);
  *
  * @param	Type	[in]	The type of the production node.
  */
-XN_C_API const XnChar* xnProductionNodeTypeToString(XnProductionNodeType Type);
+XN_C_API const XnChar* XN_C_DECL xnProductionNodeTypeToString(XnProductionNodeType Type);
 
 /**
  * Gets a type from its string representation.
@@ -71,14 +71,14 @@ XN_C_API const XnChar* xnProductionNodeTypeToString(XnProductionNodeType Type);
  * @param	strType	[in]	The string representation of the type.
  * @param	pType	[out]	The type of the production node.
  */
-XN_C_API XnStatus xnProductionNodeTypeFromString(const XnChar* strType, XnProductionNodeType* pType);
+XN_C_API XnStatus XN_C_DECL xnProductionNodeTypeFromString(const XnChar* strType, XnProductionNodeType* pType);
 
 /**
  * @brief Checks if a certain production node type is a generator or not
  *
  * @param	type	[in]	The type to check
  */
-XN_C_API XnBool xnIsTypeGenerator(XnProductionNodeType type);
+XN_C_API XnBool XN_C_DECL xnIsTypeGenerator(XnProductionNodeType type);
 
 /**
  * @brief Checks if a certain production node type is a derived of another type
@@ -86,7 +86,7 @@ XN_C_API XnBool xnIsTypeGenerator(XnProductionNodeType type);
  * @param	type	[in]	The type to check
  * @param	base	[in]	The base type to check against
  */
-XN_C_API XnBool xnIsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base);
+XN_C_API XnBool XN_C_DECL xnIsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base);
 
 /// @}
 
@@ -100,7 +100,7 @@ XN_C_API XnBool xnIsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeT
  *
  * @param	format [in]	Pixel Format
  */
-XN_C_API const XnChar* xnPixelFormatToString(XnPixelFormat format);
+XN_C_API const XnChar* XN_C_DECL xnPixelFormatToString(XnPixelFormat format);
 
 /**
  * Gets pixel format by its name.
@@ -108,14 +108,14 @@ XN_C_API const XnChar* xnPixelFormatToString(XnPixelFormat format);
  * @param	strName	[in]	Name of the pixel format.
  * @param	pFormat	[out]	Pixel format.
  */
-XN_C_API XnStatus xnPixelFormatFromString(const XnChar* strName, XnPixelFormat* pFormat);
+XN_C_API XnStatus XN_C_DECL xnPixelFormatFromString(const XnChar* strName, XnPixelFormat* pFormat);
 
 /**
  * Gets the bytes per pixel of a pixel format.
  *
  * @param	format	[in]	The pixel format.
  */
-XN_C_API XnUInt32 xnGetBytesPerPixelForPixelFormat(XnPixelFormat format);
+XN_C_API XnUInt32 XN_C_DECL xnGetBytesPerPixelForPixelFormat(XnPixelFormat format);
 
 /// @}
 
@@ -129,14 +129,14 @@ XN_C_API XnUInt32 xnGetBytesPerPixelForPixelFormat(XnPixelFormat format);
  *
  * @param	resolution	[in]	The resolution to translate.
  */
-XN_C_API XnUInt32 xnResolutionGetXRes(XnResolution resolution);
+XN_C_API XnUInt32 XN_C_DECL xnResolutionGetXRes(XnResolution resolution);
 
 /**
  * Gets the number of pixels in a column for given resolution.
  *
  * @param	resolution	[in]	The resolution to translate.
  */
-XN_C_API XnUInt32 xnResolutionGetYRes(XnResolution resolution);
+XN_C_API XnUInt32 XN_C_DECL xnResolutionGetYRes(XnResolution resolution);
 
 /**
  * Gets the resolution from the number of pixels in every row and column.
@@ -144,21 +144,21 @@ XN_C_API XnUInt32 xnResolutionGetYRes(XnResolution resolution);
  * @param	xRes	[in]	Number of pixels in a row.
  * @param	yRes	[in]	Number of pixels in a column.
  */
-XN_C_API XnResolution xnResolutionGetFromXYRes(XnUInt32 xRes, XnUInt32 yRes);
+XN_C_API XnResolution XN_C_DECL xnResolutionGetFromXYRes(XnUInt32 xRes, XnUInt32 yRes);
 
 /**
  * Gets resolution by its name. If resolution is unknown, XN_RESOLUTION_CUSTOM is returned.
  *
  * @param	strName	[in]	Name of the resolution.
  */
-XN_C_API XnResolution xnResolutionGetFromName(const XnChar* strName);
+XN_C_API XnResolution XN_C_DECL xnResolutionGetFromName(const XnChar* strName);
 
 /**
  * Get the name of the resolution.
  *
  * @param	resolution [in]	Resolution.
  */
-XN_C_API const XnChar* xnResolutionGetName(XnResolution resolution);
+XN_C_API const XnChar* XN_C_DECL xnResolutionGetName(XnResolution resolution);
 
 /// @}
 
@@ -175,9 +175,9 @@ XN_C_API const XnChar* xnResolutionGetName(XnResolution resolution);
  *
  * @returns <0 if first is smaller than second, 0 if same, >0 if first is greater than second.
  */
-XN_C_API XnInt32 xnVersionCompare(const XnVersion* pVersion1, const XnVersion* pVersion2);
+XN_C_API XnInt32 XN_C_DECL xnVersionCompare(const XnVersion* pVersion1, const XnVersion* pVersion2);
 
-XN_C_API XnStatus xnVersionToString(const XnVersion* pVersion, XnChar* csResult, XnUInt32 nSize);
+XN_C_API XnStatus XN_C_DECL xnVersionToString(const XnVersion* pVersion, XnChar* csResult, XnUInt32 nSize);
 
 /// @}
 
@@ -186,7 +186,7 @@ XN_C_API XnStatus xnVersionToString(const XnVersion* pVersion, XnChar* csResult,
  * @{
  */
 
-XN_C_API XnStatus xnProductionNodeDescriptionToString(const XnProductionNodeDescription* pDescription, XnChar* csResult, XnUInt32 nSize);
+XN_C_API XnStatus XN_C_DECL xnProductionNodeDescriptionToString(const XnProductionNodeDescription* pDescription, XnChar* csResult, XnUInt32 nSize);
 
 /// @}
 
@@ -195,8 +195,8 @@ XN_C_API XnStatus xnProductionNodeDescriptionToString(const XnProductionNodeDesc
  * @{
  */
 
-XN_C_API XnPoint3D xnCreatePoint3D(XnFloat x, XnFloat y, XnFloat z);
-XN_C_API XnPlane3D xnCreatePlane3D(XnPoint3D ptPoint, XnVector3D vNormal);
+XN_C_API XnPoint3D XN_C_DECL xnCreatePoint3D(XnFloat x, XnFloat y, XnFloat z);
+XN_C_API XnPlane3D XN_C_DECL xnCreatePlane3D(XnPoint3D ptPoint, XnVector3D vNormal);
 
 /// @}
 
@@ -205,9 +205,9 @@ XN_C_API XnPlane3D xnCreatePlane3D(XnPoint3D ptPoint, XnVector3D vNormal);
  * @{
  */
 
-XN_C_API XnStatus xnRegisterModule(const XnChar* strModule, const XnChar* strConfigDir);
-XN_C_API XnStatus xnUnregisterModule(const XnChar* strModule);
-XN_C_API XnStatus xnPrintRegisteredModules();
+XN_C_API XnStatus XN_C_DECL xnRegisterModule(const XnChar* strModule, const XnChar* strConfigDir);
+XN_C_API XnStatus XN_C_DECL xnUnregisterModule(const XnChar* strModule);
+XN_C_API XnStatus XN_C_DECL xnPrintRegisteredModules();
 
 /// @}
 
@@ -216,9 +216,9 @@ XN_C_API XnStatus xnPrintRegisteredModules();
  * @{
  */
 
-XN_C_API XnStatus xnRegisterGlobalLicense(XnLicense* pLicense);
-XN_C_API XnStatus xnUnregisterGlobalLicense(XnLicense* pLicense);
-XN_C_API XnStatus xnPrintRegisteredLicenses();
+XN_C_API XnStatus XN_C_DECL xnRegisterGlobalLicense(XnLicense* pLicense);
+XN_C_API XnStatus XN_C_DECL xnUnregisterGlobalLicense(XnLicense* pLicense);
+XN_C_API XnStatus XN_C_DECL xnPrintRegisteredLicenses();
 
 /// @}
 
@@ -232,53 +232,53 @@ XN_C_API XnStatus xnPrintRegisteredLicenses();
  * by calling @ref xnFreeOutputMetaData().
  * @returns NULL if allocation failed.
  */
-XN_C_API XnOutputMetaData* xnAllocateOutputMetaData();
+XN_C_API XnOutputMetaData* XN_C_DECL xnAllocateOutputMetaData();
 /**
  * Frees a previously allocated @ref XnOutputMetaData object.
  *
  * @param	pMetaData		[in]	object to be freed.
  */
-XN_C_API void xnFreeOutputMetaData(const XnOutputMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnFreeOutputMetaData(const XnOutputMetaData* pMetaData);
 /**
  * @brief Shallow-Copies an Output Meta Data object.
  *
  * @param	pDestination	[in]	Destination object.
  * @param	pSource			[in]	Source object.
  */
-XN_C_API XnStatus xnCopyOutputMetaData(XnOutputMetaData* pDestination, const XnOutputMetaData* pSource);
+XN_C_API XnStatus XN_C_DECL xnCopyOutputMetaData(XnOutputMetaData* pDestination, const XnOutputMetaData* pSource);
 
 /**
  * Allocates and returns an @ref XnMapMetaData object. When no longer needed, this object should be freed
  * by calling @ref xnFreeMapMetaData().
  * @returns NULL if allocation failed.
  */
-XN_C_API XnMapMetaData* xnAllocateMapMetaData();
+XN_C_API XnMapMetaData* XN_C_DECL xnAllocateMapMetaData();
 /**
  * Frees a previously allocated @ref XnMapMetaData object.
  *
  * @param	pMetaData		[in]	object to be freed.
  */
-XN_C_API void xnFreeMapMetaData(const XnMapMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnFreeMapMetaData(const XnMapMetaData* pMetaData);
 /**
  * @brief Shallow-Copies a Map Meta Data object.
  *
  * @param	pDestination	[in]	Destination object.
  * @param	pSource			[in]	Source object.
  */
-XN_C_API XnStatus xnCopyMapMetaData(XnMapMetaData* pDestination, const XnMapMetaData* pSource);
+XN_C_API XnStatus XN_C_DECL xnCopyMapMetaData(XnMapMetaData* pDestination, const XnMapMetaData* pSource);
 
 /**
  * Allocates and returns an @ref XnDepthMetaData object. When no longer needed, this object should be freed
  * by calling @ref xnFreeDepthMetaData().
  * @returns NULL if allocation failed.
  */
-XN_C_API XnDepthMetaData* xnAllocateDepthMetaData();
+XN_C_API XnDepthMetaData* XN_C_DECL xnAllocateDepthMetaData();
 /**
  * Frees a previously allocated @ref XnDepthMetaData object.
  *
  * @param	pMetaData		[in]	object to be freed.
  */
-XN_C_API void xnFreeDepthMetaData(const XnDepthMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnFreeDepthMetaData(const XnDepthMetaData* pMetaData);
 /**
  * @brief Shallow-Copies a Depth Meta Data object. Note that the data buffer is not copied, and that both
  * object will point to the same buffer.
@@ -286,20 +286,20 @@ XN_C_API void xnFreeDepthMetaData(const XnDepthMetaData* pMetaData);
  * @param	pDestination	[in]	Destination object.
  * @param	pSource			[in]	Source object.
  */
-XN_C_API XnStatus xnCopyDepthMetaData(XnDepthMetaData* pDestination, const XnDepthMetaData* pSource);
+XN_C_API XnStatus XN_C_DECL xnCopyDepthMetaData(XnDepthMetaData* pDestination, const XnDepthMetaData* pSource);
 
 /**
  * Allocates and returns an @ref XnImageMetaData object. When no longer needed, this object should be freed
  * by calling @ref xnFreeImageMetaData().
  * @returns NULL if allocation failed.
  */
-XN_C_API XnImageMetaData* xnAllocateImageMetaData();
+XN_C_API XnImageMetaData* XN_C_DECL xnAllocateImageMetaData();
 /**
  * Frees a previously allocated @ref XnImageMetaData object.
  *
  * @param	pMetaData		[in]	object to be freed.
  */
-XN_C_API void xnFreeImageMetaData(const XnImageMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnFreeImageMetaData(const XnImageMetaData* pMetaData);
 /**
  * @brief Shallow-Copies an Image Meta Data object. Note that the data buffer is not copied, and that both
  * object will point to the same buffer.
@@ -307,20 +307,20 @@ XN_C_API void xnFreeImageMetaData(const XnImageMetaData* pMetaData);
  * @param	pDestination	[in]	Destination object.
  * @param	pSource			[in]	Source object.
  */
-XN_C_API XnStatus xnCopyImageMetaData(XnImageMetaData* pDestination, const XnImageMetaData* pSource);
+XN_C_API XnStatus XN_C_DECL xnCopyImageMetaData(XnImageMetaData* pDestination, const XnImageMetaData* pSource);
 
 /**
  * Allocates and returns an @ref XnIRMetaData object. When no longer needed, this object should be freed
  * by calling @ref xnFreeIRMetaData().
  * @returns NULL if allocation failed.
  */
-XN_C_API XnIRMetaData* xnAllocateIRMetaData();
+XN_C_API XnIRMetaData* XN_C_DECL xnAllocateIRMetaData();
 /**
  * Frees a previously allocated @ref XnIRMetaData object.
  *
  * @param	pMetaData		[in]	object to be freed.
  */
-XN_C_API void xnFreeIRMetaData(const XnIRMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnFreeIRMetaData(const XnIRMetaData* pMetaData);
 /**
  * @brief Shallow-Copies an IR Meta Data object. Note that the data buffer is not copied, and that both
  * object will point to the same buffer.
@@ -328,20 +328,20 @@ XN_C_API void xnFreeIRMetaData(const XnIRMetaData* pMetaData);
  * @param	pDestination	[in]	Destination object.
  * @param	pSource			[in]	Source object.
  */
-XN_C_API XnStatus xnCopyIRMetaData(XnIRMetaData* pDestination, const XnIRMetaData* pSource);
+XN_C_API XnStatus XN_C_DECL xnCopyIRMetaData(XnIRMetaData* pDestination, const XnIRMetaData* pSource);
 
 /**
  * Allocates and returns an @ref XnAudioMetaData object. When no longer needed, this object should be freed
  * by calling @ref xnFreeAudioMetaData().
  * @returns NULL if allocation failed.
  */
-XN_C_API XnAudioMetaData* xnAllocateAudioMetaData();
+XN_C_API XnAudioMetaData* XN_C_DECL xnAllocateAudioMetaData();
 /**
  * Frees a previously allocated @ref XnAudioMetaData object.
  *
  * @param	pMetaData		[in]	object to be freed.
  */
-XN_C_API void xnFreeAudioMetaData(const XnAudioMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnFreeAudioMetaData(const XnAudioMetaData* pMetaData);
 /**
  * @brief Shallow-Copies an Audio Meta Data object. Note that the data buffer is not copied, and that both
  * object will point to the same buffer.
@@ -349,20 +349,20 @@ XN_C_API void xnFreeAudioMetaData(const XnAudioMetaData* pMetaData);
  * @param	pDestination	[in]	Destination object.
  * @param	pSource			[in]	Source object.
  */
-XN_C_API XnStatus xnCopyAudioMetaData(XnAudioMetaData* pDestination, const XnAudioMetaData* pSource);
+XN_C_API XnStatus XN_C_DECL xnCopyAudioMetaData(XnAudioMetaData* pDestination, const XnAudioMetaData* pSource);
 
 /**
  * Allocates and returns an @ref XnSceneMetaData object. When no longer needed, this object should be freed
  * by calling @ref xnFreeSceneMetaData().
  * @returns NULL if allocation failed.
  */
-XN_C_API XnSceneMetaData* xnAllocateSceneMetaData();
+XN_C_API XnSceneMetaData* XN_C_DECL xnAllocateSceneMetaData();
 /**
  * Frees a previously allocated @ref XnSceneMetaData object.
  *
  * @param	pMetaData		[in]	object to be freed.
  */
-XN_C_API void xnFreeSceneMetaData(const XnSceneMetaData* pMetaData);
+XN_C_API void XN_C_DECL xnFreeSceneMetaData(const XnSceneMetaData* pMetaData);
 /**
  * @brief Shallow-Copies a Scene Meta Data object. Note that the data buffer is not copied, and that both
  * object will point to the same buffer.
@@ -370,7 +370,7 @@ XN_C_API void xnFreeSceneMetaData(const XnSceneMetaData* pMetaData);
  * @param	pDestination	[in]	Destination object.
  * @param	pSource			[in]	Source object.
  */
-XN_C_API XnStatus xnCopySceneMetaData(XnSceneMetaData* pDestination, const XnSceneMetaData* pSource);
+XN_C_API XnStatus XN_C_DECL xnCopySceneMetaData(XnSceneMetaData* pDestination, const XnSceneMetaData* pSource);
 
 /// @}
 
@@ -391,7 +391,7 @@ XN_C_API XnStatus xnCopySceneMetaData(XnSceneMetaData* pDestination, const XnSce
  * @param	pErrors			[in]	The errors object passed to Enumerate method.
  * @param	pQuery			[in]	[Optional] A filter to be used for finding the appropriate input.
  */
-XN_C_API XnStatus xnAutoEnumerateOverSingleInput(XnContext* pContext, XnNodeInfoList* pList, XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnProductionNodeType InputType, XnEnumerationErrors* pErrors, XnNodeQuery* pQuery);
+XN_C_API XnStatus XN_C_DECL xnAutoEnumerateOverSingleInput(XnContext* pContext, XnNodeInfoList* pList, XnProductionNodeDescription* pDescription, const XnChar* strCreationInfo, XnProductionNodeType InputType, XnEnumerationErrors* pErrors, XnNodeQuery* pQuery);
 
 /**
  * Registers an extension node with OpenNI. An extension node is a node of type not defined by OpenNI.
@@ -400,14 +400,14 @@ XN_C_API XnStatus xnAutoEnumerateOverSingleInput(XnContext* pContext, XnNodeInfo
  * @param	baseType		[in]	Type of the direct base for this extension.
  * @param	pTypeID			[out]	The new ID registered with OpenNI.
  */
-XN_C_API XnStatus xnRegisterExtensionNode(const XnChar* strTypeName, XnProductionNodeType baseType, XnProductionNodeType* pTypeID);
+XN_C_API XnStatus XN_C_DECL xnRegisterExtensionNode(const XnChar* strTypeName, XnProductionNodeType baseType, XnProductionNodeType* pTypeID);
 
 /**
  * Gets the module node handle of a node. This is useful for extension implementors.
  *
  * @param	hNode			[in]	The node to get its module node handle.
  */
-XN_C_API XnModuleNodeHandle xnGetModuleNodeHandle(XnNodeHandle hNode);
+XN_C_API XnModuleNodeHandle XN_C_DECL xnGetModuleNodeHandle(XnNodeHandle hNode);
 
 #if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 /**
@@ -417,7 +417,7 @@ XN_C_API XnModuleNodeHandle xnGetModuleNodeHandle(XnNodeHandle hNode);
  * @param	strConfigDir	[in]	The module configuration directory.
  * @param	strName			[in]	Name of this module.
  */
-XN_C_API XnStatus xnRegisterModuleWithOpenNI(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
+XN_C_API XnStatus XN_C_DECL xnRegisterModuleWithOpenNI(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
 #endif
 
 /// @}

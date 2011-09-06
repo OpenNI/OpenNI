@@ -17,7 +17,7 @@ namespace UserTracker.net
 		{
 			InitializeComponent();
 
-			this.context = new Context(SAMPLE_XML_FILE);
+			this.context = Context.CreateFromXmlFile(SAMPLE_XML_FILE, out scriptNode);
 			this.depth = context.FindExistingNode(NodeType.Depth) as DepthGenerator;
 			if (this.depth == null)
 			{
@@ -32,7 +32,7 @@ namespace UserTracker.net
             this.userGenerator.NewUser += userGenerator_NewUser;
             this.userGenerator.LostUser += userGenerator_LostUser;
             this.poseDetectionCapability.PoseDetected += poseDetectionCapability_PoseDetected;
-            this.skeletonCapbility.CalibrationEnd += skeletonCapbility_CalibrationEnd;
+            this.skeletonCapbility.CalibrationComplete += skeletonCapbility_CalibrationComplete;
 
             this.skeletonCapbility.SetSkeletonProfile(SkeletonProfile.All);
             this.joints = new Dictionary<int,Dictionary<SkeletonJoint,SkeletonJointPosition>>();
@@ -49,9 +49,9 @@ namespace UserTracker.net
 			this.readerThread.Start();
 		}
 
-        void skeletonCapbility_CalibrationEnd(object sender, CalibrationEndEventArgs e)
+        void skeletonCapbility_CalibrationComplete(object sender, CalibrationProgressEventArgs e)
         {
-            if (e.Success)
+            if (e.Status == CalibrationStatus.OK)
             {
                 this.skeletonCapbility.StartTracking(e.ID);
                 this.joints.Add(e.ID, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
@@ -348,6 +348,7 @@ namespace UserTracker.net
 		private readonly string SAMPLE_XML_FILE = @"../../../../Data/SamplesConfig.xml";
 
 		private Context context;
+		private ScriptNode scriptNode;
 		private DepthGenerator depth;
         private UserGenerator userGenerator;
         private SkeletonCapability skeletonCapbility;

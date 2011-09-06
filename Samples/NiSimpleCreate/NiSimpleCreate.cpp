@@ -73,7 +73,8 @@ int main()
 		printf("Frame %d Middle point is: %u.\n", depthMD.FrameID(), depthMD(depthMD.XRes() / 2, depthMD.YRes() / 2));
 	}
 
-	context.Shutdown();
+	depth.Release();
+	context.Release();
 
 	return 0;
 }

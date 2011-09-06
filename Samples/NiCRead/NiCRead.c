@@ -47,6 +47,7 @@ int main()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	XnContext* pContext;
+	XnNodeHandle hScriptNode;
 	XnEnumerationErrors* pErrors;
 	XnNodeHandle hDepth;
 	XnDepthMetaData* pDepthMD;
@@ -56,7 +57,7 @@ int main()
 	nRetVal = xnEnumerationErrorsAllocate(&pErrors);
 	CHECK_RC(nRetVal, "Allocate errors object");
 
-	nRetVal = xnInitFromXmlFile(SAMPLE_XML_PATH, &pContext, pErrors);
+	nRetVal = xnInitFromXmlFileEx(SAMPLE_XML_PATH, &pContext, pErrors, &hScriptNode);
 	if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
 	{
 		XnChar strError[1024];
@@ -74,7 +75,7 @@ int main()
 
 	xnEnumerationErrorsFree(pErrors);
 
-	nRetVal = xnFindExistingNodeByType(pContext, XN_NODE_TYPE_DEPTH, &hDepth);
+	nRetVal = xnFindExistingRefNodeByType(pContext, XN_NODE_TYPE_DEPTH, &hDepth);
 	CHECK_RC(nRetVal, "Find depth generator");
 
 	pDepthMD = xnAllocateDepthMetaData();
@@ -97,7 +98,9 @@ int main()
 
 	xnFreeDepthMetaData(pDepthMD);
 
-	xnShutdown(pContext);
+	xnProductionNodeRelease(hDepth);
+	xnProductionNodeRelease(hScriptNode);
+	xnContextRelease(pContext);
 
 	return 0;
 }

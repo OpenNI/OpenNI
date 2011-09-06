@@ -33,7 +33,7 @@
 class XnAutoCSLocker
 {
 public:
-	inline XnAutoCSLocker(const XnAutoCSLocker& other) : m_hCS(other.m_hCS)
+	inline XnAutoCSLocker(const XnAutoCSLocker& other) : m_hCS(other.m_hCS), m_bLocked(FALSE)
 	{
 		Lock();
 	}
@@ -46,7 +46,7 @@ public:
 		return *this;
 	}
 
-	inline XnAutoCSLocker(XN_CRITICAL_SECTION_HANDLE hCS) : m_hCS(hCS)
+	inline XnAutoCSLocker(XN_CRITICAL_SECTION_HANDLE hCS) : m_hCS(hCS), m_bLocked(FALSE)
 	{
 		Lock();
 	}
@@ -56,20 +56,29 @@ public:
 		Unlock();
 	}
 
-private:
 	inline void Lock()
 	{
-		XnStatus nRetVal = xnOSEnterCriticalSection(&m_hCS);
-		XN_ASSERT(nRetVal == XN_STATUS_OK);
+		if (!m_bLocked)
+		{
+			XnStatus nRetVal = xnOSEnterCriticalSection(&m_hCS);
+			XN_ASSERT(nRetVal == XN_STATUS_OK);
+			m_bLocked = TRUE;
+		}
 	}
 
 	inline void Unlock()
 	{
-		XnStatus nRetVal = xnOSLeaveCriticalSection(&m_hCS);
-		XN_ASSERT(nRetVal == XN_STATUS_OK);
+		if (m_bLocked)
+		{
+			XnStatus nRetVal = xnOSLeaveCriticalSection(&m_hCS);
+			XN_ASSERT(nRetVal == XN_STATUS_OK);
+			m_bLocked = FALSE;
+		}
 	}
 
+private:
 	XN_CRITICAL_SECTION_HANDLE m_hCS;
+	XnBool m_bLocked;
 };
 
 class XnAutoMutexLocker

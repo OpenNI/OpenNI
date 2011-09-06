@@ -1,7 +1,89 @@
 Detailed Change log:
 --------------------
 
-Version 1.1.0.41 (Unstable version - Apr 18th 2010)
+Version 1.3.2.3 (Unstable version - July 19th 2011)
+---------------------------------------------------
+  * Windows/Linux: Allow creating mutex even if name contains slashes/backslashes.
+  * Linux installer fix: dir /var/log/ni wasn't created, so installation might fail.
+  * Linux installer fix: do not try to install non-existing .Net wrappers.
+  * Java Bug Fix: ImageMap::createByteBuffer() causes infinite recursion (#1290).
+  * Bug Fix: on rare cases, creating nodes might succeed but return a NULL hNode.
+  * Java wrappers are now installed to /usr/share/java.
+  
+Version 1.3.2.1 (Stable version - July 4th 2011)
+------------------------------------------------
+  * Moved HandTouchingFOVEdge to be a Capability, available through the HandGenerator.
+  * Skeleton Capability:
+	 - CalibrationCallbacks (bundle of CalibrationStart and CalibrationEnd) marked as deprecated
+	 - New callback: CalibrationStart (with RegisterTo/UnregisterFrom) - replacing deprecated CalibrationCallbacks
+	 - Removed forceFixedLength, IsForcedFixedLength, SetPostProcessing - not general API. Instead, int property of XnVFeatures
+  * Pose Detection Capability
+	 - PoseCallbacks (bundle of PoseStart and PoseEnd) marked as deprecated
+	 - New callback: PoseDetected (with RegisterTo/UnregisterFrom) - replacing deprecated PoseCallbacks
+	 - New callback: OutOfPose (with RegisterTo/UnregisterFrom) - replacing deprecated PoseCallbacks
+  * PoseDetectionStatus enum changed, to contain only relevant options
+  * All relevant samples use new APIs.
+  * Memory leak fix - creating temporary C++ wrapper node objects cause memory leaks.
+  * Linux: allowing OpenNI to be installed in a different directory.
+  * Linux Bug Fix: logs are not created if log dir does not exist.
+  * Removed MessageBoxes from uninstallation process.
+  * New Java wrappers and samples!
+  * Bug Fix: Exporter singleton functions might be called *after* its destruction (when global objects are destroyed, destruction order is undetermined).
+  * Raise the shutdown event *after* all nodes have been destroyed (some nodes might call the context or other nodes when destroying)
+  * BugFix: running xml script would startGenerateAll instead of just the ones that were created. NOTE: this also changes behavior so that nodes are now started in the order in which they were written in the script.
+  * Changed recorder buffer size to support UXGA with worst case compression.
+  * NiViewer bug fix: if no depth when NiViewer starts, scale is never drawn, even if depth is created later on.
+  * Initial support for Android.
+  * NiConvertXToONI: now when specifying node type in command line, only nodes of that type are converted.
+  * Bug Fix: NiSimpleViewer crashes when image node does not exist (#1211).
+  * Bug Fix: Unnecessary full file paths in samples csproj files (#964).
+  * Bug Fix: NiAudioSample memory leak (#971).
+  * Bug Fix: wrong error codes returned form semaphore functions.
+  * Added GetDestination() function to Recorder.
+  * Exposed xnNodeInfoAllocate() and xnNodeInfoFree().
+  * Bug Fix: after closing the log, opening it again might not work.
+  * Bug Fix: Create production tree didn't return hNode if already exists.
+  * Added option to query for non-existing nodes only
+  * Added options to xml script for querying existing nodes and non-existing nodes
+  * Added documentation for creating recorder from xml script
+  * Added documentation for querying for existing nodes and non-existing nodes through xml
+  * UpdateVersion.py now updates version number in doxygen project name
+  * Added APIs to register to new callbacks
+    - GestureInProgress
+	- GestureReadyForNextStage
+	- HandTouchingFOV
+	- CalibrationInProgress (with status)
+	- CalibrationComplete (with status)
+	- PoseDetectionInProgress (with status)
+	- UserExit
+	- UserReEnter
+  * Added APIs for forcing fixed length skeleton.
+  * Added API for skeleton post processing.
+
+Version 1.2.0.7 (Stable version - May 9th 2011)
+-----------------------------------------------
+  * Wrappers Bug Fix in C++ and C#: Calling Shutdown() might cause a crash in other objects destructors.
+  * Changed GLES to work properly on CE4100.
+  * Added virtual to LogWriterBase dtor.
+  * Fixed bug in queries - xnIsNodeMatch returned TRUE when there was no match.
+  * Added input pointer validation in xnGetModuleNodeHandle().
+  * C++ Wrapper Bug Fix: CreateProductionTree would not return created node, so node always had a ref count of at least 1.
+  * Log Bug Fix: changing output folder causes file to be created (even if not requested).
+  * Bug Fix: xnAddNeededNode() did not add an already added node, but also didn't notify caller. Changed to add it again.
+  * Bug Fix: playing ONI files does not work in application using deprecated API.
+  * Bug Fix: enumerating with a query might cause a crash.
+  * Bug Fix: playing ONI files might cause extra ref count to context.
+  * Bug Fix: When an enumeration error occurs in running XML file, trying to access this error causes crash.
+  * Ref count dump improvement.
+  * API change: running XML scripts is now done via ScriptNode object, and this object is responsible for the lifetime of created objects.
+  * API change: from now on, context object works with reference count:
+    1. InitFromXml() was marked deprecated. Now has another overload with takes the script node as output.
+	2. RunXmlScript() was marked deprecated. Now has another overload with takes the script node as output.
+	3. RunXmlScriptFromFile() was marked deprecated. Now has another overload with takes the script node as output.
+	4. Shutdown() was marked deprecated. Release() should be used instead (or let dtor do its stuff)
+  * Log: adding LogWriter framework. It is now possible to add other log writers (others than console/file).
+
+Version 1.1.0.41 (Unstable version - Apr 18th 2011)
 ---------------------------------------------------
   * .Net wrapper: adding publisher policy to the installation, to redirect previous versions to current one.
   * Fixed the 32-bit VCRedist problem (the MSI installer didn't call it by mistake)
@@ -13,7 +95,7 @@ Version 1.1.0.41 (Unstable version - Apr 18th 2010)
   * CE4100: stop using /var/lib - filesystem is replaced by tempfs.
   * CE4100: proper support in makefile, redist and install.
 
-Version 1.1.0.39 (Unstable version - Apr 11th 2010)
+Version 1.1.0.39 (Unstable version - Apr 11th 2011)
 ---------------------------------------------------
   * Typo fix: ANTI_FILCKER was misspelled (should be ANTI_FLICKER)
   * Bug Fix #788: NiViewer bug fix: a crash when playback speed is extremely high.
@@ -26,7 +108,7 @@ Version 1.1.0.39 (Unstable version - Apr 11th 2010)
   * NiViewer: improve error message when trying to seek in a live source.
   * .NET wrapper - better reference safety for delegates.
 
-Version 1.1.0.38 (Stable version - Apr 11th 2010)
+Version 1.1.0.38 (Stable version - Apr 11th 2011)
 -------------------------------------------------
   * Fixed .NET requirements in the Win32 installer.
   * Linux Bug Fix: xnOS timeouts did not work well, causing ISO mode to get stuck sometimes when closing the device.
