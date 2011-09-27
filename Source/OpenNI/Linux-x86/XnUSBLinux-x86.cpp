@@ -1051,7 +1051,7 @@ XN_THREAD_PROC xnUSBReadThreadMain(XN_THREAD_PARAM pThreadParam)
 								if (pTransfer->buffer + nTotalBytes != pBuffer)
 								{
 //									printf("buffer %d has %d bytes. Moving to offset %d...\n", i, pPacket->actual_length, nTotalBytes);
-									memcpy(pTransfer->buffer + nTotalBytes, pBuffer, pPacket->actual_length);
+									memmove(pTransfer->buffer + nTotalBytes, pBuffer, pPacket->actual_length);
 								}
 								nTotalBytes += pPacket->actual_length;
 							}
