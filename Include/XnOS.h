@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -562,6 +562,8 @@ XN_C_API XnStatus XN_C_DECL xnOSWaitForCondition(const XN_EVENT_HANDLE EventHand
 // Network
 struct xnOSSocket;
 typedef struct xnOSSocket* XN_SOCKET_HANDLE;
+
+#define XN_SOCKET_DEFAULT_TIMEOUT 0xFFFEFFFE
 
 XN_C_API XnStatus XN_C_DECL xnOSInitNetwork();
 XN_C_API XnStatus XN_C_DECL xnOSShutdownNetwork();

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -25,6 +25,10 @@
 #include "XnModuleCppInterface.h"
 
 using namespace xn;
+
+#ifdef XN_NO_DYNAMIC_CAST
+#include "XnDerivedCast.h"
+#endif
 
 #define _XN_VALIDATE_CAPABILITY_INTERFACE_RET(capInterface, retVal)		\
 	if (capInterface == NULL)											\

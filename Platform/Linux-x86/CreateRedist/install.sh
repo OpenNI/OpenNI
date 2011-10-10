@@ -74,7 +74,7 @@ fi
 INSTALL_LIB=$rootfs/usr/lib
 INSTALL_BIN=$rootfs/usr/bin
 INSTALL_INC=$rootfs/usr/include/ni
-INSTALL_VAR=$rootfs/usr/etc/ni
+INSTALL_VAR=$rootfs/var/lib/ni
 INSTALL_JAR=$rootfs/usr/share/java
 
 # make all calls into OpenNI run in this filesystem
@@ -115,8 +115,8 @@ if [ "$install" = yes ]; then
 	done
 
 	# mono
-	if [ -f $rootfs/usr/bin/gmcs ]
-	then
+	if [ -f $rootfs/usr/bin/gmcs -a -f Bin/OpenNI.net.dll ]; then
+		printf "Installing .Net wrappers...\n"
 		gacutil -i Bin/OpenNI.net.dll -package 2.0 $GACDIR
 	fi
 
@@ -163,9 +163,8 @@ elif [ "$uninstall" = yes ]; then
 	printf "OK\n"
 
 	# mono
-	if [ -f $rootfs/usr/bin/gmcs ]
-	then
-		printf "Removing OpenNI.net: "
+	if [ -f $rootfs/usr/bin/gmcs -a -f Bin/OpenNI.net.dll ]; then
+		printf "Removing .Net wrappers...\n"
 		gacutil -u OpenNI.net $GACDIR
 	fi
 

@@ -1,6 +1,6 @@
 #/****************************************************************************
-#*	THIS file should be DUPLICATED IN BOTH				     *
-#*	Engine\Platform\Win32\CreateRedist				     *
+#*      THIS file should be DUPLICATED IN BOTH                               *
+#*      Engine\Platform\Win32\CreateRedist                                   *
 #*  AND OpenNI\Platform\Win32\CreateRedist                                   *
 #*                                                                           *
 #****************************************************************************/
@@ -42,6 +42,7 @@ import sys
 import subprocess
 import shutil
 import stat
+import threading
 
 #-------------Functions--------------------------------------------------------#
 
@@ -60,10 +61,10 @@ def write_dependencides(sln_file, all_samples,sample):
     sln_file.write("\tEndProjectSection\n")
 
 def remove_readonly(path):
-	for root, dirs, files in os.walk(path):
-		for fname in files:
-			full_path = os.path.join(root, fname)
-			os.chmod(full_path ,stat.S_IWRITE)
+    for root, dirs, files in os.walk(path):
+        for fname in files:
+            full_path = os.path.join(root, fname)
+            os.chmod(full_path ,stat.S_IWRITE)
 
 def regx_replace(findStr,repStr,filePath):
     "replaces all findStr by repStr in file filePath using regualr expression"
@@ -128,9 +129,11 @@ class SampleData(object):
 
 class RedistBase(object):
     def __init__(self):
-        self.SCRIPT_DIR = os.getcwd()
+        self.SCRIPT_DIR = ''
         self.VC_version = 0
         self.vc_build_bits = ""
+        self.output_dir = ""
+        self.final_dir = ""
         self.config_xml_filename = ""
         self.redist_name = ""
         self.redist_internal_name = ''
@@ -138,7 +141,8 @@ class RedistBase(object):
         self.doxy_file_name = ""
         self.write_2010_sample_dependency = False
         self.all_samples = None
-	self.internal_conf_name = ''
+        self.internal_conf_name = ''
+        self.TIMEOUT_UPGRADE_VS10_SEC = 180
 
     def finish_script(self,exit_code):
         os.chdir(self.SCRIPT_DIR)
@@ -152,9 +156,9 @@ class RedistBase(object):
         if len(sys.argv) not in [4,5]:
             print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n> [<VCVersion:9/10>]"
             exit(1)
-        if sys.argv[1] == 'y':
+        if sys.argv[1] == 'y' or sys.argv[1] == 'Yes':
             self.Make_Doxy=1
-        elif sys.argv[1] == 'n':
+        elif sys.argv[1] == 'n' or sys.argv[1] == 'No':
             self.Make_Doxy=0
         else:
             print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>"
@@ -170,13 +174,13 @@ class RedistBase(object):
             print "BuildTarget param must be 32 or 64!"
             exit(1)
 
-        if sys.argv[3] == 'y':
+        if sys.argv[3] == 'y' or sys.argv[3] == 'Yes':
             self.vc_build_type = "/Rebuild"
-        elif sys.argv[3] == 'n':
+        elif sys.argv[3] == 'n' or sys.argv[3] == 'No':
             self.vc_build_type = "/Build"
         else:
             print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>"
-            print "Doxygen param must be y or n!"
+            print "FullRebuild param must be y or n!"
             exit(1)
 
         self.VC_version = 9
@@ -185,30 +189,29 @@ class RedistBase(object):
                 self.VC_version = 10
 
     def init_vs_vars(self):
-	"""
-	Checks for the availablity of Visual Studio to compile with.
-	Currently supports VS2008 (vc9) and VS2010(vc10).
-
-	If 64-bit platform, registry key under Software/Wow6432Node/...
-	"""
-	self.VS_NEED_UPGRADE = 0
-	try:
-	    if self.is_64_bit_platform:
-		MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\9.0")
-	    else:
-		MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\9.0")
-	    MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
-	    self.VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]
-	except Exception as e:
-	    self.VC_version = 10
-	if self.VC_version == 10:
-	    self.VS_NEED_UPGRADE = 1
-	    if self.is_64_bit_platform:
-		MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0")
-	    else:
-		MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\10.0")
-	    MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
-	    self.VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]
+        """
+        Checks for the availablity of Visual Studio to compile with.
+        Currently supports VS2008 (vc9) and VS2010(vc10).
+        If 64-bit platform, registry key under Software/Wow6432Node/...
+        """
+        self.VS_NEED_UPGRADE = 0
+        try:
+            if self.is_64_bit_platform:
+                MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\9.0")
+            else:
+                MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\9.0")
+            MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
+            self.VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]
+        except Exception as e:
+            self.VC_version = 10
+        if self.VC_version == 10:
+            self.VS_NEED_UPGRADE = 1
+            if self.is_64_bit_platform:
+                MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0")
+            else:
+                MSVC_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\VisualStudio\10.0")
+            MSVC_VALUES = [("InstallDir", win32con.REG_SZ)]
+            self.VS_INST_DIR = get_reg_values(MSVC_KEY, MSVC_VALUES)[0]
 
     def init_vars(self):
         """
@@ -241,23 +244,28 @@ class RedistBase(object):
         samples_guid_list_net = []
 
         if self.vc_build_bits=="32":
-                self.bin_dir = "Bin"
-                self.lib_dir = "Lib"
-                self.vc_build_platform = "Win32"
+            self.bin_dir = "Bin"
+            self.lib_dir = "Lib"
+            self.vc_build_platform = "Win32"
+            self.output_dir = "Output32"
+            self.final_dir = "Final32"
         else:
-                self.bin_dir = "Bin64"
-                self.lib_dir = "Lib64"
-                self.vc_build_platform = "x64"
+            self.bin_dir = "Bin64"
+            self.lib_dir = "Lib64"
+            self.vc_build_platform = "x64"
+            self.output_dir = "Output64"
+            self.final_dir = "Final64"
 
     def init_logger(self,name):
         """
         Initilizes the logger.
         """
         #-------------Log--------------------------------------------------------------#
-        if not(os.path.exists(self.SCRIPT_DIR + "\\Output\\")):
-            os.mkdir(self.SCRIPT_DIR + "\\Output\\")
+        out_path = os.path.join(self.SCRIPT_DIR,self.output_dir)
+        if not(os.path.exists(out_path)):
+            os.mkdir(out_path)
         self.logger = logging.getLogger(name)
-        hdlr = logging.FileHandler('Output\\%s_redist_maker.log'%name)
+        hdlr = logging.FileHandler(os.path.join(self.output_dir, '%s_redist_maker.log'%name))
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
         hdlr.setFormatter(formatter)
         self.logger.addHandler(hdlr)
@@ -273,28 +281,45 @@ class RedistBase(object):
         print("*   PrimeSense " + self.redist_name +  " Redist    *")
         print("*     " + self.DateTimeSTR + "       *")
         print("*********************************")
-        
+
     def build_proj_solution(self):
         #--------------Build Project---------------------------------------------------#
         print("* Building " + self.PROJECT_NAME + "...")
+        path2output = os.path.join(self.SCRIPT_DIR,self.output_dir)
+        if not os.path.exists(path2output):
+            os.makedirs(path2output)
+        path2final = os.path.join(self.SCRIPT_DIR,self.final_dir)
+        if not os.path.exists(path2final):
+            os.makedirs(path2final)
+
         self.logger.info("Building " + self.PROJECT_NAME + "...")
         # Set Intel Env
         os.system("set INTEL_LICENSE_FILE=C:\\Program Files\\Common Files\\Intel\\Licenses")
         # Build project solution
         os.chdir(self.WORK_DIR + self.PROJECT_SLN.rpartition("\\")[0])
+        print os.getcwd()
+        
+        out_file = os.path.join(self.SCRIPT_DIR, self.output_dir, "Build"+self.PROJECT_NAME+".txt")
+        upg_out_file = os.path.join(self.SCRIPT_DIR, self.output_dir, "Build"+self.PROJECT_NAME+"UPG"+".txt")
         if self.VS_NEED_UPGRADE == 1:
             os.system("attrib -r * /s")
-            os.system("\""+self.VS_INST_DIR + "devenv\" " + self.PROJECT_SLN.rpartition("\\")[2]+\
-                         " /upgrade > " + self.SCRIPT_DIR + "\\Output\\Build"+self.PROJECT_NAME+".txt")
+            devenv_upg_cmd_str = "\""+self.VS_INST_DIR + "devenv\" " + self.PROJECT_SLN.rpartition("\\")[2]+\
+                         " /upgrade > " + upg_out_file 
+            print 'upgrading. out put in %s'%out_file
+            print 'command is %s'%devenv_upg_cmd_str
+            my_rc = os.system(devenv_upg_cmd_str)                    
+            print 'upgrading finished w result %d'%my_rc
+            #devenv_upg_cmd = Command(devenv_upg_cmd_str)
+            #devenv_upg_cmd.run(self.TIMEOUT_UPGRADE_VS10_SEC)
 
-	devenv_cmd = '\"'+self.VS_INST_DIR + 'devenv\" ' + self.PROJECT_SLN.rpartition("\\")[2]+\
+        devenv_cmd = '\"'+self.VS_INST_DIR + 'devenv\" ' + self.PROJECT_SLN.rpartition("\\")[2]+\
                      " " + self.vc_build_type + " \"release|" + self.vc_build_platform + "\" /out " + \
-		     self.SCRIPT_DIR + "\\Output\\Build" + self.PROJECT_NAME+".txt"
+                     out_file
         self.logger.debug('Calling vs : %s'%devenv_cmd)
-	rc = subprocess.call(devenv_cmd, close_fds=True)
-	self.logger.debug('Calling vs, RC: %d'%rc)
+        rc = subprocess.call(devenv_cmd, close_fds=True)
+        self.logger.debug('Calling vs, RC: %d'%rc)
         # Get the build output
-        lines = open(self.SCRIPT_DIR+"\\Output\\Build"+self.PROJECT_NAME+".txt").readlines()
+        lines = open(out_file).readlines()
         build_result = lines[-2]
         print(build_result)
         self.logger.info(build_result)
@@ -304,17 +329,17 @@ class RedistBase(object):
 
         temp = re.search("(\d*) failed",build_result)
         if temp != None :
-                failed_builds = int(temp.group(1))
+            failed_builds = int(temp.group(1))
 
         temp2 = re.search('cannot be opened',str(lines))
         if temp2 != None :
-                fail_to_open = 1
+            fail_to_open = 1
 
         if failed_builds != 0 or fail_to_open !=0:
             print("Building Failed!!")
             self.logger.critical("Building Failed!")
             self.finish_script(1)
-        
+
         # return to work dir
         os.chdir(self.WORK_DIR)
 
@@ -335,7 +360,8 @@ class RedistBase(object):
             # Running doxygen
             os.system("mkdir html > null")
             #os.system("copy PSSmallLogo.jpg html > null") // where is this file ?
-            doxygen_cmd = "doxygen.exe %s > " % (self.doxy_file_name) + self.SCRIPT_DIR + "\\Output\\"+ self.PROJECT_NAME + "Doxy.txt"
+            doxy_out_file = os.path.join(self.SCRIPT_DIR,self.output_dir,self.PROJECT_NAME + "Doxy.txt")
+            doxygen_cmd = "doxygen.exe %s > " % (self.doxy_file_name) + doxy_out_file
             os.system(doxygen_cmd)
             self.copy_doxy_files()
             os.chdir(self.WORK_DIR)
@@ -349,7 +375,7 @@ class RedistBase(object):
         #-------------Create Redist Dir------------------------------------------------#
         print("* Creating Redist Dir...")
         self.logger.info("Creating Redist Dir...")
-        os.chdir(self.WORK_DIR + "\\Platform\\Win32")
+        os.chdir(os.path.join(self.WORK_DIR,"Platform","Win32"))
         # Removing the old directory
         os.system("rmdir /S /Q Redist")
         # Creating new directory tree
@@ -366,21 +392,22 @@ class RedistBase(object):
         os.system("mkdir Redist\\Samples\\Res")
         os.system("mkdir Redist\\Data")
         os.chdir(self.WORK_DIR)
-    
+
     def find_samples(self):
         # returns a dictionary of all samples
         all_samples = dict()
-        samples_list = os.listdir("Samples")
+        os.chdir(self.WORK_DIR)
+        samples_list = os.listdir(os.path.join(self.BUILD_DIR,"Samples"))
         if '.svn' in samples_list:
             samples_list.remove('.svn')
         #print(samples_list)
         for sample in samples_list:
             sample_data = SampleData()
             sample_data.name = sample
-            sample_data.source_dir = os.path.join(os.getcwd(), "Samples", sample)
+            sample_data.source_dir = os.path.join(self.WORK_DIR, "Samples", sample)
             sample_data.project_dir = os.path.join(self.BUILD_DIR, "Samples", sample)
             sample_data.is_other = False;
-            
+
             vc_proj_name = sample_data.project_dir + "\\" + sample + ".vcproj"
             cs_proj_name = sample_data.project_dir + "\\" + sample + ".csproj"
             other_proj_name = os.path.join(sample_data.project_dir, "Build.bat")
@@ -445,7 +472,7 @@ class RedistBase(object):
                 sample_data.project_file = other_proj_name
                 sample_data.is_other = True
                 sample_data.project_name = sample
-            
+
             else:
                 print('Sample ' + sample + ' does not have a valid project file')
                 self.finish_script(1)
@@ -472,9 +499,9 @@ class RedistBase(object):
         # returns a dictionary of all samples
         if self.all_samples == None:
             self.all_samples = self.find_samples()
-            
+
         return self.all_samples
-        
+
     def build_other_proj(self, build_dir):
         # build other (not Visual Studio) project
         ret = subprocess.call(os.path.join(build_dir, "Build.bat") + " " + self.vc_build_bits)
@@ -482,7 +509,7 @@ class RedistBase(object):
             print "Building project " + build_dir + " failed!"
             self.logger.critical("Building project " + build_dir + " failed!")
             self.finish_script(1)
-        
+
     def build_other_samples(self):
         "Builds other samples (java?)"
         all_samples = self.get_samples()
@@ -492,7 +519,7 @@ class RedistBase(object):
             #print "Building java sample " + sample.name
             build_dir = os.path.join(self.BUILD_DIR, "Samples", sample.name)
             self.build_other_proj(build_dir)
-        
+
     def creating_samples(self):
         """
         not exactly the same some further work needed.
@@ -500,7 +527,7 @@ class RedistBase(object):
         #-------Creating samples-------------------------------------------------------#
         print("* Creating samples...")
         self.logger.info("Creating samples...")
-        
+
         all_samples = self.get_samples()
 
         os.chdir(os.path.join(self.WORK_DIR, "Platform", "Win32"))
@@ -512,9 +539,13 @@ class RedistBase(object):
         OUTFILESLN2010 = open("Redist\\Samples\\Build\\All_2010.sln",'w')
         OUTFILESLN2010.write("Microsoft Visual Studio Solution File, Format Version 11.00\n")
         OUTFILESLN2010.write("# Visual Studio 2010\n")
-        
+
         # copy java build script
-        shutil.copy(os.path.join("Build", "BuildJava.py"), os.path.join("Redist", "Samples", "Build"))
+        try:
+            shutil.copy(os.path.join("Build", "BuildJava.py"), os.path.join("Redist", "Samples", "Build"))
+        except:
+            pass
+
 
         # add projects
         for sample in all_samples.values():
@@ -608,17 +639,17 @@ class RedistBase(object):
 
         OUTFILESLN2008.close()
         OUTFILESLN2010.close()
-        
+
         os.chdir(self.WORK_DIR)
-        
+
     def remove_read_only_attributes(self):
         #-----Remove Read Only Attrib--------------------------------------------------#
         print("* Removing Read Only Attributes...")
-        full_path = os.path.join(os.getcwd(), "Redist")
+        full_path = os.path.join(self.WORK_DIR,"Platform", "Win32" , "Redist")
         self.logger.info("Removing Read Only Attributes... (%s)" % (full_path))
         #os.system ("attrib -r -h -s /S Redist\\*.*")
         remove_readonly(full_path)
-        
+
     def make_installer(self,msi_dest_path):
         """
         [dev_success,redist_success]
@@ -637,28 +668,29 @@ class RedistBase(object):
         conf_name = self.internal_conf_name
         dev_success = self.build_installer(conf_name)
         print("moving %s Msi"%conf_name)
-        os.system("move .\\bin\Release\en-US\\%s.msi %s%s-Win"%(self.redist_internal_name,msi_dest_path,self.product_name)\
-              + self.vc_build_bits + "-" + self.VER + "-%s.msi"%conf_name)
+        os.system("move .\\bin\Release\en-US\\%s.msi %s"%(self.redist_internal_name,\
+                                                          os.path.join( msi_dest_path ,self.final_dir,self.product_name + '-Win' + self.vc_build_bits + "-" + self.VER + '-%s.msi'%conf_name)))
         self.dev_to_redist_hack()
         self.wix_redist_var_set()
         print("calling WIX")
         conf_name = 'Redist'
         redist_success = self.build_installer(conf_name)
         print("moving %s Msi"%conf_name)
-        os.system("move .\\bin\Release\en-US\\%s.msi %s%s-Win"%(self.redist_internal_name,msi_dest_path,self.product_name)\
-              + self.vc_build_bits + "-" + self.VER + "-%s.msi"%conf_name)
-              
+        os.system("move .\\bin\Release\en-US\\%s.msi %s"%(self.redist_internal_name,\
+                                                          os.path.join( msi_dest_path ,self.final_dir,self.product_name + '-Win' + self.vc_build_bits + "-" + self.VER + '-%s.msi'%conf_name)))
+
         os.chdir(self.WORK_DIR)
         return [dev_success,redist_success]
-        
+
     def build_installer(self,conf_name):
         success = False
         wix_log = 'Build%sWIX%s'%(self.redist_internal_name,conf_name)
         wix_log.replace('_','') #because outside code expects EENI in the name instead of EE_NI
+        out_file = os.path.join('..\\..\\CreateRedist',self.output_dir,"%s.txt"%wix_log)
         wix_rc = subprocess.call("\"" + self.VS_INST_DIR \
             + "devenv\" %s.wixproj /Build \"release|%s"%(self.redist_internal_name, 'x86' if self.vc_build_bits=='32' else 'x64')  \
-            + "\" /out ..\\..\\CreateRedist\\Output\\%s.txt"%wix_log, close_fds=True)
-        failed_builds = self.check_vs_report_failed('..\\..\\CreateRedist\\Output\\%s.txt'%wix_log)
+            + "\" /out " + out_file, close_fds=True)
+        failed_builds = self.check_vs_report_failed(out_file)
         if failed_builds > 0 or wix_rc != 0:
             self.logger.info('Fail to build installer for %s version'%conf_name)
         else:
@@ -673,21 +705,21 @@ class RedistBase(object):
         #regx_replace("BuildPlatform=(.*)", "BuildPlatform=" + str(vc_build_bits) + "?>", "Includes\\OpenNIVariables.wxi")
         print("setting WIX BinaryOnlyRedist=True")
         regx_replace("BinaryOnlyRedist=(.*)", "BinaryOnlyRedist=True?>", "Includes\\%sVariables.wxi"%temp)
-        
+
     def wix_dev_var_set(self):
         """preconsdition: CWD is where wix-variables-file is stored"""
         print("setting WIX BinaryOnlyRedist=False")
         temp = self.redist_internal_name.replace('_','')
         os.system("attrib -r Includes\\%sVariables.wxi"%temp)
         regx_replace("BinaryOnlyRedist=(.*)", "BinaryOnlyRedist=False?>", "Includes\\%sVariables.wxi"%temp)
-        
+
     def check_upgrade_install_sln(self):
         """preconsdition: CWD is where wix-variables-file is stored"""
+        up_wix_file = os.path.join('..\\..\\CreateRedist',self.output_dir,"Upgrade%sWIX.txt"%(self.redist_internal_name))
         if self.VS_NEED_UPGRADE == 1:
             subprocess.call("\"" + self.VS_INST_DIR +  \
-            "devenv\" %s.sln /upgrade /out ..\\..\\CreateRedist\\Output\\Upgrade%sWIX.txt"%(self.redist_internal_name,self.redist_internal_name)
-            , close_fds=True)
-            
+            "devenv\" %s.sln /upgrade /out "%(self.redist_internal_name) + up_wix_file, close_fds=True)
+
     def wix_inst_primitive_check(self):
         wixPath = os.environ.get('WIX')
         if wixPath == None:
@@ -696,10 +728,10 @@ class RedistBase(object):
             self.logger.info('It seems that WIX is not installed and therefore teh installer cannot be built.')
         else:
             print 'WIX='+wixPath
-            
+
     def dev_to_redist_hack(self):
         pass
-        
+
     def check_vs_report_failed(self,file):
         lines = open(file).readlines()
         build_result = lines[-2]
@@ -708,7 +740,7 @@ class RedistBase(object):
         if temp != None :
             failed_builds = int(temp.group(1))
         return failed_builds
-        
+
     def fixing_files(self):
         """
         fixing files
@@ -718,7 +750,7 @@ class RedistBase(object):
         self.logger.info("Fixing Files...")
         for dirpath, dirnames, filenames in os.walk(os.path.join(self.WORK_DIR, "Platform", "Win32", "Redist")):
             self.fix_file('', dirpath, dirnames + filenames)
-        
+
     def build_samples(self):
         """
         Build Samples.
@@ -728,8 +760,8 @@ class RedistBase(object):
         self.logger.info("Building Samples in release configuration...")
         # Build project solution
         os.chdir(self.WORK_DIR + self.SAMPLES_SLN.rpartition("\\")[0])
-        
-        output_file = self.SCRIPT_DIR + "\\Output\\" + self.PROJECT_NAME + "SmpRelease.txt"
+
+        output_file = os.path.join(self.SCRIPT_DIR ,self.output_dir ,self.PROJECT_NAME + "SmpRelease.txt")
 
         if self.VS_NEED_UPGRADE == 1:
             os.system("\""+self.VS_INST_DIR + "devenv\" " +self.SAMPLES_SLN.rpartition("\\")[2]+\
@@ -760,7 +792,7 @@ class RedistBase(object):
         # Build project solution
         os.chdir(self.WORK_DIR +self.SAMPLES_SLN.rpartition("\\")[0])
 
-        output_file = self.SCRIPT_DIR + "\\Output\\" + self.PROJECT_NAME + "SmpDebug.txt"
+        output_file = os.path.join(self.SCRIPT_DIR ,self.output_dir ,self.PROJECT_NAME + "SmpDebug.txt")
 
         if self.VS_NEED_UPGRADE == 1:
             os.system("\""+self.VS_INST_DIR + "devenv\" " +self.SAMPLES_SLN.rpartition("\\")[2]+\
@@ -800,12 +832,32 @@ class RedistBase(object):
         os.system("del *.ilk")
         os.chdir(self.WORK_DIR + "\\Platform\\Win32\\Redist\\" + self.lib_dir + "\\")
         os.system("del nim*.*")
-                
+
         os.chdir(self.WORK_DIR)
-        
+
     def clean_up(self):
         temp_str = "Redist "+ self.redist_name +" Ended."
         print(temp_str)
         self.logger.info(temp_str)
         #self.finish_script(0)
+class Command(object):
+    def __init__(self, cmd):
+        self.cmd = cmd
+        self.process = None
 
+    def run(self, timeout):
+        def target():
+            print 'Thread started'
+            self.process = subprocess.Popen(self.cmd, shell=True)
+            self.process.communicate()
+            print 'Thread finished'
+
+        thread = threading.Thread(target=target)
+        thread.start()
+
+        thread.join(timeout)
+        if thread.is_alive():
+            print 'Terminating process'
+            self.process.terminate()
+            thread.join()
+        print self.process.returncode

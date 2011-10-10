@@ -10,7 +10,7 @@ SRC_FILES = \
 EXE_NAME = niReg
 USED_LIBS = OpenNI
 
-include ../../CommonCppMakefile
+include ../../Common/CommonCppMakefile
 
 
 

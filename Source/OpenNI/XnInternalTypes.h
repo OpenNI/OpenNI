@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -89,7 +89,7 @@ XN_DECLARE_DEFAULT_HASH(XnModuleStateCookie*, XnModuleStateCookie*, XnModuleStat
 
 struct XnInternalNodeData
 {
-	XnBitSet typeHierarchy;
+	XnBitSet* pTypeHierarchy;
 	XnModuleInstance* pModuleInstance;
 	XnNodeInfo* pNodeInfo;
 	XnUInt32 nRefCount;
@@ -174,7 +174,7 @@ struct XnContext
 	XnUInt32 nRefCount;
 	XN_CRITICAL_SECTION_HANDLE hLock;
 	XnNodeInfoList* pOwnedNodes;
-	XnDump dumpRefCount;
+	XnDumpFileHandle dumpRefCount;
 	XnContextShuttingDownEvent* pShutdownEvent;
 };
 

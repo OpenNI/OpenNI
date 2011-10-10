@@ -8,4 +8,4 @@ SRC_FILES = \
 
 CSFLAGS += -keyfile:OpenNI.snk
 
-include ../../CommonCSMakefile
+include ../../Common/CommonCSMakefile

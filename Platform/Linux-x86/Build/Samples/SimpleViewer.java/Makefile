@@ -7,7 +7,4 @@ JAR_NAME = org.OpenNI.Samples.SimpleViewer
 USED_JARS = org.OpenNI
 MAIN_CLASS = org.OpenNI.Samples.SimpleViewer.SimpleViewerApplication
 
-include ../../CommonJavaMakefile
-
-
-
+include ../../Common/CommonJavaMakefile

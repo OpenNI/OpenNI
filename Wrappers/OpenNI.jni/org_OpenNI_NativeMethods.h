@@ -681,6 +681,14 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetGeneralProperty
 
 /*
  * Class:     org_OpenNI_NativeMethods
+ * Method:    xnSetGeneralPropertyArray
+ * Signature: (JLjava/lang/String;[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetGeneralPropertyArray
+  (JNIEnv *, jclass, jlong, jstring, jbyteArray);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
  * Method:    xnGetIntProperty
  * Signature: (JLjava/lang/String;Lorg/OpenNI/OutArg;)I
  */
@@ -710,6 +718,14 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetStringProperty
  */
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetGeneralProperty
   (JNIEnv *, jclass, jlong, jstring, jint, jlong);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
+ * Method:    xnGetGeneralPropertyArray
+ * Signature: (JLjava/lang/String;[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetGeneralPropertyArray
+  (JNIEnv *, jclass, jlong, jstring, jbyteArray);
 
 /*
  * Class:     org_OpenNI_NativeMethods

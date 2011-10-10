@@ -1,25 +1,23 @@
-OpenNI (Version 1.3.2.1 Stable version - Jul 4th 2011)
-------------------------------------------------------
+OpenNI (Version 1.3.3.6 Stable version - Sep 18th 2011)
+-------------------------------------------------------
 
-Website: www.openni.org
+Website: http://www.primesense.com
 Forum: http://groups.google.com/group/openni-dev
-Wiki: Coming soon!
+Wiki: http://wiki.openni.org
 
 Binaries are available at:
-http://www.openni.org/downloadfiles/opennimodules/openni-binaries/21-stable
+http://www.openni.org/Downloads/OpenNIModules.aspx
+(The "OpenNI Binaries / Stable" section)
 
-Please use this with the sensor stable branch located at:
-Source:
-https://github.com/PrimeSense/Sensor
-Binaries:
-http://www.openni.org/downloadfiles/opennimodules/openni-compliant-hardware-binaries/32-stable
+Sources are available at:
+https://github.com/OpenNI/OpenNI
 
 Release Notes:
 --------------
 * At the moment, the default is to compile the code with SSE3 support (this is also true for the supplied binaries). 
   If you have a CPU without such support, please remove the sse compiler flags from the make files.
   (A good hint for this error is that you encounter an "illegal instructions" messages)
-* MacOSX: Only OSX 10.6 (Snow Leopard) with an Intel based CPU is currently supported.
+* MacOSX: Only OSX 10.6 (Snow Leopard) and above with an Intel based CPU is currently supported.
 * MacOSX: Drawing the depth/image maps via the mono .NET wrapper can be slow and will cause the FPS to drop.
   
 Build Notes:
@@ -55,10 +53,11 @@ Windows:
 	Building OpenNI:
 	    1) Uninstall the previous version.
 		2) Go to the directory: "Platform\Win32\CreateRedist".
-		   x86 32-bit - Run the script: "RedistMaker.bat".
+		   x86 32-bit - Run the script: "RedistMaker.bat y 32 y".
 		   x64 64-bit - Run the script: "RedistMaker.bat y 64 y".
 		   This will compile and prepare the redist exe files that includes everything.
-		3) Install the exe you've just made which is located in Platform\Win32\CreateRedist\Final\OPENNI-WinXX-1.X.X.X.exe 
+		3) Install the exe you've just made which is located in Platform\Win32\CreateRedist\FinalXX\OPENNI-WinXX-1.X.X.X.exe 
+		   (XX being the number of bits: 32 or 64)
 		   The installer will also create the necessary environment variables (OPEN_NI_xxx), add the DLLs to the system path and register the internal modules with NiReg.
 		   
 		The visual studio solution is located in: Platform\Win32\Build\OpenNI.sln.

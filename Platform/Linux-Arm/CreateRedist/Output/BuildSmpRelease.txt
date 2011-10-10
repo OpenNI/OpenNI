@@ -1,0 +1,8 @@
+make[1]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Redist/Samples/Build'
+make -C ../NiAudioSample
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Redist/Samples/NiAudioSample'
+mkdir -p Release
+arm-none-linux-gnueabi-g++ -MD -MP -MT "./Release/NiAudioSample.d Release/NiAudioSample.o" -c -O3 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -ffast-math -fsingle-precision-constant -I/usr/include/ni -I../../Include  -DXN_NO_DYNAMIC_CAST -o Release/NiAudioSample.o NiAudioSample.cpp
+arm-none-linux-gnueabi-g++ -o ../Bin/Release/Sample-NiAudioSample ./Release/NiAudioSample.o -L../../Lib -L../Bin/Release -lOpenNI -lusb-1.0
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Redist/Samples/NiAudioSample'
+make[1]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Redist/Samples/Build'

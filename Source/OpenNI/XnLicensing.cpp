@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -73,10 +73,10 @@ public:
 		nRetVal = xnXmlReadStringAttribute(pElement, XN_XML_LICENSE_KEY, &strKey);
 		XN_IS_STATUS_OK(nRetVal);
 
-		nRetVal = xnOSStrNCopy(this->strVendor, strVendor, strlen(strVendor) + 1, sizeof(this->strVendor));
+		nRetVal = xnOSStrNCopy(this->strVendor, strVendor, xnOSStrLen(strVendor) + 1, sizeof(this->strVendor));
 		XN_IS_STATUS_OK(nRetVal);
 
-		nRetVal = xnOSStrNCopy(this->strKey, strKey, strlen(strKey) + 1, sizeof(this->strKey));
+		nRetVal = xnOSStrNCopy(this->strKey, strKey, xnOSStrLen(strKey) + 1, sizeof(this->strKey));
 		XN_IS_STATUS_OK(nRetVal);
 		
 		return (XN_STATUS_OK);

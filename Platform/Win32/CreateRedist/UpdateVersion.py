@@ -1,6 +1,6 @@
 #/***************************************************************************
 #*                                                                          *
-#*  OpenNI 1.1 Alpha                                                        *
+#*  OpenNI 1.x Alpha                                                        *
 #*  Copyright (C) 2011 PrimeSense Ltd.                                      *
 #*                                                                          *
 #*  This file is part of OpenNI.                                            *
@@ -27,10 +27,8 @@ import re
 # ----------------------- PARAMS -------------------------
 VERSION_MAJOR = 1
 VERSION_MINOR = 3
-VERSION_MAINTENANCE = 2
-VERSION_BUILD = 1
-
-strVersion = str(VERSION_MAJOR) + "." + str(VERSION_MINOR) + "." + str(VERSION_MAINTENANCE) + "." + str(VERSION_BUILD)
+VERSION_MAINTENANCE = 3
+VERSION_BUILD = 6
 
 # ---------------------- FUNCTIONS -----------------------
 def regx_replace(findStr,repStr,filePath):
@@ -123,6 +121,8 @@ if (VERSION_BUILD > 9999):
 	print "Illegal build version"
 	sys.exit()
 
+strVersion = str(VERSION_MAJOR) + "." + str(VERSION_MINOR) + "." + str(VERSION_MAINTENANCE) + "." + str(VERSION_BUILD)	
+	
 print "Going to update files to version: %d.%d.%d.%d" % (VERSION_MAJOR, VERSION_MINOR, VERSION_MAINTENANCE, VERSION_BUILD)
 
 update_self_defs("./UpdateVersion.py")

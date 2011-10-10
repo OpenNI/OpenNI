@@ -7,7 +7,4 @@ JAR_NAME = org.OpenNI.Samples.UserTracker
 USED_JARS = org.OpenNI
 MAIN_CLASS = org.OpenNI.Samples.UserTracker.UserTrackerApplication
 
-include ../../CommonJavaMakefile
-
-
-
+include ../../Common/CommonJavaMakefile

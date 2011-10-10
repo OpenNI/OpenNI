@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -52,6 +52,7 @@ public:
 	}
 
 	XnChar* Buffer() { return m_strBuffer; }
+	XnUInt32 MaxBufferSize() const { return XN_LOG_MAX_MESSAGE_LENGTH; }
 
 private:
 	XnChar m_strBuffer[XN_LOG_MAX_MESSAGE_LENGTH];
@@ -122,9 +123,8 @@ const XnChar* xnLogGetSeverityString(XnLogSeverity nSeverity)
 void xnLogCreateEntryV(XnBufferedLogEntry* pEntry, const XnChar* csLogMask, XnLogSeverity nSeverity, const XnChar* csFile, XnUInt32 nLine, const XnChar* csFormat, va_list args)
 {
 	// format message
-	const XnUInt32 nMaxMessageSize = 2047;
 	XnUInt32 nChars;
-	xnOSStrFormatV(pEntry->Buffer(), XN_LOG_MAX_MESSAGE_LENGTH, &nChars, csFormat, args);
+	xnOSStrFormatV(pEntry->Buffer(), pEntry->MaxBufferSize(), &nChars, csFormat, args);
 
 	// create log entry
 	xnOSGetHighResTimeStamp(&pEntry->nTimestamp);
@@ -204,10 +204,10 @@ void xnLogWriteImpl(const XnChar* csLogMask, XnLogSeverity nSeverity, const XnCh
 	va_end(args);
 }
 
-XN_C_API XnStatus xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFile)
+XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* csFileName, XnBool bSessionBased, XN_FILE_HANDLE* phFile)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
 	// set log directory
 	if (g_logData.m_strLogDir[0] == '\0')
 	{
@@ -227,13 +227,33 @@ XN_C_API XnStatus xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFi
 
 	// create full path file name - add process start time and process ID
 	XnChar strFilePath[XN_FILE_MAX_PATH];
-	sprintf(strFilePath, "%s%s_%u.%s", g_logData.m_strLogDir, g_logData.m_strTime, nProcID, csFileName);
+	XnUInt32 nPathSize = 0;
+	XnUInt32 nCharsWritten = 0;
+	nRetVal = xnOSStrFormat(strFilePath, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s", g_logData.m_strLogDir);
+	XN_IS_STATUS_OK(nRetVal);
+	nPathSize += nCharsWritten;
+
+	if (bSessionBased)
+	{
+		nRetVal = xnOSStrFormat(strFilePath + nPathSize, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s_%u.", g_logData.m_strTime, nProcID);
+		XN_IS_STATUS_OK(nRetVal);
+		nPathSize += nCharsWritten;
+	}
+
+	nRetVal = xnOSStrFormat(strFilePath + nPathSize, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s", csFileName);
+	XN_IS_STATUS_OK(nRetVal);
+	nPathSize += nCharsWritten;
 
 	// and open the file
 	nRetVal = xnOSOpenFile(strFilePath, XN_OS_FILE_WRITE | XN_OS_FILE_TRUNCATE, phFile);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFile)
+{
+	return xnLogCreateFileEx(csFileName, TRUE, phFile);
 }
 
 void xnLogCreateFilterChangedMessage(XnBufferedLogEntry* pEntry)

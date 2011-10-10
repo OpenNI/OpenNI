@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -797,14 +797,17 @@ XN_C_API XnStatus xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControl
 	}
 	else if (nBytesReceived < 0) // error
 	{
-		return (XN_STATUS_USB_CONTROL_SEND_FAILED);
+		xnLogWarning(XN_MASK_USB, "Failed to receive from USB control endpoint (%d)", nBytesReceived);
+		return (XN_STATUS_USB_CONTROL_RECV_FAILED);
 	}
 	else if (nBytesReceived == 0) // nothing received
 	{
+		xnLogWarning(XN_MASK_USB, "Received empty control message!");
 		return (XN_STATUS_USB_NOT_ENOUGH_DATA);
 	}
 	else if (nBytesReceived > nBufferSize) // too much
 	{
+		xnLogWarning(XN_MASK_USB, "Too many bytes!!!");
 		return (XN_STATUS_USB_TOO_MUCH_DATA);
 	}
 	

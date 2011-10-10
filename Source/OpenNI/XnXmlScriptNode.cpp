@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -258,7 +258,11 @@ XnStatus xnConfigureProperty(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 		XN_IS_STATUS_OK(nRetVal);
 
 		nRetVal = xnSetIntProperty(hNode, strName, nValue);
-		XN_IS_STATUS_OK(nRetVal);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnLogError(XN_MASK_OPEN_NI, "Failed to set property '%s' from xml: %s", strName, xnGetStatusString(nRetVal));
+			return nRetVal;
+		}
 	}
 	else if (strcmp(strType, "real") == 0)
 	{
@@ -267,7 +271,11 @@ XnStatus xnConfigureProperty(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 		XN_IS_STATUS_OK(nRetVal);
 
 		nRetVal = xnSetRealProperty(hNode, strName, dValue);
-		XN_IS_STATUS_OK(nRetVal);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnLogError(XN_MASK_OPEN_NI, "Failed to set property '%s' from xml: %s", strName, xnGetStatusString(nRetVal));
+			return nRetVal;
+		}
 	}
 	else if (strcmp(strType, "string") == 0)
 	{
@@ -276,7 +284,11 @@ XnStatus xnConfigureProperty(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 		XN_IS_STATUS_OK(nRetVal);
 
 		nRetVal = xnSetStringProperty(hNode, strName, strValue);
-		XN_IS_STATUS_OK(nRetVal);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnLogError(XN_MASK_OPEN_NI, "Failed to set property '%s' from xml: %s", strName, xnGetStatusString(nRetVal));
+			return nRetVal;
+		}
 	}
 	else
 	{

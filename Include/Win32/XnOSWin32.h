@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -23,36 +23,9 @@
 #define __XN_OS_WIN32_H__
 
 //---------------------------------------------------------------------------
-// Prerequisites
-//---------------------------------------------------------------------------
-#ifndef WINVER						// Allow use of features specific to Windows XP or later
-#define WINVER 0x0501
-#endif
-#ifndef _WIN32_WINNT				// Allow use of features specific to Windows XP or later
-#define _WIN32_WINNT 0x0501
-#endif						
-#ifndef _WIN32_WINDOWS				// Allow use of features specific to Windows 98 or later
-#define _WIN32_WINDOWS 0x0410
-#endif
-#ifndef _WIN32_IE					// Allow use of features specific to IE 6.0 or later
-#define _WIN32_IE 0x0600
-#endif
-#define WIN32_LEAN_AND_MEAN			// Exclude rarely-used stuff from Windows headers
-
-#define _CRT_SECURE_NO_DEPRECATE 1	// Undeprecate CRT functions
-
-//---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
-#include <windows.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <io.h>
-#include <assert.h>
-#include <float.h>
-#include <crtdbg.h>
+#include <XnPlatform.h>
 
 //---------------------------------------------------------------------------
 // Files

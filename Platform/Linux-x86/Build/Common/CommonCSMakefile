@@ -22,11 +22,14 @@ COMMON_CS_MAKE_FILE_DIR = $(dir $(lastword $(MAKEFILE_LIST)))
 include $(COMMON_CS_MAKE_FILE_DIR)CommonDefs.mak
 
 # create -r option to mcs
-USED_NETLIBS_OPTION = $(foreach lib,$(USED_LIBS),-r:$(OUT_DIR)/$(lib).dll)
+USED_NETLIBS_OPTION = $(foreach lib,$(USED_LIBS),-r:$(lib).dll)
 
 ifeq "$(NET_WIN_FORMS)" "1"
 	USED_NETLIBS_OPTION += -r:System.Windows.Forms.dll -r:System.Drawing.dll
 endif
+
+# add the output dir as a place to search for assemblies
+USED_NETLIBS_OPTION += -lib:$(OUT_DIR)
 
 ifeq "$(CFG)" "Release"
 	CSFLAGS += -o+

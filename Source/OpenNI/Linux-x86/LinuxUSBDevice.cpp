@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -19,7 +19,6 @@
 *  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
 *                                                                           *
 ****************************************************************************/
-
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -43,6 +42,8 @@
 #define GADGET_DEVICE_FILE_PATH GADGET_DEVICE_DIR GADGET_DEVICE_FILE_NAME
 #define USB_LANGUAGE_ENGLISH_US 0x0409
 #define XN_USB_DEVICE_ENDPOINT_MAX_COUNT 16
+#define XN_USB_CONTROL_TIMEOUT 5000
+#define XN_USB_WRITE_DATA_TIMEOUT 2000
 
 //---------------------------------------------------------------------------
 // Macros
@@ -59,17 +60,25 @@
 //---------------------------------------------------------------------------
 typedef enum
 {
-	/** No control message **/
-	XN_USB_DEVICE_CONTROL_CLEAR,
-	/** Out control received. Wasn't read by client yet. **/
-	XN_USB_DEVICE_CONTROL_REQUEST_PENDING,
-	/** Out control received and read by client **/
-	XN_USB_DEVICE_CONTROL_REQUEST_PROCESSING,
-	/** In control received, but no client reply yet **/
-	XN_USB_DEVICE_CONTROL_REPLY_PENDING,
-	/** Client reply received, but no in control yet **/
-	XN_USB_DEVICE_CONTROL_REPLY_READY,
-} XnUSBDeviceControlState;
+	/** Control is idle **/
+	DEVICE_CONTROL_CLEAR,
+	/** Control request was received **/
+	DEVICE_CONTROL_REQUEST_RECEIVED,
+	/** Control request was read by device, no reply yet **/
+	DEVICE_CONTROL_REQUEST_READ,
+	/** Control reply received, waiting for host in-request **/
+	DEVICE_CONTROL_REPLY_READY,
+} DeviceControlState;
+
+typedef enum
+{
+	/** Control is idle **/
+	HOST_CONTROL_CLEAR,
+	/** Control request was received **/
+	HOST_CONTROL_REQUEST_RECEIVED,
+	/** Control in-request was received, waiting for device to have reply **/
+	HOST_CONTROL_WAITING_FOR_REPLY,
+} HostControlState;
 
 struct XnUSBDevice
 {
@@ -78,6 +87,7 @@ struct XnUSBDevice
 	XnBool bShutdown;
 	XN_THREAD_HANDLE hThread;
 	XN_CRITICAL_SECTION_HANDLE hLock;
+	XN_EVENT_HANDLE hReplyEvent;
 	XnBool bConnected;
 	enum usb_device_speed speed;
 	XnUInt32 nControlMessageMaxSize;
@@ -88,7 +98,8 @@ struct XnUSBDevice
 
 	// all control members should be accessed with a lock. They can be modified either from the user thread
 	// or the ep0 thread.
-	XnUSBDeviceControlState eControlState;
+	DeviceControlState eDeviceControlState;
+	HostControlState eHostControlState;
 	XnUChar* pControlBuffer;
 	XnUInt32 nControlSize;
 	XnUSBDeviceNewControlRequestCallback pNewControlRequestCallback;
@@ -187,7 +198,6 @@ static int openEndpointFile(struct usb_endpoint_descriptor* pDesc)
 	// now we should write the full-speed descriptor. Take high-speed one and reduce speed
 	struct usb_endpoint_descriptor* pFSDesc = (struct usb_endpoint_descriptor*)buf;
 	WRITE_TO_BUF(buf, pDesc, USB_DT_ENDPOINT_SIZE);
-	pFSDesc->wMaxPacketSize = 64;
 	
 	// now write the real one (high-speed)
 	WRITE_TO_BUF(buf, pDesc, USB_DT_ENDPOINT_SIZE);
@@ -195,9 +205,7 @@ static int openEndpointFile(struct usb_endpoint_descriptor* pDesc)
 	int status = write(fd, bufConfig, buf - bufConfig);
 	if (status < 0)
 	{
-//		status = -errno;
-//		fprintf (stderr, "%s config %s error %d (%s)\n",
-//			label, name, errno, strerror (errno));
+		xnLogError(XN_MASK_OS, "Failed to write endpoint descriptors (%d - %s)\n", errno, strerror(errno));
 		close (fd);
 		return -1;
 	}
@@ -205,7 +213,7 @@ static int openEndpointFile(struct usb_endpoint_descriptor* pDesc)
 	return fd;
 }
 
-static XnStatus configureEndpoints(XnUSBDevice* pDevice, int nConfigID)
+static XnBool configureEndpoints(XnUSBDevice* pDevice, int nConfigID)
 {
 	// first of all, we need to close all previous open endpoints
 	for (int i = 0; i < XN_USB_DEVICE_ENDPOINT_MAX_COUNT; ++i)
@@ -220,7 +228,7 @@ static XnStatus configureEndpoints(XnUSBDevice* pDevice, int nConfigID)
 	if (nConfigID == 0)
 	{
 		// device is unconfigured
-		return XN_STATUS_OK;
+		return TRUE;
 	}
 
 	// open endpoint files
@@ -231,9 +239,11 @@ static XnStatus configureEndpoints(XnUSBDevice* pDevice, int nConfigID)
 		pDevice->endpointsFDs[nAddress] = openEndpointFile(pInterface->aEndpoints[i]);
 		if (pDevice->endpointsFDs[nAddress] == -1)
 		{
-			return XN_STATUS_ERROR;
+			return FALSE;
 		}
 	}
+	
+	return TRUE;
 }
 
 //---------------------------------------------------------------------------
@@ -516,7 +526,13 @@ XN_THREAD_PROC xnUSBDeviceEndPoint0Handler(XN_THREAD_PARAM pThreadParam)
 		status = read(pDevice->deviceFD, &event, sizeof(event));
 		if (status < 0)
 		{
-			if (errno != EAGAIN)
+			if (errno == EL2HLT)
+			{
+				// after previous disconnect
+				xnLogWarning(XN_MASK_OS, "Device was in level-2-halt. Continuing anyway...");
+				continue;
+			}
+			else if (errno != EAGAIN)
 			{
 				xnLogError(XN_MASK_OS, "Failed reading from device file! (%d)", errno);
 			}
@@ -610,6 +626,7 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceInit(const XnUSBDeviceDescriptorHolder* p
 	XnUSBDevice* pDevice = (XnUSBDevice*)xnOSCalloc(1, sizeof(XnUSBDevice));
 	if (pDevice == NULL)
 	{
+		xnLogError(XN_MASK_OS, "Failed to allocate USB Device");
 		close(device_fd);
 		return XN_STATUS_ALLOC_FAILED;
 	}
@@ -625,6 +642,7 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceInit(const XnUSBDeviceDescriptorHolder* p
 
 	if (pDevice->pControlBuffer == NULL)
 	{
+		xnLogError(XN_MASK_OS, "Failed to allocate control buffer");
 		xnUSBDeviceShutdown(pDevice);
 		return XN_STATUS_ALLOC_FAILED;
 	}
@@ -632,6 +650,15 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceInit(const XnUSBDeviceDescriptorHolder* p
 	nRetVal = xnOSCreateCriticalSection(&pDevice->hLock);
 	if (nRetVal != XN_STATUS_OK)
 	{
+		xnLogError(XN_MASK_OS, "Failed to create device critical section: %s", xnGetStatusString(nRetVal));
+		xnUSBDeviceShutdown(pDevice);
+		return (nRetVal);
+	}
+	
+	nRetVal = xnOSCreateEvent(&pDevice->hReplyEvent, FALSE);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogError(XN_MASK_OS, "Failed to create device event: %s", xnGetStatusString(nRetVal));
 		xnUSBDeviceShutdown(pDevice);
 		return (nRetVal);
 	}
@@ -639,6 +666,7 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceInit(const XnUSBDeviceDescriptorHolder* p
 	nRetVal = xnOSCreateThread(xnUSBDeviceEndPoint0Handler, pDevice, &pDevice->hThread);
 	if (nRetVal != XN_STATUS_OK)
 	{
+		xnLogError(XN_MASK_OS, "Failed to create endpoint handler thread: %s", xnGetStatusString(nRetVal));
 		xnUSBDeviceShutdown(pDevice);
 		return (nRetVal);
 	}
@@ -665,6 +693,12 @@ XN_C_API void XN_C_DECL xnUSBDeviceShutdown(XnUSBDevice* pDevice)
 		pDevice->hLock = NULL;
 	}
 
+	if (pDevice->hReplyEvent != NULL)
+	{
+		xnOSCloseEvent(&pDevice->hReplyEvent);
+		pDevice->hReplyEvent = NULL;
+	}
+
 	if (pDevice->pControlBuffer != NULL)
 	{
 		xnOSFreeAligned(pDevice->pControlBuffer);
@@ -686,11 +720,11 @@ XN_C_API void XN_C_DECL xnUSBDeviceShutdown(XnUSBDevice* pDevice)
 XN_C_API XnBool XN_C_DECL xnUSBDeviceIsControlRequestPending(XnUSBDevice* pDevice)
 {
 	XN_ASSERT(pDevice != NULL);
-	if (pDevice != NULL)
+	if (pDevice == NULL)
 		return FALSE;
 
 	XnAutoCSLocker locker(pDevice->hLock);
-	return (pDevice->eControlState == XN_USB_DEVICE_CONTROL_REQUEST_PENDING);
+	return (pDevice->eDeviceControlState == DEVICE_CONTROL_REQUEST_RECEIVED);
 }
 
 XN_C_API XnStatus XN_C_DECL xnUSBDeviceReceiveControlRequest(XnUSBDevice* pDevice, XnUChar* pBuffer, XnUInt32* pnRequestSize)
@@ -702,15 +736,20 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceReceiveControlRequest(XnUSBDevice* pDevic
 	XN_VALIDATE_OUTPUT_PTR(pnRequestSize);
 	
 	XnAutoCSLocker locker(pDevice->hLock);
-
-	if (pDevice->eControlState != XN_USB_DEVICE_CONTROL_REQUEST_PENDING)
+	
+	if (pDevice->eDeviceControlState != DEVICE_CONTROL_REQUEST_RECEIVED)
 	{
 		return XN_STATUS_USB_NO_REQUEST_PENDING;
 	}
 
+	if (pDevice->nControlSize > *pnRequestSize)
+	{
+		return XN_STATUS_OUTPUT_BUFFER_OVERFLOW;
+	}
+
 	xnOSMemCopy(pBuffer, pDevice->pControlBuffer, pDevice->nControlSize);
 	*pnRequestSize = pDevice->nControlSize;
-	pDevice->eControlState = XN_USB_DEVICE_CONTROL_REQUEST_PROCESSING;
+	pDevice->eDeviceControlState = DEVICE_CONTROL_REQUEST_READ;
 
 	return (XN_STATUS_OK);
 }
@@ -721,33 +760,49 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceSendControlReply(XnUSBDevice* pDevice, co
 	
 	XN_VALIDATE_INPUT_PTR(pDevice);
 	XN_VALIDATE_INPUT_PTR(pBuffer);
-
+	
 	XnAutoCSLocker locker(pDevice->hLock);
 	
-	switch (pDevice->eControlState)
+	if (pDevice->eDeviceControlState != DEVICE_CONTROL_REQUEST_READ)
 	{
-	case XN_USB_DEVICE_CONTROL_REPLY_PENDING:
+		xnLogError(XN_MASK_OS, "Device requested to send reply, but no request was received!");
+		return XN_STATUS_USB_NO_REQUEST_PENDING;
+	}
+	
+	switch (pDevice->eHostControlState)
+	{
+	case HOST_CONTROL_WAITING_FOR_REPLY:
 		{
 			// already got in control. we can write reply directly to USB
 			int status = write(pDevice->deviceFD, pBuffer, nReplySize);
 			if (status < 0)
 			{
-				perror("failed to send control reply");
+				xnLogError(XN_MASK_OS, "failed to send control reply (%d)!", errno);
 				return XN_STATUS_USB_CONTROL_SEND_FAILED;
 			}
 
-			pDevice->eControlState = XN_USB_DEVICE_CONTROL_CLEAR;
+			pDevice->eDeviceControlState = DEVICE_CONTROL_CLEAR;
+			pDevice->eHostControlState = HOST_CONTROL_CLEAR;
+			
+			nRetVal = xnOSSetEvent(pDevice->hReplyEvent);
+			if (nRetVal != XN_STATUS_OK)
+			{
+				xnLogWarning(XN_MASK_OS, "Failed to set control event: %s", xnGetStatusString(nRetVal));
+				// reply was sent, so no need to return an error
+			}
+
 			break;
 		}
-	case XN_USB_DEVICE_CONTROL_REQUEST_PROCESSING:
+	case HOST_CONTROL_REQUEST_RECEIVED:
 		{
 			// no in control yet. keep the reply for later
 			xnOSMemCopy(pDevice->pControlBuffer, pBuffer, nReplySize);
 			pDevice->nControlSize = nReplySize;
-			pDevice->eControlState = XN_USB_DEVICE_CONTROL_REPLY_READY;
+			pDevice->eDeviceControlState = DEVICE_CONTROL_REPLY_READY;
 			break;
 		}
 	default:
+		xnLogError(XN_MASK_OS, "Bad host state: %d", pDevice->eHostControlState);
 		return XN_STATUS_USB_NO_REQUEST_PENDING;
 	}
 
@@ -765,6 +820,7 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 		// read data stage
 		if (length == 0)
 		{
+			xnLogError(XN_MASK_OS, "Got a control message with size 0!");
 			return FALSE;
 		}
 
@@ -775,7 +831,7 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 		}
 
 		XnAutoCSLocker locker(pDevice->hLock);
-		if (pDevice->eControlState != XN_USB_DEVICE_CONTROL_CLEAR)
+		if (pDevice->eDeviceControlState != DEVICE_CONTROL_CLEAR)
 		{
 			xnLogError(XN_MASK_OS, "Got a control request before previous one was replied!");
 			return FALSE;
@@ -785,12 +841,26 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 		int status = read(pDevice->deviceFD, pDevice->pControlBuffer, length);
 		if (status < 0)
 		{
-			//perror("failed to read control request");
-			return FALSE;
+			if (errno == EIDRM)
+			{
+				xnLogWarning(XN_MASK_OS, "control request was aborted. Ignoring it...");
+				return TRUE;
+			}
+			else if (errno == ECANCELED)
+			{
+				xnLogWarning(XN_MASK_OS, "control request was canceled. Ignoring it...");
+				return TRUE;
+			}
+			else
+			{
+				xnLogError(XN_MASK_OS, "Got a control request but failed to read its data (length was %u, errorcode is %d)!", length, errno);
+				return FALSE;
+			}
 		}
-
+		
 		pDevice->nControlSize = length;
-		pDevice->eControlState = XN_USB_DEVICE_CONTROL_REQUEST_PENDING;
+		pDevice->eDeviceControlState = DEVICE_CONTROL_REQUEST_RECEIVED;
+		pDevice->eHostControlState = HOST_CONTROL_REQUEST_RECEIVED;
 
 		// raise callback
 		if (pDevice->pNewControlRequestCallback != NULL)
@@ -802,9 +872,16 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 	{
 		// host requests to read.
 		XnAutoCSLocker locker(pDevice->hLock);
-		switch (pDevice->eControlState)
+		
+		if (pDevice->eHostControlState != HOST_CONTROL_REQUEST_RECEIVED)
 		{
-		case XN_USB_DEVICE_CONTROL_REPLY_READY:
+			xnLogError(XN_MASK_OS, "Host asks for reply, but no request was received!");
+			return FALSE;
+		}
+		
+		switch (pDevice->eDeviceControlState)
+		{
+		case DEVICE_CONTROL_REPLY_READY:
 			{
 				// reply is waiting to be send. send it now
 				int status = write(pDevice->deviceFD, pDevice->pControlBuffer, pDevice->nControlSize);
@@ -812,17 +889,32 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 				{
 					return FALSE;
 				}
-				pDevice->eControlState = XN_USB_DEVICE_CONTROL_CLEAR;
+				pDevice->eDeviceControlState = DEVICE_CONTROL_CLEAR;
+				pDevice->eHostControlState = HOST_CONTROL_CLEAR;
 				break;
 			}
-		case XN_USB_DEVICE_CONTROL_REQUEST_PROCESSING:
+		case DEVICE_CONTROL_REQUEST_RECEIVED:
+		case DEVICE_CONTROL_REQUEST_READ:
 			{
 				// no reply yet. mark that we got the in control
-				pDevice->eControlState = XN_USB_DEVICE_CONTROL_REPLY_PENDING;
+				pDevice->eHostControlState = HOST_CONTROL_WAITING_FOR_REPLY;
+
+				// we must not read any more events until a reply is made. Wait.
+				locker.Unlock();
+				if (xnOSWaitEvent(pDevice->hReplyEvent, XN_USB_CONTROL_TIMEOUT) == XN_STATUS_OS_EVENT_TIMEOUT)
+				{
+					xnLogError(XN_MASK_OS, "control command did not finish in %u milliseconds!", XN_USB_CONTROL_TIMEOUT);
+					// clear request (it was timed out)
+					pDevice->eHostControlState = HOST_CONTROL_CLEAR;
+					pDevice->eDeviceControlState = DEVICE_CONTROL_CLEAR;
+					return FALSE;
+				}
+
 				break;
 			}
 		default:
 			// bad state
+			xnLogError(XN_MASK_OS, "Bad device state: %d", pDevice->eDeviceControlState);
 			return FALSE;
 		}
 	}
@@ -847,19 +939,71 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceSetNewControlRequestCallback(XnUSBDevice*
 //---------------------------------------------------------------------------
 // Writing Data
 //---------------------------------------------------------------------------
-XN_C_API XnStatus XN_C_DECL xnUSBDeviceWriteEndpoint(XnUSBDevice* pDevice, XnUInt8 nAddress, XnUChar* pData, XnUInt32 nDataSize)
+
+#include <aio.h>
+
+XN_C_API XnStatus XN_C_DECL xnUSBDeviceWriteEndpoint(XnUSBDevice* pDevice, XnUInt8 nEndpointID, const XnUChar* pData, XnUInt32 nDataSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
 	XN_VALIDATE_INPUT_PTR(pDevice);
 	XN_VALIDATE_INPUT_PTR(pData);
 	
-	__u8 nIndex = nAddress & 0xF;
-	int status = write(pDevice->endpointsFDs[nIndex], pData, nDataSize);
+	if ((nEndpointID & 0x7F) >= XN_USB_DEVICE_ENDPOINT_MAX_COUNT)
+	{
+		xnLogError(XN_MASK_OS, "Got bad endpoint ID: 0x%X", nEndpointID);
+		XN_ASSERT(FALSE);
+		return XN_STATUS_BAD_PARAM;
+	}
+
+	__u8 nIndex = nEndpointID & 0x0F;
+	
+	// Do the write in asynch IO (otherwise if no client is reading, it will block forever)
+	struct aiocb cb;
+	xnOSMemSet(&cb, 0, sizeof(cb));
+	cb.aio_fildes = pDevice->endpointsFDs[nIndex];
+	cb.aio_buf = (void*)pData;
+	cb.aio_nbytes = nDataSize;
+	
+	int status = aio_write(&cb);
 	if (status < 0)
 	{
-		xnLogWarning(XN_MASK_OS, "Failed to write data! (%d)", errno);
+		xnLogWarning(XN_MASK_OS, "Failed to start asynch write! (%d)", errno);
 		return XN_STATUS_USB_ENDPOINT_WRITE_FAILED;
+	}
+	
+	XnUInt64 nStart;
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nStart);
+	
+	while (TRUE)
+	{
+		status = aio_error(&cb);
+		if (status == EINPROGRESS)
+		{
+			xnOSGetHighResTimeStamp(&nNow);
+			if ((nNow - nStart) > XN_USB_WRITE_DATA_TIMEOUT*1000)
+			{
+				xnLogWarning(XN_MASK_OS, "Timeout sending data (client not reading?)", errno);
+				// try to cancel write
+				aio_cancel(pDevice->endpointsFDs[nIndex], &cb);
+				return XN_STATUS_USB_ENDPOINT_WRITE_FAILED;
+			}
+			else
+			{
+				// sleep some time and try again
+				xnOSSleep(1);
+			}
+		}
+		else if (status == 0)
+		{
+			return XN_STATUS_OK;
+		}
+		else
+		{
+			xnLogWarning(XN_MASK_OS, "Failed to write data! (%d)", errno);
+			return XN_STATUS_USB_ENDPOINT_WRITE_FAILED;
+		}
 	}
 	
 	return XN_STATUS_OK;

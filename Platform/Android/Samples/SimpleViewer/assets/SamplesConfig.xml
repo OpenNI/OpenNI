@@ -1,0 +1,32 @@
+<OpenNI>
+	<Licenses>
+		<!-- Add licenses here 
+		<License vendor="vendor" key="key"/>
+		-->
+	</Licenses>
+	<Log writeToConsole="true" writeToFile="false">
+		<!-- 0 - Verbose, 1 - Info, 2 - Warning, 3 - Error (default) -->
+		<LogLevel value="0"/>
+		<Masks>
+			<Mask name="ALL" on="true"/>
+		</Masks>
+		<Dumps>
+		</Dumps>
+	</Log>
+	<ProductionNodes>
+		<!--Recording file="/data/amit/cap/Captured.oni"/-->
+		<Node type="Depth" name="Depth1">
+			<Configuration>
+				<Mirror on="true"/>
+			</Configuration>
+		</Node>
+<!--		<Node type="Image" name="Image1" stopOnError="false">
+			<Configuration>
+				<Mirror on="true"/>
+			</Configuration>
+		</Node>
+-->		<!--
+		<Node type="Audio" name="Audio1"/>
+		-->
+	</ProductionNodes>
+</OpenNI>

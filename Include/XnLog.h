@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -170,6 +170,8 @@ XN_C_API void XN_C_DECL xnLogWriteBinaryData(const XnChar* csLogMask, XnLogSever
  * @param	phFile		[out]	The file handle.
  */
 XN_C_API XnStatus XN_C_DECL xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFile);
+
+XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* csFileName, XnBool bSessionBased, XN_FILE_HANDLE* phFile);
 
 #define XN_MASK_RETVAL_CHECKS "RetValChecks"
 

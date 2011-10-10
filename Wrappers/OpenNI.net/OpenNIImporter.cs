@@ -1,4 +1,25 @@
-﻿using System;
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.x Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -261,11 +282,26 @@ namespace OpenNI
 		public static string Focus = "Focus";
 		public static string LowLightCompensation = "LowLightCompensation";
 		public static string AntiFlicker = "AntiFlicker";
+        public static string HandTouchingFOVEdge = "Hands::HandTouchingFOVEdge";
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Version
 	{
+		public static Version Current
+		{
+			get
+			{
+				Version retVal;
+				retVal.build=0;
+				retVal.major=0;
+				retVal.maintenance=0;
+				retVal.minor=0;
+				int status=SafeNativeMethods.xnGetVersion(ref retVal);
+				WrapperUtils.ThrowOnError(status);
+				return retVal;
+			}
+		}
 		public byte Major
 		{
 			get { return major; }
@@ -381,6 +417,7 @@ namespace OpenNI
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Point3D
 	{
+		public static Point3D ZeroPoint = new Point3D(0,0,0);
 		public Point3D(XnFloat x, XnFloat y, XnFloat z)
 		{
 			this.x = x;
@@ -852,819 +889,819 @@ namespace OpenNI
 		private const string openNILibraryName = "OpenNI";
 #endif
 
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnInit(out XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern XnStatus xnContextRunXmlScriptFromFile(XnContext pContext, string strFileName, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnContextRunXmlScriptFromFileEx(XnContext pContext, string strFileName, XnEnumerationErrors pErrors, out XnNodeHandle hScriptNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern XnStatus xnContextRunXmlScript(XnContext pContext, string xmlScript, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnContextRunXmlScriptEx(XnContext pContext, string xmlScript, XnEnumerationErrors pErrors, out XnNodeHandle hScriptNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern XnStatus xnInitFromXmlFile(string strFileName, out XnContext ppContext, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnInitFromXmlFileEx(string strFileName, out XnContext ppContext, XnEnumerationErrors pErrors, out XnNodeHandle hScriptNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern XnStatus xnContextOpenFileRecording(XnContext pContext, string strFileName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnContextOpenFileRecordingEx(XnContext pContext, string strFileName, out XnNodeHandle hScriptNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnContextAddRef(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnContextRelease(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern void xnShutdown(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnForceShutdown(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnContextRegisterForShutdown(XnContext pContext, [MarshalAs(UnmanagedType.FunctionPtr)] XnContextShuttingDownHandler pHandler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnContextUnregisterFromShutdown(XnContext pContext, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateProductionTrees(XnContext pContext, NodeType Type, XnNodeQuery pQuery, out XnNodeInfoList ppTreesList, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateProductionTree(XnContext pContext, XnNodeInfo pTree, out XnNodeHandle phNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateAnyProductionTree(XnContext pContext, NodeType type, XnNodeQuery pQuery, out XnNodeHandle phNode, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateMockNode(XnContext pContext, NodeType type, string strName, out XnNodeHandle phNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateMockNodeBasedOn(XnContext pContext, XnNodeHandle hOriginalNode, string strName, out XnNodeHandle phMockNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnProductionNodeAddRef(XnNodeHandle hNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnProductionNodeRelease(XnNodeHandle hNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateExistingNodes(XnContext pContext, out XnNodeInfoList ppList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateExistingNodesByType(XnContext pContext, NodeType type, out XnNodeInfoList ppList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern XnStatus xnFindExistingNodeByType(XnContext pContext, NodeType type, out XnNodeHandle phNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnFindExistingRefNodeByType(XnContext pContext, NodeType type, out XnNodeHandle phNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern XnStatus xnGetNodeHandleByName(XnContext pContext, string strInstanceName, out XnNodeHandle phNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetRefNodeHandleByName(XnContext pContext, string strInstanceName, out XnNodeHandle phNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnWaitAndUpdateAll(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnWaitOneUpdateAll(XnContext pContext, XnNodeHandle hNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnWaitAnyUpdateAll(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnWaitNoneUpdateAll(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStartGeneratingAll(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopGeneratingAll(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetGlobalMirror(XnContext pContext, XnBool bMirror);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnGetGlobalMirror(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetGlobalErrorState(XnContext pContext);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToGlobalErrorStateChange(XnContext pContext, [MarshalAs(UnmanagedType.FunctionPtr)] XnErrorStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromGlobalErrorStateChange(XnContext pContext, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerationErrorsAllocate(out XnEnumerationErrors ppErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnEnumerationErrorsFree(XnEnumerationErrors pErrors);
-		//		[DllImport(openNILibraryName)]
+		//		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		//		public static extern XnStatus xnEnumerationErrorsAdd(XnEnumerationErrors pErrors, ProductionNodeDescription pDesc, XnStatus nError);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerationErrorsToString(XnEnumerationErrors pErrors, StringBuilder csBuffer, XnUInt32 nSize);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerationErrorsClear(XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnEnumerationErrorsIterator xnEnumerationErrorsGetFirst(XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnEnumerationErrorsIterator xnEnumerationErrorsGetNext(XnEnumerationErrorsIterator it);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnEnumerationErrorsIteratorIsValid(XnEnumerationErrorsIterator it);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern ProductionNodeDescription xnEnumerationErrorsGetCurrentDescription(XnEnumerationErrorsIterator it);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerationErrorsGetCurrentError(XnEnumerationErrorsIterator it);
 
-		/*		[DllImport(openNILibraryName)]
+		/*		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnFPSInit(XnFPSData pFPS, XnUInt32 nSamplesCount);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnFPSMarkFrame(XnFPSData pFPS, XnUInt64 nNow);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnDouble xnFPSCalc(XnFPSData pFPS, XnUInt32 nAverageOver, XnUInt64 nNow);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnFPSFree(XnFPSData pFPS);
 		*/
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAddLicense(XnContext pContext, License pLicense);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateLicenses(XnContext pContext, out IntPtr paLicenses, out XnUInt32 pnCount);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnFreeLicensesList(IntPtr aLicenses);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogInitSystem();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogInitFromINIFile(string csINIFile, string csSectionName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogInitFromXmlFile(string strFileName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogStartNewFile();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogClose();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogSetMaskState(string csMask, XnBool bEnabled);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnDumpSetMaskState(string csMask, XnBool bEnabled);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogSetSeverityFilter(LogSeverity nMinSeverity);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogSetConsoleOutput(XnBool bConsoleOutput);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogSetFileOutput(XnBool bFileOutput);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogSetLineInfo(XnBool bLineInfo);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLogSetOutputFolder(string strOutputFolder);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnLogIsEnabled(string csLogMask, LogSeverity nSeverity);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnLogWrite(string csLogMask, LogSeverity nSeverity, string csFile, XnUInt32 nLine, string csFormat);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnLogWriteNoEntry(string csLogMask, LogSeverity nSeverity, string csFormat);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnLogWriteBinaryData(string csLogMask, LogSeverity nSeverity, string csFile, XnUInt32 nLine, IntPtr pBinData, XnUInt32 nDataSize, string csFormat);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnLogIsDumpMaskEnabled(string csDumpMask);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfo xnGetNodeInfo(XnNodeHandle hNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetNodeName(XnNodeHandle hNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern XnContext xnGetContextFromNodeHandle(XnNodeHandle hNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnContext xnGetRefContextFromNodeHandle(XnNodeHandle hNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsCapabilitySupported(XnNodeHandle hInstance, string strCapabilityName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetIntProperty(XnNodeHandle hInstance, string strName, XnUInt64 nValue);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetRealProperty(XnNodeHandle hInstance, string strName, XnDouble dValue);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetStringProperty(XnNodeHandle hInstance, string strName, string strValue);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetGeneralProperty(XnNodeHandle hInstance, string strName, XnUInt32 nBufferSize, IntPtr pBuffer);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetIntProperty(XnNodeHandle hInstance, string strName, out XnUInt64 pnValue);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetRealProperty(XnNodeHandle hInstance, string strName, out XnDouble pdValue);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetStringProperty(XnNodeHandle hInstance, string strName, StringBuilder csValue, XnUInt32 nBufSize);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetGeneralProperty(XnNodeHandle hInstance, string strName, XnUInt32 nBufferSize, IntPtr pBuffer);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLockNodeForChanges(XnNodeHandle hInstance, out XnLockHandle phLock);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnUnlockNodeForChanges(XnNodeHandle hInstance, XnLockHandle hLock);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLockedNodeStartChanges(XnNodeHandle hInstance, XnLockHandle hLock);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLockedNodeEndChanges(XnNodeHandle hInstance, XnLockHandle hLock);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAddNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRemoveNeededNode(XnNodeHandle hInstance, XnNodeHandle hNeededNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetNodeErrorState(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToNodeErrorStateChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromNodeErrorStateChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern  XnStatus xnGetGeneralIntRange(XnNodeHandle hNode, string strCap, out XnInt32 pnMin, out XnInt32 pnMax, out XnInt32 pnStep, out XnInt32 pnDefault, out XnBool pbIsAutoSupported);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern  XnStatus xnGetGeneralIntValue(XnNodeHandle hNode, string strCap, out XnInt32 pnValue);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern  XnStatus xnSetGeneralIntValue(XnNodeHandle hNode, string strCap, XnInt32 nValue);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern  XnStatus xnRegisterToGeneralIntValueChange(XnNodeHandle hNode, string strCap, XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern  void xnUnregisterFromGeneralIntValueChange(XnNodeHandle hNode, string strCap, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStartGenerating(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsGenerating(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopGenerating(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToGenerationRunningChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromGenerationRunningChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToNewDataAvailable(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromNewDataAvailable(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsNewDataAvailable(XnNodeHandle hInstance, out XnUInt64 pnTimestamp);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsDataNew(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetDataSize(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt64 xnGetTimestamp(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetFrameID(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetMirror(XnNodeHandle hInstance, XnBool bMirror);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsMirrored(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToMirrorChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromMirrorChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsViewPointSupported(XnNodeHandle hInstance, XnNodeHandle hOther);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetViewPoint(XnNodeHandle hInstance, XnNodeHandle hOther);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnResetViewPoint(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsViewPointAs(XnNodeHandle hInstance, XnNodeHandle hOther);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToViewPointChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromViewPointChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnCanFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsFrameSyncedWith(XnNodeHandle hInstance, XnNodeHandle hOther);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToFrameSyncChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromFrameSyncChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetSupportedMapOutputModesCount(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetSupportedMapOutputModes(XnNodeHandle hInstance, [In][Out] MapOutputMode[] aModes, ref XnUInt32 pnCount);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetMapOutputMode(XnNodeHandle hInstance, ref MapOutputMode pOutputMode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetMapOutputMode(XnNodeHandle hInstance, ref MapOutputMode pOutputMode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToMapOutputModeChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromMapOutputModeChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetCropping(XnNodeHandle hInstance, ref Cropping pCropping);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetCropping(XnNodeHandle hInstance, ref Cropping pCropping);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToCroppingChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromCroppingChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetPowerLineFrequency(XnNodeHandle hGenerator, PowerLineFrequency nFrequency);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern PowerLineFrequency xnGetPowerLineFrequency(XnNodeHandle hGenerator);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToPowerLineFrequencyChange(XnNodeHandle hGenerator, XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromPowerLineFrequencyChange(XnNodeHandle hGenerator, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateDepthGenerator(XnContext pContext, out XnNodeHandle phDepthGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnDepthPixel xnGetDeviceMaxDepth(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetDepthFieldOfView(XnNodeHandle hInstance, ref FieldOfView pFOV);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToDepthFieldOfViewChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromDepthFieldOfViewChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnConvertProjectiveToRealWorld(XnNodeHandle hInstance, XnUInt32 nCount, Point3D[] aProjective, [In][Out] Point3D[] aRealWorld);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnConvertRealWorldToProjective(XnNodeHandle hInstance, XnUInt32 nCount, Point3D[] aRealWorld, [In][Out] Point3D[] aProjective);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetDepthMap(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnGetDepthMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetSupportedUserPositionsCount(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, ref BoundingBox3D pPosition);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetUserPosition(XnNodeHandle hInstance, XnUInt32 nIndex, ref BoundingBox3D pPosition);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToUserPositionChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromUserPositionChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateImageGenerator(XnContext pContext, out XnNodeHandle phImageGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetRGB24ImageMap(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetYUV422ImageMap(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetGrayscale8ImageMap(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetGrayscale16ImageMap(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetImageMap(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsPixelFormatSupported(XnNodeHandle hInstance, PixelFormat Format);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetPixelFormat(XnNodeHandle hInstance, PixelFormat Format);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern PixelFormat xnGetPixelFormat(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToPixelFormatChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromPixelFormatChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnGetImageMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateIRGenerator(XnContext pContext, out XnNodeHandle phIRGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetIRMap(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnGetIRMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateGestureGenerator(XnContext pContext, out XnNodeHandle phGestureGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAddGesture(XnNodeHandle hInstance, string strGesture, ref BoundingBox3D pArea);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAddGesture(XnNodeHandle hInstance, string strGesture, IntPtr pArea);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRemoveGesture(XnNodeHandle hInstance, string strGesture);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetAllActiveGestures(XnNodeHandle hInstance, [In] [Out] IntPtr[] pstrGestures, XnUInt32 nNameLength, ref XnUInt16 nGestures);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateAllGestures(XnNodeHandle hInstance, [In] [Out] IntPtr[] pstrGestures, XnUInt32 nNameLength, ref XnUInt16 nGestures);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsGestureAvailable(XnNodeHandle hInstance, string strGesture);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsGestureProgressSupported(XnNodeHandle hInstance, string strGesture);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterGestureCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureRecognized RecognizedCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureProgress ProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterGestureCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToGestureIntermediateStageCompleted(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureIntermediateStageCompleted GestureIntermediateStageCompletedCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromGestureIntermediateStageCompleted(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToGestureReadyForNextIntermediateStage(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureReadyForNextIntermediateStage GestureReadyForNextIntermediateStageCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromGestureReadyForNextIntermediateStage(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToGestureChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromGestureChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateSceneAnalyzer(XnContext pContext, out XnNodeHandle phSceneAnalyzer, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetLabelMap(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetFloor(XnNodeHandle hInstance, ref Plane3D pPlane);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnGetSceneMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateUserGenerator(XnContext pContext, out XnNodeHandle phUserGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt16 xnGetNumberOfUsers(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetUsers(XnNodeHandle hInstance, [In][Out] XnUserID[] users, ref XnUInt16 pnUsers);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetUserCoM(XnNodeHandle hInstance, XnUserID user, out Point3D pCoM);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetUserPixels(XnNodeHandle hInstance, XnUserID user, IntPtr pScene);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterUserCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler NewUserCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler LostUserCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterUserCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToUserExit(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler UserExitCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromUserExit(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToUserReEnter(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnUserHandler UserReEnterCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromUserReEnter(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsJointAvailable(XnNodeHandle hInstance, SkeletonJoint eJoint);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsProfileAvailable(XnNodeHandle hInstance, SkeletonProfile eProfile);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetSkeletonProfile(XnNodeHandle hInstance, SkeletonProfile eProfile);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetJointActive(XnNodeHandle hInstance, SkeletonJoint eJoint, XnBool bState);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsJointActive(XnNodeHandle hInstance, SkeletonJoint eJoint);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToJointConfigurationChange(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromJointConfigurationChange(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateActiveJoints(XnNodeHandle hInstance, SkeletonJoint pJoints, XnUInt16 pnJoints);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetSkeletonJoint(XnNodeHandle hInstance, XnUserID user, SkeletonJoint joint, ref SkeletonJointTransformation transformation);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetSkeletonJointPosition(XnNodeHandle hInstance, XnUserID user, SkeletonJoint joint, ref SkeletonJointPosition position);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetSkeletonJointOrientation(XnNodeHandle hInstance, XnUserID user, SkeletonJoint joint, ref SkeletonJointOrientation orientation);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsSkeletonCalibrated(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsSkeletonCalibrating(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRequestSkeletonCalibration(XnNodeHandle hInstance, XnUserID user, XnBool bForce);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAbortSkeletonCalibration(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSaveSkeletonCalibrationDataToFile(XnNodeHandle hInstance, XnUserID user, string strFileName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLoadSkeletonCalibrationDataFromFile(XnNodeHandle hInstance, XnUserID user, string strFileName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSaveSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLoadSkeletonCalibrationData(XnNodeHandle hInstance, XnUserID user, XnUInt32 nSlot);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnClearSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsSkeletonCalibrationData(XnNodeHandle hInstance, XnUInt32 nSlot);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStartSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopSkeletonTracking(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnResetSkeleton(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnNeedPoseForSkeletonCalibration(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetSkeletonCalibrationPose(XnNodeHandle hInstance, StringBuilder sb);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetSkeletonSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterCalibrationCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationStart CalibrationStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationEnd CalibrationEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterCalibrationCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToCalibrationStart(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationStart CalibrationStartCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromCalibrationStart(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToCalibrationInProgress(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationInProgress CalibrationInProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromCalibrationInProgress(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToCalibrationComplete(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnCalibrationComplete CalibrationCompleteCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromCalibrationComplete(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, [In] [Out] IntPtr[] pstrPoses, XnUInt32 nNameLength, ref XnUInt32 pnPoses);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStartPoseDetection(XnNodeHandle hInstance, string strPose, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToPoseCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionStartCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionEndCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromPoseCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToPoseDetected(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionStartCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromPoseDetected(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToOutOfPose(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionCallback PoseDetectionStartCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromOutOfPose(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToPoseDetectionInProgress(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnPoseDetectionInProgress PoseDetectionInProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromPoseDetectionInProgress(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateHandsGenerator(XnContext pContext, out XnNodeHandle phHandsGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterHandCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandCreate CreateCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandUpdate UpdateCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandDestroy DestroyCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterHandCallbacks(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern XnStatus xnRegisterToHandTouchingFOVEdge(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnHandTouchingFOVEdge TouchingCB, IntPtr pCookie, out XnCallbackHandle phCallback);
-        [DllImport(openNILibraryName)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void xnUnregisterFromHandTouchingFOVEdge(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopTracking(XnNodeHandle hInstance, XnUserID user);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopTrackingAll(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStartTracking(XnNodeHandle hInstance, ref Point3D pPosition);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetTrackingSmoothing(XnNodeHandle hInstance, XnFloat fFactor);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateAudioGenerator(XnContext pContext, out XnNodeHandle phAudioGenerator, XnNodeQuery pQuery, XnEnumerationErrors pErrors);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetAudioBuffer(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnGetSupportedWaveOutputModesCount(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetSupportedWaveOutputModes(XnNodeHandle hInstance, [In][Out] WaveOutputMode[] aSupportedModes, ref XnUInt32 pnCount);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetWaveOutputMode(XnNodeHandle hInstance, ref WaveOutputMode OutputMode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetWaveOutputMode(XnNodeHandle hInstance, ref WaveOutputMode OutputMode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToWaveOutputModeChanges(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromWaveOutputModeChanges(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnGetAudioMetaData(XnNodeHandle hInstance, IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnMockDepthSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnMockImageSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnMockIRSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnMockAudioSetData(XnNodeHandle hInstance, XnUInt32 nFrameID, XnUInt64 nTimestamp, XnUInt32 nDataSize, IntPtr pData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateCodec(XnContext pContext, XnCodecID codecID, XnNodeHandle hInitializerNode, out XnNodeHandle phCodec);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnCodecID xnGetCodecID(XnNodeHandle hCodec);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEncodeData(XnNodeHandle hCodec, IntPtr pSrc, XnUInt32 nSrcSize, IntPtr pDst, XnUInt32 nDstSize, [MarshalAs(UnmanagedType.SysUInt)] out UInt32 pnBytesWritten);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnDecodeData(XnNodeHandle hCodec, IntPtr pSrc, XnUInt32 nSrcSize, IntPtr pDst, XnUInt32 nDstSize, [MarshalAs(UnmanagedType.SysUInt)] out UInt32 pnBytesWritten);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateRecorder(XnContext pContext, string strFormatName, out XnNodeHandle phRecorder);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetRecorderDestination(XnNodeHandle hRecorder, RecordMedium destType, string strDest);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAddNodeToRecording(XnNodeHandle hRecorder, XnNodeHandle hNode, XnCodecID compression);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRemoveNodeFromRecording(XnNodeHandle hRecorder, XnNodeHandle hNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRecord(XnNodeHandle hRecorder);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetRecorderFormat(XnNodeHandle hRecorder);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreatePlayer(XnContext pContext, string strFormatName, out XnNodeHandle phPlayer);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetPlayerRepeat(XnNodeHandle hPlayer, XnBool bRepeat);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetPlayerSource(XnNodeHandle hPlayer, RecordMedium sourceType, string strSource);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetPlayerSource(XnNodeHandle hPlayer, out RecordMedium pSourceType, StringBuilder strSource, XnUInt32 nBufSize);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnPlayerReadNext(XnNodeHandle hPlayer);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSeekPlayerToTimeStamp(XnNodeHandle hPlayer, XnInt64 nTimeOffset, PlayerSeekOrigin origin);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer, string strNodeName, XnInt32 nFrameOffset, PlayerSeekOrigin origin);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnTellPlayerTimestamp(XnNodeHandle hPlayer, out XnUInt64 pnTimestamp);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnTellPlayerFrame(XnNodeHandle hPlayer, string strNodeName, out XnUInt32 pnFrame);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetPlayerNumFrames(XnNodeHandle hPlayer, string strNodeName, out XnUInt32 pnFrames);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetPlayerSupportedFormat(XnNodeHandle hPlayer);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumeratePlayerNodes(XnNodeHandle hPlayer, out XnNodeInfoList ppList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsPlayerAtEOF(XnNodeHandle hPlayer);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterToEndOfFileReached(XnNodeHandle hPlayer, [MarshalAs(UnmanagedType.FunctionPtr)] XnStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromEndOfFileReached(XnNodeHandle hInstance, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnSetPlaybackSpeed(XnNodeHandle hInstance, XnDouble dSpeed);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnDouble xnGetPlaybackSpeed(XnNodeHandle hInstance);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoSetInstanceName(XnNodeInfo pNodeInfo, string strInstanceName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern ProductionNodeDescription xnNodeInfoGetDescription(XnNodeInfo pNodeInfo);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo pNodeInfo, IntPtr csResult, XnUInt32 nSize);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnNodeInfoGetInstanceName(XnNodeInfo pNodeInfo);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnNodeInfoGetCreationInfo(XnNodeInfo pNodeInfo);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfoList xnNodeInfoGetNeededNodes(XnNodeInfo pNodeInfo);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		[Obsolete]
 		public static extern XnNodeHandle xnNodeInfoGetHandle(XnNodeInfo pNodeInfo);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeHandle xnNodeInfoGetRefHandle(XnNodeInfo pNodeInfo);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListAllocate(out XnNodeInfoList ppList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnNodeInfoListFree(XnNodeInfoList pList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListAdd(XnNodeInfoList pList, ProductionNodeDescription pDescription, string strCreationInfo, XnNodeInfoList pNeededNodes);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListAddNode(XnNodeInfoList pList, XnNodeInfo pNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListAddNodeFromList(XnNodeInfoList pList, XnNodeInfoListIterator otherListIt);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListRemove(XnNodeInfoList pList, XnNodeInfoListIterator it);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListClear(XnNodeInfoList pList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoListAppend(XnNodeInfoList pList, XnNodeInfoList pOther);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnNodeInfoListIsEmpty(XnNodeInfoList pList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetFirst(XnNodeInfoList pList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetLast(XnNodeInfoList pList);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnNodeInfoListIteratorIsValid(XnNodeInfoListIterator it);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfo xnNodeInfoListGetCurrent(XnNodeInfoListIterator it);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetNext(XnNodeInfoListIterator it);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnNodeInfoListIterator xnNodeInfoListGetPrevious(XnNodeInfoListIterator it);
-		/*		[DllImport(openNILibraryName)]
+		/*		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnProfilingInit(XnUInt32 nProfilingInterval);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnProfilingInitFromINI(string cpINIFileName, string cpSectionName);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnProfilingShutdown();
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnBool xnProfilingIsActive();
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnProfilingSectionStart(char csSectionName, XnBool bMT, XnProfilingHandle pHandle);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnProfilingSectionEnd(XnProfilingHandle pHandle);
 		*/
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQueryAllocate(out XnNodeQuery ppQuery);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnNodeQueryFree(XnNodeQuery pQuery);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetVendor(XnNodeQuery pQuery, string strVendor);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetName(XnNodeQuery pQuery, string strName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetMinVersion(XnNodeQuery pQuery, ref Version pMinVersion);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetMaxVersion(XnNodeQuery pQuery, ref Version pMaxVersion);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQueryAddSupportedCapability(XnNodeQuery pQuery, string strNeededCapability);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQueryAddSupportedMapOutputMode(XnNodeQuery pQuery, ref MapOutputMode pMapOutputMode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetSupportedMinUserPositions(XnNodeQuery pQuery, XnUInt32 nCount);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetExistingNodeOnly(XnNodeQuery pQuery, XnBool bExistingNode);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQueryAddNeededNode(XnNodeQuery pQuery, string strInstanceName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQuerySetCreationInfo(XnNodeQuery pQuery, string strCreationInfo);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeQueryFilterList(XnContext pContext, XnNodeQuery pQuery, XnNodeInfoList pList);
-		/*		[DllImport(openNILibraryName)]
+		/*		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnSchedulerStart(out XnScheduler ppScheduler);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnSchedulerShutdown(out XnScheduler ppScheduler);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnSchedulerAddTask(XnScheduler pScheduler, XnUInt64 nInterval, XnTaskCallbackFuncPtr pCallback, IntPtr pCallbackArg, out XnScheduledTask ppTask);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnSchedulerRemoveTask(XnScheduler pScheduler, out XnScheduledTask ppTask);
-				[DllImport(openNILibraryName)]
+				[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 				public static extern XnStatus xnSchedulerRescheduleTask(XnScheduler pScheduler, XnScheduledTask pTask, XnUInt64 nInterval);
 		*/
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetStatusString(XnStatus Status);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnGetStatusName(XnStatus Status);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnPrintError(XnStatus Status, string csUserMessage);
-		//		[DllImport(openNILibraryName)]
+		//		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		//		public static extern XnStatus xnRegisterErrorCodeMessages(XnUInt16 nGroup, XnUInt16 nFirst, XnUInt16 nCount, XnErrorCodeData pErrorCodeData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetVersion(ref Version pVersion);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnProductionNodeTypeToString(NodeType Type);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnProductionNodeTypeFromString(string strType, NodeType pType);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsTypeGenerator(NodeType type);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnPixelFormatToString(PixelFormat format);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnPixelFormatFromString(string strName, PixelFormat pFormat);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnResolutionGetXRes(Resolution resolution);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnUInt32 xnResolutionGetYRes(Resolution resolution);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Resolution xnResolutionGetFromXYRes(XnUInt32 xRes, XnUInt32 yRes);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Resolution xnResolutionGetFromName(string strName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnResolutionGetName(Resolution resolution);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnInt32 xnVersionCompare(ref Version pVersion1, ref Version pVersion2);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnVersionToString(ref Version pVersion, IntPtr csResult, XnUInt32 nSize);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus XnProductionNodeDescriptionToString(ProductionNodeDescription pDescription, IntPtr csResult, XnUInt32 nSize);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Point3D xnCreatePoint3D(XnFloat x, XnFloat y, XnFloat z);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Point3D xnCreatePlane3D(Point3D ptPoint, Point3D vNormal);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterModule(string strModule, string strConfigDir);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnUnregisterModule(string strModule);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnPrintRegisteredModules();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterGlobalLicense(License pLicense);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnUnregisterGlobalLicense(License pLicense);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnPrintRegisteredLicenses();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnAllocateOutputMetaData();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnFreeOutputMetaData(IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCopyOutputMetaData(IntPtr pDestination, IntPtr pSource);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnAllocateMapMetaData();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnFreeMapMetaData(IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCopyMapMetaData(IntPtr pDestination, IntPtr pSource);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnAllocateDepthMetaData();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnFreeDepthMetaData(IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCopyDepthMetaData(IntPtr pDestination, IntPtr pSource);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnAllocateImageMetaData();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnFreeImageMetaData(IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCopyImageMetaData(IntPtr pDestination, IntPtr pSource);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnAllocateIRMetaData();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnFreeIRMetaData(IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCopyIRMetaData(IntPtr pDestination, IntPtr pSource);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnAllocateAudioMetaData();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnFreeAudioMetaData(IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCopyAudioMetaData(IntPtr pDestination, IntPtr pSource);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnAllocateSceneMetaData();
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnFreeSceneMetaData(IntPtr pMetaData);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCopySceneMetaData(IntPtr pDestination, IntPtr pSource);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnAutoEnumerateOverSingleInput(XnContext pContext, XnNodeInfoList pList, ProductionNodeDescription pDescription, string strCreationInfo, NodeType InputType, XnEnumerationErrors pErrors, XnNodeQuery pQuery);
 
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnCreateScriptNode(XnContext pContext, string strFormat, out XnNodeHandle phScript);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnScriptNodeGetSupportedFormat(XnNodeHandle hScript);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLoadScriptFromFile(XnNodeHandle hScript, string strFileName);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnLoadScriptFromString(XnNodeHandle hScript, string strScript);
-		[DllImport(openNILibraryName)]
+		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnScriptNodeRun(XnNodeHandle hScript);
 	}
 }

@@ -7,5 +7,5 @@ SRC_FILES = ../../../../../Samples/NiSampleModule/*.cpp
 LIB_NAME = Sample-NiSampleModule
 USED_LIBS = OpenNI
 
-include ../../CommonCppMakefile
+include ../../Common/CommonCppMakefile
 
