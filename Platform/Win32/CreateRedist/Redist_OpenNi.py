@@ -1,6 +1,6 @@
 #/***************************************************************************
 #*                                                                          *
-#*  OpenNI 1.1 Alpha                                                        *
+#*  OpenNI 1.x Alpha                                                        *
 #*  Copyright (C) 2011 PrimeSense Ltd.                                      *
 #*                                                                          *
 #*  This file is part of OpenNI.                                            *
@@ -19,7 +19,6 @@
 #*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
 #*                                                                          *
 #***************************************************************************/
-
 #-------------Imports----------------------------------------------------------#
 from xml.dom.minidom import parse, parseString
 import win32con,pywintypes,win32api
@@ -33,9 +32,12 @@ import subprocess
 import shutil
 import stat
 import uuid
-import RedistBase
+path_to_base = os.path.dirname(os.path.abspath('common/redist_base.py'))
+if path_to_base not in sys.path:
+    sys.path.insert(0, path_to_base)
+import redist_base
 
-class RedistOpenNI(RedistBase.RedistBase):
+class RedistOpenNI(redist_base.RedistBase):
     def __init__(self):
         #RedistBase.__init__(self)
         super(RedistOpenNI,self).__init__()
@@ -48,12 +50,13 @@ class RedistOpenNI(RedistBase.RedistBase):
         self.doxy_file_name = 'Doxyfile'
         self.write_2010_sample_dependency = True
 	self.internal_conf_name = 'Dev'
+	self.SCRIPT_DIR = os.getcwd()	
         
     def init_win_sdk_vars(self):
         """find Windows SDK install dir"""
         WIN_SDK_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Microsoft SDKs\Windows")
         WIN_SDK_VALUES = [("CurrentInstallFolder", win32con.REG_SZ)]
-        self.WIN_SDK_INST_DIR = RedistBase.get_reg_values(WIN_SDK_KEY, WIN_SDK_VALUES)[0]
+        self.WIN_SDK_INST_DIR = redist_base.get_reg_values(WIN_SDK_KEY, WIN_SDK_VALUES)[0]
         
     def init_version_vars(self):
         """
@@ -252,7 +255,7 @@ class RedistOpenNI(RedistBase.RedistBase):
 	self.fixing_files()
 	self.build_samples()
 	self.update_installer_clr_policy()
-	[dev,redist] = self.make_installer(self.SCRIPT_DIR + '\\Output\\')
+	[dev,redist] = self.make_installer(self.SCRIPT_DIR)
 	if not dev:
 	    return 1
 	else:
@@ -298,7 +301,7 @@ class UpdateInstallerCLRPolicy:
         """
         comp_ref_str = '<ComponentRef Id=\"OpenNIPolicy1.%d\"/>'%minor
         comp_ref_anchor = '<ComponentRef Id="OpenNINET"/>'
-        RedistBase.regx_replace(comp_ref_anchor,'%s\n%s'%(comp_ref_anchor,comp_ref_str),self.wxs_file)
+        redist_base.regx_replace(comp_ref_anchor,'%s\n%s'%(comp_ref_anchor,comp_ref_str),self.wxs_file)
         
         guid = uuid.uuid1()
         comp_id_str = r'<Component Id="OpenNIPolicy1.%d" Guid="%s" DiskId="1">'%(minor,str(guid)) + '\n' + \
@@ -308,7 +311,7 @@ class UpdateInstallerCLRPolicy:
         r'Source="$(var.OpenNIFilesDir)\\bin$(var.PlatformSuffix)\PublisherPolicy1.%d.config" />'%(minor) + '\n' + \
         r'</Component>'
         comp_id_anchor = r'<Component Id="OpenNINET"'
-        RedistBase.regx_replace(comp_id_anchor,'%s\n%s'%(comp_id_str,comp_id_anchor),self.wxs_file)
+        redist_base.regx_replace(comp_id_anchor,'%s\n%s'%(comp_id_str,comp_id_anchor),self.wxs_file)
 
 if __name__ == "__main__":
     redist = RedistOpenNI()    

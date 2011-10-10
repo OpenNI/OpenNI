@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -44,20 +44,22 @@ XN_C_API XnStatus xnOSCreateNamedMutex(XN_MUTEX_HANDLE* pMutexHandle, const XnCh
 
 	// remove bad chars from name
 	XnChar strMutexOSName[MAX_PATH];
-	int i = 0;
-	for (; (i < MAX_PATH) && (cpMutexName[i] != '\0'); ++i)
-		strMutexOSName[i] = cpMutexName[i] == '\\' ? '_' : cpMutexName[i];
-
-	if (i == MAX_PATH)
+	if (cpMutexName != NULL)
 	{
-		xnLogWarning(XN_MASK_OS, "Mutex name is too long!");
-		return XN_STATUS_OS_MUTEX_CREATION_FAILED;
+		int i = 0;
+		for (; (i < MAX_PATH) && (cpMutexName[i] != '\0'); ++i)
+			strMutexOSName[i] = cpMutexName[i] == '\\' ? '_' : cpMutexName[i];
+
+		if (i == MAX_PATH)
+		{
+			xnLogWarning(XN_MASK_OS, "Mutex name is too long!");
+			return XN_STATUS_OS_MUTEX_CREATION_FAILED;
+		}
+		strMutexOSName[i] = '\0';
 	}
 
-	strMutexOSName[i] = '\0';
-
 	// Create a named mutex via the OS
-	*pMutexHandle = CreateMutex(NULL, FALSE, strMutexOSName);
+	*pMutexHandle = CreateMutex(NULL, FALSE, (cpMutexName == NULL) ? NULL : strMutexOSName);
 
 	// Make sure it succeeded (return value is not null)
 	XN_VALIDATE_PTR(*pMutexHandle, XN_STATUS_OS_MUTEX_CREATION_FAILED);

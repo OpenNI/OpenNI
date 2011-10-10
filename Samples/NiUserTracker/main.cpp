@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -26,6 +26,7 @@
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
 #include "SceneDrawer.h"
+#include <XnPropNames.h>
 
 //---------------------------------------------------------------------------
 // Globals
@@ -86,7 +87,9 @@ void CleanupExit()
 // Callback: New user was detected
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
 {
-	printf("New User %d\n", nId);
+	XnUInt32 epochTime = 0;
+	xnOSGetEpochTime(&epochTime);
+	printf("%d New User %d\n", epochTime, nId);
 	// New user found
 	if (g_bNeedPose)
 	{
@@ -100,33 +103,41 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 // Callback: An existing user was lost
 void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
 {
-	printf("Lost user %d\n", nId);
+	XnUInt32 epochTime = 0;
+	xnOSGetEpochTime(&epochTime);
+	printf("%d Lost user %d\n", epochTime, nId);	
 }
 // Callback: Detected a pose
 void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nId, void* pCookie)
 {
-	printf("Pose %s detected for user %d\n", strPose, nId);
+	XnUInt32 epochTime = 0;
+	xnOSGetEpochTime(&epochTime);
+	printf("%d Pose %s detected for user %d\n", epochTime, strPose, nId);
 	g_UserGenerator.GetPoseDetectionCap().StopPoseDetection(nId);
 	g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, TRUE);
 }
 // Callback: Started calibration
 void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID nId, void* pCookie)
 {
-	printf("Calibration started for user %d\n", nId);
+	XnUInt32 epochTime = 0;
+	xnOSGetEpochTime(&epochTime);
+	printf("%d Calibration started for user %d\n", epochTime, nId);
 }
 // Callback: Finished calibration
 void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(xn::SkeletonCapability& capability, XnUserID nId, XnBool bSuccess, void* pCookie)
 {
+	XnUInt32 epochTime = 0;
+	xnOSGetEpochTime(&epochTime);
 	if (bSuccess)
 	{
 		// Calibration succeeded
-		printf("Calibration complete, start tracking user %d\n", nId);
+		printf("%d Calibration complete, start tracking user %d\n", epochTime, nId);
 		g_UserGenerator.GetSkeletonCap().StartTracking(nId);
 	}
 	else
 	{
 		// Calibration failed
-		printf("Calibration failed for user %d\n", nId);
+		printf("%d Calibration failed for user %d\n", epochTime, nId);
 		if (g_bNeedPose)
 		{
 			g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_strPose, nId);
@@ -140,16 +151,19 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(xn::SkeletonCapability& cap
 
 void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& capability, XnUserID nId, XnCalibrationStatus eStatus, void* pCookie)
 {
+	XnUInt32 epochTime = 0;
+	xnOSGetEpochTime(&epochTime);
 	if (eStatus == XN_CALIBRATION_STATUS_OK)
 	{
 		// Calibration succeeded
+		printf("%d Calibration complete, start tracking user %d\n", epochTime, nId);		
 		printf("Calibration complete, start tracking user %d\n", nId);
 		g_UserGenerator.GetSkeletonCap().StartTracking(nId);
 	}
 	else
 	{
 		// Calibration failed
-		printf("Calibration failed for user %d\n", nId);
+		printf("%d Calibration failed for user %d\n", epochTime, nId);
 		if (g_bNeedPose)
 		{
 			g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_strPose, nId);
@@ -229,7 +243,7 @@ void glutDisplay (void)
 	if (!g_bPause)
 	{
 		// Read next available data
-		g_Context.WaitOneUpdateAll(g_DepthGenerator);
+		g_Context.WaitOneUpdateAll(g_UserGenerator);
 	}
 
 		// Process the data
@@ -354,7 +368,37 @@ int main(int argc, char **argv)
 	}
 
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator);
-	CHECK_RC(nRetVal, "Find depth generator");
+	if (nRetVal != XN_STATUS_OK)
+	{
+		printf("No depth generator found. Using a default one...");
+		xn::MockDepthGenerator mockDepth;
+		nRetVal = mockDepth.Create(g_Context);
+		CHECK_RC(nRetVal, "Create mock depth");
+
+		// set some defaults
+		XnMapOutputMode defaultMode;
+		defaultMode.nXRes = 320;
+		defaultMode.nYRes = 240;
+		defaultMode.nFPS = 30;
+		nRetVal = mockDepth.SetMapOutputMode(defaultMode);
+		CHECK_RC(nRetVal, "set default mode");
+
+		// set FOV
+		XnFieldOfView fov;
+		fov.fHFOV = 1.0225999419141749;
+		fov.fVFOV = 0.79661567681716894;
+		nRetVal = mockDepth.SetGeneralProperty(XN_PROP_FIELD_OF_VIEW, sizeof(fov), &fov);
+		CHECK_RC(nRetVal, "set FOV");
+
+		XnUInt32 nDataSize = defaultMode.nXRes * defaultMode.nYRes * sizeof(XnDepthPixel);
+		XnDepthPixel* pData = (XnDepthPixel*)xnOSCallocAligned(nDataSize, 1, XN_DEFAULT_MEM_ALIGN);
+
+		nRetVal = mockDepth.SetData(1, 0, nDataSize, pData);
+		CHECK_RC(nRetVal, "set empty depth map");
+
+		g_DepthGenerator = mockDepth;
+	}
+
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_USER, g_UserGenerator);
 	if (nRetVal != XN_STATUS_OK)
 	{

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -840,7 +840,7 @@ typedef struct XnRecorderOutputStreamInterface
 	 * @param	seekType	 [in]	Specifies how to seek - according to current position, end or beginning.
 	 * @param	nOffset		 [in]	Specifies how many bytes to move
 	 */
-	XnStatus (XN_CALLBACK_TYPE* Seek)(void* pCookie, XnOSSeekType seekType, const XnUInt32 nOffset);
+	XnStatus (XN_CALLBACK_TYPE* Seek)(void* pCookie, XnOSSeekType seekType, const XnInt32 nOffset);
 
 	/**
 	 * Tells the current position in the stream.
@@ -858,6 +858,26 @@ typedef struct XnRecorderOutputStreamInterface
 	 * @param	pCookie		[in]	A token that was received with this interface.
 	 */
 	void (XN_CALLBACK_TYPE* Close)(void* pCookie);
+
+	/**
+	 * Sets the stream's pointer to the specified position. (64bit version, for large files)
+	 *
+	 * @param	pCookie		 [in]	A cookie that was received with this interface.
+	 * @param	seekType	 [in]	Specifies how to seek - according to current position, end or beginning.
+	 * @param	nOffset		 [in]	Specifies how many bytes to move
+	 */
+	XnStatus (XN_CALLBACK_TYPE* Seek64)(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset);
+
+	/**
+	 * Tells the current position in the stream. (64bit version, for large files)
+	 *
+	 * @param	pCookie		[in]	A cookie that was received with this interface.
+	 * @param	pPos		[out]	The position of the stream.
+	 *
+	 * @returns (XnUInt64)-1 on error.
+	 */
+	XnUInt64 (XN_CALLBACK_TYPE* Tell64)(void* pCookie);
+
 } XnRecorderOutputStreamInterface;
 
 /** 
@@ -909,6 +929,26 @@ typedef struct XnPlayerInputStreamInterface
 	 * @param	pCookie		 [in]	A cookie that was received with this interface.
 	 */
 	void (XN_CALLBACK_TYPE* Close)(void* pCookie);
+
+	/**
+	 * Sets the stream's pointer to the specified position. (64bit version, for large files)
+	 *
+	 * @param	pCookie		 [in]	A cookie that was received with this interface.
+	 * @param	seekType	 [in]	Specifies how to seek - according to current position, end or beginning.
+	 * @param	nOffset		 [in]	Specifies how many bytes to move
+	 */
+	XnStatus (XN_CALLBACK_TYPE* Seek64)(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset);
+
+	/**
+	 * Tells the current position in the stream. (64bit version, for large files)
+	 *
+	 * @param	pCookie		[in]	A cookie that was received with this interface.
+	 * @param	pPos		[out]	The position of the stream.
+	 *
+	 * @returns (XnUInt64)-1 on error.
+	 */
+	XnUInt64 (XN_CALLBACK_TYPE* Tell64)(void* pCookie);
+
 } XnPlayerInputStreamInterface;
 
 /** 

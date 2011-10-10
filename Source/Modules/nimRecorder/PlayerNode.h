@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -62,8 +62,8 @@ private:
 	{
 		RecordUndoInfo() { Reset(); }
 		void Reset() { nRecordPos = 0; nUndoRecordPos = 0; }
-		XnUInt32 nRecordPos;
-		XnUInt32 nUndoRecordPos;
+		XnUInt64 nRecordPos;
+		XnUInt64 nUndoRecordPos;
 	};
 
 	XN_DECLARE_STRINGS_HASH(RecordUndoInfo, RecordUndoInfoMap);
@@ -77,7 +77,7 @@ private:
 
 		XnBool bValid;
 		XnChar strName[XN_MAX_NAME_LENGTH];
-		XnUInt32 nLastDataPos;
+		XnUInt64 nLastDataPos;
 		XnCodecID compression;
 		XnUInt32 nFrames;
 		XnUInt32 nCurFrame;
@@ -93,7 +93,7 @@ private:
 	XnStatus ProcessRecord(XnBool bProcessPayload);
 	XnStatus SeekToTimeStampAbsolute(XnUInt64 nDestTimeStamp);
 	XnStatus SeekToTimeStampRelative(XnInt64 nOffset);
-	XnStatus UndoRecord(PlayerNode::RecordUndoInfo& undoInfo, XnUInt32 nDestPos, XnBool& nUndone);
+	XnStatus UndoRecord(PlayerNode::RecordUndoInfo& undoInfo, XnUInt64 nDestPos, XnBool& nUndone);
 	XnStatus SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nFrameNumber);
 	XnStatus ProcessEachNodeLastData(XnUInt32 nIDToProcessLast);
 
@@ -103,8 +103,8 @@ private:
 	XnStatus ReadRecordFields(Record& record);
 	//ReadRecord reads just the fields of the record, not the payload.
 	XnStatus ReadRecord(Record& record);
-	XnStatus SeekStream(XnOSSeekType seekType, XnInt32 nOffset);
-	XnUInt32 TellStream();
+	XnStatus SeekStream(XnOSSeekType seekType, XnInt64 nOffset);
+	XnUInt64 TellStream();
 	XnStatus CloseStream();
 
 	XnStatus HandleRecord(Record& record, XnBool bHandleRecord);
@@ -126,8 +126,8 @@ private:
 	XnStatus RemovePlayerNodeInfo(XnUInt32 nNodeID);
 	XnUInt32 GetPlayerNodeIDByName(const XnChar* strNodeName);
 	PlayerNodeInfo* GetPlayerNodeInfoByName(const XnChar* strNodeName);
-	XnStatus SaveRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const XnChar* strPropName, XnUInt32 nRecordPos, XnUInt32 nUndoRecordPos);
-	XnStatus GetRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const XnChar* strPropName, XnUInt32& nRecordPos, XnUInt32& nUndoRecordPos);
+	XnStatus SaveRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const XnChar* strPropName, XnUInt64 nRecordPos, XnUInt64 nUndoRecordPos);
+	XnStatus GetRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const XnChar* strPropName, XnUInt64& nRecordPos, XnUInt64& nUndoRecordPos);
 	XnStatus SkipRecordPayload(Record record);
 	XnStatus SeekToRecordByType(XnUInt32 nNodeID, RecordType type);
 	DataIndexEntry* FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 nTimestamp);
@@ -141,9 +141,11 @@ private:
 	static const XnUInt64 DATA_MAX_SIZE;
 	static const XnUInt64 RECORD_MAX_SIZE;
 	static const XnVersion OLDEST_SUPPORTED_FILE_FORMAT_VERSION;
+	static const XnVersion FIRST_FILESIZE64BIT_FILE_FORMAT_VERSION;
 
 	XnChar m_strName[XN_MAX_NAME_LENGTH];
 	XnBool m_bOpen;
+	XnBool m_bIs32bitFileFormat;
 	XnUInt8* m_pRecordBuffer;
 	XnUInt8* m_pUncompressedData;
 	void* m_pStreamCookie;

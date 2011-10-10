@@ -1,0 +1,54 @@
+make[1]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build'
+make -C OpenNI CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/OpenNI'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/OpenNI'
+make -C Modules/nimCodecs CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Modules/nimCodecs'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Modules/nimCodecs'
+make -C Modules/nimMockNodes CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Modules/nimMockNodes'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Modules/nimMockNodes'
+make -C Modules/nimRecorder CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Modules/nimRecorder'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Modules/nimRecorder'
+make -C Utils/niReg CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Utils/niReg'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Utils/niReg'
+make -C Utils/niLicense CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Utils/niLicense'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Utils/niLicense'
+make -C Samples/NiSimpleRead CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiSimpleRead'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiSimpleRead'
+make -C Samples/NiBackRecorder CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiBackRecorder'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiBackRecorder'
+make -C Samples/NiConvertXToONI CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiConvertXToONI'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiConvertXToONI'
+make -C Samples/NiSampleModule CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiSampleModule'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiSampleModule'
+make -C Samples/NiSimpleCreate CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiSimpleCreate'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiSimpleCreate'
+make -C Samples/NiCRead CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiCRead'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiCRead'
+make -C Samples/NiRecordSynthetic CFG=Release
+make[2]: Entering directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiRecordSynthetic'
+make[2]: Nothing to be done for `all'.
+make[2]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build/Samples/NiRecordSynthetic'
+make[1]: Leaving directory `/home/ronid/sdk/OpenNI/Platform/Linux-Arm/Build'

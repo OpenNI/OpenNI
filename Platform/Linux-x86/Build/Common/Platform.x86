@@ -3,10 +3,8 @@ ifndef SSE_GENERATION
 	SSE_GENERATION = 3
 endif
 
-# change c struct alignment options to be compatable with Win32
-ifneq ("$(OSTYPE)","Darwin")
-	CFLAGS += -malign-double
-else
+ifeq ("$(OSTYPE)","Darwin")
+	# Making the binary a universal one (x86 + x64)
 	CFLAGS += -arch i386 -arch x86_64
 	LDFLAGS += -arch i386 -arch x86_64
 endif

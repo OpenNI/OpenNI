@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -38,12 +38,14 @@ XnRecorderOutputStreamInterface RecorderImpl::s_fileOutputStream =
 	&RecorderImpl::WriteFile,
 	&RecorderImpl::SeekFile,
 	&RecorderImpl::TellFile,
-	&RecorderImpl::CloseFile
+	&RecorderImpl::CloseFile,
+	&RecorderImpl::SeekFile64,
+	&RecorderImpl::TellFile64
 };
 
 RecorderImpl::RecorderImpl() : 
 	m_hRecorder(NULL),
-	m_pOutFile(NULL),
+	m_bIsFileOpen(FALSE),
 	m_destType(XN_RECORD_MEDIUM_FILE)
 {
 	xnOSMemSet(m_strFileName, 0, sizeof(m_strFileName));
@@ -311,7 +313,7 @@ XnStatus RecorderImpl::SetDestination(XnRecordMedium destType, const XnChar* str
 		//Right now only file destination is supported
 		case XN_RECORD_MEDIUM_FILE:
 		{
-			if (m_pOutFile != NULL)
+			if (m_bIsFileOpen)
 			{
 				XN_LOG_WARNING_RETURN(XN_STATUS_INVALID_OPERATION, XN_MASK_OPEN_NI, "Recorder destination is already set!");
 			}
@@ -435,11 +437,18 @@ XnStatus RecorderImpl::WriteFile(void* pCookie, const XnChar* strNodeName, const
 }
 
 
-XnStatus XN_CALLBACK_TYPE RecorderImpl::SeekFile(void* pCookie, XnOSSeekType seekType, const XnUInt32 nOffset)
+XnStatus XN_CALLBACK_TYPE RecorderImpl::SeekFile(void* pCookie, XnOSSeekType seekType, const XnInt32 nOffset)
 {
 	RecorderImpl* pThis = (RecorderImpl*)pCookie;
 	XN_VALIDATE_INPUT_PTR(pThis);
 	return pThis->SeekFileImpl(seekType, nOffset);
+}
+
+XnStatus XN_CALLBACK_TYPE RecorderImpl::SeekFile64(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset)
+{
+	RecorderImpl* pThis = (RecorderImpl*)pCookie;
+	XN_VALIDATE_INPUT_PTR(pThis);
+	return pThis->SeekFile64Impl(seekType, nOffset);
 }
 
 XnUInt32 XN_CALLBACK_TYPE RecorderImpl::TellFile(void* pCookie)
@@ -447,6 +456,13 @@ XnUInt32 XN_CALLBACK_TYPE RecorderImpl::TellFile(void* pCookie)
 	RecorderImpl* pThis = (RecorderImpl*)pCookie;
 	XN_VALIDATE_INPUT_PTR(pThis);
 	return pThis->TellFileImpl();
+}
+
+XnUInt64 XN_CALLBACK_TYPE RecorderImpl::TellFile64(void* pCookie)
+{
+	RecorderImpl* pThis = (RecorderImpl*)pCookie;
+	XN_VALIDATE_INPUT_PTR(pThis);
+	return pThis->TellFile64Impl();
 }
 
 void RecorderImpl::CloseFile(void* pCookie)
@@ -462,18 +478,20 @@ void RecorderImpl::CloseFile(void* pCookie)
 
 XnStatus RecorderImpl::OpenFileImpl()
 {
-	if (m_pOutFile != NULL)
+	if (m_bIsFileOpen)
 	{
 		//Already open
 		return XN_STATUS_OK;
 	}
 
-	m_pOutFile = fopen(m_strFileName, "wb");
-	if (m_pOutFile  == NULL)
+	XnStatus nRetVal = xnOSOpenFile(m_strFileName, XN_OS_FILE_WRITE | XN_OS_FILE_TRUNCATE, &m_hOutFile);
+
+	if (nRetVal != XN_STATUS_OK)
 	{
 		xnLogWarning(XN_MASK_OPEN_NI, "Failed to open file '%s' for writing", m_strFileName);
 		return XN_STATUS_OS_FILE_OPEN_FAILED;
 	}
+	m_bIsFileOpen = TRUE;
 
 	return XN_STATUS_OK;	
 }
@@ -483,57 +501,53 @@ XnStatus RecorderImpl::WriteFileImpl(const XnChar* strNodeName,
 									 XnUInt32 nSize)
 {
 	//strNodeName may be NULL
-	XN_VALIDATE_PTR(m_pOutFile, XN_STATUS_ERROR);
-	size_t nBytesWritten = fwrite(pData, 1, nSize, m_pOutFile);
-	if (nBytesWritten < nSize)
-	{
-		xnLogWarning(XN_MASK_OPEN_NI, "Written only %u bytes out of %u to file", nBytesWritten, nSize);
-		return XN_STATUS_OS_FILE_WRITE_FAILED;
-	}
-	return XN_STATUS_OK;
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+
+	return xnOSWriteFile(m_hOutFile, pData, nSize);
 }
 
 
-XnStatus RecorderImpl::SeekFileImpl(XnOSSeekType seekType, const XnUInt32 nOffset)
+XnStatus RecorderImpl::SeekFileImpl(XnOSSeekType seekType, const XnInt32 nOffset)
 {
-	XN_VALIDATE_PTR(m_pOutFile, XN_STATUS_ERROR);
-	long nOrigin = 0;
-	switch (seekType)
-	{
-	case XN_OS_SEEK_CUR:
-		nOrigin = SEEK_CUR;
-		break;
-	case XN_OS_SEEK_END:
-		nOrigin = SEEK_END;
-		break;
-	case SEEK_SET:
-		nOrigin = SEEK_SET;
-		break;
-	default:
-		XN_ASSERT(FALSE);
-		return XN_STATUS_BAD_PARAM;
-	}
-
-	if (fseek(m_pOutFile, nOffset, nOrigin) != 0)
-	{
-		return XN_STATUS_ERROR;
-	}
-
-	return XN_STATUS_OK;
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	return xnOSSeekFile64(m_hOutFile, seekType, nOffset);
 }
 
+XnStatus RecorderImpl::SeekFile64Impl(XnOSSeekType seekType, const XnInt64 nOffset)
+{
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	return xnOSSeekFile64(m_hOutFile, seekType, nOffset);
+}
 
 XnUInt32 RecorderImpl::TellFileImpl()
 {
-	return ftell(m_pOutFile);
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	XnUInt64 pos;
+	XnStatus nRetVal = xnOSTellFile64(m_hOutFile, &pos);
+	XN_IS_STATUS_OK_RET(nRetVal, (XnUInt32) -1);
+	// Enforce uint32 limitation
+	if (pos >> 32)
+		return (XnUInt32) -1;
+
+	return (XnUInt32)pos;
+}
+
+XnUInt64 RecorderImpl::TellFile64Impl()
+{
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	XnUInt64 pos;
+	XnStatus nRetVal = xnOSTellFile64(m_hOutFile, &pos);
+	XN_IS_STATUS_OK_RET(nRetVal, (XnUInt64) -1);
+
+	return pos;
 }
 
 void RecorderImpl::CloseFileImpl()
 {
-	if (m_pOutFile != NULL)
+	if (m_bIsFileOpen)
 	{
-		fclose(m_pOutFile);
-		m_pOutFile = NULL;
+		xnOSCloseFile(&m_hOutFile);
+		m_bIsFileOpen = FALSE;
 	}
 }
 

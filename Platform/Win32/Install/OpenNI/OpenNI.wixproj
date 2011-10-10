@@ -32,6 +32,10 @@
     <CompilerAdditionalOptions>-arch x86</CompilerAdditionalOptions>
     <WixVariables>
     </WixVariables>
+    <SuppressSpecificWarnings>
+    </SuppressSpecificWarnings>
+    <VerboseOutput>False</VerboseOutput>
+    <SuppressIces>ICE03</SuppressIces>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DefineConstants>Debug;OpenNIFilesDir=..\..\..\..\..\Redist</DefineConstants>

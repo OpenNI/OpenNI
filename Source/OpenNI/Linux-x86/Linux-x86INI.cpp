@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -61,8 +61,8 @@ XnStatus FindEntry(const XnChar* cpINIFile, const XnChar* cpSection, const XnCha
 	XnStatus nRetVal = XN_STATUS_OK;
 	
 	// get file size
-	XnUInt32 nFileSize;
-	nRetVal = xnOSGetFileSize(cpINIFile, &nFileSize);
+	XnUInt64 nFileSize;
+	nRetVal = xnOSGetFileSize64(cpINIFile, &nFileSize);
 	XN_IS_STATUS_OK(nRetVal);
 	
 	// read entire file to memory

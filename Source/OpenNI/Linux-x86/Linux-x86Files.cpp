@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -22,6 +22,12 @@
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
+
+// This define enables Large File Support (64bit version of I/O functions and data types).
+// for more information - 'man 7 feature_test_macros'
+// Moreover, it MUST be defined before ANY other include from this file.
+#define _FILE_OFFSET_BITS	64
+
 #include <XnOS.h>
 #include <libgen.h>
 #include <errno.h>
@@ -229,7 +235,51 @@ XN_C_API XnStatus xnOSWriteFile(const XN_FILE_HANDLE File, const void* pBuffer, 
 XN_C_API XnStatus xnOSSeekFile(const XN_FILE_HANDLE File, const XnOSSeekType SeekType, const XnInt32 nOffset)
 {
 	// Local function variables
-	off_t nRealSeekType = 0;
+	int nRealSeekType = 0;
+	off_t nRetOffset = 0;
+
+	// Make sure the actual file handle isn't invalid
+	if (File == XN_INVALID_FILE_HANDLE)
+	{
+		return XN_STATUS_OS_INVALID_FILE;
+	}
+
+	// Convert the Xiron seek type into OS seek type
+	switch (SeekType)
+	{
+		case XN_OS_SEEK_SET:
+			// Absolute seek from the file beginning
+			nRealSeekType = SEEK_SET;
+			break;
+		case XN_OS_SEEK_CUR:
+			// Relative seek from the current location
+			nRealSeekType = SEEK_CUR;
+			break;
+		case XN_OS_SEEK_END:
+			// Absolute seek from the file ending
+			nRealSeekType = SEEK_END;
+			break;
+		default:
+			return (XN_STATUS_OS_INVALID_SEEK_TYPE);
+	}
+
+	// Seek a file handle via the OS
+	nRetOffset = lseek(File, (off_t)nOffset, nRealSeekType);
+
+	// Make sure it succeeded (return value is valid) and that we reached the expected file offset
+	if (nRetOffset == (off_t)-1)
+	{
+		return (XN_STATUS_OS_FILE_SEEK_FAILED);
+	}
+
+	// All is good...
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnOSSeekFile64(const XN_FILE_HANDLE File, const XnOSSeekType SeekType, const XnInt64 nOffset)
+{
+	// Local function variables
+	int nRealSeekType = 0;
 	off_t nRetOffset = 0;
 
 	// Make sure the actual file handle isn't invalid
@@ -267,7 +317,6 @@ XN_C_API XnStatus xnOSSeekFile(const XN_FILE_HANDLE File, const XnOSSeekType See
 	}
 
 	// All is good...
-	return (XN_STATUS_OK);
 }
 
 XN_C_API XnStatus xnOSTellFile(const XN_FILE_HANDLE File, XnUInt32* pnFilePos)
@@ -281,7 +330,39 @@ XN_C_API XnStatus xnOSTellFile(const XN_FILE_HANDLE File, XnUInt32* pnFilePos)
 		return XN_STATUS_OS_INVALID_FILE;
 	}
 	
-		// Seek a file handle by 0 bytes in order to read the file position
+	// Seek a file handle by 0 bytes in order to read the file position
+	off_t nFilePos = lseek(File, 0, SEEK_CUR);
+
+	// Make sure it succeeded (return value is valid)
+	if (nFilePos == (off_t)-1)
+	{
+		return (XN_STATUS_OS_FILE_TELL_FAILED);
+	}
+
+	// Enforce uint32 limitation
+	if (nFilePos >> 32)
+	{
+		return XN_STATUS_INTERNAL_BUFFER_TOO_SMALL;
+	}
+	
+	*pnFilePos = (XnUInt32)nFilePos;
+
+	// All is good...
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnOSTellFile64(const XN_FILE_HANDLE File, XnUInt64* pnFilePos)
+{
+	// Validate the input/output pointers (to make sure none of them is NULL)
+	XN_VALIDATE_OUTPUT_PTR(pnFilePos);
+	
+	// Make sure the actual file handle isn't invalid
+	if (File == XN_INVALID_FILE_HANDLE)
+	{
+		return XN_STATUS_OS_INVALID_FILE;
+	}
+	
+	// Seek a file handle by 0 bytes in order to read the file position
 	off_t nFilePos = lseek(File, 0, SEEK_CUR);
 
 	// Make sure it succeeded (return value is valid)
@@ -333,6 +414,29 @@ XN_C_API XnStatus xnOSFileExists(const XnChar* cpFileName, XnBool* bResult)
 }
 
 XN_C_API XnStatus xnOSGetFileSize(const XnChar* cpFileName, XnUInt32* pnFileSize)
+{
+	// Validate the input/output pointers (to make sure none of them is NULL)
+	XN_VALIDATE_INPUT_PTR(cpFileName);
+	XN_VALIDATE_OUTPUT_PTR(pnFileSize);
+	
+	struct stat fileStat;
+	if (-1 == stat(cpFileName, &fileStat))
+	{
+		return (XN_STATUS_OS_FILE_GET_SIZE_FAILED);	
+	}
+	
+	// Enforce uint32 limitation
+	if (fileStat.st_size >> 32)
+	{
+		return XN_STATUS_INTERNAL_BUFFER_TOO_SMALL;
+	}
+
+	*pnFileSize = (XnUInt32)fileStat.st_size;
+	
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnOSGetFileSize64(const XnChar* cpFileName, XnUInt64* pnFileSize)
 {
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpFileName);

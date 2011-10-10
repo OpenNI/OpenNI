@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -2299,6 +2299,7 @@ XN_C_API XnStatus XN_C_DECL xnSetRecorderDestination(XnNodeHandle hRecorder, XnR
  * @param	hRecorder	[in]	A handle to the recorder
  * @param	pDestType	[out]	The type of medium the recorder is set to record.
  * @param	strDest		[out]	Recording destination. If destType is XN_RECORD_MEDIUM_FILE, this specifies a file name.
+ * @param	nBufSize	[in]	The size of the strDest buffer.
  */
 XN_C_API XnStatus XN_C_DECL xnGetRecorderDestination(XnNodeHandle hRecorder, XnRecordMedium* pDestType, XnChar* strDest, XnUInt32 nBufSize);
 

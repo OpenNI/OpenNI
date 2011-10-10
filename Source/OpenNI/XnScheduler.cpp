@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -286,12 +286,15 @@ XN_C_API XnStatus xnSchedulerAddTask(XnScheduler* pScheduler, XnUInt64 nInterval
 
 void XnSchedulerRemoveTaskInternal(XnScheduler* pScheduler, XnScheduledTask* pTask)
 {
-	// check if this is the first task
-	if (pScheduler->pFirst == pTask)
+	if (pScheduler->pFirst == NULL) // check if any tasks exist
+	{
+		return;
+	}
+	else if (pScheduler->pFirst == pTask) // check if this is the first task
 	{
 		pScheduler->pFirst = pTask->pNextTask;
 	}
-	else
+	else // not first task
 	{
 		XnScheduledTask* pBefore = pScheduler->pFirst;
 

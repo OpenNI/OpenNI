@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -62,6 +62,7 @@ namespace Sample
 				pQuery == NULL ? NULL : pQuery->GetUnderlyingObject(),
 				&hNode,
 				pErrors == NULL ? NULL : pErrors->GetUnderlying());
+			XN_IS_STATUS_OK(nRetVal);
 			TakeOwnership(hNode);
 			return XN_STATUS_OK;
 		}

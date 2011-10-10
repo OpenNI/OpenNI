@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -126,6 +126,7 @@ private:
 			XnStatus nRetVal = XnThreadSafeQueue::Pop(val);								\
 			if (nRetVal != XN_STATUS_OK) return (nRetVal);								\
 			value = Translator::GetFromValue(val);										\
+			Translator::FreeValue(val);													\
 			return XN_STATUS_OK;														\
 		}																				\
 	};

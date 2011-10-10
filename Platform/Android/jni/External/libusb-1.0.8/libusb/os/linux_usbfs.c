@@ -179,13 +179,17 @@ static int check_usb_vfs(const char *dirname)
 
 static const char *find_usbfs_path(void)
 {
-	const char *path = "/dev/bus/usb";
+/* 
+ * Note: this func originally searched '/dev/bus/usb' before /proc/bus/usb.
+ *       i reversed the order, because it's currently easier to manage the /proc usbfs permissions
+ */
+	const char *path = "/proc/bus/usb";
 	const char *ret = NULL;
 
 	if (check_usb_vfs(path)) {
 		ret = path;
 	} else {
-		path = "/proc/bus/usb";
+		path = "/dev/bus/usb";
 		if (check_usb_vfs(path))
 			ret = path;
 	}

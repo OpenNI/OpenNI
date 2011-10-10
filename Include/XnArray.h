@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -273,13 +273,13 @@ public:
 		return m_pData[nIndex];
 	}
 
-	/** @returns a modifiable itertor pointing to the beginning of this array. **/
+	/** @returns a modifiable iterator pointing to the beginning of this array. **/
 	Iterator begin()
 	{
 		return &m_pData[0];
 	}
 
-	/** @returns a const itertor pointing to the beginning of this array. **/
+	/** @returns a const iterator pointing to the beginning of this array. **/
 	ConstIterator begin() const
 	{
 		return &m_pData[0];

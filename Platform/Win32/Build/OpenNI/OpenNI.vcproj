@@ -202,6 +202,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
@@ -289,6 +290,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
@@ -861,6 +863,18 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\Include\XnDump.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\OpenNI\XnDumpFileWriter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\OpenNI\XnDumpFileWriter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Include\XnDumpWriters.h"
 					>
 				</File>
 				<File

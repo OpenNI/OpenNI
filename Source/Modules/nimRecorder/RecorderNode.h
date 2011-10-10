@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -58,7 +58,7 @@ private:
 			nPos = 0;
 		}
 
-		XnUInt32 nPos;		//Position in stream of record that did this property change
+		XnUInt64 nPos;		//Position in stream of record that did this property change
 	};
 
 	XN_DECLARE_STRINGS_HASH(RecordedNodePropInfo, RecordedNodePropInfoMap);
@@ -71,7 +71,7 @@ private:
 
 		XnUInt32 nNodeID;
 		XnProductionNodeType type;
-		XnUInt32 nNodeAddedPos;
+		XnUInt64 nNodeAddedPos;
 		XnUInt32 nMinFrameNum;
 		XnUInt32 nMaxFrameNum;
 		XnUInt32 nCurFrameNum;
@@ -90,8 +90,8 @@ private:
 	XnStatus WriteHeader(XnUInt64 nGlobalMaxTimeStamp, XnUInt32 nMaxNodeID);
 	XnStatus WriteToStream(const XnChar* strNodeName, const void* pData, XnUInt32 nSize);
 	XnStatus WriteRecordToStream(const XnChar* strNodeName, Record &record);
-	XnStatus SeekStream(XnOSSeekType seekType, XnUInt32 nOffset);
-	XnUInt32 TellStream();
+	XnStatus SeekStream(XnOSSeekType seekType, XnUInt64 nOffset);
+	XnUInt64 TellStream();
 	XnStatus FinalizeStream();
 	XnStatus CloseStream();
 	XnStatus WriteNodeDataBegin(const XnChar* strNodeName);
@@ -99,7 +99,7 @@ private:
 	XnStatus RemoveNode(const XnChar* strNodeName);
 	
 	//UpdateNodePropInfo() returns, in nUndoPos, the position in the file you should read to undo the property update.
-	XnStatus UpdateNodePropInfo(const XnChar* strNodeName, const XnChar* strPropName, RecordedNodeInfo*& pRecordedNodeInfo, XnUInt32& nUndoPos);
+	XnStatus UpdateNodePropInfo(const XnChar* strNodeName, const XnChar* strPropName, RecordedNodeInfo*& pRecordedNodeInfo, XnUInt64& nUndoPos);
 	RecordedNodeInfo* GetRecordedNodeInfo(const XnChar* strNodeName);
 
 	static const XnUInt32 RECORD_MAX_SIZE;

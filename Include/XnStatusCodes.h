@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -73,6 +73,9 @@ XN_STATUS_MESSAGE(XN_STATUS_PROTO_BAD_MSG_TYPE, "Bad protocol message type")
 XN_STATUS_MESSAGE(XN_STATUS_PROTO_BAD_CID, "Bad protocol CID")
 XN_STATUS_MESSAGE(XN_STATUS_PROTO_BAD_NODE_ID, "Bad protocol node ID")
 XN_STATUS_MESSAGE(XN_STATUS_PROTO_BAD_MSG_SIZE, "Bad protocol message size")
+XN_STATUS_MESSAGE(XN_STATUS_NO_SUCH_USER, "User could not be found")
+XN_STATUS_MESSAGE(XN_STATUS_USER_IS_NOT_BEING_TRACKED, "User is not being tracked")
+XN_STATUS_MESSAGE(XN_STATUS_JOINT_IS_NOT_ACTIVE, "Joint is not active")
 XN_STATUS_MESSAGE_MAP_END(XN_ERROR_GROUP_NI)
 
 #endif // __XN_STATUS_CODES_H__

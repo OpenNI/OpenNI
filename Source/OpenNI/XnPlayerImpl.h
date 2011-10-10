@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -53,14 +53,18 @@ private:
 
 	static XnStatus XN_CALLBACK_TYPE OpenFile(void* pCookie);
 	static XnStatus XN_CALLBACK_TYPE ReadFile(void* pCookie, void *pBuffer, XnUInt32 nSize, XnUInt32 *pnBytesRead);
-	static XnStatus XN_CALLBACK_TYPE SeekFile(void* pCookie, XnOSSeekType seekType, const XnInt32 nOffset);
-	static XnUInt32 XN_CALLBACK_TYPE TellFile(void* pCookie);
+	static XnStatus XN_CALLBACK_TYPE SeekFile  (void* pCookie, XnOSSeekType seekType, const XnInt32 nOffset);
+	static XnStatus XN_CALLBACK_TYPE SeekFile64(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset);
+	static XnUInt32 XN_CALLBACK_TYPE TellFile  (void* pCookie);
+	static XnUInt64 XN_CALLBACK_TYPE TellFile64(void* pCookie);
 	static void XN_CALLBACK_TYPE CloseFile(void *pCookie);
 
 	XnStatus OpenFileImpl();
 	XnStatus ReadFileImpl(void *pData, XnUInt32 nSize, XnUInt32& nBytesRead);
-	XnStatus SeekFileImpl(XnOSSeekType seekType, XnInt32 nOffset);
-	XnUInt32 TellFileImpl();
+	XnStatus SeekFileImpl  (XnOSSeekType seekType, XnInt32 nOffset);
+	XnStatus SeekFile64Impl(XnOSSeekType seekType, XnInt64 nOffset);
+	XnUInt32 TellFileImpl  ();
+	XnUInt64 TellFile64Impl();
 	void CloseFileImpl();
 
 	//Node notifications
@@ -102,7 +106,8 @@ private:
 	XnNodeHandle m_hPlayer;
 	static XnPlayerInputStreamInterface s_fileInputStream;
 	static XnNodeNotifications s_nodeNotifications;
-	FILE* m_pInFile;
+	XnBool m_bIsFileOpen;
+	XN_FILE_HANDLE m_hInFile;
 	XnChar m_strSource[XN_FILE_MAX_PATH];
 	XnRecordMedium m_sourceType;
 	PlayedNodesHash m_playedNodes;

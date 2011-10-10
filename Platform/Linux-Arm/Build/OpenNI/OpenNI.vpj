@@ -1,0 +1,98 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+	Version="10.0"
+	VendorName="SlickEdit"
+	WorkingDir="."
+	VCSProject="Subversion:">
+	<Config
+		Name="Release"
+		Type="Makefile"
+		OutputFile=""
+		CompilerConfigName="">
+		<Menu>
+			<Target
+				Name="Compile"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec/>
+			</Target>
+			<Target
+				Name="Build"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rp"
+				ClearProcessBuffer="1">
+				<Exec CmdLine="make"/>
+			</Target>
+			<Target
+				Name="Rebuild"
+				MenuCaption="&amp;Rebuild"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rp">
+				<Exec CmdLine="make clean &amp;&amp; make"/>
+			</Target>
+			<Target
+				Name="Debug"
+				MenuCaption="&amp;Debug"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec/>
+			</Target>
+			<Target
+				Name="Execute"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='".exe"'/>
+			</Target>
+		</Menu>
+		<Dependencies Name="Release">
+			<Dependency Project="../Modules/nimCodecs/nimCodecs.vpj"/>
+			<Dependency Project="../Modules/nimMockNodes/nimMockNodes.vpj"/>
+			<Dependency Project="../Modules/nimRecorder/nimRecorder.vpj"/>
+			<Dependency Project="../Utils/niReg/niReg.vpj"/>
+			<Dependency Project="../Samples/NiViewer/NiViewer.vpj"/>
+			<Dependency Project="../Samples/NiSimpleRead/NiSimpleRead.vpj"/>
+		</Dependencies>
+	</Config>
+	<Files>
+		<F
+			N="../../../../Source/OpenNI/*.cpp"
+			Recurse="0"
+			Refilter="0"
+			Excludes=""/>
+		<F
+			N="../../../../Source/OpenNI/Linux-x86/*.cpp"
+			Recurse="0"
+			Refilter="0"
+			Excludes=""/>
+		<F
+			N="../../../../Include/*.h"
+			Recurse="0"
+			Refilter="0"
+			Excludes=""/>
+		<F
+			N="../../../../Include/Linux-x86/*.h"
+			Recurse="0"
+			Refilter="0"
+			Excludes=""/>
+		<F
+			N="../../../../Source/OpenNI/*.h"
+			Recurse="0"
+			Refilter="0"
+			Excludes=""/>
+		<F
+			N="../../../../Source/OpenNI/Linux-x86/*.h"
+			Recurse="0"
+			Refilter="0"
+			Excludes=""/>
+		<F N="../../../../Source/OpenNI/Linux-x86/Linux-x86SharedMemory.cpp"/>
+		<F
+			N="Makefile"
+			Type="Makefile"/>
+	</Files>
+</Project>

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -39,7 +39,9 @@ XnPlayerInputStreamInterface PlayerImpl::s_fileInputStream =
 	&ReadFile,
 	&SeekFile,
 	&TellFile,
-	&CloseFile
+	&CloseFile,
+	&SeekFile64,
+	&TellFile64
 };
 
 XnNodeNotifications PlayerImpl::s_nodeNotifications =
@@ -56,7 +58,7 @@ XnNodeNotifications PlayerImpl::s_nodeNotifications =
 
 PlayerImpl::PlayerImpl() : 
 	m_hPlayer(NULL), 
-	m_pInFile(NULL),
+	m_bIsFileOpen(FALSE),
 	m_bHasTimeReference(FALSE),
 	m_dPlaybackSpeed(1.0)
 {
@@ -229,11 +231,25 @@ XnStatus XN_CALLBACK_TYPE PlayerImpl::SeekFile(void* pCookie, XnOSSeekType seekT
 	return pThis->SeekFileImpl(seekType, nOffset);
 }
 
+XnStatus XN_CALLBACK_TYPE PlayerImpl::SeekFile64(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset)
+{
+	PlayerImpl* pThis = (PlayerImpl*)pCookie;
+	XN_VALIDATE_INPUT_PTR(pThis);
+	return pThis->SeekFile64Impl(seekType, nOffset);
+}
+
 XnUInt32 XN_CALLBACK_TYPE PlayerImpl::TellFile(void* pCookie)
 {
 	PlayerImpl* pThis = (PlayerImpl*)pCookie;
 	XN_VALIDATE_PTR(pThis, (XnUInt32)-1);
 	return pThis->TellFileImpl();
+}
+
+XnUInt64 XN_CALLBACK_TYPE PlayerImpl::TellFile64(void* pCookie)
+{
+	PlayerImpl* pThis = (PlayerImpl*)pCookie;
+	XN_VALIDATE_PTR(pThis, (XnUInt64)-1);
+	return pThis->TellFile64Impl();
 }
 
 void XN_CALLBACK_TYPE PlayerImpl::CloseFile(void* pCookie)
@@ -249,74 +265,75 @@ void XN_CALLBACK_TYPE PlayerImpl::CloseFile(void* pCookie)
 
 XnStatus PlayerImpl::OpenFileImpl()
 {
-	if (m_pInFile != NULL)
+	if (m_bIsFileOpen)
 	{
 		//Already open
 		return XN_STATUS_OK;
 	}
 	
-	m_pInFile = fopen(m_strSource, "rb");
-	if (m_pInFile == NULL)
+	XnStatus nRetVal = xnOSOpenFile(m_strSource, XN_OS_FILE_READ, &m_hInFile);
+
+	if (nRetVal != XN_STATUS_OK)
 	{
 		xnLogWarning(XN_MASK_OPEN_NI, "Failed to open file '%s' for reading", m_strSource);
-		return XN_STATUS_OS_FILE_NOT_FOUND;
+		return XN_STATUS_OS_FILE_OPEN_FAILED;
 	}
+	m_bIsFileOpen = TRUE;
 
 	return XN_STATUS_OK;
 }
 
 XnStatus PlayerImpl::ReadFileImpl(void* pData, XnUInt32 nSize, XnUInt32 &nBytesRead)
 {
-	XN_VALIDATE_PTR(m_pInFile, XN_STATUS_ERROR);
-	nBytesRead = (XnUInt32)fread(pData, 1, nSize, m_pInFile);
-	if (ferror(m_pInFile))
-	{
-		return XN_STATUS_OS_FILE_READ_FAILED;
-	}
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+
+	nBytesRead = nSize;
+
+	return xnOSReadFile(m_hInFile, pData, &nBytesRead);
 	//nBytesRead could be smaller than nSize at the end, but that's not an error
-	return XN_STATUS_OK;
 }
 
 XnStatus PlayerImpl::SeekFileImpl(XnOSSeekType seekType, XnInt32 nOffset)
 {
-	XN_VALIDATE_PTR(m_pInFile, XN_STATUS_ERROR);
-	long nOrigin = 0;
-	switch (seekType)
-	{
-		case XN_OS_SEEK_CUR:
-			nOrigin = SEEK_CUR;
-			break;
-		case XN_OS_SEEK_END:
-			nOrigin = SEEK_END;
-			break;
-		case SEEK_SET:
-			nOrigin = SEEK_SET;
-			break;
-		default:
-			XN_ASSERT(FALSE);
-			return XN_STATUS_BAD_PARAM;
-	}
-	
-	if (fseek(m_pInFile, nOffset, nOrigin) != 0)
-	{
-		return XN_STATUS_ERROR;
-	}
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	return xnOSSeekFile64(m_hInFile, seekType, nOffset);
+}
 
-	return XN_STATUS_OK;	
+XnStatus PlayerImpl::SeekFile64Impl(XnOSSeekType seekType, XnInt64 nOffset)
+{
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	return xnOSSeekFile64(m_hInFile, seekType, nOffset);
 }
 
 XnUInt32 PlayerImpl::TellFileImpl()
 {
-	XN_VALIDATE_PTR(m_pInFile, (XnUInt32)-1);
-	return ftell(m_pInFile);
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	XnUInt64 pos;
+	XnStatus nRetVal = xnOSTellFile64(m_hInFile, &pos);
+	XN_IS_STATUS_OK_RET(nRetVal, (XnUInt32) -1);
+	// Enforce uint32 limitation
+	if (pos >> 32)
+		return (XnUInt32) -1;
+
+	return (XnUInt32)pos;
+}
+
+XnUInt64 PlayerImpl::TellFile64Impl()
+{
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	XnUInt64 pos;
+	XnStatus nRetVal = xnOSTellFile64(m_hInFile, &pos);
+	XN_IS_STATUS_OK_RET(nRetVal, (XnUInt64) -1);
+
+	return pos;
 }
 
 void PlayerImpl::CloseFileImpl()
 {
-	if (m_pInFile != NULL)	
+	if (m_bIsFileOpen)
 	{
-		fclose(m_pInFile);
-		m_pInFile = NULL;
+		xnOSCloseFile(&m_hInFile);
+		m_bIsFileOpen = FALSE;
 	}
 }
 

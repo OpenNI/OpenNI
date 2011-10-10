@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -68,7 +68,7 @@
 	XN_VALIDATE_FUNC_PTR_RET(ptr, XN_STATUS_INVALID_OPERATION)
 
 #define XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, nodeType, retVal)						\
-	if (!hInstance->typeHierarchy.IsSet(nodeType))	\
+	if (!hInstance->pTypeHierarchy->IsSet(nodeType))	\
 	{																					\
 		return retVal;																	\
 	}
@@ -102,7 +102,7 @@ static XnBool xnIsFrameSyncedWithImpl(XnNodeHandle hInstance, XnNodeHandle hOthe
 //---------------------------------------------------------------------------
 // Static Variables
 //---------------------------------------------------------------------------
-XnDump g_refCountDump = XN_DUMP_CLOSED;
+XnLogger* g_logger = xnLoggerOpen(XN_MASK_OPEN_NI);
 
 //---------------------------------------------------------------------------
 // Initialization / Deinitialization
@@ -122,7 +122,7 @@ static void xnDumpRefCount(XnContext* pContext, XnNodeHandle hNode, XnUInt32 nRe
 	{
 		strActualComment = "";
 	}
-	xnDumpWriteString(pContext->dumpRefCount, "%llu,%s,%u,%s\n", nNow, strName, nRefCount, strActualComment);
+	xnDumpFileWriteString(pContext->pDumpRefCount, "%llu,%s,%u,%s\n", nNow, strName, nRefCount, strActualComment);
 }
 
 XN_C_API XnStatus xnInit(XnContext** ppContext)
@@ -154,8 +154,9 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	pContext->pGlobalErrorChangeEvent = XN_NEW(XnErrorStateChangedEvent);
 	pContext->pShutdownEvent = XN_NEW(XnContextShuttingDownEvent);
 	pContext->nRefCount = 1;
-	pContext->dumpRefCount = XN_DUMP_CLOSED;
-	xnDumpInit(&pContext->dumpRefCount, XN_DUMP_MASK_REF_COUNT, "Timestamp,Object,RefCount,Comment\n", "RefCount.csv");
+	pContext->pDumpRefCount = xnDumpFileOpen(XN_DUMP_MASK_REF_COUNT, "RefCount.csv");
+
+	xnDumpFileWriteString(pContext->pDumpRefCount, "Timestamp,Object,RefCount,Comment\n");
 
 	// validate memory allocations
 	if (pContext->pLicenses == NULL ||
@@ -451,7 +452,7 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 	if (pContext != NULL)
 	{
 		xnDumpRefCount(pContext, NULL, 0, "Destroy");
-		xnDumpClose(&pContext->dumpRefCount);
+		xnDumpFileClose(pContext->pDumpRefCount);
 
 		// we have to destroy nodes from top to bottom. So we'll go over the list, each time removing
 		// nodes that nobody needs, until the list is empty
@@ -474,7 +475,7 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 			pContext->pShutdownEvent->Raise(pContext);
 		}
 
-		xnLogInfo(XN_MASK_OPEN_NI, "Destroying context");
+		xnLoggerInfo(g_logger, "Destroying context");
 
 		xnNodeInfoListFree(pContext->pOwnedNodes);
 		xnOSCloseCriticalSection(&pContext->hLock);
@@ -1051,7 +1052,7 @@ XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, X
 		XN_IS_STATUS_OK(nRetVal);
 
 		XnBool bFirst = TRUE;
-		XnSizeT nLen;
+		XnUInt32 nLen = 0;
 
 		for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pNodeInfo->pNeededTrees); 
 			xnNodeInfoListIteratorIsValid(it);
@@ -1063,7 +1064,7 @@ XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, X
 				XN_IS_STATUS_OK(nRetVal);
 			}
 
-			nLen = strlen(csResult);
+			nLen = xnOSStrLen(csResult);
 
 			nRetVal = xnNodeInfoGetTreeStringRepresentation(pNodeInfo, csResult + nLen, nSize - nLen);
 			XN_IS_STATUS_OK(nRetVal);
@@ -1367,31 +1368,31 @@ XnStatus xnCreateMetaData(XnInternalNodeData* pNodeData)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+	if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
 	{
 		pNodeData->pMetaData.Depth = xnAllocateDepthMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Depth);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Depth->pMap->pOutput->bIsNew;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_IMAGE))
 	{
 		pNodeData->pMetaData.Image = xnAllocateImageMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Image);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Image->pMap->pOutput->bIsNew;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_IR))
 	{
 		pNodeData->pMetaData.IR = xnAllocateIRMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.IR);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.IR->pMap->pOutput->bIsNew;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_AUDIO))
 	{
 		pNodeData->pMetaData.Audio = xnAllocateAudioMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Audio);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Audio->pOutput->bIsNew;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_SCENE))
 	{
 		pNodeData->pMetaData.Scene = xnAllocateSceneMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Scene);
@@ -1407,7 +1408,7 @@ XnStatus xnCreatePrivateData(XnInternalNodeData* pNodeData)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_RECORDER))
+	if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_RECORDER))
 	{
 		xn::RecorderImpl *pRecorderImpl = NULL;
 		XN_VALIDATE_NEW(pRecorderImpl, xn::RecorderImpl);
@@ -1420,7 +1421,7 @@ XnStatus xnCreatePrivateData(XnInternalNodeData* pNodeData)
 
 		pNodeData->pPrivateData = pRecorderImpl;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_PLAYER))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_PLAYER))
 	{
 		xn::PlayerImpl *pPlayerImpl = NULL;
 		XN_VALIDATE_NEW(pPlayerImpl, xn::PlayerImpl);
@@ -1432,7 +1433,7 @@ XnStatus xnCreatePrivateData(XnInternalNodeData* pNodeData)
 		}
 		pNodeData->pPrivateData = pPlayerImpl;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
 	{
 		xn::DepthPrivateData* pDepthPrivateData = NULL;
 		XN_VALIDATE_NEW(pDepthPrivateData, xn::DepthPrivateData);
@@ -1467,11 +1468,11 @@ void xnSetGlobalErrorState(XnContext* pContext, XnStatus errorState)
 	{
 		if (errorState == XN_STATUS_OK)
 		{
-			xnLogInfo(XN_MASK_OPEN_NI, "Context has returned to normal state.");
+			xnLoggerInfo(g_logger, "Context has returned to normal state.");
 		}
 		else
 		{
-			xnLogInfo(XN_MASK_OPEN_NI, "Context has entered error state: %s", xnGetStatusString(errorState));
+			xnLoggerInfo(g_logger, "Context has entered error state: %s", xnGetStatusString(errorState));
 		}
 
 		pContext->globalErrorState = errorState;
@@ -1543,7 +1544,7 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 
 	XnChar strDescription[500];
 	xnProductionNodeDescriptionToString(&pTree->Description, strDescription, 500);
-	xnLogInfo(XN_MASK_OPEN_NI, "Creating node '%s' of type %s...", pTree->strInstanceName, strDescription);
+	xnLoggerInfo(g_logger, "Creating node '%s' of type %s...", pTree->strInstanceName, strDescription);
 
 	XnModuleInstance* pModuleInstance;
 	nRetVal = pContext->pModuleLoader->CreateRootNode(pTree, &pModuleInstance);
@@ -1552,7 +1553,14 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 	// create handle
 	XnInternalNodeData* pNodeData;
 	XN_VALIDATE_CALLOC(pNodeData, XnInternalNodeData, 1);
-	pNodeData->typeHierarchy = pModuleInstance->pLoaded->pInterface->HierarchyType;
+
+	pNodeData->pTypeHierarchy = XN_NEW(XnBitSet);
+	if (pNodeData->pTypeHierarchy == NULL)
+	{
+		return xnFreeProductionNodeImpl(pNodeData, XN_STATUS_ALLOC_FAILED);
+	}
+
+	*pNodeData->pTypeHierarchy = pModuleInstance->pLoaded->pInterface->HierarchyType;
 	pNodeData->pNodeInfo = pTree;
 	pNodeData->nRefCount = 1;
 	pNodeData->pModuleInstance = pModuleInstance;
@@ -1749,23 +1757,23 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 	{
 		XN_DELETE(hNode->pPrivateData);
 
-		if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+		if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
 		{
 			xnFreeDepthMetaData(hNode->pMetaData.Depth);
 		}
-		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_IMAGE))
 		{
 			xnFreeImageMetaData(hNode->pMetaData.Image);
 		}
-		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_IR))
 		{
 			xnFreeIRMetaData(hNode->pMetaData.IR);
 		}
-		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_AUDIO))
 		{
 			xnFreeAudioMetaData(hNode->pMetaData.Audio);
 		}
-		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_SCENE))
 		{
 			xnFreeSceneMetaData(hNode->pMetaData.Scene);
 		}
@@ -1791,6 +1799,11 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 			xnContextRelease(hNode->pContext);
 		}
 
+		if (hNode->pTypeHierarchy != NULL)
+		{
+			XN_DELETE(hNode->pTypeHierarchy);
+		}
+
 		xnOSFree(hNode);
 	}
 	return nRetVal;
@@ -1798,7 +1811,7 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 
 void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 {
-	xnLogInfo(XN_MASK_OPEN_NI, "Destroying node '%s'", hNode->pNodeInfo->strInstanceName);
+	xnLoggerInfo(g_logger, "Destroying node '%s'", hNode->pNodeInfo->strInstanceName);
 
 	if (hNode->pPrivateData != NULL)
 	{
@@ -2215,23 +2228,23 @@ void xnUpdateMetaData(XnNodeHandle hNode)
 	XN_ASSERT(hNode != NULL);
 	XN_ASSERT(hNode->pNodeInfo != NULL);
 
-	if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+	if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
 	{
 		xnUpdateDepthMetaData(hNode);
 	}
-	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+	else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_IMAGE))
 	{
 		xnUpdateImageMetaData(hNode);
 	}
-	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+	else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_IR))
 	{
 		xnUpdateIRMetaData(hNode);
 	}
-	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+	else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_AUDIO))
 	{
 		xnUpdateAudioMetaData(hNode);
 	}
-	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+	else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_SCENE))
 	{
 		xnUpdateSceneMetaData(hNode);
 	}
@@ -2287,6 +2300,25 @@ static XnStatus xnUpdateTreeImpl(XnProductionNodesSet* pUpdatedSet, const XnNode
 	return (XN_STATUS_OK);
 }
 
+static XnStatus xnUpdateAll(XnContext* pContext)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	xnResetNewDataFlag(pContext);
+
+	XnProductionNodesSet UpdatedSet;
+
+	// update all the nodes (without waiting)
+	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	{
+		XnNodeInfo* pNodeInfo = it.Value()->pNodeInfo;
+		nRetVal = xnUpdateTreeImpl(&UpdatedSet, pNodeInfo);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	return (XN_STATUS_OK);
+}
+
 XnBool xnDidNodeAdvanced(XnNodeHandle hNode)
 {
 	XnUInt64 nTimestamp;
@@ -2330,6 +2362,36 @@ XnBool XN_CALLBACK_TYPE xnDidAllNodesAdvanced(void* pConditionData)
 	}
 
 	return (TRUE);
+}
+
+static XnStatus xnPlayRecording(XnContext* pContext)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	// check if we have players in this context
+	// TODO: handle the case in which we have more than one player
+	XnNodeHandle hPlayer = NULL;
+	nRetVal = xnFindExistingRefNodeByType(pContext, XN_NODE_TYPE_PLAYER, &hPlayer);
+	if (nRetVal == XN_STATUS_NO_MATCH)
+	{
+		return (XN_STATUS_OK);
+	}
+	else
+	{
+		XN_IS_STATUS_OK(nRetVal)
+	}
+
+	if (xnIsPlayerAtEOF(hPlayer))
+	{
+		return XN_STATUS_EOF;
+	}
+	else
+	{
+		nRetVal = xnPlayerReadNext(hPlayer);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	return (XN_STATUS_OK);
 }
 
 XnStatus xnWaitForCondition(XnContext* pContext, XnConditionFunc pConditionFunc, void* pConditionData)
@@ -2396,7 +2458,7 @@ XN_C_API XnStatus xnWaitAndUpdateAll(XnContext* pContext)
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now update entire tree
-	nRetVal = xnWaitNoneUpdateAll(pContext);
+	nRetVal = xnUpdateAll(pContext);
 	XN_IS_STATUS_OK(nRetVal);
 	
 	return (XN_STATUS_OK);
@@ -2419,7 +2481,7 @@ XN_C_API XnStatus xnWaitOneUpdateAll(XnContext* pContext, XnNodeHandle hNode)
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now update entire tree
-	nRetVal = xnWaitNoneUpdateAll(pContext);
+	nRetVal = xnUpdateAll(pContext);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -2431,17 +2493,11 @@ XN_C_API XnStatus xnWaitNoneUpdateAll(XnContext* pContext)
 
 	XN_VALIDATE_INPUT_PTR(pContext);
 
-	xnResetNewDataFlag(pContext);
+	nRetVal = xnPlayRecording(pContext);
+	XN_IS_STATUS_OK(nRetVal);
 
-	XnProductionNodesSet UpdatedSet;
-
-	// update all the nodes (without waiting)
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
-	{
-		XnNodeInfo* pNodeInfo = it.Value()->pNodeInfo;
-		nRetVal = xnUpdateTreeImpl(&UpdatedSet, pNodeInfo);
-		XN_IS_STATUS_OK(nRetVal);
-	}
+	nRetVal = xnUpdateAll(pContext);
+	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
 }
@@ -2473,7 +2529,7 @@ XN_C_API XnStatus xnWaitAnyUpdateAll(XnContext* pContext)
 	XN_IS_STATUS_OK(nRetVal);
 
 	// we have new data, now just update all
-	nRetVal = xnWaitNoneUpdateAll(pContext);
+	nRetVal = xnUpdateAll(pContext);
 	XN_IS_STATUS_OK(nRetVal);
 	
 	return (XN_STATUS_OK);
@@ -3258,6 +3314,7 @@ XN_C_API XnStatus xnGetSerialNumber(XnNodeHandle hInstance, XnChar* strBuffer, X
 
 static XnStatus xnStartGeneratingImpl(XnNodeHandle hInstance)
 {
+	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Generator.StartGenerating(hModuleNode);
@@ -3266,7 +3323,6 @@ static XnStatus xnStartGeneratingImpl(XnNodeHandle hInstance)
 XN_C_API XnStatus xnStartGenerating(XnNodeHandle hInstance)
 {
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
-	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	return xnStartGeneratingTreeImpl(hInstance->pNodeInfo);
 }
 
@@ -3434,7 +3490,7 @@ XN_C_API XnStatus xnCreateRecorder(XnContext* pContext, const XnChar* strFormatN
 			nRetVal = xnCreateProductionTree(pContext, pInfo, &hRecorder);
 			if (nRetVal != XN_STATUS_OK)
 			{
-				xnLogWarning(XN_MASK_OPEN_NI, "Failed to create recorder %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
+				xnLoggerWarning(g_logger, "Failed to create recorder %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
 				continue;
 			}
 
@@ -3598,7 +3654,7 @@ XN_C_API XnStatus xnCreatePlayer(XnContext* pContext, const XnChar* strFormatNam
 			nRetVal = xnCreateProductionTree(pContext, pInfo, &hPlayer);
 			if (nRetVal != XN_STATUS_OK)
 			{
-				xnLogWarning(XN_MASK_OPEN_NI, "Failed to create player %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
+				xnLoggerWarning(g_logger, "Failed to create player %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
 				continue;
 			}
 
@@ -3960,7 +4016,7 @@ XN_C_API XnStatus xnFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther)
 	// TODO: support more than one node. Right now, every node can only be synched to one other node.
 	if (hInstance->hFrameSyncedWith != NULL || hOther->hFrameSyncedWith != NULL)
 	{
-		XN_LOG_WARNING_RETURN(XN_STATUS_NOT_IMPLEMENTED, XN_MASK_OPEN_NI, "Currently, a node can be frame synched to one node only.");
+		XN_RETURN_WITH_WARNING_LOG(g_logger, XN_STATUS_NOT_IMPLEMENTED, "Currently, a node can be frame synched to one node only.");
 	}
 
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -5808,7 +5864,7 @@ XN_C_API void xnUnregisterFromCalibrationComplete(XnNodeHandle hInstance, XnCall
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 
 	CalibrationCompleteCookie* pRegCookie = (CalibrationCompleteCookie*)hCallback;
-	if (pInterface->Skeleton.UnregisterFromCalibrationComplete == NULL)
+	if (pInterface->Skeleton.UnregisterFromCalibrationComplete != NULL)
 	{
 		pInterface->Skeleton.UnregisterFromCalibrationComplete(hModuleNode, pRegCookie->hCallback);
 	}
@@ -6248,7 +6304,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 			nRetVal = xnCreateProductionTree(pContext, pInfo, &hCodec);
 			if (nRetVal != XN_STATUS_OK)
 			{
-				xnLogWarning(XN_MASK_OPEN_NI, "Failed to create codec %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
+				xnLoggerWarning(g_logger, "Failed to create codec %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
 				continue;
 			}
 
@@ -6279,7 +6335,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 	if (nRetVal != XN_STATUS_OK)
 	{
 		xnProductionNodeRelease(hCodec);
-		XN_LOG_ERROR_RETURN(nRetVal, XN_MASK_OPEN_NI, "Failed to init codec using given node: %s", xnGetStatusString(nRetVal));
+		XN_RETURN_WITH_ERROR_LOG(g_logger, nRetVal, "Failed to init codec using given node: %s", xnGetStatusString(nRetVal));
 	}
 
 	*phCodec = hCodec;

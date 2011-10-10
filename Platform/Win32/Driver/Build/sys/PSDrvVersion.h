@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -22,7 +22,7 @@
 #define PSUSBDRV_MAJOR_VERSION 3
 #define PSUSBDRV_MINOR_VERSION 1
 #define PSUSBDRV_MAINTENANCE_VERSION 2
-#define PSUSBDRV_BUILD_VERSION 0
+#define PSUSBDRV_BUILD_VERSION 2
 
 #define PSDRV_STRINGIFY(n) PSDRV_STRINGIFY_HELPER(n)
 #define PSDRV_STRINGIFY_HELPER(n) #n

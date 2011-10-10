@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -74,7 +74,7 @@ void XnLogFileWriter::WriteEntry(const XnLogEntry* pEntry)
 
 void XnLogFileWriter::WriteUnformatted(const XnChar* strMessage)
 {
-	xnOSWriteFile(m_fLogFile, strMessage, strlen(strMessage) + 1);
+	xnOSWriteFile(m_fLogFile, strMessage, xnOSStrLen(strMessage) + 1);
 }
 
 XnStatus XnLogFileWriter::OpenFile()

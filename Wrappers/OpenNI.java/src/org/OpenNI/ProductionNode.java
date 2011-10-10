@@ -1,3 +1,24 @@
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.x Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 package org.OpenNI;
 
 public class ProductionNode extends NodeWrapper
@@ -58,6 +79,12 @@ public class ProductionNode extends NodeWrapper
 		WrapperUtils.throwOnError(status);
 	}
 
+	public void setGeneralProperty(String propName, byte[] buffer) throws StatusException
+	{
+		int status = NativeMethods.xnSetGeneralPropertyArray(this.toNative(), propName, buffer);
+		WrapperUtils.throwOnError(status);
+	}
+
 	public long getIntProperty(String propName) throws StatusException
 	{
 		OutArg<Long> value = new OutArg<Long>();
@@ -85,6 +112,12 @@ public class ProductionNode extends NodeWrapper
 	public void getGeneralProperty(String propName, int size, long buff) throws StatusException
 	{
 		int status = NativeMethods.xnGetGeneralProperty(this.toNative(), propName, size, buff);
+		WrapperUtils.throwOnError(status);
+	}
+
+	public void getGeneralProperty(String propName, byte[] buffer) throws StatusException
+	{
+		int status = NativeMethods.xnGetGeneralPropertyArray(this.toNative(), propName, buffer);
 		WrapperUtils.throwOnError(status);
 	}
 
