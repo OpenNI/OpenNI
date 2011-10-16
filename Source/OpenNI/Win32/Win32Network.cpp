@@ -417,7 +417,7 @@ XN_C_API XnStatus xnOSSendNetworkBuffer(XN_SOCKET_HANDLE Socket, const XnChar* c
 	// Make sure the actual socket handle isn't NULL
 	XN_RET_IF_NULL(Socket->Socket, XN_STATUS_OS_INVALID_SOCKET);
 
-	// Send the data over our socket to the server and make sure the wanted number of bytes were actually sent
+	// Send the data over our UDP socket to the server and make sure the wanted number of bytes were actually sent
 	nRetVal = send(Socket->Socket, cpBuffer, nBufferSize, 0);
 	if (nRetVal != nBufferSize)
 	{

@@ -174,7 +174,7 @@ struct XnContext
 	XnUInt32 nRefCount;
 	XN_CRITICAL_SECTION_HANDLE hLock;
 	XnNodeInfoList* pOwnedNodes;
-	XnDumpFileHandle dumpRefCount;
+	XnDump dumpRefCount;
 	XnContextShuttingDownEvent* pShutdownEvent;
 };
 

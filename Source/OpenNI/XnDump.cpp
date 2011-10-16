@@ -23,57 +23,15 @@
 // Includes
 //---------------------------------------------------------------------------
 #include <XnDump.h>
-#include <XnDumpWriters.h>
 #include <XnStringsHash.h>
 #include <XnLogTypes.h>
 #include <XnLog.h>
-#include <XnList.h>
-#include <XnArray.h>
-#include "XnDumpFileWriter.h"
-
-//---------------------------------------------------------------------------
-// Defines
-//---------------------------------------------------------------------------
-#define XN_DUMP_MAX_FORMATTED_STRING_LENGTH	(8*1024)
-
-//---------------------------------------------------------------------------
-// Types
-//---------------------------------------------------------------------------
-XN_DECLARE_LIST(XnDumpWriter*, XnDumpWriters);
-XN_DECLARE_STRINGS_HASH(XnBool, XnDumpsHash);
-
-class DumpData
-{
-public:
-	DumpData() : bDefaultState(FALSE) {}
-
-	~DumpData() {}
-
-	XnDumpWriters writers;
-	XnDumpsHash dumpsState;
-	XnBool bDefaultState;
-
-	XnDumpFileWriter fileWriter;
-};
-
-typedef struct XnDumpWriterFile
-{
-	XnDumpWriter* pWriter;
-	XnDumpWriterFileHandle hFile;
-} XnDumpWriterFile;
-
-typedef struct XnDumpFile
-{
-	XnArray<XnDumpWriterFile> m_writersFiles;
-} XnDumpFile;
 
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
-static DumpData* g_pDumpData = new DumpData();
-static XnStatus _g_registerStatus = g_pDumpData->fileWriter.Register();
-
-const XnDumpFileHandle XN_DUMP_FILE_HANDLE_INVALID = { NULL };
+XnLogFilteringType g_DumpFilteringType;
+XnStringsHash g_DumpMasks;
 
 //---------------------------------------------------------------------------
 // Code
@@ -84,219 +42,61 @@ XN_C_API XnStatus xnDumpSetMaskState(const XnChar* csMask, XnBool bEnabled)
 
 	if (strcmp(csMask, XN_LOG_MASK_ALL) == 0)
 	{
-		// change default (for future dumps)
-		g_pDumpData->bDefaultState = bEnabled;
+		g_DumpFilteringType = bEnabled ? XN_LOG_WRITE_ALL : XN_LOG_WRITE_NONE;
 
-		// and set all existing ones
-		for (XnDumpsHash::Iterator it = g_pDumpData->dumpsState.begin(); it != g_pDumpData->dumpsState.end(); ++it)
+		if (!bEnabled)
 		{
-			it.Value() = bEnabled;
+			g_DumpMasks.Clear();
 		}
 	}
 	else
 	{
-		nRetVal = g_pDumpData->dumpsState.Set(csMask, bEnabled);
-		XN_IS_STATUS_OK(nRetVal);
+		g_DumpFilteringType = XN_LOG_WRITE_MASKS;
+
+		if (bEnabled)
+		{
+			nRetVal = g_DumpMasks.Set(csMask, NULL);
+			XN_IS_STATUS_OK(nRetVal);
+		}
+		else
+		{
+			XnValue val = NULL;
+			nRetVal = g_DumpMasks.Remove(csMask, val);
+			if (nRetVal != XN_STATUS_OK && nRetVal != XN_STATUS_NO_MATCH)
+			{
+				return (XN_STATUS_OK);
+			}
+		}
 	}
 
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnBool XN_C_DECL xnLogIsDumpMaskEnabled(const XnChar* strDumpMask)
+XnBool xnLogIsDumpMaskEnabled(const XnChar* csDumpMask)
 {
-	XN_VALIDATE_INPUT_PTR(strDumpMask);
+	XN_VALIDATE_INPUT_PTR(csDumpMask);
 
-	XnBool bEnabled = FALSE;
-	g_pDumpData->dumpsState.Get(strDumpMask, bEnabled);
-	return bEnabled;
-}
-
-XN_C_API XnStatus XN_C_DECL xnDumpRegisterWriter(XnDumpWriter* pWriter)
-{
-	return g_pDumpData->writers.AddLast(pWriter);
-}
-
-XN_C_API void XN_C_DECL xnDumpUnregisterWriter(XnDumpWriter* pWriter)
-{
-	g_pDumpData->writers.Remove(pWriter);
-}
-
-XN_C_API XnStatus XN_C_DECL xnDumpSetFilesOutput(XnBool bOn)
-{
-	if (bOn)
+	switch (g_DumpFilteringType)
 	{
-		return g_pDumpData->fileWriter.Register();
-	}
-	else
-	{
-		g_pDumpData->fileWriter.Unregister();
-	}
-
-	return XN_STATUS_OK;
-}
-
-XnDumpFileHandle xnDumpFileOpenImpl(const XnChar* strDumpName, XnBool bForce, XnBool bSessionDump, const XnChar* strNameFormat, va_list args)
-{
-	XnStatus nRetVal = XN_STATUS_OK;
-
-	// check if there are writers
-	if (g_pDumpData->writers.IsEmpty())
-	{
-		return XN_DUMP_FILE_HANDLE_INVALID;
-	}
-
-	if (!bForce)
-	{
-		if (!xnLogIsDumpMaskEnabled(strDumpName))
+	case XN_LOG_WRITE_ALL:
+		return TRUE;
+	case XN_LOG_WRITE_NONE:
+		return FALSE;
+	case XN_LOG_WRITE_MASKS:
 		{
-			return XN_DUMP_FILE_HANDLE_INVALID;
+			XnStringsHash::Iterator it = g_DumpMasks.end();
+			return (XN_STATUS_OK == g_DumpMasks.Find(csDumpMask, it));
 		}
-	}
-
-	// format file name
-	XnChar strFileName[XN_FILE_MAX_PATH];
-	XnUInt32 nChars;
-	nRetVal = xnOSStrFormatV(strFileName, XN_FILE_MAX_PATH, &nChars, strNameFormat, args);
-	if (nRetVal != XN_STATUS_OK)
-	{
-		XN_ASSERT(FALSE);
-		return XN_DUMP_FILE_HANDLE_INVALID;
-	}
-
-	// create a handle that will hold all handles to all writers
-	XnDumpFile* pFile = XN_NEW(XnDumpFile);
-
-	// try to add writers
-	for (XnDumpWriters::Iterator it = g_pDumpData->writers.begin(); it != g_pDumpData->writers.end(); ++it)
-	{
-		XnDumpWriterFile writerFile;
-		writerFile.pWriter = *it;
-		writerFile.hFile = writerFile.pWriter->OpenFile(writerFile.pWriter->pCookie, strDumpName, bSessionDump, strFileName);
-		XN_ASSERT(writerFile.hFile.pInternal != NULL);
-		if (writerFile.hFile.pInternal != NULL)
-		{
-			nRetVal = pFile->m_writersFiles.AddLast(writerFile);
-			XN_ASSERT(nRetVal == XN_STATUS_OK);
-		}
-	}
-
-	// check if any writer succeeded
-	if (pFile->m_writersFiles.IsEmpty())
-	{
-		// no file. Release memory
-		XN_DELETE(pFile);
-		return XN_DUMP_FILE_HANDLE_INVALID;
-	}
-
-	// return the handle
-	XnDumpFileHandle handle = { pFile };
-	return handle;
-}
-
-XN_C_API XnDumpFileHandle XN_C_DECL xnDumpFileOpen(const XnChar* strDumpName, const XnChar* strNameFormat, ...)
-{
-	if (strDumpName == NULL || strNameFormat == NULL)
-	{
-		XN_ASSERT(FALSE);
-		return XN_DUMP_FILE_HANDLE_INVALID;
-	}
-
-	va_list args;
-	va_start(args, strNameFormat);
-	XnDumpFileHandle handle = xnDumpFileOpenImpl(strDumpName, FALSE, TRUE, strNameFormat, args);
-	va_end(args);
-
-	return handle;
-}
-
-XN_C_API XnDumpFileHandle XN_C_DECL xnDumpFileOpenEx(const XnChar* strDumpName, XnBool bForce, XnBool bSessionDump, const XnChar* strNameFormat, ...)
-{
-	if (strNameFormat == NULL)
-	{
-		XN_ASSERT(FALSE);
-		return XN_DUMP_FILE_HANDLE_INVALID;
-	}
-
-	va_list args;
-	va_start(args, strNameFormat);
-	XnDumpFileHandle handle = xnDumpFileOpenImpl(strDumpName, bForce, bSessionDump, strNameFormat, args);
-	va_end(args);
-
-	return handle;
-}
-
-XN_C_API void XN_C_DECL _xnDumpFileWriteBuffer(XnDumpFileHandle hFile, const XnUInt8* pBuffer, XnUInt32 nBufferSize)
-{
-	if (hFile.pInternal == NULL)
-	{
-		return;
-	}
-
-	XnDumpFile* pFile = (XnDumpFile*)hFile.pInternal;
-
-	// write to each writer
-	for (XnUInt32 i = 0; i < pFile->m_writersFiles.GetSize(); ++i)
-	{
-		XnDumpWriter* pWriter = pFile->m_writersFiles[i].pWriter;
-		XnDumpWriterFileHandle hWriterFile = pFile->m_writersFiles[i].hFile;
-
-		pWriter->Write(pWriter->pCookie, hWriterFile, pBuffer, nBufferSize);
+	default:
+		printf("Log: Unknown filter type: %d", g_DumpFilteringType);
+		return FALSE;
 	}
 }
-
-XN_C_API void XN_C_DECL _xnDumpFileWriteString(XnDumpFileHandle hFile, const XnChar* strFormat, ...)
-{
-	XnStatus nRetVal = XN_STATUS_OK;
-	
-	if (hFile.pInternal == NULL)
-	{
-		return;
-	}
-
-	// format string
-	XnChar strBuffer[XN_DUMP_MAX_FORMATTED_STRING_LENGTH];
-	XnUInt32 nCharsWritten;
-	va_list args;
-	va_start(args, strFormat);
-	nRetVal = xnOSStrFormatV(strBuffer, sizeof(strBuffer), &nCharsWritten, strFormat, args);
-	XN_ASSERT(nRetVal == XN_STATUS_OK);
-	va_end(args);
-
-	_xnDumpFileWriteBuffer(hFile, (const XnUInt8*)strBuffer, nCharsWritten);
-}
-
-XN_C_API void XN_C_DECL _xnDumpFileClose(XnDumpFileHandle* phFile)
-{
-	XnStatus nRetVal = XN_STATUS_OK;
-
-	if (phFile->pInternal == NULL)
-	{
-		return;
-	}
-
-	// Notify each writer
-	XnDumpFile* pFile = (XnDumpFile*)phFile->pInternal;
-
-	for (XnUInt32 i = 0; i < pFile->m_writersFiles.GetSize(); ++i)
-	{
-		XnDumpWriter* pWriter = pFile->m_writersFiles[i].pWriter;
-		XnDumpWriterFileHandle hWriterFile = pFile->m_writersFiles[i].hFile;
-
-		pWriter->CloseFile(pWriter->pCookie, hWriterFile);
-	}
-
-	phFile->pInternal = NULL;
-}
-
-//---------------------------------------------------------------------------
-// Backwards Compatibility Stuff
-//---------------------------------------------------------------------------
-#ifndef __XN_NO_BC__
 
 XnStatus xnDumpCreate(XnDump* pDump, const XnChar* csHeader, const XnChar* csFileNameFormat, va_list args)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-
+	
 	XnChar strFileName[XN_FILE_MAX_PATH];
 	XnUInt32 nChars;
 	nRetVal = xnOSStrFormatV(strFileName, XN_FILE_MAX_PATH, &nChars, csFileNameFormat, args);
@@ -313,7 +113,7 @@ XnStatus xnDumpCreate(XnDump* pDump, const XnChar* csHeader, const XnChar* csFil
 
 	if (csHeader != NULL)
 	{
-		xnOSWriteFile(pDump->hFile, csHeader, strlen(csHeader));
+		xnDumpWriteStringImpl(*pDump, csHeader);
 	}
 
 	return XN_STATUS_OK;
@@ -386,5 +186,3 @@ XN_C_API void xnDumpFlush(XnDump dump)
 		xnOSFlushFile(dump.hFile);
 	}
 }
-
-#endif // #ifndef __XN_NO_BC__

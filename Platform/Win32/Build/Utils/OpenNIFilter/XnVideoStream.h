@@ -102,7 +102,7 @@ private:
 	BOOL m_bFlipVertically;
 	XnFPSData m_FPS;
 	int m_nPreferredMode;
-	XnDumpFileHandle& m_Dump;
+	XnDump& m_Dump;
 };
 
 #endif // __XN_VIDEO_STREAM_H__

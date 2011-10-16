@@ -204,10 +204,10 @@ void xnLogWriteImpl(const XnChar* csLogMask, XnLogSeverity nSeverity, const XnCh
 	va_end(args);
 }
 
-XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* csFileName, XnBool bSessionBased, XN_FILE_HANDLE* phFile)
+XN_C_API XnStatus xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFile)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-
+	
 	// set log directory
 	if (g_logData.m_strLogDir[0] == '\0')
 	{
@@ -227,33 +227,13 @@ XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* csFileName, XnBool b
 
 	// create full path file name - add process start time and process ID
 	XnChar strFilePath[XN_FILE_MAX_PATH];
-	XnUInt32 nPathSize = 0;
-	XnUInt32 nCharsWritten = 0;
-	nRetVal = xnOSStrFormat(strFilePath, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s", g_logData.m_strLogDir);
-	XN_IS_STATUS_OK(nRetVal);
-	nPathSize += nCharsWritten;
-
-	if (bSessionBased)
-	{
-		nRetVal = xnOSStrFormat(strFilePath + nPathSize, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s_%u.", g_logData.m_strTime, nProcID);
-		XN_IS_STATUS_OK(nRetVal);
-		nPathSize += nCharsWritten;
-	}
-
-	nRetVal = xnOSStrFormat(strFilePath + nPathSize, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s", csFileName);
-	XN_IS_STATUS_OK(nRetVal);
-	nPathSize += nCharsWritten;
+	sprintf(strFilePath, "%s%s_%u.%s", g_logData.m_strLogDir, g_logData.m_strTime, nProcID, csFileName);
 
 	// and open the file
 	nRetVal = xnOSOpenFile(strFilePath, XN_OS_FILE_WRITE | XN_OS_FILE_TRUNCATE, phFile);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
-}
-
-XN_C_API XnStatus xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFile)
-{
-	return xnLogCreateFileEx(csFileName, TRUE, phFile);
 }
 
 void xnLogCreateFilterChangedMessage(XnBufferedLogEntry* pEntry)

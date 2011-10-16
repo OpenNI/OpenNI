@@ -5256,8 +5256,6 @@ namespace xn
 		inline ScriptNode(XnNodeHandle hNode = NULL) : ProductionNode(hNode) {}
 		inline ScriptNode(const NodeWrapper& other) : ProductionNode(other) {}
 
-		inline XnStatus Create(Context& context, const XnChar* strFormat);
-
 		inline const XnChar* GetSupportedFormat()
 		{
 			return xnScriptNodeGetSupportedFormat(GetHandle());
@@ -6319,15 +6317,6 @@ namespace xn
 	inline XnStatus ScriptNode::Run(EnumerationErrors* pErrors)
 	{
 		return xnScriptNodeRun(GetHandle(), pErrors == NULL ? NULL : pErrors->GetUnderlying());
-	}
-
-	inline XnStatus ScriptNode::Create(Context& context, const XnChar* strFormat)
-	{
-		XnNodeHandle hNode;
-		XnStatus nRetVal = xnCreateScriptNode(context.GetUnderlyingObject(), strFormat, &hNode);
-		XN_IS_STATUS_OK(nRetVal);
-		TakeOwnership(hNode);
-		return (XN_STATUS_OK);
 	}
 
 	//---------------------------------------------------------------------------

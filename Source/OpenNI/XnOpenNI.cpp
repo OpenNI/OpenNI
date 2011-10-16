@@ -122,7 +122,7 @@ static void xnDumpRefCount(XnContext* pContext, XnNodeHandle hNode, XnUInt32 nRe
 	{
 		strActualComment = "";
 	}
-	xnDumpFileWriteString(pContext->dumpRefCount, "%llu,%s,%u,%s\n", nNow, strName, nRefCount, strActualComment);
+	xnDumpWriteString(pContext->dumpRefCount, "%llu,%s,%u,%s\n", nNow, strName, nRefCount, strActualComment);
 }
 
 XN_C_API XnStatus xnInit(XnContext** ppContext)
@@ -154,9 +154,8 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	pContext->pGlobalErrorChangeEvent = XN_NEW(XnErrorStateChangedEvent);
 	pContext->pShutdownEvent = XN_NEW(XnContextShuttingDownEvent);
 	pContext->nRefCount = 1;
-	pContext->dumpRefCount = xnDumpFileOpen(XN_DUMP_MASK_REF_COUNT, "RefCount.csv");
-
-	xnDumpFileWriteString(pContext->dumpRefCount, "Timestamp,Object,RefCount,Comment\n");
+	pContext->dumpRefCount = XN_DUMP_CLOSED;
+	xnDumpInit(&pContext->dumpRefCount, XN_DUMP_MASK_REF_COUNT, "Timestamp,Object,RefCount,Comment\n", "RefCount.csv");
 
 	// validate memory allocations
 	if (pContext->pLicenses == NULL ||
@@ -452,7 +451,7 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 	if (pContext != NULL)
 	{
 		xnDumpRefCount(pContext, NULL, 0, "Destroy");
-		xnDumpFileClose(&pContext->dumpRefCount);
+		xnDumpClose(&pContext->dumpRefCount);
 
 		// we have to destroy nodes from top to bottom. So we'll go over the list, each time removing
 		// nodes that nobody needs, until the list is empty

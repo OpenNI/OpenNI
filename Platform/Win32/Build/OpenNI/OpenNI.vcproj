@@ -866,18 +866,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\Source\OpenNI\XnDumpFileWriter.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\Source\OpenNI\XnDumpFileWriter.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\Include\XnDumpWriters.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\Source\OpenNI\XnLog.cpp"
 					>
 				</File>

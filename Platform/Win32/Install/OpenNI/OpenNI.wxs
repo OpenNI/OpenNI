@@ -156,9 +156,8 @@
     
     <DirectoryRef Id="TARGETDIR">
       <Component Id="RegistryEntries" Guid="D48D0BF7-6004-4403-B390-54C46454C394"  >
-        
-        <RegistryKey Root="HKLM" Key="Software\OpenNI" Action="none" >
-          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]"  />
+        <RegistryKey Root="HKLM" Key="Software\OpenNI" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]" />
           <RegistryValue Type="string" Name="Version" Value="$(var.VersionNumber)"/>
         </RegistryKey>
         
@@ -326,7 +325,7 @@
     </CustomAction>
 
     <!-- Set the components defined in our fragment files that will be used for our feature  -->
-    <Feature Id="OpenNIFeature" Title="!(loc.ProductName)" Level="1"  >
+    <Feature Id="OpenNIFeature" Title="!(loc.ProductName)" Level="1" >
       <?if $(var.BinaryOnlyRedist)="False"?>
         <ComponentGroupRef Id="OpenNIFiles" />              
         <ComponentRef Id="DocumentationShortcut" />

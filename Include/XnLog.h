@@ -171,8 +171,6 @@ XN_C_API void XN_C_DECL xnLogWriteBinaryData(const XnChar* csLogMask, XnLogSever
  */
 XN_C_API XnStatus XN_C_DECL xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFile);
 
-XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* csFileName, XnBool bSessionBased, XN_FILE_HANDLE* phFile);
-
 #define XN_MASK_RETVAL_CHECKS "RetValChecks"
 
 /** Validates return value and writes log message with appropriate status string **/

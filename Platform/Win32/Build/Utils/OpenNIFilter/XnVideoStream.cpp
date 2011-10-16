@@ -390,24 +390,24 @@ STDMETHODIMP XnVideoStream::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 	// Standard OLE stuff
 	if(riid == IID_IAMStreamConfig) 
 	{
-		xnDumpFileWriteString(m_Dump, "Pin query interface to IAMStreamConfig\n");
+		xnDumpWriteString(m_Dump, "Pin query interface to IAMStreamConfig\n");
 		hr = GetInterface(static_cast<IAMStreamConfig*>(this), ppv);
 	}
 	else if(riid == IID_IKsPropertySet)
 	{
-		xnDumpFileWriteString(m_Dump, "Pin query interface to IKsPropertySet\n");
+		xnDumpWriteString(m_Dump, "Pin query interface to IKsPropertySet\n");
 		hr = GetInterface(static_cast<IKsPropertySet*>(this), ppv);
 	}
 	else if(riid == IID_ISpecifyPropertyPages)
 	{
-		xnDumpFileWriteString(m_Dump, "Pin query interface to ISpecifyPropertyPages\n");
+		xnDumpWriteString(m_Dump, "Pin query interface to ISpecifyPropertyPages\n");
 		hr = GetInterface(static_cast<ISpecifyPropertyPages*>(this), ppv);
 	}
 	else 
 	{
 		OLECHAR strGuid[40];
 		StringFromGUID2(riid, strGuid, 40);
-		xnDumpFileWriteString(m_Dump, "Pin query interface to %S\n", strGuid);
+		xnDumpWriteString(m_Dump, "Pin query interface to %S\n", strGuid);
 		hr = CSourceStream::NonDelegatingQueryInterface(riid, ppv);
 	}
 
@@ -437,14 +437,14 @@ HRESULT STDMETHODCALLTYPE XnVideoStream::GetStreamCaps(int iIndex, AM_MEDIA_TYPE
 	XN_METHOD_CHECK_POINTER(pmt);
 	XN_METHOD_CHECK_POINTER(pSCC);
 
-	xnDumpFileWriteString(m_Dump, "Calling %s for %d\n", __FUNCTION__, iIndex);
+	xnDumpWriteString(m_Dump, "Calling %s for %d\n", __FUNCTION__, iIndex);
 
 	CMediaType mediaType;
 	VIDEO_STREAM_CONFIG_CAPS* pvscc = (VIDEO_STREAM_CONFIG_CAPS*)pSCC;
 	HRESULT hr = GetStreamCapability(iIndex, mediaType, *pvscc);
 	if (FAILED(hr)) XN_METHOD_RETURN(hr);
 
-	xnDumpFileWriteString(m_Dump, "Returning %dx%d@%d using %s\n", m_aSupportedModes[iIndex].OutputMode.nXRes, m_aSupportedModes[iIndex].OutputMode.nYRes, m_aSupportedModes[iIndex].OutputMode.nFPS, xnPixelFormatToString(m_aSupportedModes[iIndex].Format));
+	xnDumpWriteString(m_Dump, "Returning %dx%d@%d using %s\n", m_aSupportedModes[iIndex].OutputMode.nXRes, m_aSupportedModes[iIndex].OutputMode.nYRes, m_aSupportedModes[iIndex].OutputMode.nFPS, xnPixelFormatToString(m_aSupportedModes[iIndex].Format));
 
 	*pmt = CreateMediaType(&mediaType);
 	XN_METHOD_RETURN(S_OK);

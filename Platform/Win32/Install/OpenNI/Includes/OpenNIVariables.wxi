@@ -20,7 +20,7 @@
 
   <?define MinOpenNIVersion="1.0.0"?>
   
-  <?define BinaryOnlyRedist=True?>
+  <?define BinaryOnlyRedist=False?>
    
   <?if $(var.Platform)="x86"?>
     <?define PlatformSuffix=""?>    

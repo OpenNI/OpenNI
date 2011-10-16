@@ -4,7 +4,7 @@ INC_DIRS = \
 	../../../../Include \
 	../../../../Source \
 	../../../../Source/External/TinyXml \
-	$(LINUXARM_INCDIR)
+	../../../../../../ti-dvsdk_dm3730-evm_4_01_00_09/linux-devkit/arm-none-linux-gnueabi/usr/include
 
 SRC_FILES = \
 	../../../../Source/OpenNI/*.cpp \
