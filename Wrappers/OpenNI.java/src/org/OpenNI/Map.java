@@ -56,6 +56,17 @@ public class Map
 		NativeMethods.copyToBuffer(buffer, this.ptr, size);
 		return buffer;
 	}
+	
+	/**
+	 * Copies the data to a preallocated buffer.
+	 * 
+	 * @param buffer preallocated ByteBuffer with size greater than or equal to 
+	 *     the number of bytes need to be copied.
+	 * @param size number of bytes to copy.
+	 */
+	public void copyToBuffer(ByteBuffer buffer, int size) {
+	  NativeMethods.copyToBuffer(buffer, this.ptr, size);
+	}
 
 	protected long getPixelPtr(int x, int y) 
 	{ 
