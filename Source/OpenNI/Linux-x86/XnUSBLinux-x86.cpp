@@ -350,10 +350,52 @@ XN_C_API XnStatus xnUSBOpenDeviceImpl(libusb_device* pDevice, XN_USB_DEV_HANDLE*
 		return (XN_STATUS_USB_SET_CONFIG_FAILED);
 	}
 */	
+
+	// Asking the kernel politely to detach every other driver form this device.
+	// If other drivers or programs are attached to the interface, it cannot be claimed.
+	xnLogVerbose(XN_MASK_USB, "Detaching other kernel drivers.");
+	
+	rc = libusb_detach_kernel_driver(handle, 0);
+	
+	if(rc == 0){
+		xnLogWarning(XN_MASK_USB, "Detach success. Drivers detached.");
+	}
+	else if(rc == LIBUSB_ERROR_NOT_FOUND){
+		xnLogWarning(XN_MASK_USB, "Detach success. No drivers were attached.");
+	}
+	else if(rc == LIBUSB_ERROR_INVALID_PARAM){
+		XN_LOG_ERROR_RETURN(XN_STATUS_USB_SET_CONFIG_FAILED, XN_MASK_USB, "Detach kernel driver error. The specified interface does not exist.");
+	}
+	else if(rc == LIBUSB_ERROR_NO_DEVICE){
+		XN_LOG_ERROR_RETURN(XN_STATUS_USB_SET_CONFIG_FAILED, XN_MASK_USB, "Detach kernel driver error. Device is disconnectd.");
+	}
+	else {
+		XN_LOG_ERROR_RETURN(XN_STATUS_USB_SET_CONFIG_FAILED, XN_MASK_USB, "Detach kernel driver error. Unknown error.");
+	}
+		
+
+	
+	xnLogVerbose(XN_MASK_USB, "Claiming the interface.");
 	// claim the interface (you cannot open any end point before claiming the interface)
 	rc = libusb_claim_interface(handle, 0);
 	if (rc != 0)
 	{
+		if(rc == LIBUSB_ERROR_NOT_FOUND){
+			xnLogError(XN_MASK_USB, "Interface claim failed: The specified interface does not exist.");
+		}
+		else if(rc == LIBUSB_ERROR_BUSY){
+			xnLogError(XN_MASK_USB, "Interface claim failed: Another program or driver has claimed the interface.");
+		}
+		else if(rc == LIBUSB_ERROR_NO_DEVICE){
+			xnLogError(XN_MASK_USB, "Interface claim failed: Device disconnected.");
+		}
+		else if (rc == LIBUSB_ERROR_OTHER){
+			xnLogError(XN_MASK_USB, "Interface claim failed: Other error.");
+		}
+		else {
+			xnLogError(XN_MASK_USB, "Interface claim failed: Unknown error.");
+		}
+		
 		libusb_close(handle);
 		return (XN_STATUS_USB_SET_INTERFACE_FAILED);
 	}
