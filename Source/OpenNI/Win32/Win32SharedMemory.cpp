@@ -24,6 +24,7 @@
 //---------------------------------------------------------------------------
 #include <XnOS.h>
 #include <XnLog.h>
+#include "XnOSWin32Internal.h"
 
 //---------------------------------------------------------------------------
 // Types
@@ -81,19 +82,12 @@ static XnStatus AccessFlagsToWin32ViewFlags(XnUInt32 nAccessFlags, DWORD* pFlags
 	return (XN_STATUS_OK);
 }
 
-static XnStatus NameToWin32Name(const XnChar* strName, XnChar* strWin32Name)
+XN_C_API XnStatus XN_C_DECL xnOSCreateSharedMemory(const XnChar* strName, XnUInt32 nSize, XnUInt32 nAccessFlags, XN_SHARED_MEMORY_HANDLE* phSharedMem)
 {
-	int i = 0;
-	for (; strName[i] != '\0'; ++i)
-	{
-		// replace all backslashes (not allowed)
-		strWin32Name[i] = strName[i] == '\\' ? '/' : strName[i];
-	}
-	strWin32Name[i] = '\0';
-	return (XN_STATUS_OK);
+	return xnOSCreateSharedMemoryEx(strName, nSize, nAccessFlags, FALSE, phSharedMem);
 }
 
-XN_C_API XnStatus xnOSCreateSharedMemory(const XnChar* strName, XnUInt32 nSize, XnUInt32 nAccessFlags, XN_SHARED_MEMORY_HANDLE* phSharedMem)
+XN_C_API XnStatus XN_C_DECL xnOSCreateSharedMemoryEx(const XnChar* strName, XnUInt32 nSize, XnUInt32 nAccessFlags, XnBool bAllowOtherUsers, XN_SHARED_MEMORY_HANDLE* phSharedMem)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
@@ -109,8 +103,18 @@ XN_C_API XnStatus xnOSCreateSharedMemory(const XnChar* strName, XnUInt32 nSize, 
 	XN_IS_STATUS_OK(nRetVal);
 
 	XnChar strWinName[XN_FILE_MAX_PATH];
-	nRetVal = NameToWin32Name(strName, strWinName);
-	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = XnWin32CreateKernelObjectName(strWinName, MAX_PATH, strName, TRUE);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		return XN_STATUS_OS_EVENT_CREATION_FAILED;
+	}
+
+	SECURITY_ATTRIBUTES* pSecurityAttributes = NULL;
+	nRetVal = XnWin32GetSecurityAttributes(bAllowOtherUsers, &pSecurityAttributes);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		return XN_STATUS_OS_EVENT_CREATION_FAILED;
+	}
 
 	// allocate handle
 	XnOSSharedMemory* pHandle;
@@ -119,7 +123,7 @@ XN_C_API XnStatus xnOSCreateSharedMemory(const XnChar* strName, XnUInt32 nSize, 
 	// create file mapping
 	pHandle->hMapFile = CreateFileMapping(
 		INVALID_HANDLE_VALUE,    // use paging file
-		NULL,                    // default security 
+		pSecurityAttributes,     // security 
 		mapflags,		         // read/write access
 		0,                       // max. object size 
 		nSize,                   // buffer size  
@@ -160,8 +164,11 @@ XN_C_API XnStatus xnOSOpenSharedMemory(const XnChar* strName, XnUInt32 nAccessFl
 	XN_IS_STATUS_OK(nRetVal);
 
 	XnChar strWinName[XN_FILE_MAX_PATH];
-	nRetVal = NameToWin32Name(strName, strWinName);
-	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = XnWin32CreateKernelObjectName(strWinName, MAX_PATH, strName, TRUE);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		return XN_STATUS_OS_FAILED_TO_OPEN_SHARED_MEMORY;
+	}
 
 	// allocate handle
 	XnOSSharedMemory* pHandle;

@@ -297,7 +297,7 @@ XnStatus GeneratorWatcher::Watch()
 	XN_IS_STATUS_OK(nRetVal);
 
 	XnUInt64 nCurrentTimeStamp = m_generator.GetTimestamp();
-	if (nCurrentTimeStamp > m_nLastDataTimeStamp)
+	if ((nCurrentTimeStamp > m_nLastDataTimeStamp) || ((nCurrentTimeStamp == 0) && (m_generator.GetFrameID() > 0)))
 	{
 		m_nLastDataTimeStamp = nCurrentTimeStamp;
 		const void* pData = GetCurrentData();

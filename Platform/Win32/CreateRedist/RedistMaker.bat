@@ -3,7 +3,7 @@
 set MAJOR_VERSION=1
 set MINOR_VERSION=3
 set MAINTENANCE_VERSION=4
-set BUILD_VERSION=3
+set BUILD_VERSION=6
 
 
 @echo ************************

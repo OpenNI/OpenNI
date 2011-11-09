@@ -46,7 +46,9 @@ namespace OpenNI
 		{
 			get
 			{
-				return SafeNativeMethods.xnNodeInfoGetDescription(this.InternalObject);
+                IntPtr pDescription = SafeNativeMethods.xnNodeInfoGetDescription(this.InternalObject);
+                ProductionNodeDescription description = ProductionNodeDescription.Empty;
+                return (ProductionNodeDescription)Marshal.PtrToStructure(pDescription, typeof(ProductionNodeDescription));
 			}
 		}
 

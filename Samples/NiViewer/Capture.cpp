@@ -217,7 +217,6 @@ void captureBrowse(int)
 	ofn.lpstrFile = g_Capture.csFileName;
 	ofn.nMaxFile = sizeof(g_Capture.csFileName);
 	ofn.lpstrTitle = TEXT("Capture to...");
-	ofn.nMaxFileTitle = sizeof (ofn.lpstrTitle);
 	ofn.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR;
 
 	GetSaveFileName(&ofn); 

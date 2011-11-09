@@ -594,6 +594,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\Source\OpenNI\Win32\XnOSWin32Internal.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\Source\OpenNI\XnUSB.cpp"
 					>
 				</File>

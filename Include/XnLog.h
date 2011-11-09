@@ -407,7 +407,11 @@ XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* strFileName, XnBool 
 
 #define XN_MASK_RETVAL_CHECKS "RetValChecks"
 
+#if XN_PLATFORM == XN_PLATFORM_ARC
+extern "C" XnLogger* XN_LOGGER_RETVAL_CHECKS;
+#else
 XN_C_API XnLogger* XN_LOGGER_RETVAL_CHECKS;
+#endif
 
 /** Validates return value and writes log message with appropriate status string **/
 #define XN_IS_STATUS_OK_LOG_ERROR(what, nRetVal)														\

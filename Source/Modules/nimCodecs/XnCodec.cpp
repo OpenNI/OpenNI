@@ -51,7 +51,7 @@ XnStatus XnCodec::CompressData(const void* pSrc, XnUInt32 nSrcSize, void* pDst, 
 	}
 
 	nRetVal = CompressImpl((const XnUChar*)pSrc, nSrcSize, (XnUChar*)pDst, &nDstSize);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Compress", nRetVal);
 
 	*pnBytesWritten = nDstSize;
 
@@ -67,7 +67,7 @@ XnStatus XnCodec::DecompressData(const void* pSrc, XnUInt32 nSrcSize, void* pDst
 	XN_VALIDATE_OUTPUT_PTR(pnBytesWritten);
 
 	nRetVal = DecompressImpl((const XnUChar*)pSrc, nSrcSize, (XnUChar*)pDst, &nDstSize);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Decompress", nRetVal);
 
 	*pnBytesWritten = nDstSize;
 

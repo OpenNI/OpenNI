@@ -43,9 +43,9 @@ public:
 	typedef const T* ConstIterator;
 
 	/** Default constructor. Initializes the array to BASE_SIZE. **/
-	XnArray()
+	XnArray(XnUInt32 nBaseSize = BASE_SIZE)
 	{
-		Init();
+		Init(nBaseSize);
 	}
 
 	/** Copy constructor. Initializes this array from another array of the same type. **/
@@ -298,10 +298,10 @@ public:
 	}
 
 private:
-	void Init()
+	void Init(XnUInt32 nBaseSize = BASE_SIZE)
 	{
-		m_pData = XN_NEW_ARR(T, BASE_SIZE);
-		m_nAllocatedSize = BASE_SIZE;
+		m_pData = XN_NEW_ARR(T, nBaseSize);
+		m_nAllocatedSize = nBaseSize;
 		m_nSize = 0;
 	}
 

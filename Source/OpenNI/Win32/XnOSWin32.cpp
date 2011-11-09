@@ -214,3 +214,75 @@ XN_C_API XnStatus xnOSGetInfo(xnOSInfo* pOSInfo)
 
 	return (XN_STATUS_OK);
 }
+
+XnStatus XnWin32CreateKernelObjectName(XnChar* strDest, const XnUInt32 nDestLength, const XnChar* strSource, XnBool bAllowOtherUsers)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XnChar* pDest = strDest;
+	XnChar* pDestEnd = strDest + nDestLength;
+
+	if (bAllowOtherUsers)
+	{
+		static const XnChar strGlobal[] = "Global\\";
+		strcpy(strDest, strGlobal);
+		pDest = strDest + sizeof(strGlobal) - 1;
+	}
+
+	const XnChar* pSource = strSource;
+
+	while (pDest < pDestEnd && *pSource != '\0')
+	{
+		*pDest = *pSource == '\\' ? '_' : *pSource;
+		++pDest;
+		++pSource;
+	}
+
+	if (pDest == pDestEnd)
+	{
+		xnLogWarning(XN_MASK_OS, "Event name is too long!");
+		return XN_STATUS_ERROR;
+	}
+
+	*pDest = '\0';
+
+	return (XN_STATUS_OK);
+}
+
+XnStatus XnWin32GetSecurityAttributes(XnBool bAllowOtherUsers, SECURITY_ATTRIBUTES** ppSecurityAttributes)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	*ppSecurityAttributes = NULL;
+
+	static SECURITY_DESCRIPTOR securityDesc;
+	static SECURITY_ATTRIBUTES securityAttributes;
+	static SECURITY_ATTRIBUTES* pSecurityAttributes = NULL;
+
+	if (pSecurityAttributes == NULL)
+	{
+		// initialize it now
+		if (FALSE == InitializeSecurityDescriptor(&securityDesc, SECURITY_DESCRIPTOR_REVISION))
+		{
+			xnLogError(XN_MASK_OS, "Failed to initialize security descriptor (%d)", GetLastError());
+			return XN_STATUS_ERROR;
+		}
+
+		if (FALSE == SetSecurityDescriptorDacl(&securityDesc, TRUE, NULL, FALSE))
+		{
+			xnLogError(XN_MASK_OS, "Failed to set security descriptor DACL (%d)", GetLastError());
+			return XN_STATUS_ERROR;
+		}
+
+		securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+		securityAttributes.lpSecurityDescriptor = &securityDesc;
+		securityAttributes.bInheritHandle = FALSE;
+
+		// initialization complete. Store a pointer
+		pSecurityAttributes = &securityAttributes;
+	}
+
+	*ppSecurityAttributes = bAllowOtherUsers ? pSecurityAttributes : NULL;
+
+	return (XN_STATUS_OK);
+}

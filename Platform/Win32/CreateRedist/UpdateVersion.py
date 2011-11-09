@@ -28,7 +28,7 @@ import re
 VERSION_MAJOR = 1
 VERSION_MINOR = 3
 VERSION_MAINTENANCE = 4
-VERSION_BUILD = 3
+VERSION_BUILD = 6
 
 # ---------------------- FUNCTIONS -----------------------
 def regx_replace(findStr,repStr,filePath):
@@ -131,7 +131,7 @@ update_redist_script("./Redist_OpenNI.py")
 update_redist_eng_defs("./OpenNi_Config.xml")
 update_src_ver_defs("../../../Include/XnVersion.h")
 update_assembly_info("../Build/Res/AssemblyInfo-OpenNI.cs")
-update_assembly_info("../../Linux-x86/Build/Res/AssemblyInfo-OpenNI.cs")
+update_assembly_info("../../Linux/Build/Res/AssemblyInfo-OpenNI.cs")
 update_wix("../Install/OpenNI/Includes/OpenNIVariables.wxi")
 update_publisher_policy("../../../Wrappers/OpenNI.Net/PublisherPolicy.config")
 update_doxygen("../../../Source/DoxyGen/Doxyfile")

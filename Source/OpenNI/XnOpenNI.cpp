@@ -6287,7 +6287,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 	// search for all codecs
 	XnNodeInfoList* pList;
 	nRetVal = xnEnumerateProductionTrees(pContext, XN_NODE_TYPE_CODEC, NULL, &pList, NULL);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Enumerate production trees", nRetVal);
 
 	XnNodeHandle hCodec = NULL;
 
@@ -6327,6 +6327,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 
 	if (hCodec == NULL)
 	{
+		xnLogError(XN_MASK_OPEN_NI, "Unsupported codec '%.4s'", &codecID);
 		return XN_STATUS_UNSUPPORTED_CODEC;
 	}
 

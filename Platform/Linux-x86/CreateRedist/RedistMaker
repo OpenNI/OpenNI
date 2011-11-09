@@ -1,3 +1,0 @@
-#!/bin/bash -e
-python Redist_OpenNi.py $1
-

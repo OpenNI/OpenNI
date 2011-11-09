@@ -649,6 +649,7 @@ XnStatus PlayerNode::OpenStream()
 		m_bIs32bitFileFormat = TRUE;
 	}
 
+	m_fileVersion = header.version;
 	m_nGlobalMaxTimeStamp = header.nGlobalMaxTimeStamp;
 	m_nMaxNodes = header.nMaxNodeID + 1;
 	XN_ASSERT(m_nMaxNodes > 0);
@@ -1122,10 +1123,22 @@ XnStatus PlayerNode::HandleIntPropRecord(IntPropRecord record)
 		return XN_STATUS_CORRUPT_FILE;
 	}
 
+	const XnChar* strPropName = record.GetPropName();
+	XnUInt64 nValue = record.GetValue();
+
+	// old files workaround: some old files recorded nodes as not generating though having frames.
+	// make them generating.
+	if (strcmp(strPropName, XN_PROP_IS_GENERATING) == 0 &&
+		nValue == FALSE &&
+		pPlayerNodeInfo->nFrames > 0)
+	{
+		nValue = TRUE;
+	}
+
 	nRetVal = m_pNodeNotifications->OnNodeIntPropChanged(m_pNotificationsCookie, 
 		pPlayerNodeInfo->strName,
-		record.GetPropName(),
-		record.GetValue());
+		strPropName,
+		nValue);
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = SaveRecordUndoInfo(pPlayerNodeInfo, 
@@ -1246,15 +1259,15 @@ XnStatus PlayerNode::HandleNodeStateReadyRecord(NodeStateReadyRecord record)
 		  with the name pPlayerNodeInfo->strName should have been created by now. If it wasn't,
 		  GetProductionNodeByName() will fail. */
 		nRetVal = m_context.GetProductionNodeByName(pPlayerNodeInfo->strName, node);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_LOG_ERROR("Get codec production node", nRetVal);
 
 		nRetVal = m_context.CreateCodec(pPlayerNodeInfo->compression, node, pPlayerNodeInfo->codec);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_LOG_ERROR("Create codec", nRetVal);
 
 		// we need to make the codec a needed node, so that if xnForceShutdown() is called, we will be
 		// destroyed *before* it does (as we hold a reference to it).
 		nRetVal = xnAddNeededNode(GetSelfNodeHandle(), pPlayerNodeInfo->codec);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_LOG_ERROR("Add needed node", nRetVal);
 	}
 
 	pPlayerNodeInfo->bStateReady = TRUE;

@@ -24,6 +24,7 @@
 //---------------------------------------------------------------------------
 #include <XnOS.h>
 #include <XnLog.h>
+#include "XnOSWin32Internal.h"
 
 //---------------------------------------------------------------------------
 // Code
@@ -35,6 +36,11 @@ XN_C_API XnStatus xnOSCreateMutex(XN_MUTEX_HANDLE* pMutexHandle)
 
 XN_C_API XnStatus xnOSCreateNamedMutex(XN_MUTEX_HANDLE* pMutexHandle, const XnChar* cpMutexName)
 {
+	return xnOSCreateNamedMutexEx(pMutexHandle, cpMutexName, FALSE);
+}
+
+XN_C_API XnStatus XN_C_DECL xnOSCreateNamedMutexEx(XN_MUTEX_HANDLE* pMutexHandle, const XnChar* cpMutexName, XnBool bAllowOtherUsers)
+{
 	// Local function variables
 	XnStatus nRetVal = XN_STATUS_OK;
 	XnBool bRetVal = FALSE;
@@ -42,27 +48,35 @@ XN_C_API XnStatus xnOSCreateNamedMutex(XN_MUTEX_HANDLE* pMutexHandle, const XnCh
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(pMutexHandle);
 
-	// remove bad chars from name
 	XnChar strMutexOSName[MAX_PATH];
+	XnChar* pMutexOSName = NULL;
+	SECURITY_ATTRIBUTES* pSecurityAttributes = NULL;
+
 	if (cpMutexName != NULL)
 	{
-		int i = 0;
-		for (; (i < MAX_PATH) && (cpMutexName[i] != '\0'); ++i)
-			strMutexOSName[i] = cpMutexName[i] == '\\' ? '_' : cpMutexName[i];
-
-		if (i == MAX_PATH)
+		nRetVal = XnWin32CreateKernelObjectName(strMutexOSName, MAX_PATH, cpMutexName, bAllowOtherUsers);
+		if (nRetVal != XN_STATUS_OK)
 		{
-			xnLogWarning(XN_MASK_OS, "Mutex name is too long!");
 			return XN_STATUS_OS_MUTEX_CREATION_FAILED;
 		}
-		strMutexOSName[i] = '\0';
+
+		pMutexOSName = strMutexOSName;
+
+		nRetVal = XnWin32GetSecurityAttributes(bAllowOtherUsers, &pSecurityAttributes);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			return XN_STATUS_OS_MUTEX_CREATION_FAILED;
+		}
 	}
 
 	// Create a named mutex via the OS
-	*pMutexHandle = CreateMutex(NULL, FALSE, (cpMutexName == NULL) ? NULL : strMutexOSName);
+	*pMutexHandle = CreateMutex(pSecurityAttributes, FALSE, pMutexOSName);
 
 	// Make sure it succeeded (return value is not null)
-	XN_VALIDATE_PTR(*pMutexHandle, XN_STATUS_OS_MUTEX_CREATION_FAILED);
+	if (*pMutexHandle == NULL)
+	{
+		XN_LOG_WARNING_RETURN(XN_STATUS_OS_MUTEX_CREATION_FAILED, XN_MASK_OS, "Failed to create mutex (%d).", GetLastError());
+	}
 
 	// All is good...
 	return (XN_STATUS_OK);

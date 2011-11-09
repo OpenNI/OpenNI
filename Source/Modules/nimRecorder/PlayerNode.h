@@ -143,6 +143,7 @@ private:
 	static const XnVersion OLDEST_SUPPORTED_FILE_FORMAT_VERSION;
 	static const XnVersion FIRST_FILESIZE64BIT_FILE_FORMAT_VERSION;
 
+	XnVersion m_fileVersion;
 	XnChar m_strName[XN_MAX_NAME_LENGTH];
 	XnBool m_bOpen;
 	XnBool m_bIs32bitFileFormat;

@@ -192,8 +192,16 @@ namespace OpenNI
 
 		public void AddLicense(License license)
 		{
-			int status = SafeNativeMethods.xnAddLicense(this.InternalObject, license);
-			WrapperUtils.ThrowOnError(status);
+            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(license));
+            try
+            {
+                int status = SafeNativeMethods.xnAddLicense(this.InternalObject, ptr);
+                WrapperUtils.ThrowOnError(status);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
 		}
 
 		public License[] EnumerateLicenses()
@@ -475,7 +483,7 @@ namespace OpenNI
 					if (type == null)
 					{
 						IntPtr pNodeInfo = SafeNativeMethods.xnGetNodeInfo(nodeHandle);
-						type = SafeNativeMethods.xnNodeInfoGetDescription(pNodeInfo).Type;
+                        type = NodeInfo.FromNative(pNodeInfo).Description.Type;
 					}
 
 					ProductionNode node;

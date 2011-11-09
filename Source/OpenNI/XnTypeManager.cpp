@@ -136,8 +136,6 @@ XnStatus TypeManager::GetTypeName(XnProductionNodeType type, const XnChar** pstr
 
 XnStatus TypeManager::GetTypeByName(const XnChar* strName, XnProductionNodeType* pType) const
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	// take current count (for thread safety reasons)
 	XnUInt32 nCount = m_nNextExtendedNodeType;
 

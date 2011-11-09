@@ -122,9 +122,6 @@ int main(int argc, char* argv[])
 
 	rawGenerator.Release();
 
-	nRetVal = context.GetProductionNodeByName("MockRaw", rawGenerator);
-	XN_ASSERT(nRetVal == XN_STATUS_BAD_NODE_NAME);
-
 	Player player;
 	nRetVal = context.OpenFileRecording(RECORDING_FILE_NAME, player);
 	CHECK_RC(nRetVal, "Open file recording");

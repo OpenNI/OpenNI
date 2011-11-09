@@ -1,6 +1,25 @@
 Detailed Change log:
 --------------------
 
+Version 1.3.4.6 (Unstable version - Nov 7th 2011)
+-------------------------------------------------
+  * In MockGenerator::SetData, change the node to Generating state so it would be recorded properly.
+  * Added new calibration error messages to the XnCalibrationStatus enum.
+  * XnArray: Allow passing base size in the ctor (to save double allocation).
+  * NiViewer: Removed an unnecessary line from file dialog init
+  * Bug fix: When recording from mock node, the first frame is no longer lost.
+  * XnOS: Added the option to create named objects in a way that will be accessible to other sessions.
+  * Renamed Linux-x86* files to Linux*
+  * Linux Bug Fix: xnOSSeekFile64 did not return OK. This caused problems in playback and recording of ONI files.
+  * Added some error log prints to the codecs and players.
+  * C# wrappers: fixed the marshaling of license struct.
+  * Added the function SetDataBytes to XnBitSet so it now accepts a byte buffer of any size. Note: byte order is different when reading from byte array or dword array in little endian platforms.
+  * C# wrappers: fixed a bug related to ProductionNodeDescription. Might break API, but this API would usually crash, so its OK.
+  * Linux: Switched to newer makefiles. SSE is enabled in debug, always declare sysroot (even for /) so that -I=/usr/include/ni could work properly.
+  * Linux: fix cross compilation and add separate scripts to cross compile on specific machine. Also, binary folders are now named according to platform and configuration.
+  * Documentation: Added a section about creating modules.
+  * Backwards Compatibility Workaround: some old recordings marked nodes as not generating though they contained frames. This resulted in "node is locked" error if trying to start generating them.
+
 Version 1.3.4.3 (Unstable version - Oct 10th 2011)
 --------------------------------------------------
   * Update to newer version of CommonCppMakefile (without the -malign-double flag).

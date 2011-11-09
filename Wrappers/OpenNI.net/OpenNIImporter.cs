@@ -292,17 +292,27 @@ namespace OpenNI
 		{
 			get
 			{
-				Version retVal;
-				retVal.build=0;
-				retVal.major=0;
-				retVal.maintenance=0;
-				retVal.minor=0;
-				int status=SafeNativeMethods.xnGetVersion(ref retVal);
+				Version retVal = Version.Zero;
+				int status = SafeNativeMethods.xnGetVersion(ref retVal);
 				WrapperUtils.ThrowOnError(status);
 				return retVal;
 			}
 		}
-		public byte Major
+
+        public static Version Zero
+        {
+            get
+            {
+                Version retVal;
+                retVal.build = 0;
+                retVal.major = 0;
+                retVal.maintenance = 0;
+                retVal.minor = 0;
+                return retVal;
+            }
+        }
+        
+        public byte Major
 		{
 			get { return major; }
 			set { major = value; }
@@ -711,7 +721,7 @@ namespace OpenNI
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public class ProductionNodeDescription
+	public struct ProductionNodeDescription
 	{
 		public NodeType Type
 		{
@@ -734,6 +744,19 @@ namespace OpenNI
 			set { version = value; }
 		}
 
+        public static ProductionNodeDescription Empty
+        {
+            get
+            {
+                ProductionNodeDescription description;
+                description.type = NodeType.Invalid;
+                description.strVendor = "";
+                description.strName = "";
+                description.version = Version.Zero;
+                return description;
+            }
+        }
+
 		private NodeType type;
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = Defs.XN_MAX_NAME_LENGTH)]
 		private string strVendor;
@@ -743,7 +766,7 @@ namespace OpenNI
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
-	public class License
+	public struct License
 	{
 		public string Vendor
 		{
@@ -1005,7 +1028,7 @@ namespace OpenNI
 				public static extern XnStatus xnFPSFree(XnFPSData pFPS);
 		*/
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnStatus xnAddLicense(XnContext pContext, License pLicense);
+		public static extern XnStatus xnAddLicense(XnContext pContext, IntPtr pLicense);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerateLicenses(XnContext pContext, out IntPtr paLicenses, out XnUInt32 pnCount);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -1502,7 +1525,7 @@ namespace OpenNI
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoSetInstanceName(XnNodeInfo pNodeInfo, string strInstanceName);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
-		public static extern ProductionNodeDescription xnNodeInfoGetDescription(XnNodeInfo pNodeInfo);
+		public static extern IntPtr xnNodeInfoGetDescription(XnNodeInfo pNodeInfo);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo pNodeInfo, IntPtr csResult, XnUInt32 nSize);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
