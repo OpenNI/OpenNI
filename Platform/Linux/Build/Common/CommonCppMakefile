@@ -62,11 +62,10 @@ endif
 
 # set Debug / Release flags
 ifeq "$(CFG)" "Debug"
-	CFLAGS += -g
+	CFLAGS += -O0 -g
 endif
 ifeq "$(CFG)" "Release"
 	CFLAGS += -O2 -DNDEBUG
-	CSFLAGS += -o+
 endif
 
 CFLAGS += $(INC_DIRS_OPTION) $(DEFINES_OPTION)

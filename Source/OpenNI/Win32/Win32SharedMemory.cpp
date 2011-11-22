@@ -103,7 +103,7 @@ XN_C_API XnStatus XN_C_DECL xnOSCreateSharedMemoryEx(const XnChar* strName, XnUI
 	XN_IS_STATUS_OK(nRetVal);
 
 	XnChar strWinName[XN_FILE_MAX_PATH];
-	nRetVal = XnWin32CreateKernelObjectName(strWinName, MAX_PATH, strName, TRUE);
+	nRetVal = XnWin32CreateKernelObjectName(strWinName, MAX_PATH, strName, bAllowOtherUsers);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		return XN_STATUS_OS_EVENT_CREATION_FAILED;
@@ -154,6 +154,11 @@ XN_C_API XnStatus XN_C_DECL xnOSCreateSharedMemoryEx(const XnChar* strName, XnUI
 
 XN_C_API XnStatus xnOSOpenSharedMemory(const XnChar* strName, XnUInt32 nAccessFlags, XN_SHARED_MEMORY_HANDLE* phSharedMem)
 {
+	return xnOSOpenSharedMemoryEx(strName, nAccessFlags, FALSE, phSharedMem);
+}
+
+XN_C_API XnStatus XN_C_DECL xnOSOpenSharedMemoryEx(const XnChar* strName, XnUInt32 nAccessFlags, XnBool bAllowOtherUsers, XN_SHARED_MEMORY_HANDLE* phSharedMem)
+{
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	XN_VALIDATE_INPUT_PTR(strName);
@@ -164,7 +169,7 @@ XN_C_API XnStatus xnOSOpenSharedMemory(const XnChar* strName, XnUInt32 nAccessFl
 	XN_IS_STATUS_OK(nRetVal);
 
 	XnChar strWinName[XN_FILE_MAX_PATH];
-	nRetVal = XnWin32CreateKernelObjectName(strWinName, MAX_PATH, strName, TRUE);
+	nRetVal = XnWin32CreateKernelObjectName(strWinName, MAX_PATH, strName, bAllowOtherUsers);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		return XN_STATUS_OS_FAILED_TO_OPEN_SHARED_MEMORY;
@@ -205,8 +210,6 @@ XN_C_API XnStatus xnOSOpenSharedMemory(const XnChar* strName, XnUInt32 nAccessFl
 
 XN_C_API XnStatus xnOSCloseSharedMemory(XN_SHARED_MEMORY_HANDLE hSharedMem)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	XN_VALIDATE_INPUT_PTR(hSharedMem);
 
 	if (!UnmapViewOfFile(hSharedMem->pAddress))
@@ -226,8 +229,6 @@ XN_C_API XnStatus xnOSCloseSharedMemory(XN_SHARED_MEMORY_HANDLE hSharedMem)
 
 XN_C_API XnStatus xnOSSharedMemoryGetAddress(XN_SHARED_MEMORY_HANDLE hSharedMem, void** ppAddress)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	XN_VALIDATE_INPUT_PTR(hSharedMem);
 	XN_VALIDATE_OUTPUT_PTR(ppAddress);
 

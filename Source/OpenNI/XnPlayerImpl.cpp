@@ -60,7 +60,10 @@ PlayerImpl::PlayerImpl() :
 	m_hPlayer(NULL), 
 	m_bIsFileOpen(FALSE),
 	m_bHasTimeReference(FALSE),
-	m_dPlaybackSpeed(1.0)
+	m_dPlaybackSpeed(1.0),
+	m_hPlaybackThread(NULL),
+	m_hPlaybackEvent(NULL),
+	m_bPlaybackThreadShutdown(FALSE)
 {
 	xnOSMemSet(m_strSource, 0, sizeof(m_strSource));
 }
@@ -88,12 +91,36 @@ XnStatus PlayerImpl::Init(XnNodeHandle hPlayer)
 	nRetVal = ModulePlayer().RegisterToEndOfFileReached(ModuleHandle(), EndOfFileReachedCallback, this, &hDummy);
 	XN_IS_STATUS_OK(nRetVal);
 
+	nRetVal = xnOSCreateCriticalSection(&m_hPlaybackLock);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnOSCreateEvent(&m_hPlaybackEvent, FALSE);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnOSCreateThread(PlaybackThread, this, &m_hPlaybackThread);
+	XN_IS_STATUS_OK(nRetVal);
+
 	return XN_STATUS_OK;
 }
 
 void PlayerImpl::BeforeNodeDestroy()
 {
-	//Do nothing here - we only destroy in the destructor.
+	// we need to close the thread *before* the node is destroyed (as the thread uses it)
+	m_bPlaybackThreadShutdown = TRUE;
+
+	if (m_hPlaybackThread != NULL)
+	{
+		// signal the event, so the thread will wake up
+		xnOSSetEvent(m_hPlaybackEvent);
+		xnOSWaitAndTerminateThread(&m_hPlaybackThread, 1000);
+		m_hPlaybackThread = NULL;
+	}
+
+	if (m_hPlaybackEvent != NULL)
+	{
+		xnOSCloseEvent(&m_hPlaybackEvent);
+		m_hPlaybackEvent = NULL;
+	}
 }
 
 XnStatus PlayerImpl::SetSource(XnRecordMedium sourceType, const XnChar* strSource)
@@ -128,6 +155,8 @@ XnStatus PlayerImpl::SetSource(XnRecordMedium sourceType, const XnChar* strSourc
 	nRetVal = SetPlaybackSpeed(dPlaybackSpeed);
 	XN_IS_STATUS_OK(nRetVal);
 
+	TriggerPlayback();
+
 	return XN_STATUS_OK;
 }
 
@@ -143,6 +172,12 @@ XnStatus PlayerImpl::GetSource(XnRecordMedium &sourceType, XnChar* strSource, Xn
 void PlayerImpl::Destroy()
 {
 	CloseFileImpl();
+
+	if (m_hPlaybackLock != NULL)
+	{
+		xnOSCloseCriticalSection(&m_hPlaybackLock);
+		m_hPlaybackLock = NULL;
+	}
 
 	for (PlayedNodesHash::Iterator it = m_playedNodes.begin(); it != m_playedNodes.end(); ++it)
 	{
@@ -393,7 +428,7 @@ XnStatus XN_CALLBACK_TYPE PlayerImpl::OnNodeNewData(void* pCookie, const XnChar*
 	return pThis->SetNodeNewData(strNodeName, nTimeStamp, nFrame, pData, nSize);
 }
 
-XnStatus PlayerImpl::AddNode(const XnChar* strNodeName, XnProductionNodeType type, XnCodecID compression)
+XnStatus PlayerImpl::AddNode(const XnChar* strNodeName, XnProductionNodeType type, XnCodecID /*compression*/)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
@@ -665,6 +700,58 @@ void PlayerImpl::EndOfFileReachedCallback(void* pCookie)
 {
 	PlayerImpl* pThis = (PlayerImpl*)pCookie;
 	pThis->OnEndOfFileReached();
+}
+
+void PlayerImpl::PlaybackThread()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	while (!m_bPlaybackThreadShutdown)
+	{
+		nRetVal = xnOSWaitEvent(m_hPlaybackEvent, XN_WAIT_INFINITE);
+		if (nRetVal != XN_STATUS_OK && nRetVal != XN_STATUS_OS_EVENT_TIMEOUT)
+		{
+			xnLogWarning(XN_MASK_OPEN_NI, "Failed to wait for event: %s", xnGetStatusString(nRetVal));
+			xnOSSleep(1);
+			continue;
+		}
+
+		if (m_bPlaybackThreadShutdown)
+		{
+			return;
+		}
+
+		nRetVal = xnPlayerReadNext(m_hPlayer);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnLogWarning(XN_MASK_OPEN_NI, "Failed to playback: %s", xnGetStatusString(nRetVal));
+			xnOSSleep(1);
+			continue;
+		}
+	}
+}
+
+XN_THREAD_PROC PlayerImpl::PlaybackThread(XN_THREAD_PARAM pThreadParam)
+{
+	PlayerImpl* pThis = (PlayerImpl*)pThreadParam;
+	pThis->PlaybackThread();
+	XN_THREAD_PROC_RETURN(XN_STATUS_OK);
+}
+
+void PlayerImpl::TriggerPlayback()
+{
+	XnStatus nRetVal = xnOSSetEvent(m_hPlaybackEvent);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to trigger playback: %s", xnGetStatusString(nRetVal));
+	}
+}
+
+XnStatus PlayerImpl::ReadNext()
+{
+	// Always read inside a lock (to make it thread safe)
+	XnAutoCSLocker lock(m_hPlaybackLock);
+	return ModulePlayer().ReadNext(ModuleHandle());
 }
 
 }

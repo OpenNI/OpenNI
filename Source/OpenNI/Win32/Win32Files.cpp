@@ -418,9 +418,6 @@ XN_C_API XnStatus xnOSFlushFile(const XN_FILE_HANDLE File)
 
 XN_C_API XnStatus xnOSDeleteFile(const XnChar* cpFileName)
 {
-	// Local function variables
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpFileName);
 
@@ -453,8 +450,6 @@ XN_C_API XnStatus xnOSDoesFileExist(const XnChar* cpFileName, XnBool* bResult)
 
 XN_C_API XnStatus xnOSDoesDirecotyExist(const XnChar* cpDirName, XnBool* pbResult)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpDirName);
 	XN_VALIDATE_OUTPUT_PTR(pbResult);
@@ -552,8 +547,6 @@ XN_C_API XnStatus xnOSCreateDirectory(const XnChar* cpDirName)
 
 XN_C_API XnStatus XN_C_DECL xnOSDeleteEmptyDirectory(const XnChar* strDirName)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	XN_VALIDATE_INPUT_PTR(strDirName);
 	
 	XnBool bRetVal = RemoveDirectory(strDirName);

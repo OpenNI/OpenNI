@@ -40,7 +40,14 @@ public class UserTracker extends Component
 			System.out.println("New user " + args.getId());
 			try
 			{
-				poseDetectionCap.StartPoseDetection(calibPose, args.getId());
+				if (skeletonCap.needPoseForCalibration())
+				{
+					poseDetectionCap.StartPoseDetection(calibPose, args.getId());
+				}
+				else
+				{
+					skeletonCap.requestSkeletonCalibration(args.getId(), true);
+				}
 			} catch (StatusException e)
 			{
 				e.printStackTrace();
@@ -75,7 +82,14 @@ public class UserTracker extends Component
 			}
 			else
 			{
-                poseDetectionCap.StartPoseDetection(calibPose, args.getUser());
+				if (skeletonCap.needPoseForCalibration())
+				{
+					poseDetectionCap.StartPoseDetection(calibPose, args.getUser());
+				}
+				else
+				{
+					skeletonCap.requestSkeletonCalibration(args.getUser(), true);
+				}
 			}
 			} catch (StatusException e)
 			{

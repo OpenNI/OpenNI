@@ -35,8 +35,6 @@ XnOSTimer g_xnOSHighResGlobalTimer;
 XN_C_API XnStatus xnOSGetEpochTime(XnUInt32* nEpochTime)
 {
 	// Local function variables
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	*nEpochTime = (XnUInt32)time(NULL);
 
 	// All is good...

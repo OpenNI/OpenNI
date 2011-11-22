@@ -325,7 +325,6 @@ XN_C_API XnStatus xnOSConnectSocket(XN_SOCKET_HANDLE Socket, XnUInt32 nMillisecs
 		if (ioctlsocket(Socket->Socket, FIONBIO, &nNonBlockingSocket) != 0)
 		{
 			XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED, XN_MASK_OS, "ioctlsocket() failed with error %d", WSAGetLastError());
-			return(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED);
 		}
 	}
 
@@ -419,7 +418,7 @@ XN_C_API XnStatus xnOSSendNetworkBuffer(XN_SOCKET_HANDLE Socket, const XnChar* c
 
 	// Send the data over our socket to the server and make sure the wanted number of bytes were actually sent
 	nRetVal = send(Socket->Socket, cpBuffer, nBufferSize, 0);
-	if (nRetVal != nBufferSize)
+	if (nRetVal != (int)nBufferSize)
 	{
 		return (XN_STATUS_OS_NETWORK_SEND_FAILED);
 	}
@@ -443,7 +442,7 @@ XN_C_API XnStatus xnOSSendToNetworkBuffer(XN_SOCKET_HANDLE Socket, const XnChar*
 
 	// Send the data over our UDP socket to the server and make sure the wanted number of bytes were actually sent
 	nRetVal = sendto(Socket->Socket, cpBuffer, nBufferSize, 0, (SOCKADDR*)&SocketTo->SocketAddress, sizeof(SOCKADDR));
-	if (nRetVal != nBufferSize)
+	if (nRetVal != (int)nBufferSize)
 	{
 		return (XN_STATUS_OS_NETWORK_SEND_FAILED);
 	}
@@ -499,7 +498,6 @@ XN_C_API XnStatus xnOSReceiveNetworkBuffer(XN_SOCKET_HANDLE Socket, XnChar* cpBu
 XN_C_API XnStatus xnOSReceiveFromNetworkBuffer(XN_SOCKET_HANDLE Socket, XnChar* cpBuffer, XnUInt32* pnBufferSize, XN_SOCKET_HANDLE* SocketFrom)
 {
 	// Local function variables
-	XnInt32 nRetVal = 0;
 	XnInt32 nLen = sizeof(SOCKADDR);	
 
 	// Validate the input/output pointers (to make sure none of them is NULL)

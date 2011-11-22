@@ -496,7 +496,7 @@ XnStatus RecorderImpl::OpenFileImpl()
 	return XN_STATUS_OK;	
 }
 
-XnStatus RecorderImpl::WriteFileImpl(const XnChar* strNodeName, 
+XnStatus RecorderImpl::WriteFileImpl(const XnChar* /*strNodeName*/, 
 									 const void* pData, 
 									 XnUInt32 nSize)
 {

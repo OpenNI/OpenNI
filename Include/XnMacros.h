@@ -115,4 +115,9 @@
 			return (XN_STATUS_OUTPUT_BUFFER_OVERFLOW);	\
 		}
 
+/** Disables Copy ctor and assignment operator. Should be placed under "private:" section. */
+#define XN_DISABLE_COPY_AND_ASSIGN(TypeName)			\
+	TypeName(const TypeName&);							\
+	void operator=(const TypeName&)
+
 #endif //_XN_MACROS_H_

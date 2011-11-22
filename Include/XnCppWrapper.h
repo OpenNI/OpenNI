@@ -3469,6 +3469,15 @@ namespace xn
 		{
 			return xnEnumerateGestures(GetHandle(), &astrGestures, &nGestures);
 		}
+
+        /** @copybrief xnGetNumberOfAvailableGestures
+         * For full details and usage, see @ref xnGetNumberOfAvailableGestures
+         */
+        inline XnUInt16 GetNumberOfAvailableGestures() const
+        {
+            return xnGetNumberOfAvailableGestures(GetHandle());
+        }
+
 		/** @copybrief xnEnumerateAllGestures
 		 * For full details and usage, see @ref xnEnumerateAllGestures
 		 */
@@ -4567,6 +4576,16 @@ namespace xn
 		{
 			return xnGetAllAvailablePoses(GetHandle(), pstrPoses, nNameLength, &nPoses);
 		}
+
+        inline XnBool IsPoseSupported(const XnChar* strPose)
+        {
+            return xnIsPoseSupported(GetHandle(), strPose);
+        }
+
+        inline XnStatus GetPoseStatus(XnUserID userID, const XnChar* poseName, XnUInt64& poseTime, XnPoseDetectionStatus& eStatus, XnPoseDetectionState& eState)
+        {
+            return xnGetPoseStatus(GetHandle(), userID, poseName, &poseTime, &eStatus, &eState);
+        }
 
 		/** @copybrief xnStartPoseDetection
 		 * For full details and usage, see @ref xnStartPoseDetection

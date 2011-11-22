@@ -1,6 +1,29 @@
 Detailed Change log:
 --------------------
 
+Version 1.4.0.2 (Unstable version - Nov 17th 2011)
+--------------------------------------------------
+  * Linux bug fix: The USB read thread was using memcpy with overlapping source and dest addresses which caused newer libc libraries to fail. The solution is to use memmove.
+  * Log: fix BC methods behavior to be backwards-compatible to old one.
+  * Added GetNumberOfAvailableGestures() method to GestureGenerator.
+  * .NET BugFix: GetPoseStatus() did not work.
+  * JNI: fix a typo that prevents creating joint orientations.
+  * NiUserSelection: Update to support N closest users and N waves.
+  * Fixed python scripts to also support python 3.
+  * Java Wrapper: Added a new method copyToBuffer for copying data to a preallocated buffer to improve performance (community request).
+  * Mac: Fixed a bug in the linux set thread priority where the struct wasn't zero'd before usage (caused warning on mac osx).
+  * Linux redist bug: .net wrappers were skipped on 64-bit machines by mistake.
+  * Windows Bug Fix: shared memory was always created under the Global namespace (Failed to work with UAC turned on).
+  * Added APIs xnIsPoseSupported, xnGetPoseStatus, through PoseDetectionCapability.
+  * Java Wrappers: added createByteBuffer() to AudioMetaData to access data.
+  * NiRecordRaw: Removed duplicate call to GetProductionNodeByName.
+  * Added NiHandTracker C++ sample.
+  * Added NO_TRACKING to the list of pose detection statuses.
+  * Added NiSimpleSkeleton sample which shows the head movement of skeleton with no graphics.
+  * Added NiUserSelection sample which shows the exit pose (cross hands) and user selection.
+  * Added a new dump, "OpenNIDataFlow", to track data frames.
+  * WaitNoneUpdateAll now doesn't actually read from file (might cause some sleeping), but only triggers another thread to read in the background. 
+
 Version 1.3.4.6 (Unstable version - Nov 7th 2011)
 -------------------------------------------------
   * In MockGenerator::SetData, change the node to Generating state so it would be recorded properly.

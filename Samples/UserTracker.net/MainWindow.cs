@@ -79,7 +79,14 @@ namespace UserTracker.net
             }
             else
             {
-                this.poseDetectionCapability.StartPoseDetection(calibPose, e.ID);
+                if (this.skeletonCapbility.DoesNeedPoseForCalibration)
+                {
+                    this.poseDetectionCapability.StartPoseDetection(calibPose, e.ID);
+                }
+                else
+                {
+                    this.skeletonCapbility.RequestCalibration(e.ID, true);
+                }
             }
         }
 
@@ -91,7 +98,14 @@ namespace UserTracker.net
 
         void userGenerator_NewUser(object sender, NewUserEventArgs e)
         {
-            this.poseDetectionCapability.StartPoseDetection(this.calibPose, e.ID);
+            if (this.skeletonCapbility.DoesNeedPoseForCalibration)
+            {
+                this.poseDetectionCapability.StartPoseDetection(this.calibPose, e.ID);
+            }
+            else
+            {
+                this.skeletonCapbility.RequestCalibration(e.ID, true);
+            }
         }
 
 		void userGenerator_LostUser(object sender, UserLostEventArgs e)

@@ -1360,6 +1360,7 @@ XnStatus XN_CALLBACK_TYPE __ModuleGetAllAvailablePoses(XnModuleNodeHandle hGener
 	return pInterface->GetAllAvailablePoses(pstrPoses, nNameLength, *pnPoses);
 }
 
+
 XnStatus XN_CALLBACK_TYPE __ModuleStartPoseDetection(XnModuleNodeHandle hGenerator, const XnChar* strPose, XnUserID user)
 {
 	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;

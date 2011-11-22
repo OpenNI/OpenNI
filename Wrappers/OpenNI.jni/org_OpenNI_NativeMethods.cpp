@@ -316,7 +316,7 @@ jobject CreateJointPosition(JNIEnv* pEnv, const XnSkeletonJointPosition* pPositi
 }
 jobject CreateJointOrientation(JNIEnv* pEnv, const XnSkeletonJointOrientation* pOrientation)
 {
-	jclass cls = pEnv->FindClass("org/OpenNI/SkeletonJointOrienation");
+	jclass cls = pEnv->FindClass("org/OpenNI/SkeletonJointOrientation");
 	jmethodID ctor = pEnv->GetMethodID(cls, "<init>", "(FFFFFFFFFF)V");
 
 	return pEnv->NewObject(cls, ctor, pOrientation->orientation.elements[0], pOrientation->orientation.elements[1], pOrientation->orientation.elements[2], pOrientation->orientation.elements[3], pOrientation->orientation.elements[4], pOrientation->orientation.elements[5], pOrientation->orientation.elements[6], pOrientation->orientation.elements[7], pOrientation->orientation.elements[8], pOrientation->fConfidence);
@@ -1847,11 +1847,17 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnEnumerateAllGestures(JNIE
 	delete [] jGestures;
 	for (int i = 0; i < 20; ++i)
 	{
-		delete nativeGestures[i];
+		delete[] nativeGestures[i];
 	}
-	delete [] nativeGestures;
+	delete[] nativeGestures;
 	return XN_STATUS_OK;
 }
+
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetNumberOfAvailableGestures(JNIEnv *env, jclass, jlong hNode)
+{
+    return xnGetNumberOfAvailableGestures((XnNodeHandle)hNode);
+}
+
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsGestureAvailable(JNIEnv *env, jclass, jlong hNode, jstring strGesture)
 {
 	JavaString jName(env, strGesture);
@@ -2369,6 +2375,29 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetAllAvailablePoses(JNIE
 	delete []nativePoses;
 	return XN_STATUS_OK;
 }
+
+JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsPoseSupported(JNIEnv* env, jclass, jlong hNode, jstring strPose)
+{
+    JavaString jPose(env, strPose);
+    return xnIsPoseSupported((XnNodeHandle)hNode, jPose);
+}
+
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetPoseStatus(JNIEnv* env, jclass, jlong hNode, jint user, jstring strPose, jobject pTime, jobject eStatus, jobject eState)
+{
+    
+    JavaString jPose(env, strPose);
+    XnUInt64 nTimestamp;
+    XnPoseDetectionStatus tmpStatus;
+    XnPoseDetectionState tmpState;
+    XnStatus nRetVal = xnGetPoseStatus((XnNodeHandle)hNode,user,jPose,&nTimestamp,&tmpStatus,&tmpState);
+    XN_IS_STATUS_OK(nRetVal);
+    SetOutArgLongValue(env, pTime, nTimestamp);
+    SetOutArgIntValue(env, eState, tmpState);
+    SetOutArgIntValue(env, eStatus, tmpStatus);
+    return XN_STATUS_OK;
+
+}
+
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStartPoseDetection(JNIEnv* env, jclass, jlong hNode, jstring strPose, jint user)
 {
 	JavaString jPose(env, strPose);

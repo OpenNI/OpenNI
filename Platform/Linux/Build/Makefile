@@ -50,16 +50,21 @@ CORE_SAMPLES = \
 	Samples/NiSimpleCreate \
 	Samples/NiCRead \
 	Samples/NiAudioSample \
+	Samples/NiSimpleSkeleton \
 	
-ifneq "$(PLATFORM)" "Arm"
-	CORE_SAMPLES += \
-		Samples/NiUserTracker
-endif
-	
-ifeq "$(PLATFORM)" "x86"	
+ifeq "$(GLUT_SUPPORTED)" "1"
 	CORE_SAMPLES += \
 		Samples/NiViewer \
-		Samples/NiSimpleViewer
+		Samples/NiSimpleViewer \
+		Samples/NiUserTracker \
+		Samples/NiUserSelection \
+		Samples/NiHandTracker
+else
+	ifeq "$(GLES_SUPPORTED)" "1"
+		CORE_SAMPLES += \
+			Samples/NiUserTracker \
+			Samples/NiUserSelection
+	endif
 endif
 
 MONO_SAMPLES = \
@@ -119,10 +124,10 @@ ALL_PROJS_CLEAN = $(foreach proj,$(ALL_PROJS),$(proj)-clean)
 # define a function which creates a target for each proj
 define CREATE_PROJ_TARGET
 $1: 
-	$(MAKE) -C $1
+	$$(MAKE) -C $1
 
 $1-clean: 
-	$(MAKE) -C $1 clean
+	$$(MAKE) -C $1 clean
 endef
 
 ################ TARGETS ##################
@@ -144,29 +149,40 @@ mono_samples: $(MONO_SAMPLES) $(MONO_FORMS_SAMPLES)
 $(foreach proj,$(ALL_PROJS),$(eval $(call CREATE_PROJ_TARGET,$(proj))))
 
 # additional dependencies
-Modules/nimCodecs: OpenNI
-Modules/nimMockNodes: OpenNI
-Modules/nimRecorder: OpenNI
-Utils/niReg: OpenNI
-Utils/niLicense: OpenNI
-Wrappers/OpenNI.net: OpenNI
-Wrappers/OpenNI.jni: OpenNI
-Wrappers/OpenNI.java: Wrappers/OpenNI.jni
-Samples/NiSimpleRead: OpenNI
-Samples/NiViewer: OpenNI
-Samples/NiBackRecorder: OpenNI
-Samples/NiConvertXToONI: OpenNI
-Samples/NiRecordSynthetic: OpenNI
-Samples/NiSampleModule: OpenNI
-Samples/NiSimpleCreate: OpenNI
-Samples/NiCRead: OpenNI
-Samples/NiSimpleViewer: OpenNI
-Samples/SimpleRead.net: Wrappers/OpenNI.net
-Samples/SimpleViewer.net: Wrappers/OpenNI.net
-Samples/UserTracker.net: Wrappers/OpenNI.net
-Samples/SimpleRead.java: Wrappers/OpenNI.java
-Samples/SimpleViewer.java: Wrappers/OpenNI.java
-Samples/UserTracker.java: Wrappers/OpenNI.java
+Modules/nimCodecs:		OpenNI
+Modules/nimMockNodes:		OpenNI
+Modules/nimRecorder:		OpenNI
+
+Utils/niReg:			OpenNI
+Utils/niLicense:		OpenNI
+
+Wrappers/OpenNI.net:		OpenNI
+Wrappers/OpenNI.jni:		OpenNI
+Wrappers/OpenNI.java:		Wrappers/OpenNI.jni
+
+Samples/NiSimpleRead:		OpenNI
+Samples/NiBackRecorder:		OpenNI
+Samples/NiConvertXToONI:	OpenNI
+Samples/NiRecordSynthetic:	OpenNI
+Samples/NiSampleModule:		OpenNI
+Samples/NiSimpleCreate:		OpenNI
+Samples/NiCRead:		OpenNI
+Samples/NiAudioSample:		OpenNI
+Samples/NiSimpleSkeleton:	OpenNI
+Samples/NiUserTracker:		OpenNI
+Samples/NiUserSelection:	OpenNI
+Samples/NiHandTracker:		OpenNI
+Samples/NiViewer:		OpenNI
+Samples/NiSimpleViewer:		OpenNI
+
+Samples/SimpleRead.net:		Wrappers/OpenNI.net
+Samples/SimpleViewer.net:	Wrappers/OpenNI.net
+Samples/UserTracker.net:	Wrappers/OpenNI.net
+
+Samples/SimpleRead.java:	Wrappers/OpenNI.java
+Samples/SimpleViewer.java:	Wrappers/OpenNI.java
+Samples/UserTracker.java:	Wrappers/OpenNI.java
+
 
 # clean is cleaning all projects
 clean: $(ALL_PROJS_CLEAN)

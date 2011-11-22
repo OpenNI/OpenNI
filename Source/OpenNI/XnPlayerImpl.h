@@ -46,6 +46,8 @@ public:
 	XnStatus SetPlaybackSpeed(XnDouble dSpeed);
 	XnDouble GetPlaybackSpeed();
 	void ResetTimeReference();
+	void TriggerPlayback();
+	XnStatus ReadNext();
 
 private:
 	XnModulePlayerInterface& ModulePlayer();
@@ -95,6 +97,9 @@ private:
 	void OnEndOfFileReached();
 	static void XN_CALLBACK_TYPE EndOfFileReachedCallback(void* pCookie);
 
+	void PlaybackThread();
+	static XN_THREAD_PROC PlaybackThread(XN_THREAD_PARAM pThreadParam);
+
 	typedef struct PlayedNodeInfo
 	{
 		XnNodeHandle hNode;
@@ -115,6 +120,10 @@ private:
 	XnUInt64 m_nStartTimestamp;
 	XnUInt64 m_nStartTime;
 	XnBool m_bHasTimeReference;
+	XN_THREAD_HANDLE m_hPlaybackThread;
+	XN_EVENT_HANDLE m_hPlaybackEvent;
+	XN_CRITICAL_SECTION_HANDLE m_hPlaybackLock;
+	XnBool m_bPlaybackThreadShutdown;
 };
 
 }

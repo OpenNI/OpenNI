@@ -43,7 +43,6 @@ XN_C_API XnStatus XN_C_DECL xnOSCreateNamedMutexEx(XN_MUTEX_HANDLE* pMutexHandle
 {
 	// Local function variables
 	XnStatus nRetVal = XN_STATUS_OK;
-	XnBool bRetVal = FALSE;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(pMutexHandle);
@@ -85,7 +84,6 @@ XN_C_API XnStatus XN_C_DECL xnOSCreateNamedMutexEx(XN_MUTEX_HANDLE* pMutexHandle
 XN_C_API XnStatus xnOSCloseMutex(XN_MUTEX_HANDLE* pMutexHandle)
 {
 	// Local function variables
-	XnStatus nRetVal = XN_STATUS_OK;
 	XnBool bRetVal = FALSE;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)

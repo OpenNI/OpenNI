@@ -59,6 +59,9 @@ protected:
 	XnNodeNotifications& m_notifications;
 	void* m_pCookie;
 	ProductionNode m_node;
+
+private:
+	XN_DISABLE_COPY_AND_ASSIGN(NodeWatcher);
 };
 
 class DeviceWatcher : public NodeWatcher

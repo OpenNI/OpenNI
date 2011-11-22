@@ -1,4 +1,6 @@
 # some defaults
+export GLUT_SUPPORTED=1
+
 ifndef SSE_GENERATION
 	SSE_GENERATION = 3
 endif

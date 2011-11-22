@@ -157,7 +157,6 @@ XN_C_API XnStatus xnOSSaveFile(const XnChar* cpFileName, const void* pBuffer, co
 {
 	// Local function variables
 	XN_FILE_HANDLE FileHandle;
-	XnUInt32 nReadBytes = nBufferSize;
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)
@@ -185,7 +184,6 @@ XN_C_API XnStatus xnOSAppendFile(const XnChar* cpFileName, const void* pBuffer, 
 {
 	// Local function variables
 	XN_FILE_HANDLE FileHandle;
-	XnUInt32 nReadBytes = nBufferSize;
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)

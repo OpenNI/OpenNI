@@ -29,7 +29,7 @@ SCRIPT_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 # parse command line
 if len(sys.argv) < 5:
-    print "usage: ", sys.argv[0], " <32|64> <ProjDir> <SourceDir> <Name> [NeededJarFiles] [MainClass]"
+    print (("usage: ", sys.argv[0], " <32|64> <ProjDir> <SourceDir> <Name> [NeededJarFiles] [MainClass]"))
     exit(1)
 
 if sys.argv[1] == "" or sys.argv[1] == "32":
@@ -37,7 +37,7 @@ if sys.argv[1] == "" or sys.argv[1] == "32":
 elif sys.argv[1] == "64":
     bin_dir = "Bin64"
 else:
-    print 'First argument must be "32", "64" or empty (32)'
+    print ('First argument must be "32", "64" or empty (32)')
     exit(1)
     
 proj_dir = sys.argv[2]
@@ -59,7 +59,7 @@ BATCH_FILE = os.path.join(RELEASE_DIR, proj_name + '.bat')
 # make sure JAVA_HOME is set
 JAVA_HOME = os.path.expandvars("$JAVA_HOME")
 if JAVA_HOME == "":
-    print "JAVA_HOME is not set!"
+    print ("JAVA_HOME is not set!")
     exit(1)
     
 CLASS_PATH = os.path.expandvars("$CLASSPATH")
@@ -83,7 +83,7 @@ if needed_jar_files != "":
 cmd += '-d ' + TEMP_BUILD_DIR + ' ' + os.path.join(source_dir, '*.java')
 res = subprocess.call(cmd)
 if res != 0:
-    print "Failed to build!"
+    print ("Failed to build!")
     exit(1)
 
 # create JAR file
@@ -109,7 +109,7 @@ if manifest:
 cmd += '-C ' + TEMP_BUILD_DIR + ' .'
 res = subprocess.call(cmd)
 if res != 0:
-    print "Failed to jar!"
+    print ("Failed to jar!")
     exit(1)
 
 # copy jar to Bin/Debug

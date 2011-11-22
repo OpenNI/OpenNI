@@ -229,6 +229,15 @@ namespace OpenNI
 	    TopFOV = 2,
 	    SideFoV = 3,
 	    Error = 4,
+        NoTracking = 5
+    }
+
+    public enum PoseDetectionState
+    {
+        InPose = 0,
+        OutOfPose = 1,
+        Undefined = 2
+
     }
 
 /** Possible statuses for calibration */
@@ -1281,7 +1290,9 @@ namespace OpenNI
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsGestureAvailable(XnNodeHandle hInstance, string strGesture);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
-		public static extern XnBool xnIsGestureProgressSupported(XnNodeHandle hInstance, string strGesture);
+        public static extern XnUInt32 xnGetNumberOfAvailableGestures(XnNodeHandle hInstance);
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern XnBool xnIsGestureProgressSupported(XnNodeHandle hInstance, string strGesture);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnRegisterGestureCallbacks(XnNodeHandle hInstance, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureRecognized RecognizedCB, [MarshalAs(UnmanagedType.FunctionPtr)] XnGestureProgress ProgressCB, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -1404,7 +1415,11 @@ namespace OpenNI
 		public static extern XnUInt32 xnGetNumberOfPoses(XnNodeHandle hInstance);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, [In] [Out] IntPtr[] pstrPoses, XnUInt32 nNameLength, ref XnUInt32 pnPoses);
-		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern XnBool xnIsPoseSupported(XnNodeHandle hInstance, string strPose);
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern XnStatus xnGetPoseStatus(XnNodeHandle hInstance, XnUserID userID, string poseName, out XnUInt64 poseTime, out PoseDetectionStatus eStatus,out PoseDetectionState eState);
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStartPoseDetection(XnNodeHandle hInstance, string strPose, XnUserID user);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user);

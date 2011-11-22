@@ -132,8 +132,8 @@ private:
 	mutable XnUInt32 m_nReadOffset;
 	XnUInt32 m_nMaxSize;
 protected:
-	enum {HEADER_SIZE_current = sizeof(Header)};
-	enum {HEADER_SIZE_old32   = sizeof(Header_old32)};
+	enum {HEADER_SIZE_current = sizeof(Header),
+	      HEADER_SIZE_old32   = sizeof(Header_old32)};
 	XnBool m_bUseOld32Header;
 
 public:

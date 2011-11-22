@@ -320,7 +320,7 @@ XnUInt64 GeneratorWatcher::GetTimestamp()
 	return m_generator.GetTimestamp();
 }
 
-void XN_CALLBACK_TYPE GeneratorWatcher::HandleGenerationRunningChange(ProductionNode& node, void* pCookie)
+void XN_CALLBACK_TYPE GeneratorWatcher::HandleGenerationRunningChange(ProductionNode& /*node*/, void* pCookie)
 {
 	GeneratorWatcher *pThis = (GeneratorWatcher*)pCookie;
 	if (pThis == NULL)
@@ -332,7 +332,7 @@ void XN_CALLBACK_TYPE GeneratorWatcher::HandleGenerationRunningChange(Production
 	pThis->NotifyIntPropChanged(XN_PROP_IS_GENERATING, pThis->m_generator.IsGenerating());
 }
 
-void XN_CALLBACK_TYPE GeneratorWatcher::HandleMirrorChange(ProductionNode& node, void* pCookie)
+void XN_CALLBACK_TYPE GeneratorWatcher::HandleMirrorChange(ProductionNode& /*node*/, void* pCookie)
 {
 	GeneratorWatcher *pThis = (GeneratorWatcher*)pCookie;
 	if ((pThis == NULL) || !pThis->m_generator.IsCapabilitySupported(XN_CAPABILITY_MIRROR))
@@ -470,7 +470,7 @@ XnStatus MapWatcher::NotifyCropping()
 	return XN_STATUS_OK;
 }
 
-void XN_CALLBACK_TYPE MapWatcher::HandleMapOutputModeChange(ProductionNode& node, void* pCookie)
+void XN_CALLBACK_TYPE MapWatcher::HandleMapOutputModeChange(ProductionNode& /*node*/, void* pCookie)
 {
 	MapWatcher *pThis = (MapWatcher*)pCookie;
 	if (pThis == NULL)
@@ -486,7 +486,7 @@ void XN_CALLBACK_TYPE MapWatcher::HandleMapOutputModeChange(ProductionNode& node
 	}
 }
 
-void XN_CALLBACK_TYPE MapWatcher::HandleCroppingChange(ProductionNode& node, void* pCookie)
+void XN_CALLBACK_TYPE MapWatcher::HandleCroppingChange(ProductionNode& /*node*/, void* pCookie)
 {
 	MapWatcher *pThis = (MapWatcher*)pCookie;
 	if (pThis == NULL)
@@ -564,7 +564,7 @@ XnStatus ImageWatcher::NotifySupportedPixelFormats()
 	return XN_STATUS_OK;
 }
 
-void XN_CALLBACK_TYPE ImageWatcher::HandlePixelFormatChange(ProductionNode& node, void* pCookie)
+void XN_CALLBACK_TYPE ImageWatcher::HandlePixelFormatChange(ProductionNode& /*node*/, void* pCookie)
 {
 	ImageWatcher *pThis = (ImageWatcher*)pCookie;
 	if (pThis == NULL)
@@ -714,7 +714,7 @@ XnStatus DepthWatcher::NotifyUserPositions()
 	return XN_STATUS_OK;	
 }
 
-void XN_CALLBACK_TYPE DepthWatcher::HandleFieldOfViewChange(ProductionNode& node, void* pCookie)
+void XN_CALLBACK_TYPE DepthWatcher::HandleFieldOfViewChange(ProductionNode& /*node*/, void* pCookie)
 {
 	DepthWatcher *pThis = (DepthWatcher*)pCookie;
 	if (pThis == NULL)
@@ -731,7 +731,7 @@ void XN_CALLBACK_TYPE DepthWatcher::HandleFieldOfViewChange(ProductionNode& node
 	}
 }
 
-void XN_CALLBACK_TYPE DepthWatcher::HandleUserPositionChange(ProductionNode& node, void* pCookie)
+void XN_CALLBACK_TYPE DepthWatcher::HandleUserPositionChange(ProductionNode& /*node*/, void* pCookie)
 {
 	DepthWatcher *pThis = (DepthWatcher*)pCookie;
 	if (pThis == NULL)
@@ -832,7 +832,7 @@ XnStatus AudioWatcher::NotifySupportedOutputModes()
 	return XN_STATUS_OK;	
 }
 
-void XN_CALLBACK_TYPE AudioWatcher::HandleWaveOutputModeChange(ProductionNode& node, void* pCookie)
+void XN_CALLBACK_TYPE AudioWatcher::HandleWaveOutputModeChange(ProductionNode& /*node*/, void* pCookie)
 {
 	AudioWatcher *pThis = (AudioWatcher*)pCookie;
 	if (pThis == NULL)
@@ -882,7 +882,7 @@ XnStatus GestureWatcher::NotifyStateImpl()
 	return XN_STATUS_OK;
 }
 
-void XN_CALLBACK_TYPE GestureWatcher::HandleGestureRecognized(GestureGenerator& generator, 
+void XN_CALLBACK_TYPE GestureWatcher::HandleGestureRecognized(GestureGenerator& /*generator*/, 
 															  const XnChar* strGesture, 
 														  	  const XnPoint3D* pIDPosition, 
 															  const XnPoint3D* pEndPosition, 
@@ -901,7 +901,7 @@ void XN_CALLBACK_TYPE GestureWatcher::HandleGestureRecognized(GestureGenerator& 
 		sizeof(gestureRecognizedParams), &gestureRecognizedParams);
 }
 
-void XN_CALLBACK_TYPE GestureWatcher::HandleGestureProgress(GestureGenerator& generator, 
+void XN_CALLBACK_TYPE GestureWatcher::HandleGestureProgress(GestureGenerator& /*generator*/, 
 														    const XnChar* strGesture, 
 														    const XnPoint3D* pPosition, 
 														    XnFloat fProgress, 

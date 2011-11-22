@@ -262,8 +262,6 @@ XN_C_API void XN_C_DECL _xnDumpFileWriteString(XnDumpFile* pFile, const XnChar* 
 
 XN_C_API void XN_C_DECL _xnDumpFileClose(XnDumpFile* pFile)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	if (pFile == NULL)
 	{
 		return;
@@ -304,7 +302,7 @@ XnStatus xnDumpCreate(XnDump* pDump, const XnChar* csHeader, const XnChar* csFil
 
 	if (csHeader != NULL)
 	{
-		xnOSWriteFile(pDump->hFile, csHeader, strlen(csHeader));
+		xnOSWriteFile(pDump->hFile, csHeader, (XnUInt32)strlen(csHeader));
 	}
 
 	return XN_STATUS_OK;

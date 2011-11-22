@@ -119,7 +119,7 @@ class SampleData(object):
         self.dependencies = []
 
     def print_():
-        print self.name
+        print((self.name))
 
     def __str__(self):
         return self.name
@@ -154,15 +154,15 @@ class RedistBase(object):
         Parse cmdline args; along them are doxy,bitness,VC.
         """
         if len(sys.argv) not in [4,5]:
-            print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n> [<VCVersion:9/10>]"
+            print ("Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n> [<VCVersion:9/10>]")
             exit(1)
         if sys.argv[1] == 'y' or sys.argv[1] == 'Yes':
             self.Make_Doxy=1
         elif sys.argv[1] == 'n' or sys.argv[1] == 'No':
             self.Make_Doxy=0
         else:
-            print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>"
-            print "Doxygen param must be y or n!"
+            print("Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>")
+            print("Doxygen param must be y or n!")
             exit(1)
 
         if sys.argv[2] == '32':
@@ -170,8 +170,8 @@ class RedistBase(object):
         elif sys.argv[2] == '64':
             self.vc_build_bits = "64"
         else:
-            print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>"
-            print "BuildTarget param must be 32 or 64!"
+            print("Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>")
+            print("BuildTarget param must be 32 or 64!")
             exit(1)
 
         if sys.argv[3] == 'y' or sys.argv[3] == 'Yes':
@@ -179,8 +179,8 @@ class RedistBase(object):
         elif sys.argv[3] == 'n' or sys.argv[3] == 'No':
             self.vc_build_type = "/Build"
         else:
-            print "Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>"
-            print "FullRebuild param must be y or n!"
+            print("Args: <Doxygen:y/n> <BuildTarget:32/64> <FullRebuild:y/n>")
+            print("FullRebuild param must be y or n!")
             exit(1)
 
         self.VC_version = 9
@@ -278,13 +278,13 @@ class RedistBase(object):
         #------------Welcome Messege--------=------------------------------------------#
         print("\n");
         print("*********************************")
-        print("*   PrimeSense " + self.redist_name +  " Redist    *")
-        print("*     " + self.DateTimeSTR + "       *")
+        print(("*   PrimeSense " + self.redist_name +  " Redist    *"))
+        print(("*     " + self.DateTimeSTR + "       *"))
         print("*********************************")
 
     def build_proj_solution(self):
         #--------------Build Project---------------------------------------------------#
-        print("* Building " + self.PROJECT_NAME + "...")
+        print(("* Building " + self.PROJECT_NAME + "..."))
         path2output = os.path.join(self.SCRIPT_DIR,self.output_dir)
         if not os.path.exists(path2output):
             os.makedirs(path2output)
@@ -292,23 +292,23 @@ class RedistBase(object):
         if not os.path.exists(path2final):
             os.makedirs(path2final)
 
-        self.logger.info("Building " + self.PROJECT_NAME + "...")
+        self.logger.info(("Building " + self.PROJECT_NAME + "..."))
         # Set Intel Env
         os.system("set INTEL_LICENSE_FILE=C:\\Program Files\\Common Files\\Intel\\Licenses")
         # Build project solution
         os.chdir(self.WORK_DIR + self.PROJECT_SLN.rpartition("\\")[0])
-        print os.getcwd()
-        
+        print((os.getcwd()))
+
         out_file = os.path.join(self.SCRIPT_DIR, self.output_dir, "Build"+self.PROJECT_NAME+".txt")
         upg_out_file = os.path.join(self.SCRIPT_DIR, self.output_dir, "Build"+self.PROJECT_NAME+"UPG"+".txt")
         if self.VS_NEED_UPGRADE == 1:
             os.system("attrib -r * /s")
             devenv_upg_cmd_str = "\""+self.VS_INST_DIR + "devenv\" " + self.PROJECT_SLN.rpartition("\\")[2]+\
-                         " /upgrade > " + upg_out_file 
-            print 'upgrading. out put in %s'%out_file
-            print 'command is %s'%devenv_upg_cmd_str
-            my_rc = os.system(devenv_upg_cmd_str)                    
-            print 'upgrading finished w result %d'%my_rc
+                         " /upgrade > " + upg_out_file
+            print(('upgrading. out put in %s'%out_file))
+            print(('command is %s'%devenv_upg_cmd_str))
+            my_rc = os.system(devenv_upg_cmd_str)
+            print(('upgrading finished w result %d'%my_rc))
             #devenv_upg_cmd = Command(devenv_upg_cmd_str)
             #devenv_upg_cmd.run(self.TIMEOUT_UPGRADE_VS10_SEC)
 
@@ -353,7 +353,7 @@ class RedistBase(object):
             os.chdir(os.path.join(self.WORK_DIR,"Source\\Doxygen"));
             # Replacing version number in the doxygen setup file
             res = os.system("attrib -r " + self.doxy_file_name)
-            print 'removing readonly attribute for Doxyfile: ' + str(res)
+            print(('removing readonly attribute for Doxyfile: ' + str(res)))
             regx_replace(self.redist_name + " \d*.\d*.\d*\s",self.PROJECT_NAME +" " + self.VER + " ",self.doxy_file_name)
             if os.path.exists(self.WORK_DIR + "\\Source\\Doxygen\\html\\"):
                 os.system("rmdir /S /Q html")
@@ -400,7 +400,6 @@ class RedistBase(object):
         samples_list = os.listdir(os.path.join(self.BUILD_DIR,"Samples"))
         if '.svn' in samples_list:
             samples_list.remove('.svn')
-        #print(samples_list)
         for sample in samples_list:
             sample_data = SampleData()
             sample_data.name = sample
@@ -474,7 +473,7 @@ class RedistBase(object):
                 sample_data.project_name = sample
 
             else:
-                print('Sample ' + sample + ' does not have a valid project file')
+                print(('Sample ' + sample + ' does not have a valid project file'))
                 self.finish_script(1)
 
             # check if it has a special configuration
@@ -506,17 +505,16 @@ class RedistBase(object):
         # build other (not Visual Studio) project
         ret = subprocess.call(os.path.join(build_dir, "Build.bat") + " " + self.vc_build_bits)
         if ret != 0:
-            print "Building project " + build_dir + " failed!"
+            print(("Building project " + build_dir + " failed!"))
             self.logger.critical("Building project " + build_dir + " failed!")
             self.finish_script(1)
 
     def build_other_samples(self):
         "Builds other samples (java?)"
         all_samples = self.get_samples()
-        for sample in all_samples.values():
+        for sample in list(all_samples.values()):
             if not sample.is_other:
                 continue
-            #print "Building java sample " + sample.name
             build_dir = os.path.join(self.BUILD_DIR, "Samples", sample.name)
             self.build_other_proj(build_dir)
 
@@ -548,7 +546,7 @@ class RedistBase(object):
 
 
         # add projects
-        for sample in all_samples.values():
+        for sample in list(all_samples.values()):
             # make dir
             os.system ("mkdir " + sample.redist_dir)
             # copy source
@@ -604,7 +602,7 @@ class RedistBase(object):
         OUTFILESLN2010.write("	EndGlobalSection\n")
         OUTFILESLN2010.write("	GlobalSection(ProjectConfigurationPlatforms) = postSolution\n")
 
-        for sample in all_samples.values():
+        for sample in list(all_samples.values()):
             conf_32_name = "Win32"
             if sample.is_net:
                 conf_32_name = "x86"
@@ -667,15 +665,16 @@ class RedistBase(object):
         print("calling WIX")
         conf_name = self.internal_conf_name
         dev_success = self.build_installer(conf_name)
-        print("moving %s Msi"%conf_name)
-        os.system("move .\\bin\Release\en-US\\%s.msi %s"%(self.redist_internal_name,\
-                                                          os.path.join( msi_dest_path ,self.final_dir,self.product_name + '-Win' + self.vc_build_bits + "-" + self.VER + '-%s.msi'%conf_name)))
+        print(("moving %s Msi"%conf_name))
+        src = ('.\\bin\Release\en-US\\%s.msi'%self.redist_internal_name)
+        dst = os.path.join( msi_dest_path ,self.final_dir,(self.product_name + '-Win' + self.vc_build_bits + "-" + self.VER + '-%s.msi'%conf_name))
+        os.system(("move %s %s"%(src,dst)))
         self.dev_to_redist_hack()
         self.wix_redist_var_set()
         print("calling WIX")
         conf_name = 'Redist'
         redist_success = self.build_installer(conf_name)
-        print("moving %s Msi"%conf_name)
+        print(("moving %s Msi"%conf_name))
         os.system("move .\\bin\Release\en-US\\%s.msi %s"%(self.redist_internal_name,\
                                                           os.path.join( msi_dest_path ,self.final_dir,self.product_name + '-Win' + self.vc_build_bits + "-" + self.VER + '-%s.msi'%conf_name)))
 
@@ -723,11 +722,11 @@ class RedistBase(object):
     def wix_inst_primitive_check(self):
         wixPath = os.environ.get('WIX')
         if wixPath == None:
-            print '*** no WIX env. var. defined ! use set WIX=C:\Program Files\Windows Installer XML v3.5\ or similar to set the path ***'
-            print 'make installer is SERIOUSLY expected to fail'
+            print('*** no WIX env. var. defined ! use set WIX=C:\Program Files\Windows Installer XML v3.5\ or similar to set the path ***')
+            print('make installer is SERIOUSLY expected to fail')
             self.logger.info('It seems that WIX is not installed and therefore teh installer cannot be built.')
         else:
-            print 'WIX='+wixPath
+            print(('WIX='+wixPath))
 
     def dev_to_redist_hack(self):
         pass
@@ -820,7 +819,7 @@ class RedistBase(object):
 
         # Build other samples
         all_samples = self.get_samples()
-        for sample in all_samples.values():
+        for sample in list(all_samples.values()):
             if sample.is_other:
                 self.build_other_proj(os.path.join(self.WORK_DIR, "Platform", "Win32", "Redist", "Samples", sample.name))
 
@@ -847,17 +846,17 @@ class Command(object):
 
     def run(self, timeout):
         def target():
-            print 'Thread started'
+            print('Thread started')
             self.process = subprocess.Popen(self.cmd, shell=True)
             self.process.communicate()
-            print 'Thread finished'
+            print('Thread finished')
 
         thread = threading.Thread(target=target)
         thread.start()
 
         thread.join(timeout)
         if thread.is_alive():
-            print 'Terminating process'
+            print('Terminating process')
             self.process.terminate()
             thread.join()
-        print self.process.returncode
+        print((self.process.returncode))

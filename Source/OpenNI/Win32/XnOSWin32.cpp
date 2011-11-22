@@ -145,7 +145,7 @@ static void GetCPUName(XnChar* csName)
 		return;
 
 	// else, we need to build the name ourselves
-	xnOSMemSet(CPUInfo, -1, sizeof(CPUInfo));
+	xnOSMemSet(CPUInfo, 0xFF, sizeof(CPUInfo));
 
 	__cpuid(CPUInfo, 0);
 	int nIds = CPUInfo[0];
@@ -160,10 +160,10 @@ static void GetCPUName(XnChar* csName)
         int nSteppingID = CPUInfo[0] & 0xf;
         int nModel = (CPUInfo[0] >> 4) & 0xf;
         int nFamily = (CPUInfo[0] >> 8) & 0xf;
-        int nProcessorType = (CPUInfo[0] >> 12) & 0x3;
-        int nExtendedmodel = (CPUInfo[0] >> 16) & 0xf;
-        int nExtendedfamily = (CPUInfo[0] >> 20) & 0xff;
-        int nBrandIndex = CPUInfo[1] & 0xff;
+        //int nProcessorType = (CPUInfo[0] >> 12) & 0x3;
+        //int nExtendedmodel = (CPUInfo[0] >> 16) & 0xf;
+        //int nExtendedfamily = (CPUInfo[0] >> 20) & 0xff;
+        //int nBrandIndex = CPUInfo[1] & 0xff;
 
 		sprintf(csName+strlen(csName), " Model: %d Family: %d Stepping: %d", nModel, nFamily, nSteppingID);
 	}
@@ -171,8 +171,6 @@ static void GetCPUName(XnChar* csName)
 
 XN_C_API XnStatus xnOSGetInfo(xnOSInfo* pOSInfo)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	// Validate input/output arguments
 	XN_VALIDATE_OUTPUT_PTR(pOSInfo);
 
@@ -217,8 +215,6 @@ XN_C_API XnStatus xnOSGetInfo(xnOSInfo* pOSInfo)
 
 XnStatus XnWin32CreateKernelObjectName(XnChar* strDest, const XnUInt32 nDestLength, const XnChar* strSource, XnBool bAllowOtherUsers)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	XnChar* pDest = strDest;
 	XnChar* pDestEnd = strDest + nDestLength;
 
@@ -251,8 +247,6 @@ XnStatus XnWin32CreateKernelObjectName(XnChar* strDest, const XnUInt32 nDestLeng
 
 XnStatus XnWin32GetSecurityAttributes(XnBool bAllowOtherUsers, SECURITY_ATTRIBUTES** ppSecurityAttributes)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	*ppSecurityAttributes = NULL;
 
 	static SECURITY_DESCRIPTOR securityDesc;

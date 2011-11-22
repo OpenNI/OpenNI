@@ -2143,6 +2143,12 @@ If no production graphs alternatives are currently available, besides returning 
 a return value other than XN_STATUS_OK. This return value will be added to the EnumerationErrors object, so that the application
 can later on check why a specific node failed to enumerate.
 
+<b>Note:</b> Current OpenNI interface can not pass state while enumerating. This causes a problem if production
+graph cycles might occur (for example, if a depth generator enumerates for depth generator, or if a hands generator
+enumerates for user generator which itself enumerates for hands generator). Right now, the best solution is to 
+use a static boolean inside your Enumerate() implementation, to recognize if the method is called recursively, and
+if so, return nothing.
+
 @section modules_exporter_create Creating the Node
 
 Once enumeration is complete, the application can choose one of the returned production graphs alternatives and ask OpenNI 

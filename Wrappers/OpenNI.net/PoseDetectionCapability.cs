@@ -183,6 +183,16 @@ namespace OpenNI
 			return poses;
 		}
 
+        public bool IsPoseSupported(string pose)
+        {
+            return SafeNativeMethods.xnIsPoseSupported(this.InternalObject,pose);
+        }
+
+        public void GetPoseStatus(UserID userID, string poseName, out UInt64 poseTime, out PoseDetectionStatus eStatus, out PoseDetectionState eState)
+        {
+            int status = SafeNativeMethods.xnGetPoseStatus(this.InternalObject,userID, poseName, out poseTime,out eStatus,out eState);
+            WrapperUtils.ThrowOnError(status);
+        }
 		public void StartPoseDetection(string pose, UserID user)
         {
             int status = SafeNativeMethods.xnStartPoseDetection(this.InternalObject, pose, user);

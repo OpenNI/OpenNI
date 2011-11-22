@@ -646,8 +646,17 @@ typedef enum XnPoseDetectionStatus
 	XN_POSE_DETECTION_STATUS_TOP_FOV	= 2,
 	XN_POSE_DETECTION_STATUS_SIDE_FOV	= 3,
 	XN_POSE_DETECTION_STATUS_ERROR		= 4,
+    XN_POSE_DETECTION_STATUS_NO_TRACKING = 5
 } XnPoseDetectionStatus;
 
+
+/** Possible pose detection states */
+typedef enum XnPoseDetectionState
+{
+    XN_POSE_DETECTION_STATE_IN_POSE     =0,
+    XN_POSE_DETECTION_STATE_OUT_OF_POSE =1,
+    XN_POSE_DETECTION_STATE_UNDEFINED   =2
+} XnPoseDetectionState;
 /** Possible statuses for calibration */
 typedef enum XnCalibrationStatus
 {

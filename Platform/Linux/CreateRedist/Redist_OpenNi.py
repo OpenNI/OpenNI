@@ -32,8 +32,24 @@ import re
 import sys
 import shutil
 import stat
+from commands import getoutput as gop
 
 #-------------Functions--------------------------------------------------------#
+
+def calc_jobs_number():
+    cores = 1
+	
+    try:
+        if ostype == "Darwin":
+            txt = gop('sysctl -n hw.physicalcpu')
+        else:		
+            txt = gop('grep "processor\W:" /proc/cpuinfo | wc -l')
+			
+        cores = int(txt)
+    except:
+        pass
+       
+    return str(cores * 2)
 
 def finish_script(exit_code):
     os.chdir(SCRIPT_DIR)
@@ -104,7 +120,7 @@ def fix_file(arg,dirname,fname):
                 olds = s
                 s = re.sub(r"../../../Bin",r"../Bin",s)
                 s = re.sub(r"../../../../../Include",r"../../Include =/usr/include/ni",s)
-                s = re.sub(r"../../../../../Samples/[\w.]+/",r"",s)
+                s = re.sub(r"../../../../../Samples/[\w.]+/?",r"./",s)
                 s = re.sub(r"../../../../Data/SamplesConfig.xml",r"../../Config/SamplesConfig.xml",s)
                 s = re.sub(r"../../Res/",r"../Res/",s)
                 s = re.sub(r"include ../../Common/CommonCppMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonCppMakefile",s)
@@ -181,6 +197,8 @@ else:
 
     makeArgs = "PLATFORM=" + PLATFORM
 
+makeArgs += ' -j'+calc_jobs_number()
+
 if ostype == "Darwin":
     TARGET = "MacOSX"
 else:
@@ -221,6 +239,8 @@ build = re.search(r"define XN_BUILD_VERSION (\d+)", version_file).groups()[0]
 
 version = major + "." + minor + "." + maintenance + "." + build
 print "Version:", version
+
+print "Num of compile jobs:", calc_jobs_number()
 
 print
 
@@ -263,7 +283,9 @@ print "* Creating Redist Dir..."
 logger.info("Creating Redist Dir...")
 os.chdir(SCRIPT_DIR + "/..")
 
-REDIST_DIR = "OpenNI-Bin-Dev-" + TARGET + "-v" + version
+REDIST_NAME = "OpenNI-Bin-Dev-" + TARGET + "-v" + version
+
+REDIST_DIR = "Redist/" + REDIST_NAME
 
 # Removing the old directory
 if (os.path.exists(REDIST_DIR)):
@@ -308,7 +330,7 @@ shutil.copy("Bin/" + PLATFORM + "-Release/libOpenNI.jni"+LIBS_TYPE, REDIST_DIR +
 MonoDetected = 0
 shutil.copy("Bin/" + PLATFORM + "-Release/niReg", REDIST_DIR + "/Bin")
 shutil.copy("Bin/" + PLATFORM + "-Release/niLicense", REDIST_DIR + "/Bin")
-if PLATFORM == 'x86':
+if PLATFORM == 'x86' or PLATFORM == 'x64':
     if (os.path.exists("/usr/bin/gmcs")):
         shutil.copy("Bin/" + PLATFORM + "-Release/OpenNI.net.dll", REDIST_DIR + "/Bin")
         shutil.copy("Bin/" + PLATFORM + "-Release/OpenNI.net.dll", REDIST_DIR + "/Samples/Bin/" + PLATFORM + "-Debug")
@@ -346,6 +368,8 @@ if PLATFORM == 'Arm':
     samples_list.remove('NiUserTracker')
     samples_list.remove('NiViewer')
     samples_list.remove('NiSimpleViewer')
+    samples_list.remove('NiHandTracker')
+    samples_list.remove('NiUserSelection')
 
 if (MonoDetected == 0):
     samples_list.remove("SimpleRead.net")
@@ -443,8 +467,11 @@ print "* Creating tar......"
 logger.info("Creating tar...")
 
 os.makedirs(SCRIPT_DIR+"/Final")
+os.chdir(SCRIPT_DIR + "/../Redist")
 
-execute_check("tar -cjf " +SCRIPT_DIR+"/Final/" + REDIST_DIR + ".tar.bz2 " + REDIST_DIR, "Tar")
+execute_check("tar -cjf " +SCRIPT_DIR+"/Final/" + REDIST_NAME + ".tar.bz2 " + REDIST_NAME, "Tar")
+
+os.chdir(SCRIPT_DIR)
 
 #-------------CleanUP----------------------------------------------------------#
 print "* Redist OpenNi Ended.   !!"

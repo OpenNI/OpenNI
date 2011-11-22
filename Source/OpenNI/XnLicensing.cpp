@@ -351,8 +351,6 @@ XN_C_API XnStatus xnAddLicense(XnContext* pContext, const XnLicense* pLicense)
 
 XN_C_API XnStatus xnEnumerateLicenses(XnContext* pContext, XnLicense** paLicenses, XnUInt32* pnCount)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	XN_VALIDATE_INPUT_PTR(pContext);
 	XN_VALIDATE_OUTPUT_PTR(paLicenses);
 	XN_VALIDATE_OUTPUT_PTR(pnCount);

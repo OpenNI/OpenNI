@@ -261,6 +261,15 @@ namespace OpenNI
             return poses;
         }
 
+        public int NumberOfEnumeratedGestures
+        {
+            get
+            {
+                return (Int32)SafeNativeMethods.xnGetNumberOfAvailableGestures(this.InternalObject);
+            }
+            
+        }
+
 		public bool IsGestureAvailable(string gesture)
         {
 			return SafeNativeMethods.xnIsGestureAvailable(InternalObject, gesture);

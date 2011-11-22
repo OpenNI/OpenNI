@@ -124,31 +124,6 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& c
 	printf("%d Calibration started for user %d\n", epochTime, nId);
 }
 // Callback: Finished calibration
-void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(xn::SkeletonCapability& capability, XnUserID nId, XnBool bSuccess, void* pCookie)
-{
-	XnUInt32 epochTime = 0;
-	xnOSGetEpochTime(&epochTime);
-	if (bSuccess)
-	{
-		// Calibration succeeded
-		printf("%d Calibration complete, start tracking user %d\n", epochTime, nId);
-		g_UserGenerator.GetSkeletonCap().StartTracking(nId);
-	}
-	else
-	{
-		// Calibration failed
-		printf("%d Calibration failed for user %d\n", epochTime, nId);
-		if (g_bNeedPose)
-		{
-			g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_strPose, nId);
-		}
-		else
-		{
-			g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, TRUE);
-		}
-	}
-}
-
 void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& capability, XnUserID nId, XnCalibrationStatus eStatus, void* pCookie)
 {
 	XnUInt32 epochTime = 0;
@@ -157,7 +132,6 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability
 	{
 		// Calibration succeeded
 		printf("%d Calibration complete, start tracking user %d\n", epochTime, nId);		
-		printf("Calibration complete, start tracking user %d\n", nId);
 		g_UserGenerator.GetSkeletonCap().StartTracking(nId);
 	}
 	else
