@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -3469,6 +3469,15 @@ namespace xn
 		{
 			return xnEnumerateGestures(GetHandle(), &astrGestures, &nGestures);
 		}
+
+        /** @copybrief xnGetNumberOfAvailableGestures
+         * For full details and usage, see @ref xnGetNumberOfAvailableGestures
+         */
+        inline XnUInt16 GetNumberOfAvailableGestures() const
+        {
+            return xnGetNumberOfAvailableGestures(GetHandle());
+        }
+
 		/** @copybrief xnEnumerateAllGestures
 		 * For full details and usage, see @ref xnEnumerateAllGestures
 		 */
@@ -4340,14 +4349,19 @@ namespace xn
 			hCallback = pCalibrationCookie;
 			return XN_STATUS_OK;
 		}
+
 		/** @copybrief xnUnregisterFromCalibrationStart
-		 * For full details and usage, see @ref xnUnregisterFromCalibrationStart
+		 * For full details and usage, see @ref xnUnregisterFromCalibrationStart.
+		 *
+		 * Note: due to history constraints, this function has an XnStatus return value. In practice, it
+		 * will always succeed. The user can safely ignore the return value.
 		 */
 		inline XnStatus UnregisterFromCalibrationStart(XnCallbackHandle hCallback)
 		{
 			CalibrationStartCookie* pCalibrationCookie = (CalibrationStartCookie*)hCallback;
 			xnUnregisterFromCalibrationStart(GetHandle(), pCalibrationCookie->hCallback);
 			xnOSFree(pCalibrationCookie);
+			return XN_STATUS_OK;
 		}
 
 		/**
@@ -4562,6 +4576,16 @@ namespace xn
 		{
 			return xnGetAllAvailablePoses(GetHandle(), pstrPoses, nNameLength, &nPoses);
 		}
+
+        inline XnBool IsPoseSupported(const XnChar* strPose)
+        {
+            return xnIsPoseSupported(GetHandle(), strPose);
+        }
+
+        inline XnStatus GetPoseStatus(XnUserID userID, const XnChar* poseName, XnUInt64& poseTime, XnPoseDetectionStatus& eStatus, XnPoseDetectionState& eState)
+        {
+            return xnGetPoseStatus(GetHandle(), userID, poseName, &poseTime, &eStatus, &eState);
+        }
 
 		/** @copybrief xnStartPoseDetection
 		 * For full details and usage, see @ref xnStartPoseDetection
@@ -5251,6 +5275,8 @@ namespace xn
 		inline ScriptNode(XnNodeHandle hNode = NULL) : ProductionNode(hNode) {}
 		inline ScriptNode(const NodeWrapper& other) : ProductionNode(other) {}
 
+		inline XnStatus Create(Context& context, const XnChar* strFormat);
+
 		inline const XnChar* GetSupportedFormat()
 		{
 			return xnScriptNodeGetSupportedFormat(GetHandle());
@@ -5488,8 +5514,8 @@ namespace xn
 			#pragma warning (pop)
 		}
 
-		/** @copybrief xnContextRunXmlScriptFromFile
-		 * For full details and usage, see @ref xnContextRunXmlScriptFromFile
+		/** @copybrief xnContextRunXmlScriptFromFileEx
+		 * For full details and usage, see @ref xnContextRunXmlScriptFromFileEx
 		 */
 		inline XnStatus RunXmlScriptFromFile(const XnChar* strFileName, ScriptNode& scriptNode, EnumerationErrors* pErrors = NULL)
 		{
@@ -6312,6 +6338,15 @@ namespace xn
 	inline XnStatus ScriptNode::Run(EnumerationErrors* pErrors)
 	{
 		return xnScriptNodeRun(GetHandle(), pErrors == NULL ? NULL : pErrors->GetUnderlying());
+	}
+
+	inline XnStatus ScriptNode::Create(Context& context, const XnChar* strFormat)
+	{
+		XnNodeHandle hNode;
+		XnStatus nRetVal = xnCreateScriptNode(context.GetUnderlyingObject(), strFormat, &hNode);
+		XN_IS_STATUS_OK(nRetVal);
+		TakeOwnership(hNode);
+		return (XN_STATUS_OK);
 	}
 
 	//---------------------------------------------------------------------------

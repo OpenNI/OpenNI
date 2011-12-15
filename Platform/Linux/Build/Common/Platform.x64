@@ -1,0 +1,5 @@
+# take this file's dir
+COMMON_MAK_DIR = $(dir $(lastword $(MAKEFILE_LIST)))
+
+# everything is the same as in x86
+include $(COMMON_MAK_DIR)Platform.x86

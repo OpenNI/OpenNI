@@ -1,3 +1,24 @@
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.x Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 package org.OpenNI;
 
 public class PoseDetectionCapability extends CapabilityBase
@@ -73,6 +94,22 @@ public class PoseDetectionCapability extends CapabilityBase
 	{
 		return NativeMethods.xnGetNumberOfPoses(toNative());
 	}
+	
+	public boolean isPoseSupported(String pose)
+	{
+		return NativeMethods.xnIsPoseSupported(toNative(),pose);
+	}
+	
+	public void getPoseStatus(int user, String pose, OutArg<Long> poseTime, OutArg<PoseDetectionStatus> eStatus, OutArg<PoseDetectionState> eState ) throws StatusException
+	{
+		OutArg<Integer> eInnerStatus = new OutArg<Integer>();
+		OutArg<Integer> eInnerState = new OutArg<Integer>();
+		int status = NativeMethods.xnGetPoseStatus(toNative(), user, pose, poseTime, eInnerStatus,eInnerState);
+		eStatus.value = PoseDetectionStatus.fromNative(eInnerStatus.value);
+		eState.value = PoseDetectionState.fromNative(eInnerState.value);
+		WrapperUtils.throwOnError(status);
+	}
+	
 	public String[] getAllAvailablePoses() throws StatusException
 	{
 		OutArg<String[]> poses = new OutArg<String[]>();

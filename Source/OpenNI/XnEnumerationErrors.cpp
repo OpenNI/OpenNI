@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -47,8 +47,6 @@ struct XnEnumerationErrors
 
 XN_C_API XnStatus xnEnumerationErrorsAllocate(XnEnumerationErrors** ppError)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	XN_VALIDATE_OUTPUT_PTR(ppError);
 
 	XN_VALIDATE_CALLOC(*ppError, XnEnumerationErrors, 1);

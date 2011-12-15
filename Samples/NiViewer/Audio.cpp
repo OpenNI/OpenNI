@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -54,7 +54,7 @@ typedef struct AudioData
 	int nAudioNextBuffer;
 	bool bFlush;
 	int nFirstToCheck;
-	XnDump SyncDump;
+	XnDumpFile* SyncDump;
 } AudioData;
 
 AudioData g_AudioData;
@@ -74,7 +74,7 @@ void audioPlay()
 	if (g_AudioData.bFlush)
 	{
 		printf("Audio is falling behind. Flushing all queue.\n");
-		xnDumpWriteString(g_AudioData.SyncDump, "Flushing queue...\n");
+		xnDumpFileWriteString(g_AudioData.SyncDump, "Flushing queue...\n");
 
 		// mark not to check all dropped headers
 		g_AudioData.nFirstToCheck = g_AudioData.nAudioNextBuffer;
@@ -146,7 +146,7 @@ void audioPlay()
 	// place end-time as a timestamp
 	g_AudioData.pAudioTimestamps[g_AudioData.nAudioNextBuffer] = (XnUInt64)(pAudioMD->Timestamp() + nBufferSize / (pAudioMD->BitsPerSample() / 8.0) / pAudioMD->NumberOfChannels() / (pAudioMD->SampleRate() / 1e6));
 
-	xnDumpWriteString(g_AudioData.SyncDump, "Queued index %d with timestamp %llu (%u bytes, %f ms, end timestamp: %llu)\n", g_AudioData.nAudioNextBuffer, pAudioMD->Timestamp(), nBufferSize, nBufferSize / 2.0 / pAudioMD->NumberOfChannels() / (pAudioMD->SampleRate() / 1e3), g_AudioData.pAudioTimestamps[g_AudioData.nAudioNextBuffer]);
+	xnDumpFileWriteString(g_AudioData.SyncDump, "Queued index %d with timestamp %llu (%u bytes, %f ms, end timestamp: %llu)\n", g_AudioData.nAudioNextBuffer, pAudioMD->Timestamp(), nBufferSize, nBufferSize / 2.0 / pAudioMD->NumberOfChannels() / (pAudioMD->SampleRate() / 1e3), g_AudioData.pAudioTimestamps[g_AudioData.nAudioNextBuffer]);
 
 	g_AudioData.nAudioNextBuffer = (g_AudioData.nAudioNextBuffer + 1) % NUMBER_OF_AUDIO_BUFFERS;
 }
@@ -158,7 +158,7 @@ void CALLBACK audioCallback(HWAVEOUT hwo, UINT uMsg, DWORD_PTR dwInstance, DWORD
 		WAVEHDR* pHeader = (WAVEHDR*)dwParam1;
 		XnUInt32 nIndex = pHeader->dwUser;
 
-		xnDumpWriteString(g_AudioData.SyncDump, "Done playing index %d.", nIndex);
+		xnDumpFileWriteString(g_AudioData.SyncDump, "Done playing index %d.", nIndex);
 
 		if (g_AudioData.nFirstToCheck == -1 || g_AudioData.nFirstToCheck == nIndex)
 		{
@@ -171,18 +171,18 @@ void CALLBACK audioCallback(HWAVEOUT hwo, UINT uMsg, DWORD_PTR dwInstance, DWORD
 			XnUInt32 nLastQueuedIndex = (g_AudioData.nAudioNextBuffer + NUMBER_OF_AUDIO_BUFFERS - 1) % NUMBER_OF_AUDIO_BUFFERS;
 			XnUInt64 nLastQueuedTimestamp = g_AudioData.pAudioTimestamps[nLastQueuedIndex];
 
-			xnDumpWriteString(g_AudioData.SyncDump, " %f ms in queue.", (nLastQueuedTimestamp - nPlayedTimestamp) / 1e3);
+			xnDumpFileWriteString(g_AudioData.SyncDump, " %f ms in queue.", (nLastQueuedTimestamp - nPlayedTimestamp) / 1e3);
 
 			if (nLastQueuedTimestamp - nPlayedTimestamp > AUDIO_LATENCY_THRESHOLD)
 			{
 				g_AudioData.bFlush = true;
-				xnDumpWriteString(g_AudioData.SyncDump, " Will flush queue.\n");
+				xnDumpFileWriteString(g_AudioData.SyncDump, " Will flush queue.\n");
 			}
 			else
-				xnDumpWriteString(g_AudioData.SyncDump, "\n");
+				xnDumpFileWriteString(g_AudioData.SyncDump, "\n");
 		}
 		else
-			xnDumpWriteString(g_AudioData.SyncDump, "\n");
+			xnDumpFileWriteString(g_AudioData.SyncDump, "\n");
 	}
 }
 
@@ -191,7 +191,7 @@ void audioInit()
 	g_AudioData.hWaveOut = NULL;
 	g_AudioData.bFlush = false;
 	g_AudioData.nFirstToCheck = -1;
-	g_AudioData.SyncDump = XN_DUMP_CLOSED;
+	g_AudioData.SyncDump = xnDumpFileOpen(AUDIO_SYNC_DUMP_MASK, "%s.txt", AUDIO_SYNC_DUMP_MASK);;
 
 	// check if device audio is enabled
 	const AudioMetaData* pAudioMD = getAudioMetaData();
@@ -230,7 +230,6 @@ void audioInit()
 	}
 
 	g_AudioData.nAudioNextBuffer = 0;
-	xnDumpInit(&g_AudioData.SyncDump, AUDIO_SYNC_DUMP_MASK, "", "%s.txt", AUDIO_SYNC_DUMP_MASK);
 }
 
 void audioShutdown()

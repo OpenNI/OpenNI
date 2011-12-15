@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -110,8 +110,7 @@ int main(XnInt argc, XnChar* argv[])
 
 	xnLogInitSystem();
 	xnLogSetConsoleOutput(bVerbose || bList);
-	xnLogSetSeverityFilter(bVerbose ? XN_LOG_VERBOSE : XN_LOG_WARNING);
-	xnLogSetMaskState(XN_LOG_MASK_ALL, TRUE);
+	xnLogSetMaskMinSeverity(XN_LOG_MASK_ALL, bVerbose ? XN_LOG_VERBOSE : XN_LOG_WARNING);
 
 	XnStatus nRetVal = XN_STATUS_OK;
 	if (bList)

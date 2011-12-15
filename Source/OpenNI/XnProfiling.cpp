@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -173,8 +173,6 @@ XN_C_API XnStatus xnProfilingInitFromINI(const XnChar* cpINIFileName, const XnCh
 
 XN_C_API XnStatus xnProfilingShutdown()
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	if (g_ProfilingData.hThread != NULL)
 	{
 		g_ProfilingData.bKillThread = TRUE;

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -229,7 +229,6 @@ XN_C_API XnStatus xnOSStrNCRC32(XnUChar* cpBuffer, XnUInt32 nBufferSize, XnUInt3
 {
 	// Local function variables
 	XnUInt32 nTempCRC32 = 0xffffffff;
-	XnUInt32 nStrLen = 0;
 	XnUInt32 nIdx = 0;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)
@@ -263,7 +262,7 @@ XN_C_API XnStatus xnOSStrFormatV(XnChar* cpDestString, const XnUInt32 nDestLengt
 	// nRes is the number of bytes written, not including NULL termination
 
 	if ((nRes == -1) ||	// string was truncated
-		(nRes == nDestLength && cpDestString[nRes] != '\0')) // no space for the NULL termination
+		(nRes == (XnInt32)nDestLength && cpDestString[nRes] != '\0')) // no space for the NULL termination
 	{
 		return (XN_STATUS_INTERNAL_BUFFER_TOO_SMALL);
 	}

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -181,15 +181,17 @@ private:
 	}
 };
 
-#define _XN_RAISE_WITH_RET_CODE(args)			\
-	nRetVal = pFunc(args pCallback->pCookie);	\
-	if (nRetVal != XN_STATUS_OK)				\
-	{											\
-		XnEvent::ApplyListChanges();			\
-		return (nRetVal);						\
+#define _XN_RAISE_WITH_RET_CODE(args)						\
+	{														\
+		XnStatus nRetVal = pFunc(args pCallback->pCookie);	\
+		if (nRetVal != XN_STATUS_OK)						\
+		{													\
+			XnEvent::ApplyListChanges();					\
+			return (nRetVal);								\
+		}													\
 	}
 
-#define _XN_RAISE_NO_RET_CODE(args)				\
+#define _XN_RAISE_NO_RET_CODE(args)						\
 	pFunc(args pCallback->pCookie);
 
 /**
@@ -217,7 +219,6 @@ private:
 		}																									\
 		XnStatus Raise(_raise_sign)																			\
 		{																									\
-			XnStatus nRetVal = XN_STATUS_OK;																\
 			XnAutoCSLocker lock(m_hLock);																	\
 			XnEvent::ApplyListChanges();																	\
 			XnEvent::XnCallbackPtrList::Iterator it = XnEvent::m_Handlers.begin();							\

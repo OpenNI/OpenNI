@@ -1,8 +1,103 @@
 Detailed Change log:
 --------------------
 
-Version 1.3.2.3 (Unstable version - July 19th 2011)
----------------------------------------------------
+Version 1.4.0.2 (Unstable version - Nov 17th 2011)
+--------------------------------------------------
+  * Linux bug fix: The USB read thread was using memcpy with overlapping source and dest addresses which caused newer libc libraries to fail. The solution is to use memmove.
+  * Log: fix BC methods behavior to be backwards-compatible to old one.
+  * Added GetNumberOfAvailableGestures() method to GestureGenerator.
+  * .NET BugFix: GetPoseStatus() did not work.
+  * JNI: fix a typo that prevents creating joint orientations.
+  * NiUserSelection: Update to support N closest users and N waves.
+  * Fixed python scripts to also support python 3.
+  * Java Wrapper: Added a new method copyToBuffer for copying data to a preallocated buffer to improve performance (community request).
+  * Mac: Fixed a bug in the linux set thread priority where the struct wasn't zero'd before usage (caused warning on mac osx).
+  * Linux redist bug: .net wrappers were skipped on 64-bit machines by mistake.
+  * Windows Bug Fix: shared memory was always created under the Global namespace (Failed to work with UAC turned on).
+  * Added APIs xnIsPoseSupported, xnGetPoseStatus, through PoseDetectionCapability.
+  * Java Wrappers: added createByteBuffer() to AudioMetaData to access data.
+  * NiRecordRaw: Removed duplicate call to GetProductionNodeByName.
+  * Added NiHandTracker C++ sample.
+  * Added NO_TRACKING to the list of pose detection statuses.
+  * Added NiSimpleSkeleton sample which shows the head movement of skeleton with no graphics.
+  * Added NiUserSelection sample which shows the exit pose (cross hands) and user selection.
+  * Added a new dump, "OpenNIDataFlow", to track data frames.
+  * WaitNoneUpdateAll now doesn't actually read from file (might cause some sleeping), but only triggers another thread to read in the background. 
+
+Version 1.3.4.6 (Unstable version - Nov 7th 2011)
+-------------------------------------------------
+  * In MockGenerator::SetData, change the node to Generating state so it would be recorded properly.
+  * Added new calibration error messages to the XnCalibrationStatus enum.
+  * XnArray: Allow passing base size in the ctor (to save double allocation).
+  * NiViewer: Removed an unnecessary line from file dialog init
+  * Bug fix: When recording from mock node, the first frame is no longer lost.
+  * XnOS: Added the option to create named objects in a way that will be accessible to other sessions.
+  * Renamed Linux-x86* files to Linux*
+  * Linux Bug Fix: xnOSSeekFile64 did not return OK. This caused problems in playback and recording of ONI files.
+  * Added some error log prints to the codecs and players.
+  * C# wrappers: fixed the marshaling of license struct.
+  * Added the function SetDataBytes to XnBitSet so it now accepts a byte buffer of any size. Note: byte order is different when reading from byte array or dword array in little endian platforms.
+  * C# wrappers: fixed a bug related to ProductionNodeDescription. Might break API, but this API would usually crash, so its OK.
+  * Linux: Switched to newer makefiles. SSE is enabled in debug, always declare sysroot (even for /) so that -I=/usr/include/ni could work properly.
+  * Linux: fix cross compilation and add separate scripts to cross compile on specific machine. Also, binary folders are now named according to platform and configuration.
+  * Documentation: Added a section about creating modules.
+  * Backwards Compatibility Workaround: some old recordings marked nodes as not generating though they contained frames. This resulted in "node is locked" error if trying to start generating them.
+
+Version 1.3.4.3 (Unstable version - Oct 10th 2011)
+--------------------------------------------------
+  * Update to newer version of CommonCppMakefile (without the -malign-double flag).
+  * Changed dump API to use void pointer instead of char pointer
+  * Added xnOSDeleteEmptyDirectory and xnOSDeleteDirectoryTree methods.
+  * Adding ScriptNode.Create() to C++ wrappers.
+  * Dumps: New, cleaner interface.
+  * Dumps: Adding dump writers mechanisms, so one can implement a new writer, other than files.
+  * Recordings: Support files bigger than 2 GB.
+  * Samples: default SamplesConfig is now better documented. Global mirror is turned on, instead of every generator.
+  * Java Wrappers: some methods were private by mistake.
+  * Samples Bug Fix: trying to create the rotating device extension would cause a crash if extension sample is not registered with OpenNI.
+  * Bug Fix: StartGenerating would fail on locked nodes even if node is already generating (this caused a bug where declaring a node in the XML which already existed in the recording would fail).
+  * Logs: New, better performance API.
+  * XnPlatform min/max values were wrong.
+
+Version 1.3.3.6 (Stable version - Sep 18th 2011)
+------------------------------------------------
+  * Fixed memory leak in Queue and ThreadSafeQueue.
+  * Java: added AlternativeViewpoint API.
+  * Java Bug Fix: audio was missing getMetaData().
+  * Bug Fix: potential crash in DirectX filter.
+  * Java: added getGeneralProperty and setGeneralProperty overloads which work with byte[].
+  * Java bug fix: imageGenerator.getMetaData().getData() returns map where bytesPerPixel is set to 0.
+  * Bug Fix: Playback now advances even if using xnWaitNoneUpdateAll.
+  * Bug Fix: UnregisterFromCalibrationComplete didn't work properly.
+  * Bug Fix: trying to remove a (non-existing) task from an empty scheduler would cause a crash.
+  * Linux USB device: in kernel 2.6.37, need to wait for control reply before continuing to poll ep0.
+  * Linux USB device: write to data endpoint in asynch IO, and return error if timeout occurred.
+  * Preliminary Android Support. With 2 samples: SimpleViewer and UserTracker.
+  * Preliminary ARM Support.  
+  * Removed some duplicate definitions in OS and Platform of Win32 (ref #1472).
+  * NiUserTracker can now work without depth (it simulates its view perspective).
+  * Java bug fix: improper cleanup in 'Context' object java wrapper. 
+  * NiSimpleRead: Also accept SamplesConfig from local dir.
+  * Windows USB driver: Updated the digital signature.
+  * Fix a small leak - 32 bytes for each created node (the BitSet ctor and dtor weren't called)
+  * .NET wrapper: added a "Current" version to the XnVersion structure.
+  * .NET wrapper: marking all C imports as cdecl.
+  * Java bug fix: memory corruption in some methods and callbacks.
+  * Java bug fix: TellPlayerFrame and GetPlayerNumOfFrames would always throw exception (bad cast).
+  * Java bug fix: callbacks would sometime cause an exception when detaching thread.
+  * API Bug Fix: UnregisterFromCalibrationStart returns XnStatus, but nothing was returned. This function should be a void function, but was left with original signature due to backwards compatibility issues.
+  * XnOS: adding special timeout to sockets Connect method: XN_SOCKET_DEFAULT_TIMEOUT, which give default OS behavior.
+  * .Net wrapper Bug Fix: nodes created using CreateAnyProductionTree will never be destroyed.
+  * .Net wrapper: GetXXXCap now always returns the same object (instead of creating and garbage collecting many objects).
+  * OpenNI filter: Added some validity checks.
+  * XnDump.h: allowing compilation under C.
+  * Linux USB Device: fix enumeration process.
+  * Linux USB Device: control and data endpoints now work.
+  * Win32 Bug Fix: trying to create an unnamed mutex causes Access Violation.
+  * Linux USB: Fix error code when failed to receive from control.
+
+Version 1.3.2.3 (Stable version - July 19th 2011)
+-------------------------------------------------
   * Windows/Linux: Allow creating mutex even if name contains slashes/backslashes.
   * Linux installer fix: dir /var/log/ni wasn't created, so installation might fail.
   * Linux installer fix: do not try to install non-existing .Net wrappers.

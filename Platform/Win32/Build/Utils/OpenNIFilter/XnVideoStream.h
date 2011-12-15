@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -99,11 +99,10 @@ private:
 
 	xn::ImageGenerator& m_imageGen;
 	XnArray<Mode> m_aSupportedModes;
-	XnUInt32 m_nSupportedModes;
 	BOOL m_bFlipVertically;
 	XnFPSData m_FPS;
 	int m_nPreferredMode;
-	XnDump& m_Dump;
+	XnDumpFile*& m_Dump;
 };
 
 #endif // __XN_VIDEO_STREAM_H__

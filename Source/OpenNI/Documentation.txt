@@ -11,6 +11,7 @@ It includes the following chapters:
 - @subpage xmlscripts
 - @subpage cmdutils
 - @subpage samples
+- @subpage modules_root
 - @subpage additional
 - @subpage legal
 */
@@ -1589,6 +1590,912 @@ Note: Keep in mind the memory used to store the frames.
 */
 
 
+/**
+@page modules_root Creating OpenNI Modules
+
+OpenNI is a plugin system. It defines the interfaces and data flow of common 3D computer vision types.
+
+One can create a new OpenNI module. An OpenNI module is a shared-library which exports one or more node implementation.
+
+In this section, we'll go over the necessary steps of creating such a module.
+
+<table>
+	<tr><th>Note:</th></tr>
+	<tr><td>
+OpenNI native interface is written in C. However, just as there are C++ wrappers for the API, there are also C++ wrappers 
+for creating modules. Using the C++ wrappers is the easiest way to create a new module, so all further explanations will
+assume the use of C++.
+
+Creating new modules in C is not covered currently in this documentation.
+	</td></tr>
+</table>
+
+@subpage modules_topology
+
+@subpage modules_node
+
+@subpage modules_exporter
+
+@subpage modules_module
+
+@subpage modules_registration
+
+*/
+
+/**
+@page modules_topology Defining Nodes Topology
+
+The first thing to do when wanting to create new node implmentations is to define exactly what nodes we want to 
+implement and the input each node needs.
+
+For example, if I have a physical device which is able to create both depth data and color image, I would want to 
+create two node implementations: a depth generator and an image generator. It is also highly recommended to create
+a device implementation. The device node does not necessarily participate in the data flow, but can be useful when
+wanting the represent the physical device (to get serial number for example).
+
+In the above example, we'll define our topology as follows:
+- a device node, 
+- a depth generator, depended on the specific device node we defined, and
+- an image generator, depended on the specific device node we defined.
+
+Another example would be creating a module which is some sort of algorithm over another input. For example, a hand 
+generator which identifies hands in any color image. In this case, our module will include a single node implementation,
+a hand generator, which will depend on any image generator.
+
+*/
+
+/**
+@page modules_node Creating a Node Implementation
+
+Now we need to create the node implementations we want. For each such implementation, we'll create a new class.
+
+The class should:
+- @subpage modules_node_interface
+- @subpage modules_node_inputs
+- @subpage modules_node_capabilities
+- @subpage modules_gen
+
+*/
+
+/**
+@page modules_node_interface Implement the Proper Interface
+
+Note that OpenNI has a different interface for a node implementation than the actual API of the node. However sometimes very similar, 
+those interfaces are different.
+
+The module's interfaces (C++ ones) are defined in file @ref XnModuleCppInterface.h.
+
+The following table lists current OpenNI node types and their module interface.
+
+<table>
+	<tr>
+		<th>Node Type</th>
+		<th>Module Interface</th>
+	</tr>
+	<tr>
+		<td>Production Node</td>
+		<td>@ref xn::ModuleProductionNode</td>
+	</tr>
+	<tr>
+		<td>Device</td>
+		<td>@ref xn::ModuleDevice</td>
+	</tr>
+	<tr>
+		<td>Generator</td>
+		<td>@ref xn::ModuleGenerator</td>
+	</tr>
+	<tr>
+		<td>Recorder</td>
+		<td>@ref xn::ModuleRecorder</td>
+	</tr>
+	<tr>
+		<td>Player</td>
+		<td>@ref xn::ModulePlayer</td>
+	</tr>
+	<tr>
+		<td>Map Generator</td>
+		<td>@ref xn::ModuleMapGenerator</td>
+	</tr>
+	<tr>
+		<td>Depth Generator</td>
+		<td>@ref xn::ModuleDepthGenerator</td>
+	</tr>
+	<tr>
+		<td>Image Generator</td>
+		<td>@ref xn::ModuleImageGenerator</td>
+	</tr>
+	<tr>
+		<td>IR Generator</td>
+		<td>@ref xn::ModuleIRGenerator</td>
+	</tr>
+	<tr>
+		<td>Gestures Generator</td>
+		<td>@ref xn::ModuleGestureGenerator</td>
+	</tr>
+	<tr>
+		<td>Scene Analyzer</td>
+		<td>@ref xn::ModuleSceneAnalyzer</td>
+	</tr>
+	<tr>
+		<td>Hands Generator</td>
+		<td>@ref xn::ModuleHandsGenerator</td>
+	</tr>
+	<tr>
+		<td>User Generator</td>
+		<td>@ref xn::ModuleUserGenerator</td>
+	</tr>
+	<tr>
+		<td>Audio Generator</td>
+		<td>@ref xn::ModuleAudioGenerator</td>
+	</tr>
+	<tr>
+		<td>Codec</td>
+		<td>@ref xn::ModuleCodec</td>
+	</tr>
+	<tr>
+		<td>Script</td>
+		<td>@ref xn::ModuleScriptNode</td>
+	</tr>
+</table>
+
+Our newly created class should inherit virtually from the proper interface. For example, if we're creating
+a hand generator then our class declaration should start with:
+
+@code
+class MyHandGenerator: public virtual xn::ModuleHandsGenerator
+{
+...
+};
+@endcode
+
+*/
+
+/**
+@page modules_node_inputs Obtain Inputs
+
+If our node implementation requires any inputs (it would normally need), we can pass them to this class in its
+constructor or in an initialization method. Later on, we'll pass those inputs to instances of this class. This will
+be done from the node exporter (see @ref modules_exporter_create).
+
+Note that if the inputs required are other nodes (for example, if our hands generator requires an image generator), then
+those nodes should be recevied as API objects, and not as module objects (i.e. we should use @ref xn::ImageGenerator 
+and not @ref xn::ModuleImageGenerator).
+
+In our example:
+@code
+class MyHandGenerator: public virtual xn::ModuleHandsGenerator
+{
+public:
+	MyHandsGenerator(xn::ImageGenerator imageGen);
+	...
+};
+@endcode
+
+*/
+
+/**
+@page modules_node_capabilities Support Capabilities
+
+If our new node implementation supports any capabilities, it should both declare that and implement their interfaces.
+
+Declaring the node implementation supported capabilities is done by implementing the @ref xn::ModuleProductionNode::IsCapabilitySupported
+method. This method only declares if a certain capability is supported or not.
+
+The actual implementation of the capability is done by implementing this capability interface. This implementation can be 
+done in a different class, or in our node implementation class. In any case, our node implementation must implement the propert 
+get method for this interface.
+
+The following table summarizes all capabilities:
+
+<table>
+	<tr>
+		<th>Capability</th>
+		<th>Capability Name</th>
+		<th>Capability Interface</th>
+		<th>Get Interface Method</th>
+	</tr>
+	<tr>
+		<td>Extended Serialization</td>
+		<td>XN_CAPABILITY_EXTENDED_SERIALIZATION</td>
+		<td>xn::ModuleExtendedSerializationInterface</td>
+		<td>xn::ModuleProductionNode::GetExtendedSerializationInterface</td>
+	</tr>
+	<tr>
+		<td>Lock Aware</td>
+		<td>XN_CAPABILITY_LOCK_AWARE</td>
+		<td>xn::ModuleLockAwareInterface</td>
+		<td>xn::ModuleProductionNode::GetLockAwareInterface</td>
+	</tr>
+	<tr>
+		<td>Error State</td>
+		<td>XN_CAPABILITY_ERROR_STATE</td>
+		<td>xn::ModuleErrorStateInterface</td>
+		<td>xn::ModuleProductionNode::GetErrorStateInterface</td>
+	</tr>
+	<tr>
+		<td>Brightness</td>
+		<td>XN_CAPABILITY_BRIGHTNESS</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Contrast</td>
+		<td>XN_CAPABILITY_CONTRAST</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Hue</td>
+		<td>XN_CAPABILITY_HUE</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Saturation</td>
+		<td>XN_CAPABILITY_SATURATION</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Sharpness</td>
+		<td>XN_CAPABILITY_SHARPNESS</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Gamma</td>
+		<td>XN_CAPABILITY_GAMMA</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Color Temperature</td>
+		<td>XN_CAPABILITY_COLOR_TEMPERATURE</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Backlight Compensation</td>
+		<td>XN_CAPABILITY_BACKLIGHT_COMPENSATION</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Gain</td>
+		<td>XN_CAPABILITY_GAIN</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Pan</td>
+		<td>XN_CAPABILITY_PAN</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Tilt</td>
+		<td>XN_CAPABILITY_TILT</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Roll</td>
+		<td>XN_CAPABILITY_ROLL</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Zoom</td>
+		<td>XN_CAPABILITY_ZOOM</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Exposure</td>
+		<td>XN_CAPABILITY_EXPOSURE</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Iris</td>
+		<td>XN_CAPABILITY_IRIS</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Focus</td>
+		<td>XN_CAPABILITY_FOCUS</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Lowlight Compensation</td>
+		<td>XN_CAPABILITY_LOW_LIGHT_COMPENSATION</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Device Identification</td>
+		<td>XN_CAPABILITY_DEVICE_IDENTIFICATION</td>
+		<td>xn::ModuleDeviceIdentificationInterface</td>
+		<td>xn::ModuleDevice::GetIdentificationInterface</td>
+	</tr>
+	<tr>
+		<td>Alternative Viewpoint</td>
+		<td>XN_CAPABILITY_ALTERNATIVE_VIEW_POINT</td>
+		<td>xn::ModuleAlternativeViewPointInterface</td>
+		<td>xn::ModuleGenerator::GetAlternativeViewPointInterface</td>
+	</tr>
+	<tr>
+		<td>Frame Sync</td>
+		<td>XN_CAPABILITY_FRAME_SYNC</td>
+		<td>xn::ModuleFrameSyncInterface</td>
+		<td>xn::ModuleGenerator::GetFrameSyncInterface</td>
+	</tr>
+	<tr>
+		<td>Mirror</td>
+		<td>XN_CAPABILITY_MIRROR</td>
+		<td>xn::ModuleMirrorInterface</td>
+		<td>xn::ModuleGenerator::GetMirrorInterface</td>
+	</tr>
+	<tr>
+		<td>Cropping</td>
+		<td>XN_CAPABILITY_CROPPING</td>
+		<td>xn::ModuleCroppingInterface</td>
+		<td>xn::ModuleMapGenerator::GetCroppingInterface</td>
+	</tr>
+	<tr>
+		<td>Anti Flicker</td>
+		<td>XN_CAPABILITY_ANTI_FLICKER</td>
+		<td>xn::ModuleAntiFlickerInterface</td>
+		<td>xn::ModuleMapGenerator::GetAntiFlickerInterface</td>
+	</tr>
+	<tr>
+		<td>User Position</td>
+		<td>XN_CAPABILITY_USER_POSITION</td>
+		<td>xn::ModuleUserPositionInterface</td>
+		<td>xn::ModuleDepthGenerator::GetUserPositionInterface</td>
+	</tr>
+	<tr>
+		<td>Hand Touching Field-of-View</td>
+		<td>XN_CAPABILITY_HAND_TOUCHING_FOV_EDGE</td>
+		<td>xn::ModuleHandTouchingFOVEdgeInterface</td>
+		<td>xn::ModuleHandsGenerator::GetHandTouchingFOVEdgeInterface</td>
+	</tr>
+	<tr>
+		<td>Skeleton</td>
+		<td>XN_CAPABILITY_SKELETON</td>
+		<td>xn::ModuleSkeletonInterface</td>
+		<td>xn::ModuleUserGenerator::GetSkeletonInterface</td>
+	</tr>
+	<tr>
+		<td>Pose Detection</td>
+		<td>XN_CAPABILITY_POSE_DETECTION</td>
+		<td>xn::ModulePoseDetectionInteface</td>
+		<td>xn::ModuleUserGenerator::GetPoseDetectionInteface</td>
+	</tr>
+</table>
+
+For example, let's say our hands generator supports the mirror capability as well as the error state capability. It implements
+error state in the same class and mirror in another one.
+
+@code
+class MyHandsGeneratorMirror : public virtual xn::ModuleMirrorInterface
+{
+...
+};
+
+class MyHandGenerator: 
+	public virtual xn::ModuleHandsGenerator, 
+	public virtual xn::ModuleErrorStateInterface
+{
+public:
+	...
+	
+	virtual XnBool IsCapabilitySupported(const XnChar* strCapabilityName)
+	{
+		return (
+			strcmp(strCapabilityName, XN_CAPABILITY_MIRROR) == 0 ||
+			strcmp(strCapabilityName, XN_CAPABILITY_ERROR_STATE) == 0
+			);
+	}
+	
+	...
+	
+	virtual ModuleErrorStateInterface* GetErrorStateInterface() { return this; }
+	
+	...
+	
+	virtual ModuleMirrorInterface* GetMirrorInterface() { return &m_mirrorCap; }
+
+private:
+	MyHandsGeneratorMirror m_mirrorCap;
+};
+@endcode
+*/
+
+/**
+@page modules_gen Implemeting a Generator
+
+If our node implementation is some sort of generator (i.e. produces data), it can be usually implemeted
+in one of two ways - an active generator (i.e. generates data in the background somehow) or a passive one
+(i.e. processes other nodes data in order to create new data). While those two models are different when implementing,
+they both fit in OpenNI interfaces.
+
+When a generator has new data, it informs OpenNI by raising its <i>New Data Available</i> event. This will cause OpenNI
+to call its @ref xn::ModuleGenerator::UpdateData() method in the application main-loop (assuming the application is using
+one of the <i>WaitXUpdateAll</i> methods. The UpdateData method is the only place where the node implementation is allowed
+to change its <i>Last Updated Data</i>. This flow is explained in details in the following sections.
+
+@section modules_gen_state The Generating State
+
+A generator can be in one of two states: generating and non-generating. When the node is created, it is in the non-generating
+state. This state is useful for choosing configuration before actually starting to generate new data.
+
+A generator's state can be changed to generating by calling its @ref xn::ModuleGenerator::StartGenerating() method, and can 
+be changed to non-generating by calling its @ref xn::ModuleGenerator::StopGenerating() method. The generator is responsible
+to raise the "Generation Running Changed" event whenever its generating state is changed.
+
+In essense, when in the generating state, the generator constantly generates new data (unless bounded by some input of course).
+
+@section modules_gen_new New Data
+
+When a generator is in the generating state it generates "new" data, meaning, data that the application hasn't received yet.
+A generator does not simply replace its data when it can. Each generator is responsible of holding the last data that the 
+application received, and not to modify it. Instead, when new data is available, the generator should raise its <i>New Data
+Available</i> event, as well as to return TRUE when its @ref xn::ModuleGenerator::IsNewDataAvailable() method is called.
+
+The event is used by OpenNI to check current state if the application called one of the WaitXUpdateAll methods. In those methods,
+OpenNI waits for some new data to arrive and then checks if the requested condition was completed. If so, it updates all the nodes
+which has new data. It uses the @ref xn::ModuleGenerator::IsNewDataAvailable() method for checking if the node has new data, and
+the @ref xn::ModuleGenerator::UpdateData() to make the node update its data. The <i>UpdateData</i> method is the only place
+where the node implementation is allowed to modify its last updated data.
+
+@section modules_gen_active Example A: An Active Generator
+
+An active generator is a generator that does its generation in a thread other than the application thread. 
+
+Usually, its implementation will be as follows:
+- The StartGenerating() method starts a worker thread (or perform an asynchronous call) that is responsible of
+  getting new data.
+- The StopGenerating() method stops the worker thread (or cancels the asynchronous call).
+- The node holds a buffer containing the last updated data (i.e. the "user" buffer, the buffer holding the data the 
+  application received after last UpdateData() method was called).
+- When the worker thread is done generating the new data (or the asynchronous call has returned), the data is stored
+  in another buffer (the "next" buffer), and the <i>New Data Available</i> event is raised.
+- The IsNewDataAvailable() methods checks if the "next" buffer exists.
+- The UpdateData() method changes the "next" buffer to be the "user" buffer, and deletes the previous "user" buffer.
+
+Of course, the explanation above is simplified. Usually, instead of allocating and deleting data buffers, a buffer pool
+is used, and the implementation should copy the data from one buffer to the other as little as possible, so that it
+wouldn't consume much hardware resources.
+
+@section modules_gen_passive Example B: A Passive Generator
+
+A passive generator usually depends on the data of another generator. It does some processing in the application thread
+to produce new data from its input node's data.
+
+Usually, its implementation will be as follows:
+- The StartGenerating() method registers to its input node <i>New Data Available</i> event.
+- The StopGenerating() method unregisters from this event.
+- The node holds a buffer containing the last updated data (i.e. the "user" buffer, the buffer holding the data the 
+  application received after last UpdateData() method was called).
+- When the input node's <i>New Data Available</i> event is raised, it raises its own event, also marking that 
+  new input data is available for processing (using a member flag).
+- The IsNewDataAvailable() method checks if this flag is turned on. <b>Note:</b> it is not sufficient to check
+  if the input node has new data available, because this method might be called <b>after</b> the input node's UpdateData()
+  method was called, but before our node's UpdateData() method was called. In such a case, the input node will say it has
+  no new data, but its last data wasn't processed yet by our node.
+- The UpdateData() method takes the input data from the input node, does some processing and updates the "user" buffer.
+
+*/
+
+
+/**
+@page modules_exporter Creating a Node Exporter
+
+Once we completed our node implementation class, we should create a node exporter class to export our new node to OpenNI.
+The node exporter is some sort of a factory. It allows getting some information about this node implementation, it supports 
+enumerating which instances of this implementation can be created at the moment, and allows creating such instances and
+destroying them.
+
+Creating a node exporter is done by defining a new class inheriting from @ref xn::ModuleExportedProductionNode.
+
+@section modules_exporter_desc Node Description
+
+Each node implementation has a description. The description contains the following information:
+- Node Type (Depth Generator / Device / Hands Generator, etc.)
+- Vendor Name
+- Produce Name (To distinguish two products from the same vendor)
+- Version
+
+This description should be unique to each node implementation.
+
+@section modules_exporter_enum Enumeration
+
+The enumeration process is where production graphs are created. When an application asks for a node of a specific type,
+OpenNI enumerates the node exporters which declared this type. The node exporter is responsible of returning the list
+of production graphs that can be created in order to have such a node. Of course, each such production graph will
+have our node implementation as its root.
+
+The enumeration process is the opportunity to:
+- Check if a specific hardware is attached and ready for operation. For example, an exporter of a device node will usually
+  query the operating system to find our if a specific USB device is connected right now. It can also check if this hardware
+  is not already in use by another software, and so cannot be used. If more than one device is connected, it can return
+  two different production graphs, one for each such device.
+- Check that a valid license exists to use the node implementation.
+- Enumerate nodes from another type that are required for this node implementation to function.
+
+A production graph alternative is represented by a @ref xn::NodeInfo object. It contains a description of the node (must be
+the same as the description returned by the @ref xn::ModuleExportedProductionNode::GetDescription() method), an optional
+creation info and a list of depended nodes (through which the entire graph can be described).
+
+Adding production graphs to the list is usually done using the @ref xn::NodeInfoList::Add() method.
+
+Note that one of the returned production graph alternatives might be used later on to create the production graph, so it's
+important that this alternative will fully describe the exact instance to be created. If two alternatives only differ in the
+way the root node (our node implementation) is created, the difference can be described in the <i>creation info</i> member.
+
+If the node implementation depends on exactly one input node, it can use the @ref xn::Context::AutoEnumerateOverSingleInput()
+utility method.
+
+If no production graphs alternatives are currently available, besides returning an empty list, it is also advised to return
+a return value other than XN_STATUS_OK. This return value will be added to the EnumerationErrors object, so that the application
+can later on check why a specific node failed to enumerate.
+
+<b>Note:</b> Current OpenNI interface can not pass state while enumerating. This causes a problem if production
+graph cycles might occur (for example, if a depth generator enumerates for depth generator, or if a hands generator
+enumerates for user generator which itself enumerates for hands generator). Right now, the best solution is to 
+use a static boolean inside your Enumerate() implementation, to recognize if the method is called recursively, and
+if so, return nothing.
+
+@section modules_exporter_create Creating the Node
+
+Once enumeration is complete, the application can choose one of the returned production graphs alternatives and ask OpenNI 
+to create it. OpenNI assures the node exporter that all needed nodes in the production graphs will be created before
+calling to xn::ModuleExportedProductionNode::Create(), so that the exporter can take those nodes and use them.
+In addition to the information found in the NodeInfo object (needed nodes, creation info), OpenNI passes to the exporter
+an instance name (the name that this node will have in OpenNI context), and a configuration dir (taken from the module
+registration. see @ref modules_registration).
+
+The exporter should create the node implementation it exports, and return a pointer to it to OpenNI.
+
+@section modules_exporter_destroy Destroying the Node
+
+Once OpenNI determines that the node is no longer needed, it will ask the exporter to destroy it by calling @ref
+xn::ModuleExportedProductionNode::Destroy().
+
+@section modules_exporter_ex1 Example A: Exporter for a node which requires a physical device
+
+Let's take for example a device node which represent some USB physical device. The enumeration uses the operating system
+to find out which devices are connected right now, takes the path to each of them, and create a production graph for each.
+The exporter places the device path in the creation info, so it would know the right device to connect to.
+
+The Create() method takes the creation info and passes it to the device node constructor.
+
+@code
+class MyDevice : public virtual xn::ModuleDevice
+{
+public:
+	MyDevice(const XnChar* strDevicePath);
+	...
+};
+
+class MyDeviceExporter : public virtual xn::ModuleExportedProductionNode
+{
+public:
+	virtual void GetDescription(XnProductionNodeDescription* pDescription) 
+	{
+		pDescription->Type = XN_NODE_TYPE_DEVICE;
+		strcpy(pDescription->strVendor, "New Devices Inc.");
+		strcpy(pDescription->strName, "MyDevice");
+		pDescription->Version.nMajor = 1;
+		pDescription->Version.nMinor = 0;
+		pDescription->Version.nMaintenance = 0;
+		pDescription->Version.nBuild = 7;
+	}
+
+	virtual XnStatus EnumerateProductionTrees(Context& context, NodeInfoList& TreesList, EnumerationErrors* pErrors) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+
+		XnProductionNodeDescription description;
+		GetDescription(&description);
+		
+		// find which USB device are connected
+		const XnUSBConnectionString* astrDevicePaths;
+		XnUInt32 nCount;
+
+		nRetVal = xnUSBEnumerateDevices(MY_VENDOR_ID, MY_PRODUCT_ID, astrDevicePaths, &nCount);
+		XN_IS_STATUS_OK(nRetVal);
+		
+		if (nCount == 0)
+		{
+			// no device was found. return an error
+			return XN_STATUS_DEVICE_NOT_CONNECTED;
+		}
+
+		// add a production graph alternative for each connected device
+		for (XnUInt32 i = 0; i < nCount; ++i)
+		{
+			nRetVal = TreesList.Add(description, astrDevicePaths[i], NULL);
+			XN_IS_STATUS_OK(nRetVal);
+		}
+
+		xnUSBFreeDevicesList(astrDevicePaths);
+
+		return (XN_STATUS_OK);
+	}
+
+	virtual XnStatus Create(Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, 
+							NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, ModuleProductionNode** ppInstance) 
+	{
+		*ppInstance = new MyDevice(strCreationInfo);
+		if (*ppInstance == NULL)
+		{
+			return XN_STATUS_ALLOC_FAILED;
+		}
+
+		return XN_STATUS_OK;
+	}
+
+	virtual void Destroy(ModuleProductionNode* pInstance) 
+	{
+		delete pInstance;
+	}
+};
+@endcode
+
+@section modules_exporter_ex2 Example B: Exporter for a node which requires one input node
+
+Let's take for example a hands generator that works on an RGB image. The exporter will declare
+the node needs an image generator as input.
+
+@code
+class MyHandsGenerator : public virtual xn::ModuleHandsGenerator
+{
+public:
+	MyHandsGenerator(ImageGenerator imageGen);
+	...
+};
+
+class MyHandsExporter : public virtual xn::ModuleExportedProductionNode
+{
+public:
+	virtual void GetDescription(XnProductionNodeDescription* pDescription) 
+	{
+		pDescription->Type = XN_NODE_TYPE_DEVICE;
+		strcpy(pDescription->strVendor, "New Algorithms Inc.");
+		strcpy(pDescription->strName, "MyHandsGenerator");
+		pDescription->Version.nMajor = 1;
+		pDescription->Version.nMinor = 0;
+		pDescription->Version.nMaintenance = 0;
+		pDescription->Version.nBuild = 7;
+	}
+
+	virtual XnStatus EnumerateProductionTrees(Context& context, NodeInfoList& TreesList, EnumerationErrors* pErrors) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+
+		XnProductionNodeDescription description;
+		GetDescription(&description);
+
+		return context.AutoEnumerateOverSingleInput(
+			TreesList,			// the list to be filled
+			description,		// our description
+			NULL,				// creation info. Not needed in this example.
+			XN_NODE_TYPE_IMAGE, // type of the single input required
+			pErrors,			// the EnumerationErrors object
+			NULL				// query. Not needed in this example.
+			);
+	}
+
+	virtual XnStatus Create(Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, 
+							NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, ModuleProductionNode** ppInstance) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+		
+		// take the first needed node
+		NodeInfoList::Iterator it = pNeededTrees->Begin();
+		if (it == pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		NodeInfo imageInfo = *it;
+
+		// make sure its of the right type and that this is the only one
+		if (imageInfo.GetDescription().Type != XN_NODE_TYPE_IMAGE || ++it != pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		// OpenNI assures us the image node is already created
+		ImageGenerator image;
+		nRetVal = imageInfo.GetInstance(image);
+		XN_IS_STATUS_OK(nRetVal);
+
+		*ppInstance = new MyHandsGenerator(image);
+		if (*ppInstance == NULL)
+		{
+			return XN_STATUS_ALLOC_FAILED;
+		}
+
+		return XN_STATUS_OK;
+	}
+
+	virtual void Destroy(ModuleProductionNode* pInstance) 
+	{
+		delete pInstance;
+	}
+};
+@endcode
+
+@section modules_exporter_ex3 Example C: Exporter for a node which requires two different nodes
+
+Let's take for example a hands generator that needs both RGB information and depth information
+of the scene. The exporter will create production graphs alternatives that require both
+ImageGenerator and DepthGenerator.
+
+@code
+class MyHandsGenerator : public virtual xn::ModuleHandsGenerator
+{
+public:
+	MyHandsGenerator(ImageGenerator& imageGen, DepthGenerator& depthGen);
+	...
+};
+
+class MyHandsExporter : public virtual xn::ModuleExportedProductionNode
+{
+public:
+	virtual void GetDescription(XnProductionNodeDescription* pDescription) 
+	{
+		pDescription->Type = XN_NODE_TYPE_DEVICE;
+		strcpy(pDescription->strVendor, "New Algorithms Inc.");
+		strcpy(pDescription->strName, "MyHandsGenerator");
+		pDescription->Version.nMajor = 1;
+		pDescription->Version.nMinor = 0;
+		pDescription->Version.nMaintenance = 0;
+		pDescription->Version.nBuild = 7;
+	}
+
+	virtual XnStatus EnumerateProductionTrees(Context& context, NodeInfoList& TreesList, EnumerationErrors* pErrors) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+
+		XnProductionNodeDescription description;
+		GetDescription(&description);
+
+		// find production graph alternatives for image
+		NodeInfoList imageList;
+		nRetVal = context.EnumerateProductionTrees(XN_NODE_TYPE_IMAGE, NULL, imageList, pErrors);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// find production graph alternatives for depth
+		NodeInfoList depthList;
+		nRetVal = context.EnumerateProductionTrees(XN_NODE_TYPE_DEPTH, NULL, depthList, pErrors);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// now for each combination, we create one alternative
+		for (NodeInfoList::Iterator imageIt = imageList.Begin(); imageIt != imageList.End(); ++imageIt)
+		{
+			for (NodeInfoList::Iterator depthIt = depthList.Begin(); depthIt != depthList.End(); ++depthIt)
+			{
+				// create needed nodes list
+				NodeInfoList neededNodes;
+
+				nRetVal = neededNodes.AddNodeFromAnotherList(imageIt);
+				XN_IS_STATUS_OK(nRetVal);
+
+				nRetVal = neededNodes.AddNodeFromAnotherList(depthIt);
+				XN_IS_STATUS_OK(nRetVal);
+
+				nRetVal = TreesList.Add(
+					description,	// our description
+					NULL,			// creation info. not needed in this example
+					&neededNodes	// needed nodes list
+					);
+				XN_IS_STATUS_OK(nRetVal);
+			}
+		}
+
+		return XN_STATUS_OK;
+	}
+
+	virtual XnStatus Create(Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, 
+							NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, ModuleProductionNode** ppInstance) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+		
+		// take the first needed node
+		NodeInfoList::Iterator it = pNeededTrees->Begin();
+		if (it == pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		NodeInfo imageInfo = *it;
+
+		// take the second needed node
+		++it;
+		if (it == pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		NodeInfo depthInfo = *it;
+
+		// make sure types are correct and that no more nodes were received
+		if (imageInfo.GetDescription().Type != XN_NODE_TYPE_IMAGE || 
+			depthInfo.GetDescription().Type != XN_NODE_TYPE_DEPTH ||
+			++it != pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		// OpenNI assures us the nodes are already created
+		ImageGenerator image;
+		nRetVal = imageInfo.GetInstance(image);
+		XN_IS_STATUS_OK(nRetVal);
+
+		DepthGenerator depth;
+		nRetVal = depthInfo.GetInstance(depth);
+		XN_IS_STATUS_OK(nRetVal);
+
+		*ppInstance = new MyHandsGenerator(image, depth);
+		if (*ppInstance == NULL)
+		{
+			return XN_STATUS_ALLOC_FAILED;
+		}
+
+		return XN_STATUS_OK;
+	}
+
+	virtual void Destroy(ModuleProductionNode* pInstance) 
+	{
+		delete pInstance;
+	}
+};
+@endcode
+
+*/
+
+/**
+@page modules_module Module Entry Points
+
+Now that we have a node implementation and an exporter which exports it to OpenNI, all that is
+left is to let OpenNI know which exporters exist in your module.
+
+The best way to do so is to create a new cpp file, and in it:
+*-	Include OpenNI C++ registration header:
+	@code
+	#include <XnModuleCppRegistratration.h>
+	@endcode
+*-	Declare this module. This is done by the following line:
+	@code
+	XN_EXPORT_MODULE(xn::Module)
+	@endcode
+	If you want your module to behave differently than default (for example, do some extra initialization
+	upon shared library loading), you can create a new class, inheriting from xn::Module, and export it instead.
+*-	Declare all exporters using the corresponding macros. For example, to declare a HandsGenerator exporter:
+	@code
+	XN_EXPORT_HANDS(xn::MyHandsExporter)
+	@endcode
+
+*/
+
+/**
+@page modules_registration Registering the new Module
+
+Our module is now complete. All we need to do now is to register our shared library with OpenNI. This can
+be done using OpenNI's niReg utility. see @ref nireg for usage.
+
+*/
 
 
 /**
@@ -1611,7 +2518,10 @@ compatibility).
 
 
 /**
-@page legal Legal Stuff
+@page legal Legal Stuff & Acknowledgments
 
 "This software is based in part on the work of the Independent JPEG Group"
+
+OpenNI uses TinyXML for its implementation (www.sourceforge.net/projects/tinyxml).
+
 */

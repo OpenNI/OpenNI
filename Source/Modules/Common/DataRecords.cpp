@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -26,17 +26,19 @@
 const RecordingHeader DEFAULT_RECORDING_HEADER = 
 {
 	{'N','I','1','0'}, //Magic
-	{1, 0, 0, 6}, //Version 
+	{1, 0, 1, 0}, //Version
 	0, //Global max timestamp
 	0 //Max node id
 };
 
 const XnUInt32 Record::MAGIC = 0x0052494E; //It reads "NIR\0"
 
-Record::Record(XnUInt8* pData, XnUInt32 nMaxSize) : 
+Record::Record(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) : 
 	m_pData(pData),
 	m_nMaxSize(nMaxSize),
-	m_nReadOffset(0)
+	m_nReadOffset(0),
+	m_bUseOld32Header(bUseOld32Header),
+	HEADER_SIZE(bUseOld32Header ? HEADER_SIZE_old32 : HEADER_SIZE_current)
 {
 	XN_ASSERT(m_pData != NULL);
 	XN_ASSERT(m_nMaxSize >= HEADER_SIZE);
@@ -48,7 +50,9 @@ Record::Record(XnUInt8* pData, XnUInt32 nMaxSize) :
 Record::Record(const Record &other) :
 	m_pData(other.m_pData),
 	m_nMaxSize(other.m_nMaxSize),
-	m_nReadOffset(other.m_nReadOffset)
+	m_nReadOffset(other.m_nReadOffset),
+	m_bUseOld32Header(other.m_bUseOld32Header),
+	HEADER_SIZE(other.HEADER_SIZE)
 {
 	//We don't set the header info here, cuz it was already set by the other record
 }
@@ -73,9 +77,12 @@ XnUInt32 Record::GetPayloadSize() const
 	return m_pHeader->m_nPayloadSize;
 }
 
-XnUInt32 Record::GetUndoRecordPos() const
+XnUInt64 Record::GetUndoRecordPos() const
 {
-	return m_pHeader->m_nUndoRecordPos;
+	if (m_bUseOld32Header)
+		return ((Header_old32 *)m_pHeader)->m_nUndoRecordPos;
+	else
+		return m_pHeader->m_nUndoRecordPos;
 }
 
 void Record::SetNodeID(XnUInt32 nNodeID)
@@ -88,7 +95,7 @@ void Record::SetPayloadSize(XnUInt32 nPayloadSize)
 	m_pHeader->m_nPayloadSize = nPayloadSize;
 }
 
-void Record::SetUndoRecordPos(XnUInt32 nUndoRecordPos)
+void Record::SetUndoRecordPos(XnUInt64 nUndoRecordPos)
 {
 	m_pHeader->m_nUndoRecordPos = nUndoRecordPos;
 }
@@ -258,8 +265,8 @@ XnStatus Record::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCharsWritt
 /****************************/
 /* NodeAdded_1_0_0_4_Record */
 /****************************/
-NodeAdded_1_0_0_4_Record::NodeAdded_1_0_0_4_Record(XnUInt8* pData, XnUInt32 nMaxSize) :
-	Record(pData, nMaxSize), m_strNodeName(NULL), m_type(XnProductionNodeType(0))
+NodeAdded_1_0_0_4_Record::NodeAdded_1_0_0_4_Record(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
+	Record(pData, nMaxSize, bUseOld32Header), m_strNodeName(NULL), m_type(XnProductionNodeType(0))
 {
 	xnOSMemSet(&m_compression, 0, sizeof(m_compression));
 }
@@ -369,8 +376,8 @@ XnStatus NodeAdded_1_0_0_4_Record::AsString(XnChar* strDest, XnUInt32 nSize, XnU
 /****************************/
 /* NodeAdded_1_0_0_5_Record */
 /****************************/
-NodeAdded_1_0_0_5_Record::NodeAdded_1_0_0_5_Record(XnUInt8* pData, XnUInt32 nMaxSize) :
-	NodeAdded_1_0_0_4_Record(pData, nMaxSize), m_nNumberOfFrames(0), m_nMinTimestamp(0), m_nMaxTimestamp(0)
+NodeAdded_1_0_0_5_Record::NodeAdded_1_0_0_5_Record(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
+	NodeAdded_1_0_0_4_Record(pData, nMaxSize, bUseOld32Header), m_nNumberOfFrames(0), m_nMinTimestamp(0), m_nMaxTimestamp(0)
 {
 }
 
@@ -479,8 +486,8 @@ XnStatus NodeAdded_1_0_0_5_Record::AsString(XnChar* strDest, XnUInt32 nSize, XnU
 /****************************/
 /* NodeAddedRecord          */
 /****************************/
-NodeAddedRecord::NodeAddedRecord(XnUInt8* pData, XnUInt32 nMaxSize) :
-	NodeAdded_1_0_0_5_Record(pData, nMaxSize), m_nSeekTablePosition(0)
+NodeAddedRecord::NodeAddedRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
+	NodeAdded_1_0_0_5_Record(pData, nMaxSize, bUseOld32Header), m_nSeekTablePosition(0)
 {
 }
 
@@ -489,12 +496,12 @@ NodeAddedRecord::NodeAddedRecord(const Record& record) :
 {
 }
 
-void NodeAddedRecord::SetSeekTablePosition(XnUInt32 nPos)
+void NodeAddedRecord::SetSeekTablePosition(XnUInt64 nPos)
 {
 	m_nSeekTablePosition = nPos;
 }
 
-XnUInt32 NodeAddedRecord::GetSeekTablePosition()
+XnUInt64 NodeAddedRecord::GetSeekTablePosition()
 {
 	return m_nSeekTablePosition;
 }
@@ -518,7 +525,10 @@ XnStatus NodeAddedRecord::Decode()
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = NodeAdded_1_0_0_5_Record::DecodeImpl();
 	XN_IS_STATUS_OK(nRetVal);
-	nRetVal = Read(&m_nSeekTablePosition, sizeof(m_nSeekTablePosition));
+	if (m_bUseOld32Header)
+		nRetVal = Read(&m_nSeekTablePosition, sizeof(XnUInt32));
+	else
+		nRetVal = Read(&m_nSeekTablePosition, sizeof(m_nSeekTablePosition));
 	XN_IS_STATUS_OK(nRetVal);
 	return XN_STATUS_OK;
 }
@@ -540,8 +550,8 @@ XnStatus NodeAddedRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nC
 /*********************/
 /* NodeRemovedRecord */
 /*********************/
-NodeRemovedRecord::NodeRemovedRecord(XnUInt8* pData, XnUInt32 nMaxSize) :
-	Record(pData, nMaxSize)
+NodeRemovedRecord::NodeRemovedRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
+	Record(pData, nMaxSize, bUseOld32Header)
 {
 }
 
@@ -571,9 +581,9 @@ XnStatus NodeRemovedRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& 
 /*********************/
 /* GeneralPropRecord */
 /*********************/
-GeneralPropRecord::GeneralPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnUInt32 nPropRecordType /*= RECORD_GENERAL_PROPERTY*/) : 
+GeneralPropRecord::GeneralPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header, XnUInt32 nPropRecordType /*= RECORD_GENERAL_PROPERTY*/) : 
 	m_nPropRecordType(nPropRecordType),
-	Record(pData, nMaxSize), 
+	Record(pData, nMaxSize, bUseOld32Header), 
 	m_strPropName(NULL),
 	m_nPropDataSize(0),
 	m_pPropData(NULL)
@@ -678,8 +688,8 @@ XnStatus GeneralPropRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& 
 /*****************/
 /* IntPropRecord */
 /*****************/
-IntPropRecord::IntPropRecord(XnUInt8* pData, XnUInt32 nMaxSize) :
-	GeneralPropRecord(pData, nMaxSize, RECORD_INT_PROPERTY),
+IntPropRecord::IntPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
+	GeneralPropRecord(pData, nMaxSize, bUseOld32Header, RECORD_INT_PROPERTY),
 	m_nValue(0)
 {
 }
@@ -717,8 +727,8 @@ XnStatus IntPropRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCha
 /******************/
 /* RealPropRecord */
 /******************/
-RealPropRecord::RealPropRecord(XnUInt8* pData, XnUInt32 nMaxSize) :
-	GeneralPropRecord(pData, nMaxSize, RECORD_REAL_PROPERTY),
+RealPropRecord::RealPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
+	GeneralPropRecord(pData, nMaxSize, bUseOld32Header, RECORD_REAL_PROPERTY),
 	m_dValue(0)
 {
 }
@@ -756,8 +766,8 @@ XnStatus RealPropRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCh
 /********************/
 /* StringPropRecord */
 /********************/
-StringPropRecord::StringPropRecord(XnUInt8* pData, XnUInt32 nMaxSize) : 
-	GeneralPropRecord(pData, nMaxSize, RECORD_STRING_PROPERTY)
+StringPropRecord::StringPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) : 
+	GeneralPropRecord(pData, nMaxSize, bUseOld32Header, RECORD_STRING_PROPERTY)
 {
 }
 
@@ -793,8 +803,8 @@ XnStatus StringPropRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& n
 /***********************/
 /* NodeDataBeginRecord */
 /***********************/
-NodeDataBeginRecord::NodeDataBeginRecord(XnUInt8* pData, XnUInt32 nMaxSize) : 
-	Record(pData, nMaxSize)
+NodeDataBeginRecord::NodeDataBeginRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) : 
+	Record(pData, nMaxSize, bUseOld32Header)
 {
 	xnOSMemSet(&m_seekInfo, 0, sizeof(m_seekInfo));
 }
@@ -851,8 +861,8 @@ XnStatus NodeDataBeginRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32
 /************************/
 /* NodeStateReadyRecord */
 /************************/
-NodeStateReadyRecord::NodeStateReadyRecord(XnUInt8* pData, XnUInt32 nMaxSize) : 
-	Record(pData, nMaxSize)
+NodeStateReadyRecord::NodeStateReadyRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) : 
+	Record(pData, nMaxSize, bUseOld32Header)
 {
 
 }
@@ -891,8 +901,8 @@ XnStatus NodeStateReadyRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt3
 /***********************/
 /* NewDataRecordHeader */
 /***********************/
-NewDataRecordHeader::NewDataRecordHeader(XnUInt8* pData, XnUInt32 nMaxSize) :
-	Record(pData, nMaxSize),
+NewDataRecordHeader::NewDataRecordHeader(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
+	Record(pData, nMaxSize, bUseOld32Header),
 	m_nTimeStamp(0),
 	m_nFrameNumber(0)
 {
@@ -969,8 +979,8 @@ XnStatus NewDataRecordHeader::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32
 /*******************/
 /* DataIndexRecordHeader */
 /*******************/
-DataIndexRecordHeader::DataIndexRecordHeader(XnUInt8* pData, XnUInt32 nMaxSize) :
-	Record(pData, nMaxSize)
+DataIndexRecordHeader::DataIndexRecordHeader(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
+	Record(pData, nMaxSize, bUseOld32Header)
 {
 }
 
@@ -1008,7 +1018,8 @@ XnStatus DataIndexRecordHeader::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt
 /*************/
 /* EndRecord */
 /*************/
-EndRecord::EndRecord(XnUInt8* pData, XnUInt32 nMaxSize) : Record(pData, nMaxSize)
+EndRecord::EndRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) : 
+	Record(pData, nMaxSize, bUseOld32Header)
 {
 }
 

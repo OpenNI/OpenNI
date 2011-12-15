@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -46,13 +46,13 @@ void XnXmlScriptNodeExporter::GetDescription(XnProductionNodeDescription* pDescr
 	GetOpenNIScriptNodeDescription(pDescription);
 }
 
-XnStatus XnXmlScriptNodeExporter::EnumerateProductionTrees(xn::Context& context, xn::NodeInfoList& TreesList, xn::EnumerationErrors* pErrors)
+XnStatus XnXmlScriptNodeExporter::EnumerateProductionTrees(xn::Context& /*context*/, xn::NodeInfoList& /*TreesList*/, xn::EnumerationErrors* /*pErrors*/)
 {
 	// never return any results. This node is only created explicitly.
 	return (XN_STATUS_OK);
 }
 
-XnStatus XnXmlScriptNodeExporter::Create(xn::Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, xn::NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, xn::ModuleProductionNode** ppInstance)
+XnStatus XnXmlScriptNodeExporter::Create(xn::Context& context, const XnChar* /*strInstanceName*/, const XnChar* /*strCreationInfo*/, xn::NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, xn::ModuleProductionNode** ppInstance)
 {
 	XN_VALIDATE_NEW(*ppInstance, XnXmlScriptNode, context);
 	return XN_STATUS_OK;

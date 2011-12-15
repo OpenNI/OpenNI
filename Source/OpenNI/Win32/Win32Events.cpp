@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -24,16 +24,22 @@
 //---------------------------------------------------------------------------
 #include <XnOS.h>
 #include <XnLog.h>
+#include "XnOSWin32Internal.h"
 
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
-XN_C_API XnStatus xnOSCreateEvent(XN_EVENT_HANDLE* pEventHandle, XnBool bManualReset)
+XN_C_API XnStatus XN_C_DECL xnOSCreateEvent(XN_EVENT_HANDLE* pEventHandle, XnBool bManualReset)
 {
 	return (xnOSCreateNamedEvent(pEventHandle, NULL, bManualReset));
 }
 
-XN_C_API XnStatus xnOSCreateNamedEvent(XN_EVENT_HANDLE* pEventHandle, const XnChar* cpEventName, XnBool bManualReset)
+XN_C_API XnStatus XN_C_DECL xnOSCreateNamedEvent(XN_EVENT_HANDLE* pEventHandle, const XnChar* cpEventName, XnBool bManualReset)
+{
+	return xnOSCreateNamedEventEx(pEventHandle, cpEventName, bManualReset, FALSE);
+}
+
+XN_C_API XnStatus XN_C_DECL xnOSCreateNamedEventEx(XN_EVENT_HANDLE* pEventHandle, const XnChar* cpEventName, XnBool bManualReset, XnBool bAllowOtherUsers)
 {
 	// Local function variables
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -41,8 +47,29 @@ XN_C_API XnStatus xnOSCreateNamedEvent(XN_EVENT_HANDLE* pEventHandle, const XnCh
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_OUTPUT_PTR(pEventHandle);
 
+	XnChar strEventOSName[MAX_PATH];
+	XnChar* pEventOSName = NULL;
+	SECURITY_ATTRIBUTES* pSecurityAttributes = NULL;
+
+	if (cpEventName != NULL)
+	{
+		nRetVal = XnWin32CreateKernelObjectName(strEventOSName, MAX_PATH, cpEventName, bAllowOtherUsers);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			return XN_STATUS_OS_EVENT_CREATION_FAILED;
+		}
+
+		pEventOSName = strEventOSName;
+
+		nRetVal = XnWin32GetSecurityAttributes(bAllowOtherUsers, &pSecurityAttributes);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			return XN_STATUS_OS_MUTEX_CREATION_FAILED;
+		}
+	}
+
 	// Create a named event via the OS
-	*pEventHandle = CreateEvent(NULL, bManualReset, FALSE, cpEventName);
+	*pEventHandle = CreateEvent(pSecurityAttributes, bManualReset, FALSE, pEventOSName);
 
 	// Make sure it succeeded (return value is not null)
 	if (*pEventHandle == NULL)
@@ -55,13 +82,25 @@ XN_C_API XnStatus xnOSCreateNamedEvent(XN_EVENT_HANDLE* pEventHandle, const XnCh
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnOSOpenNamedEvent(XN_EVENT_HANDLE* pEventHandle, const XnChar* cpEventName)
+XN_C_API XnStatus XN_C_DECL xnOSOpenNamedEvent(XN_EVENT_HANDLE* pEventHandle, const XnChar* cpEventName)
+{
+	return xnOSOpenNamedEventEx(pEventHandle, cpEventName, FALSE);
+}
+
+XN_C_API XnStatus XN_C_DECL xnOSOpenNamedEventEx(XN_EVENT_HANDLE* pEventHandle, const XnChar* cpEventName, XnBool bAllowOtherUsers)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	XN_VALIDATE_INPUT_PTR(cpEventName);
 	XN_VALIDATE_OUTPUT_PTR(pEventHandle);
 	
-	*pEventHandle = OpenEvent(EVENT_ALL_ACCESS, FALSE, cpEventName);
+	XnChar strEventOSName[MAX_PATH];
+	nRetVal = XnWin32CreateKernelObjectName(strEventOSName, MAX_PATH, cpEventName, bAllowOtherUsers);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		return XN_STATUS_OS_EVENT_CREATION_FAILED;
+	}
+
+	*pEventHandle = OpenEvent(EVENT_MODIFY_STATE | SYNCHRONIZE, FALSE, cpEventName);
 	if (*pEventHandle == NULL)
 	{
 		return XN_STATUS_OS_EVENT_OPEN_FAILED;

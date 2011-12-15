@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -33,11 +33,11 @@
 /** OpenNI major version. */ 
 #define XN_MAJOR_VERSION 1
 /** OpenNI minor version. */ 
-#define XN_MINOR_VERSION 3
+#define XN_MINOR_VERSION 4
 /** OpenNI maintenance version. */ 
-#define XN_MAINTENANCE_VERSION 2
+#define XN_MAINTENANCE_VERSION 0
 /** OpenNI build version. */ 
-#define XN_BUILD_VERSION 3
+#define XN_BUILD_VERSION 2
 
 /** OpenNI version (in brief string format): "Major.Minor.Maintenance (Build)" */ 
 #define XN_BRIEF_VERSION_STRING \

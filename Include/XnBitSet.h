@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -72,6 +72,21 @@ public:
 		XnStatus nRetVal = m_array.SetData(pData, nSizeInDwords);
 		XN_IS_STATUS_OK(nRetVal);
 		m_nSize = (nSizeInDwords << 5);
+		return XN_STATUS_OK;
+	}
+
+	/** Copies raw data from a buffer of bytes to this bitset. **/
+	XnStatus SetDataBytes(const XnUInt8* pData, XnUInt32 nSizeInBytes)
+	{
+		//XnStatus nRetVal = m_array.SetData(reinterpret_cast<const XnUInt32*>(pData), XN_MAX(1, nSizeInBytes >> 2));
+		XnUInt32 nSizeInDwords = XN_MAX(1, nSizeInBytes >> 2);
+		XnStatus nRetVal = m_array.SetSize(nSizeInDwords);
+		XN_IS_STATUS_OK(nRetVal);
+		for (XnUInt32 nDwordIdx = 0, nByteIdx = 0; nDwordIdx < nSizeInDwords; nDwordIdx++, nByteIdx += 4)
+		{
+			m_array[nDwordIdx] = ((pData[nByteIdx] << 24) | (pData[nByteIdx + 1] << 16) | (pData[nByteIdx + 2] << 8) | pData[nByteIdx + 3] );
+		}
+		m_nSize = (nSizeInBytes << 3);
 		return XN_STATUS_OK;
 	}
 

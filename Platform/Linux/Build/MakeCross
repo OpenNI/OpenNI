@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+if [ $# -lt 3 ]; then
+	printf "Usage: $0 <PLATFORM> <CXX> <STAGING_DIR> [args for make]\n" 
+	exit 1
+fi
+
+export PLATFORM=$1 
+export CXX=$2 
+export TARGET_SYS_ROOT=$3 
+
+shift 3
+make $*

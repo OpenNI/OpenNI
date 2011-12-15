@@ -1,0 +1,1 @@
+./MakeCross Arm /home/eddiec/Angstrom/setup-scripts/build/tmp-angstrom_2008_1/sysroots/x86_64-linux/usr/armv7a/bin/arm-angstrom-linux-gnueabi-g++ /home/eddiec/Angstrom/setup-scripts/build/tmp-angstrom_2008_1/sysroots/armv7a-angstrom-linux-gnueabi $*

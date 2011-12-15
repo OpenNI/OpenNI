@@ -1,0 +1,25 @@
+# some defaults
+export GLUT_SUPPORTED=1
+
+ifndef SSE_GENERATION
+	SSE_GENERATION = 3
+endif
+
+ifeq ("$(OSTYPE)","Darwin")
+	# Making the binary a universal one (x86 + x64)
+	CFLAGS += -arch i386 -arch x86_64
+	LDFLAGS += -arch i386 -arch x86_64
+endif
+
+ifeq ($(SSE_GENERATION), 2)
+	CFLAGS += -msse2
+else
+	ifeq ($(SSE_GENERATION), 3)
+		CFLAGS += -msse3
+		ifeq ($(SSSE3_ENABLED), 1)
+			CFLAGS += -mssse3
+		endif
+	else
+		DUMMY:=($error "Only SSE2 and SSE3 are supported")
+	endif
+endif

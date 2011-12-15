@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -37,15 +37,13 @@ XnVideoSource::XnVideoSource(LPUNKNOWN lpunk, HRESULT *phr) :
 	CSource(g_videoName, lpunk, CLSID_OpenNIVideo),
 	m_pVideoProcAmp(NULL),
 	m_pCameraControl(NULL),
-	m_Dump(XN_DUMP_CLOSED)
+	m_Dump(xnDumpFileOpen(XN_MASK_FILTER, "FilterFlow.log"))
 {
 	ASSERT(phr != NULL);
 
 	xnLogVerbose(XN_MASK_FILTER, "Creating video source filter");
 
 	CAutoLock cAutoLock(&m_cStateLock);
-
-	xnDumpInit(&m_Dump, XN_MASK_FILTER, "", "FilterFlow.log");
 
 	// initialize OpenNI
 	XnStatus nRetVal = m_context.Init();
@@ -122,10 +120,9 @@ CUnknown * WINAPI XnVideoSource::CreateInstance(LPUNKNOWN lpunk, HRESULT *phr)
 
 STDMETHODIMP XnVideoSource::GetPages(CAUUID *pPages)
 {
-	XN_METHOD_START
+	XN_METHOD_START;
 
-	if (!pPages)
-		XN_METHOD_RETURN(E_POINTER);
+	XN_METHOD_CHECK_POINTER(pPages);
 
 	pPages->cElems = 3;
 	pPages->pElems = reinterpret_cast<GUID*>(CoTaskMemAlloc(sizeof(GUID)*pPages->cElems));
@@ -144,21 +141,23 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 {
 	XN_METHOD_START;
 
+	XN_METHOD_CHECK_POINTER(ppv);
+
 	HRESULT hr = S_OK;
 
 	if (riid == IID_ISpecifyPropertyPages)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to ISpecifyPropertyPages\n");
+		xnDumpFileWriteString(m_Dump, "Filter query interface to ISpecifyPropertyPages\n");
 		hr = GetInterface(static_cast<ISpecifyPropertyPages*>(this), ppv);
 	}
 	else if (riid == IID_IAMVideoControl)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to IAMVideoControl\n");
+		xnDumpFileWriteString(m_Dump, "Filter query interface to IAMVideoControl\n");
 		hr = GetInterface(static_cast<IAMVideoControl*>(this), ppv);
 	}
 	else if (riid == IID_IAMVideoProcAmp)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to IAMVideoProcAmp\n");
+		xnDumpFileWriteString(m_Dump, "Filter query interface to IAMVideoProcAmp\n");
 		if (m_pVideoProcAmp == NULL)
 		{
 			m_pVideoProcAmp = new VideoProcAmp(this);
@@ -172,7 +171,7 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 	}
 	else if (riid == IID_IAMCameraControl)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to IAMCameraControl\n");
+		xnDumpFileWriteString(m_Dump, "Filter query interface to IAMCameraControl\n");
 		if (m_pCameraControl == NULL)
 		{
 			m_pCameraControl = new CameraControl(this);
@@ -186,14 +185,14 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 	}
 	else if (riid == IID_IAdditionalOpenNIControls)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to IAdditionalControls\n");
+		xnDumpFileWriteString(m_Dump, "Filter query interface to IAdditionalControls\n");
 		hr = GetInterface(static_cast<IAdditionalControls*>(this), ppv);
 	}
 	else
 	{
 		OLECHAR strGuid[40];
 		StringFromGUID2(riid, strGuid, 40);
-		xnDumpWriteString(m_Dump, "Filter query interface to %S\n", strGuid);
+		xnDumpFileWriteString(m_Dump, "Filter query interface to %S\n", strGuid);
 
 		hr = CSource::NonDelegatingQueryInterface(riid, ppv);
 	}
@@ -204,6 +203,9 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 HRESULT STDMETHODCALLTYPE XnVideoSource::GetCaps(IPin *pPin, long *pCapsFlags)
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pPin);
+	XN_METHOD_CHECK_POINTER(pCapsFlags);
 
 	// we have only 1 pin, make sure this is it
 	if (pPin != static_cast<IPin*>(GetPin(0)))
@@ -218,6 +220,8 @@ HRESULT STDMETHODCALLTYPE XnVideoSource::GetCaps(IPin *pPin, long *pCapsFlags)
 HRESULT STDMETHODCALLTYPE XnVideoSource::SetMode( IPin *pPin, long Mode )
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pPin);
 
 	HRESULT hr = S_OK;
 
@@ -245,6 +249,9 @@ HRESULT STDMETHODCALLTYPE XnVideoSource::GetMode( IPin *pPin, __out long *Mode )
 {
 	XN_METHOD_START;
 
+	XN_METHOD_CHECK_POINTER(pPin);
+	XN_METHOD_CHECK_POINTER(Mode);
+
 	HRESULT hr = S_OK;
 
 	// we have only 1 pin, make sure this is it
@@ -269,6 +276,9 @@ HRESULT STDMETHODCALLTYPE XnVideoSource::GetCurrentActualFrameRate( IPin *pPin, 
 {
 	XN_METHOD_START;
 
+	XN_METHOD_CHECK_POINTER(pPin);
+	XN_METHOD_CHECK_POINTER(ActualFrameRate);
+
 	HRESULT hr = S_OK;
 
 	// we have only 1 pin, make sure this is it
@@ -285,6 +295,9 @@ HRESULT STDMETHODCALLTYPE XnVideoSource::GetCurrentActualFrameRate( IPin *pPin, 
 HRESULT STDMETHODCALLTYPE XnVideoSource::GetMaxAvailableFrameRate( IPin *pPin, long iIndex, SIZE Dimensions, __out LONGLONG *MaxAvailableFrameRate )
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pPin);
+	XN_METHOD_CHECK_POINTER(MaxAvailableFrameRate);
 
 	HRESULT hr = S_OK;
 
@@ -312,6 +325,9 @@ HRESULT STDMETHODCALLTYPE XnVideoSource::GetMaxAvailableFrameRate( IPin *pPin, l
 HRESULT STDMETHODCALLTYPE XnVideoSource::GetFrameRateList( IPin *pPin, long iIndex, SIZE Dimensions, __out long *ListSize, __out LONGLONG **FrameRates )
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pPin);
+	XN_METHOD_CHECK_POINTER(ListSize);
 
 	HRESULT hr = S_OK;
 
@@ -348,6 +364,8 @@ STDMETHODIMP XnVideoSource::GetPowerLineFrequencyDefault(XnPowerLineFrequency* p
 {
 	XN_METHOD_START;
 
+	XN_METHOD_CHECK_POINTER(pnValue);
+
 	if (!m_image.IsCapabilitySupported(XN_CAPABILITY_ANTI_FLICKER))
 	{
 		XN_METHOD_RETURN(E_PROP_ID_UNSUPPORTED);
@@ -361,6 +379,9 @@ STDMETHODIMP XnVideoSource::GetPowerLineFrequencyDefault(XnPowerLineFrequency* p
 STDMETHODIMP XnVideoSource::GetPowerLineFrequency(XnPowerLineFrequency *pnValue)
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pnValue);
+
 	if (!m_image.IsCapabilitySupported(XN_CAPABILITY_ANTI_FLICKER))
 	{
 		XN_METHOD_RETURN(E_PROP_ID_UNSUPPORTED);
@@ -390,6 +411,12 @@ STDMETHODIMP XnVideoSource::GetGainRange(XnInt32 *pnMin, XnInt32* pnMax, XnInt32
 {
 	XN_METHOD_START;
 
+	XN_METHOD_CHECK_POINTER(pnMin);
+	XN_METHOD_CHECK_POINTER(pnMax);
+	XN_METHOD_CHECK_POINTER(pnStep);
+	XN_METHOD_CHECK_POINTER(pnDefault);
+	XN_METHOD_CHECK_POINTER(pbAutoSupported);
+
 	if (!m_image.IsCapabilitySupported(XN_CAPABILITY_GAIN))
 	{
 		XN_METHOD_RETURN(E_PROP_ID_UNSUPPORTED);
@@ -404,6 +431,8 @@ STDMETHODIMP XnVideoSource::GetGainRange(XnInt32 *pnMin, XnInt32* pnMax, XnInt32
 STDMETHODIMP XnVideoSource::GetGain(XnInt32 *pnValue)
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pnValue);
 
 	if (!m_image.IsCapabilitySupported(XN_CAPABILITY_GAIN))
 	{
@@ -439,6 +468,8 @@ STDMETHODIMP XnVideoSource::GetLowLightCompensationDefault(XnBool* pbValue)
 {
 	XN_METHOD_START;
 
+	XN_METHOD_CHECK_POINTER(pbValue);
+
 	if (!m_image.IsCapabilitySupported(XN_CAPABILITY_LOW_LIGHT_COMPENSATION))
 	{
 		XN_METHOD_RETURN(E_PROP_ID_UNSUPPORTED);
@@ -456,6 +487,8 @@ STDMETHODIMP XnVideoSource::GetLowLightCompensationDefault(XnBool* pbValue)
 STDMETHODIMP XnVideoSource::GetLowLightCompensation(XnBool *pbValue)
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pbValue);
 
 	if (!m_image.IsCapabilitySupported(XN_CAPABILITY_LOW_LIGHT_COMPENSATION))
 	{
@@ -496,6 +529,12 @@ HRESULT XnVideoSource::GetCapRange(const XnChar* strCap, long *pMin, long *pMax,
 		XN_METHOD_RETURN(E_PROP_ID_UNSUPPORTED);
 	}
 
+	XN_METHOD_CHECK_POINTER(pMin);
+	XN_METHOD_CHECK_POINTER(pMax);
+	XN_METHOD_CHECK_POINTER(pSteppingDelta);
+	XN_METHOD_CHECK_POINTER(pDefault);
+	XN_METHOD_CHECK_POINTER(pCapsFlags);
+
 	xn::GeneralIntCapability cap = m_image.GetGeneralIntCap(strCap);
 	XnInt32 nMin, nMax, nStep, nDefault;
 	XnBool bIsAutoSupported;
@@ -518,6 +557,9 @@ HRESULT XnVideoSource::GetCap(const XnChar* strCap, long *lValue, long *Flags)
 	{
 		XN_METHOD_RETURN(E_PROP_ID_UNSUPPORTED);
 	}
+
+	XN_METHOD_CHECK_POINTER(lValue);
+	XN_METHOD_CHECK_POINTER(Flags);
 
 	xn::GeneralIntCapability cap = m_image.GetGeneralIntCap(strCap);
 	XnInt32 nVal = cap.Get();

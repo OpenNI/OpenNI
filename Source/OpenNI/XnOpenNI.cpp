@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -52,7 +52,9 @@
 #define XN_FRAME_SYNC_THRESHOLD		3000
 #define XN_NODE_FPS_CALC_SAMPLES	90
 #define XN_MASK_FPS					"FPS"
-#define XN_DUMP_MASK_REF_COUNT		"RefCount"
+#define XN_DUMP_MASK_REF_COUNT		"OpenNIRefCount"
+#define XN_DUMP_MASK_DATA_FLOW		"OpenNIDataFlow"
+#define XN_BASE_NUMBER_OF_GESTURES 2
 
 //---------------------------------------------------------------------------
 // Macros
@@ -68,7 +70,7 @@
 	XN_VALIDATE_FUNC_PTR_RET(ptr, XN_STATUS_INVALID_OPERATION)
 
 #define XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, nodeType, retVal)						\
-	if (!hInstance->typeHierarchy.IsSet(nodeType))	\
+	if (!hInstance->pTypeHierarchy->IsSet(nodeType))	\
 	{																					\
 		return retVal;																	\
 	}
@@ -102,7 +104,7 @@ static XnBool xnIsFrameSyncedWithImpl(XnNodeHandle hInstance, XnNodeHandle hOthe
 //---------------------------------------------------------------------------
 // Static Variables
 //---------------------------------------------------------------------------
-XnDump g_refCountDump = XN_DUMP_CLOSED;
+XnLogger* g_logger = xnLoggerOpen(XN_MASK_OPEN_NI);
 
 //---------------------------------------------------------------------------
 // Initialization / Deinitialization
@@ -122,7 +124,7 @@ static void xnDumpRefCount(XnContext* pContext, XnNodeHandle hNode, XnUInt32 nRe
 	{
 		strActualComment = "";
 	}
-	xnDumpWriteString(pContext->dumpRefCount, "%llu,%s,%u,%s\n", nNow, strName, nRefCount, strActualComment);
+	xnDumpFileWriteString(pContext->pDumpRefCount, "%llu,%s,%u,%s\n", nNow, strName, nRefCount, strActualComment);
 }
 
 XN_C_API XnStatus xnInit(XnContext** ppContext)
@@ -154,8 +156,11 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	pContext->pGlobalErrorChangeEvent = XN_NEW(XnErrorStateChangedEvent);
 	pContext->pShutdownEvent = XN_NEW(XnContextShuttingDownEvent);
 	pContext->nRefCount = 1;
-	pContext->dumpRefCount = XN_DUMP_CLOSED;
-	xnDumpInit(&pContext->dumpRefCount, XN_DUMP_MASK_REF_COUNT, "Timestamp,Object,RefCount,Comment\n", "RefCount.csv");
+	pContext->pDumpRefCount = xnDumpFileOpen(XN_DUMP_MASK_REF_COUNT, "RefCount.csv");
+	pContext->pDumpDataFlow = xnDumpFileOpen(XN_DUMP_MASK_DATA_FLOW, "DataFlow.csv");
+
+	xnDumpFileWriteString(pContext->pDumpRefCount, "Timestamp,Object,RefCount,Comment\n");
+	xnDumpFileWriteString(pContext->pDumpDataFlow, "Timestamp,Action,Object\n");
 
 	// validate memory allocations
 	if (pContext->pLicenses == NULL ||
@@ -451,7 +456,7 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 	if (pContext != NULL)
 	{
 		xnDumpRefCount(pContext, NULL, 0, "Destroy");
-		xnDumpClose(&pContext->dumpRefCount);
+		xnDumpFileClose(pContext->pDumpRefCount);
 
 		// we have to destroy nodes from top to bottom. So we'll go over the list, each time removing
 		// nodes that nobody needs, until the list is empty
@@ -474,7 +479,7 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 			pContext->pShutdownEvent->Raise(pContext);
 		}
 
-		xnLogInfo(XN_MASK_OPEN_NI, "Destroying context");
+		xnLoggerInfo(g_logger, "Destroying context");
 
 		xnNodeInfoListFree(pContext->pOwnedNodes);
 		xnOSCloseCriticalSection(&pContext->hLock);
@@ -526,7 +531,10 @@ XN_C_API void xnContextUnregisterFromShutdown(XnContext* pContext, XnCallbackHan
 	}
 
 	XnStatus nRetVal = pContext->pShutdownEvent->Unregister(hCallback);
-	XN_ASSERT(nRetVal == XN_STATUS_OK);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		XN_ASSERT(FALSE);
+	}
 }
 
 XN_C_API XnStatus xnContextOpenFileRecordingEx(XnContext* pContext, const XnChar* strFileName, XnNodeHandle* phPlayerNode)
@@ -978,8 +986,6 @@ XN_C_API XnStatus xnNodeInfoSetInstanceName(XnNodeInfo* pNodeInfo, const XnChar*
 
 XnStatus xnNodeInfoSetAdditionalData(XnNodeInfo* pNodeInfo, const void* pAdditionalData, XnFreeHandler pFreeHandler)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	XN_VALIDATE_INPUT_PTR(pNodeInfo);
 
 	pNodeInfo->pAdditionalData = pAdditionalData;
@@ -1024,7 +1030,10 @@ XN_C_API XnNodeHandle xnNodeInfoGetRefHandle(XnNodeInfo* pNodeInfo)
 	if (pNodeInfo->hNode != NULL)
 	{
 		XnStatus nRetVal = xnProductionNodeAddRef(pNodeInfo->hNode);
-		XN_ASSERT(nRetVal == XN_STATUS_OK);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			XN_ASSERT(FALSE);
+	}
 	}
 	return pNodeInfo->hNode;
 }
@@ -1051,7 +1060,7 @@ XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, X
 		XN_IS_STATUS_OK(nRetVal);
 
 		XnBool bFirst = TRUE;
-		XnSizeT nLen;
+		XnUInt32 nLen = 0;
 
 		for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pNodeInfo->pNeededTrees); 
 			xnNodeInfoListIteratorIsValid(it);
@@ -1063,7 +1072,7 @@ XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, X
 				XN_IS_STATUS_OK(nRetVal);
 			}
 
-			nLen = strlen(csResult);
+			nLen = xnOSStrLen(csResult);
 
 			nRetVal = xnNodeInfoGetTreeStringRepresentation(pNodeInfo, csResult + nLen, nSize - nLen);
 			XN_IS_STATUS_OK(nRetVal);
@@ -1084,8 +1093,6 @@ XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, X
 
 XN_C_API XnStatus xnNodeInfoListAllocate(XnNodeInfoList** ppList)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	XN_VALIDATE_OUTPUT_PTR(ppList);
 
 	XN_VALIDATE_CALLOC(*ppList, XnNodeInfoList, 1);
@@ -1104,8 +1111,6 @@ XN_C_API void xnNodeInfoListFree(XnNodeInfoList* pList)
 
 XN_C_API XnStatus xnNodeInfoListAddNode(XnNodeInfoList* pList, XnNodeInfo* pNode)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	// allocate new list node
 	XnNodeInfoListNode* pListNode;
 	XN_VALIDATE_CALLOC(pListNode, XnNodeInfoListNode, 1);
@@ -1365,33 +1370,31 @@ XN_C_API XnStatus xnEnumerateProductionTrees(XnContext* pContext, XnProductionNo
 
 XnStatus xnCreateMetaData(XnInternalNodeData* pNodeData)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
-	if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+	if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
 	{
 		pNodeData->pMetaData.Depth = xnAllocateDepthMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Depth);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Depth->pMap->pOutput->bIsNew;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_IMAGE))
 	{
 		pNodeData->pMetaData.Image = xnAllocateImageMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Image);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Image->pMap->pOutput->bIsNew;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_IR))
 	{
 		pNodeData->pMetaData.IR = xnAllocateIRMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.IR);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.IR->pMap->pOutput->bIsNew;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_AUDIO))
 	{
 		pNodeData->pMetaData.Audio = xnAllocateAudioMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Audio);
 		pNodeData->pbMetaDataIsNewFlag = &pNodeData->pMetaData.Audio->pOutput->bIsNew;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_SCENE))
 	{
 		pNodeData->pMetaData.Scene = xnAllocateSceneMetaData();
 		XN_VALIDATE_ALLOC_PTR(pNodeData->pMetaData.Scene);
@@ -1407,7 +1410,7 @@ XnStatus xnCreatePrivateData(XnInternalNodeData* pNodeData)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_RECORDER))
+	if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_RECORDER))
 	{
 		xn::RecorderImpl *pRecorderImpl = NULL;
 		XN_VALIDATE_NEW(pRecorderImpl, xn::RecorderImpl);
@@ -1420,7 +1423,7 @@ XnStatus xnCreatePrivateData(XnInternalNodeData* pNodeData)
 
 		pNodeData->pPrivateData = pRecorderImpl;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_PLAYER))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_PLAYER))
 	{
 		xn::PlayerImpl *pPlayerImpl = NULL;
 		XN_VALIDATE_NEW(pPlayerImpl, xn::PlayerImpl);
@@ -1432,7 +1435,7 @@ XnStatus xnCreatePrivateData(XnInternalNodeData* pNodeData)
 		}
 		pNodeData->pPrivateData = pPlayerImpl;
 	}
-	else if (pNodeData->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+	else if (pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
 	{
 		xn::DepthPrivateData* pDepthPrivateData = NULL;
 		XN_VALIDATE_NEW(pDepthPrivateData, xn::DepthPrivateData);
@@ -1444,17 +1447,36 @@ XnStatus xnCreatePrivateData(XnInternalNodeData* pNodeData)
 		}
 		pNodeData->pPrivateData = pDepthPrivateData;
 	}
+    else if(pNodeData->pTypeHierarchy->IsSet(XN_NODE_TYPE_USER))
+    {
+        xn::PosePrivateData * pPosePrivateData=NULL;
 
+        if(xnIsCapabilitySupported(pNodeData,XN_CAPABILITY_POSE_DETECTION))
+        {
+            XN_VALIDATE_NEW(pPosePrivateData, xn::PosePrivateData);
+            nRetVal = pPosePrivateData->Init(pNodeData);
+            if (nRetVal != XN_STATUS_OK)
+            {
+                XN_DELETE(pPosePrivateData);
+                return nRetVal;
+            }
+            pNodeData->pPrivateData = pPosePrivateData;
+        }
+
+    }
 	return (XN_STATUS_OK);
 }
 
-void XN_CALLBACK_TYPE xnGeneratorHasNewData(XnNodeHandle hNode, void* pCookie)
+void XN_CALLBACK_TYPE xnGeneratorHasNewData(XnNodeHandle hNode, void* /*pCookie*/)
 {
 	xnMarkFPSFrame(hNode->pContext, &hNode->genFPS);
 	xnOSSetEvent(hNode->pContext->hNewDataEvent);
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	xnDumpFileWriteString(hNode->pContext->pDumpDataFlow, "%llu,NewDataAvailable,%s\n", nNow, hNode->pNodeInfo->strInstanceName);
 }
 
-void XN_CALLBACK_TYPE xnNodeLockChanged(XnNodeHandle hNode, void* pCookie)
+void XN_CALLBACK_TYPE xnNodeLockChanged(XnNodeHandle hNode, void* /*pCookie*/)
 {
 	XnBool bLocked = xnGetLockStateImpl(hNode);
 	// if it's locked, give it a special handle
@@ -1467,11 +1489,11 @@ void xnSetGlobalErrorState(XnContext* pContext, XnStatus errorState)
 	{
 		if (errorState == XN_STATUS_OK)
 		{
-			xnLogInfo(XN_MASK_OPEN_NI, "Context has returned to normal state.");
+			xnLoggerInfo(g_logger, "Context has returned to normal state.");
 		}
 		else
 		{
-			xnLogInfo(XN_MASK_OPEN_NI, "Context has entered error state: %s", xnGetStatusString(errorState));
+			xnLoggerInfo(g_logger, "Context has entered error state: %s", xnGetStatusString(errorState));
 		}
 
 		pContext->globalErrorState = errorState;
@@ -1479,7 +1501,7 @@ void xnSetGlobalErrorState(XnContext* pContext, XnStatus errorState)
 	}
 }
 
-void XN_CALLBACK_TYPE xnNodeErrorStateChanged(XnNodeHandle hNode, void* pCookie)
+void XN_CALLBACK_TYPE xnNodeErrorStateChanged(XnNodeHandle hNode, void* /*pCookie*/)
 {
 	XnContext* pContext = hNode->pContext;
 
@@ -1509,7 +1531,7 @@ void XN_CALLBACK_TYPE xnNodeErrorStateChanged(XnNodeHandle hNode, void* pCookie)
 	xnSetGlobalErrorState(pContext, errorState);
 }
 
-void XN_CALLBACK_TYPE xnNodeFrameSyncChanged(XnNodeHandle hNode, void* pCookie)
+void XN_CALLBACK_TYPE xnNodeFrameSyncChanged(XnNodeHandle hNode, void* /*pCookie*/)
 {
 	XnContext* pContext = hNode->pContext;
 
@@ -1543,7 +1565,7 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 
 	XnChar strDescription[500];
 	xnProductionNodeDescriptionToString(&pTree->Description, strDescription, 500);
-	xnLogInfo(XN_MASK_OPEN_NI, "Creating node '%s' of type %s...", pTree->strInstanceName, strDescription);
+	xnLoggerInfo(g_logger, "Creating node '%s' of type %s...", pTree->strInstanceName, strDescription);
 
 	XnModuleInstance* pModuleInstance;
 	nRetVal = pContext->pModuleLoader->CreateRootNode(pTree, &pModuleInstance);
@@ -1552,7 +1574,14 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 	// create handle
 	XnInternalNodeData* pNodeData;
 	XN_VALIDATE_CALLOC(pNodeData, XnInternalNodeData, 1);
-	pNodeData->typeHierarchy = pModuleInstance->pLoaded->pInterface->HierarchyType;
+
+	pNodeData->pTypeHierarchy = XN_NEW(XnBitSet);
+	if (pNodeData->pTypeHierarchy == NULL)
+	{
+		return xnFreeProductionNodeImpl(pNodeData, XN_STATUS_ALLOC_FAILED);
+	}
+
+	*pNodeData->pTypeHierarchy = pModuleInstance->pLoaded->pInterface->HierarchyType;
 	pNodeData->pNodeInfo = pTree;
 	pNodeData->nRefCount = 1;
 	pNodeData->pModuleInstance = pModuleInstance;
@@ -1747,25 +1776,29 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 {
 	if (hNode != NULL)	
 	{
-		XN_DELETE(hNode->pPrivateData);
+        if (hNode->pPrivateData != NULL)
+        {
+		    XN_DELETE(hNode->pPrivateData);
+            hNode->pPrivateData = NULL;
+        }
 
-		if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+		if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
 		{
 			xnFreeDepthMetaData(hNode->pMetaData.Depth);
 		}
-		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_IMAGE))
 		{
 			xnFreeImageMetaData(hNode->pMetaData.Image);
 		}
-		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_IR))
 		{
 			xnFreeIRMetaData(hNode->pMetaData.IR);
 		}
-		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_AUDIO))
 		{
 			xnFreeAudioMetaData(hNode->pMetaData.Audio);
 		}
-		else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_SCENE))
 		{
 			xnFreeSceneMetaData(hNode->pMetaData.Scene);
 		}
@@ -1791,6 +1824,11 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 			xnContextRelease(hNode->pContext);
 		}
 
+		if (hNode->pTypeHierarchy != NULL)
+		{
+			XN_DELETE(hNode->pTypeHierarchy);
+		}
+
 		xnOSFree(hNode);
 	}
 	return nRetVal;
@@ -1798,7 +1836,7 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 
 void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 {
-	xnLogInfo(XN_MASK_OPEN_NI, "Destroying node '%s'", hNode->pNodeInfo->strInstanceName);
+	xnLoggerInfo(g_logger, "Destroying node '%s'", hNode->pNodeInfo->strInstanceName);
 
 	if (hNode->pPrivateData != NULL)
 	{
@@ -1855,7 +1893,6 @@ void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 
 XN_C_API XnStatus xnProductionNodeAddRef(XnNodeHandle hNode)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
 	XN_VALIDATE_INPUT_PTR(hNode);
 
 	// preform this in a lock
@@ -2108,7 +2145,10 @@ XN_C_API XnContext* xnGetRefContextFromNodeHandle(XnNodeHandle hNode)
 	XN_VALIDATE_PTR(hNode, NULL);
 
 	XnStatus nRetVal = xnContextAddRef(hNode->pContext);
-	XN_ASSERT(nRetVal == XN_STATUS_OK);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		XN_ASSERT(FALSE);
+	}
 
 	return hNode->pContext;
 }
@@ -2215,23 +2255,23 @@ void xnUpdateMetaData(XnNodeHandle hNode)
 	XN_ASSERT(hNode != NULL);
 	XN_ASSERT(hNode->pNodeInfo != NULL);
 
-	if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_DEPTH))
+	if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
 	{
 		xnUpdateDepthMetaData(hNode);
 	}
-	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IMAGE))
+	else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_IMAGE))
 	{
 		xnUpdateImageMetaData(hNode);
 	}
-	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_IR))
+	else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_IR))
 	{
 		xnUpdateIRMetaData(hNode);
 	}
-	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_AUDIO))
+	else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_AUDIO))
 	{
 		xnUpdateAudioMetaData(hNode);
 	}
-	else if (hNode->typeHierarchy.IsSet(XN_NODE_TYPE_SCENE))
+	else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_SCENE))
 	{
 		xnUpdateSceneMetaData(hNode);
 	}
@@ -2287,6 +2327,25 @@ static XnStatus xnUpdateTreeImpl(XnProductionNodesSet* pUpdatedSet, const XnNode
 	return (XN_STATUS_OK);
 }
 
+static XnStatus xnUpdateAll(XnContext* pContext)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	xnResetNewDataFlag(pContext);
+
+	XnProductionNodesSet UpdatedSet;
+
+	// update all the nodes (without waiting)
+	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	{
+		XnNodeInfo* pNodeInfo = it.Value()->pNodeInfo;
+		nRetVal = xnUpdateTreeImpl(&UpdatedSet, pNodeInfo);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	return (XN_STATUS_OK);
+}
+
 XnBool xnDidNodeAdvanced(XnNodeHandle hNode)
 {
 	XnUInt64 nTimestamp;
@@ -2330,6 +2389,45 @@ XnBool XN_CALLBACK_TYPE xnDidAllNodesAdvanced(void* pConditionData)
 	}
 
 	return (TRUE);
+}
+
+static XnStatus xnPlayRecording(XnContext* pContext, XnBool bAsynch = FALSE)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	// check if we have players in this context
+	// TODO: handle the case in which we have more than one player
+	XnNodeHandle hPlayer = NULL;
+	nRetVal = xnFindExistingRefNodeByType(pContext, XN_NODE_TYPE_PLAYER, &hPlayer);
+	if (nRetVal == XN_STATUS_NO_MATCH)
+	{
+		return (XN_STATUS_OK);
+	}
+	else
+	{
+		XN_IS_STATUS_OK(nRetVal)
+	}
+
+	if (xnIsPlayerAtEOF(hPlayer))
+	{
+		return XN_STATUS_EOF;
+	}
+	else
+	{
+		if (bAsynch)
+		{
+			xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
+			XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
+			pPlayerImpl->TriggerPlayback();
+		}
+		else
+		{
+			nRetVal = xnPlayerReadNext(hPlayer);
+			XN_IS_STATUS_OK(nRetVal);
+		}
+	}
+
+	return (XN_STATUS_OK);
 }
 
 XnStatus xnWaitForCondition(XnContext* pContext, XnConditionFunc pConditionFunc, void* pConditionData)
@@ -2391,12 +2489,16 @@ XN_C_API XnStatus xnWaitAndUpdateAll(XnContext* pContext)
 	
 	XN_VALIDATE_INPUT_PTR(pContext);
 
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitAndUpdateAll,Application,%s\n", nNow);
+
 	// wait on new data event
 	nRetVal = xnWaitForCondition(pContext, xnDidAllNodesAdvanced, pContext);
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now update entire tree
-	nRetVal = xnWaitNoneUpdateAll(pContext);
+	nRetVal = xnUpdateAll(pContext);
 	XN_IS_STATUS_OK(nRetVal);
 	
 	return (XN_STATUS_OK);
@@ -2414,12 +2516,16 @@ XN_C_API XnStatus xnWaitOneUpdateAll(XnContext* pContext, XnNodeHandle hNode)
 	XN_VALIDATE_INPUT_PTR(pContext);
 	XN_VALIDATE_INPUT_PTR(hNode);
 
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	xnDumpFileWriteString(hNode->pContext->pDumpDataFlow, "%llu,WaitOneUpdateAll,Application,%s\n", nNow, hNode->pNodeInfo->strInstanceName);
+
 	// wait on new data event
 	nRetVal = xnWaitForCondition(pContext, xnDidNodeAdvanced, hNode);
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now update entire tree
-	nRetVal = xnWaitNoneUpdateAll(pContext);
+	nRetVal = xnUpdateAll(pContext);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -2431,17 +2537,15 @@ XN_C_API XnStatus xnWaitNoneUpdateAll(XnContext* pContext)
 
 	XN_VALIDATE_INPUT_PTR(pContext);
 
-	xnResetNewDataFlag(pContext);
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitNoneUpdateAll,Application\n", nNow);
 
-	XnProductionNodesSet UpdatedSet;
+	nRetVal = xnPlayRecording(pContext, TRUE);
+	XN_IS_STATUS_OK(nRetVal);
 
-	// update all the nodes (without waiting)
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
-	{
-		XnNodeInfo* pNodeInfo = it.Value()->pNodeInfo;
-		nRetVal = xnUpdateTreeImpl(&UpdatedSet, pNodeInfo);
-		XN_IS_STATUS_OK(nRetVal);
-	}
+	nRetVal = xnUpdateAll(pContext);
+	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
 }
@@ -2467,13 +2571,17 @@ XN_C_API XnStatus xnWaitAnyUpdateAll(XnContext* pContext)
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	XN_VALIDATE_INPUT_PTR(pContext);
+
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitAnyUpdateAll,Application\n", nNow);
 	
 	// wait on new data event
 	nRetVal = xnWaitForCondition(pContext, xnDidAnyNodeAdvanced, pContext);
 	XN_IS_STATUS_OK(nRetVal);
 
 	// we have new data, now just update all
-	nRetVal = xnWaitNoneUpdateAll(pContext);
+	nRetVal = xnUpdateAll(pContext);
 	XN_IS_STATUS_OK(nRetVal);
 	
 	return (XN_STATUS_OK);
@@ -2484,6 +2592,10 @@ XN_C_API XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance)
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	XN_VALIDATE_INPUT_PTR(hInstance);
+
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	xnDumpFileWriteString(hInstance->pContext->pDumpDataFlow, "%llu,WaitAndUpdateData,Application\n", nNow);
 
 	// wait on new data event
 	nRetVal = xnWaitForCondition(hInstance->pContext, xnDidNodeAdvanced, hInstance);
@@ -3258,6 +3370,7 @@ XN_C_API XnStatus xnGetSerialNumber(XnNodeHandle hInstance, XnChar* strBuffer, X
 
 static XnStatus xnStartGeneratingImpl(XnNodeHandle hInstance)
 {
+	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Generator.StartGenerating(hModuleNode);
@@ -3266,7 +3379,6 @@ static XnStatus xnStartGeneratingImpl(XnNodeHandle hInstance)
 XN_C_API XnStatus xnStartGenerating(XnNodeHandle hInstance)
 {
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
-	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	return xnStartGeneratingTreeImpl(hInstance->pNodeInfo);
 }
 
@@ -3356,6 +3468,10 @@ static XnStatus xnUpdateDataImpl(XnNodeHandle hInstance)
 	xnMarkFPSFrame(hInstance->pContext, &hInstance->readFPS);
 	xnUpdateMetaData(hInstance);
 
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	xnDumpFileWriteString(hInstance->pContext->pDumpDataFlow, "%llu,Update,%s\n", nNow, hInstance->pNodeInfo->strInstanceName);
+
 	return XN_STATUS_OK;
 }
 
@@ -3434,7 +3550,7 @@ XN_C_API XnStatus xnCreateRecorder(XnContext* pContext, const XnChar* strFormatN
 			nRetVal = xnCreateProductionTree(pContext, pInfo, &hRecorder);
 			if (nRetVal != XN_STATUS_OK)
 			{
-				xnLogWarning(XN_MASK_OPEN_NI, "Failed to create recorder %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
+				xnLoggerWarning(g_logger, "Failed to create recorder %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
 				continue;
 			}
 
@@ -3565,7 +3681,7 @@ XN_C_API XnStatus xnRecord(XnNodeHandle hInstance)
 	return XN_STATUS_OK;
 }
 
-XN_C_API const XnChar* xnGetRecorderFormat(XnNodeHandle hInstance)
+XN_C_API const XnChar* xnGetRecorderFormat(XnNodeHandle /*hInstance*/)
 {
 	//TODO: Call module's function
 	return "oni";
@@ -3598,7 +3714,7 @@ XN_C_API XnStatus xnCreatePlayer(XnContext* pContext, const XnChar* strFormatNam
 			nRetVal = xnCreateProductionTree(pContext, pInfo, &hPlayer);
 			if (nRetVal != XN_STATUS_OK)
 			{
-				xnLogWarning(XN_MASK_OPEN_NI, "Failed to create player %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
+				xnLoggerWarning(g_logger, "Failed to create player %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
 				continue;
 			}
 
@@ -3656,9 +3772,12 @@ XN_C_API XnStatus xnPlayerReadNext(XnNodeHandle hPlayer)
 {
 	XN_VALIDATE_INPUT_PTR(hPlayer);
 	XN_VALIDATE_INTERFACE_TYPE(hPlayer, XN_NODE_TYPE_PLAYER);
-	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
-	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
-	return pInterface->Player.ReadNext(hModuleNode);
+
+	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
+	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
+	XnStatus nRetVal = pPlayerImpl->ReadNext();
+	XN_IS_STATUS_OK(nRetVal);
+	return XN_STATUS_OK;	
 }
 
 XN_C_API XnStatus xnGetPlayerSource(XnNodeHandle hPlayer, XnRecordMedium* pSourceType, XnChar* strSource, XnUInt32 nBufSize)
@@ -3960,7 +4079,7 @@ XN_C_API XnStatus xnFrameSyncWith(XnNodeHandle hInstance, XnNodeHandle hOther)
 	// TODO: support more than one node. Right now, every node can only be synched to one other node.
 	if (hInstance->hFrameSyncedWith != NULL || hOther->hFrameSyncedWith != NULL)
 	{
-		XN_LOG_WARNING_RETURN(XN_STATUS_NOT_IMPLEMENTED, XN_MASK_OPEN_NI, "Currently, a node can be frame synched to one node only.");
+		XN_RETURN_WITH_WARNING_LOG(g_logger, XN_STATUS_NOT_IMPLEMENTED, "Currently, a node can be frame synched to one node only.");
 	}
 
 	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
@@ -4237,10 +4356,219 @@ void xn::DepthPrivateData::OnFieldOfViewChanged()
 	m_fRealWorldYtoZ = tan(FOV.fVFOV/2)*2;
 }
 
-void XN_CALLBACK_TYPE xn::DepthPrivateData::FieldOfViewChangedCallback(XnNodeHandle hNode, void* pCookie)
+void XN_CALLBACK_TYPE xn::DepthPrivateData::FieldOfViewChangedCallback(XnNodeHandle /*hNode*/, void* pCookie)
 {
 	xn::DepthPrivateData* pThis = (xn::DepthPrivateData*)pCookie;
 	pThis->OnFieldOfViewChanged();
+}
+
+
+
+xn::PosePrivateData::PosePrivateData()
+{
+    m_usersPoseDataPerPose = NULL;
+    m_numPoses = 0;
+
+    m_userCallbacksHandle = NULL;
+    m_poseDetectHandle = NULL;
+    m_outOfPoseHandle = NULL;
+    m_inProgressHandle = NULL;
+    m_hUserGenerator = NULL;
+}
+
+xn::PosePrivateData::~PosePrivateData()
+{
+    XN_ASSERT(m_userCallbacksHandle == NULL);
+    XN_ASSERT(m_poseDetectHandle == NULL);
+    XN_ASSERT(m_outOfPoseHandle == NULL);
+    XN_ASSERT(m_inProgressHandle == NULL);
+    XN_ASSERT(m_usersPoseDataPerPose == NULL);
+    XN_ASSERT(m_hUserGenerator == NULL);
+}
+
+void xn::PosePrivateData::BeforeNodeDestroy()
+{
+    if (m_usersPoseDataPerPose != NULL)
+    {
+        XN_DELETE_ARR(m_usersPoseDataPerPose);
+        m_usersPoseDataPerPose = NULL;
+    }
+    m_numPoses = 0;
+    if (m_userCallbacksHandle != NULL)
+    {
+        xnUnregisterUserCallbacks(m_hUserGenerator, m_userCallbacksHandle);
+        m_userCallbacksHandle = NULL;
+    }
+    if (m_poseDetectHandle != NULL)
+    {
+        xnUnregisterFromPoseDetected(m_hUserGenerator, m_poseDetectHandle);
+        m_poseDetectHandle=NULL;
+    }
+    if (m_outOfPoseHandle != NULL)
+    {
+        xnUnregisterFromOutOfPose(m_hUserGenerator, m_outOfPoseHandle);
+        m_outOfPoseHandle=NULL;
+    }
+    if (m_inProgressHandle != NULL)
+    {
+        xnUnregisterFromPoseDetectionInProgress(m_hUserGenerator, m_inProgressHandle);
+        m_inProgressHandle = NULL;
+    }
+    m_hUserGenerator = NULL;
+}
+
+XnStatus xn::PosePrivateData::Init(XnNodeHandle hUserGenerator)
+{
+    m_hUserGenerator = hUserGenerator;
+    XnStatus nRetVal = xnRegisterUserCallbacks(m_hUserGenerator, XnNewUserCallback, XnLostUserCallback, this, &m_userCallbacksHandle);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnRegisterToPoseDetected(m_hUserGenerator, XnPoseDetectedCallback, this, &m_poseDetectHandle);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnRegisterToOutOfPose(m_hUserGenerator, XnOutOfPoseDetectedCallback, this, &m_outOfPoseHandle);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnRegisterToPoseDetectionInProgress(hUserGenerator, XnPoseInProgressCallback, this, &m_inProgressHandle);
+	XN_IS_STATUS_OK(nRetVal);
+
+    m_numPoses = xnGetNumberOfPoses(hUserGenerator);
+    if (m_numPoses < 1)
+    {
+        return XN_STATUS_OK; // no poses so nothing much to do
+    }
+
+    XnChar** arr = XN_NEW_ARR(XnChar*, m_numPoses);
+    for (XnUInt32 i = 0; i < m_numPoses; i++)
+    {
+        arr[i] = XN_NEW_ARR(XnChar, XN_MAX_NAME_LENGTH);
+    }
+    XnUInt32 numTotal = m_numPoses;
+    nRetVal = xnGetAllAvailablePoses(m_hUserGenerator, arr, XN_MAX_NAME_LENGTH, &m_numPoses);
+    if(nRetVal == XN_STATUS_OK)
+    {
+        m_usersPoseDataPerPose = XN_NEW_ARR(UsersPoseData, m_numPoses);
+        for (XnUInt32 i = 0; i < m_numPoses; i++)
+        {
+            XnUInt32 len = (XnUInt32)strlen(arr[i])+1;
+            m_usersPoseDataPerPose[i].m_poseName = XN_NEW_ARR(XnChar, len);
+            xnOSStrCopy(m_usersPoseDataPerPose[i].m_poseName, arr[i], len);
+        }
+    }
+
+    for (XnUInt32 i = 0; i < numTotal; i++)
+    {
+        XN_DELETE(arr[i]);
+    }
+
+    XN_DELETE(arr);
+    return nRetVal;
+}
+XnStatus xn::PosePrivateData::GetPoseStatus(XnUserID userID, const XnChar* poseName, XnUInt64& poseTime, XnPoseDetectionStatus& eStatus, XnPoseDetectionState& eState)
+{
+    for (XnUInt32 i = 0; i < m_numPoses; i++)
+    {
+        if (xnOSStrCmp(poseName, m_usersPoseDataPerPose[i].m_poseName) == 0)
+        {
+            PoseData tmpData;
+            XnStatus nRetVal = m_usersPoseDataPerPose[i].m_usersHash.Get(userID, tmpData);
+			XN_IS_STATUS_OK(nRetVal);
+
+			if (tmpData.m_lastState != XN_POSE_DETECTION_STATE_IN_POSE)
+            {
+                poseTime = 0;
+            }
+            else
+            {
+                poseTime = tmpData.m_lastTimeInPose;
+            }
+            eStatus = tmpData.m_lastStatus;
+            eState = tmpData.m_lastState;
+            return XN_STATUS_OK;
+        }
+    }
+    return XN_STATUS_NO_SUCH_USER;
+}
+
+void XN_CALLBACK_TYPE xn::PosePrivateData::XnNewUserCallback(XnNodeHandle /*hNode*/, XnUserID nUserId, void* pCookie)
+{
+    xn::PosePrivateData* dataPtr = (xn::PosePrivateData*)pCookie;
+    for (XnUInt32 i = 0; i < dataPtr->m_numPoses; i++)
+    {
+        PoseData tmpData;
+        dataPtr->m_usersPoseDataPerPose[i].m_usersHash.Set(nUserId, tmpData);
+    }
+}
+
+void XN_CALLBACK_TYPE xn::PosePrivateData::XnLostUserCallback(XnNodeHandle /*hNode*/, XnUserID nUserId, void* pCookie)
+{
+    xn::PosePrivateData* dataPtr = (xn::PosePrivateData*)pCookie;
+    for (XnUInt32 i = 0; i < dataPtr->m_numPoses; i++)
+    {
+        dataPtr->m_usersPoseDataPerPose[i].m_usersHash.Remove(nUserId);
+    }
+}
+
+void XN_CALLBACK_TYPE xn::PosePrivateData::XnPoseInProgressCallback(XnNodeHandle /*hNode*/, const XnChar* strPose, XnUserID nUserId, XnPoseDetectionStatus ePoseError, void* pCookie)
+{
+    xn::PosePrivateData* dataPtr = (xn::PosePrivateData*)pCookie;
+    for (XnUInt32 i = 0; i < dataPtr->m_numPoses; i++)
+    {
+        if (xnOSStrCmp(dataPtr->m_usersPoseDataPerPose[i].m_poseName, strPose) == 0)
+        {
+            PoseData tmpData;
+            if (dataPtr->m_usersPoseDataPerPose[i].m_usersHash.Get(nUserId, tmpData) != XN_STATUS_OK)
+            {
+                tmpData.Reset();
+            }
+            tmpData.m_lastStatus = ePoseError;
+            dataPtr->m_usersPoseDataPerPose[i].m_usersHash.Set(nUserId, tmpData);
+            break; // we already found the pose.
+        }
+    }
+}
+
+void XN_CALLBACK_TYPE xn::PosePrivateData::XnPoseDetectedCallback(XnNodeHandle /*hNode*/, const XnChar* strPose, XnUserID nUserId, void* pCookie)
+{
+    xn::PosePrivateData* dataPtr = (xn::PosePrivateData*)pCookie;
+    for (XnUInt32 i = 0; i < dataPtr->m_numPoses; i++)
+    {
+        if (xnOSStrCmp(dataPtr->m_usersPoseDataPerPose[i].m_poseName, strPose) == 0)
+        {
+            PoseData tmpData;
+            if (dataPtr->m_usersPoseDataPerPose[i].m_usersHash.Get(nUserId, tmpData) == XN_STATUS_OK)
+            {
+                if (tmpData.m_lastState == XN_POSE_DETECTION_STATE_IN_POSE)
+                {
+                    return; // we don't have anything to fix.
+                }
+            }
+            tmpData.m_lastState = XN_POSE_DETECTION_STATE_IN_POSE;
+            tmpData.m_lastStatus = XN_POSE_DETECTION_STATUS_OK;
+            tmpData.m_lastTimeInPose = xnGetTimestamp(dataPtr->m_hUserGenerator);
+            dataPtr->m_usersPoseDataPerPose[i].m_usersHash.Set(nUserId, tmpData);
+            break; // we already found the pose.
+        }
+    }
+}
+void XN_CALLBACK_TYPE xn::PosePrivateData::XnOutOfPoseDetectedCallback(XnNodeHandle /*hNode*/, const XnChar* strPose, XnUserID nUserId, void* pCookie)
+{
+    xn::PosePrivateData* dataPtr = (xn::PosePrivateData*)pCookie;
+    for (XnUInt32 i = 0; i < dataPtr->m_numPoses; i++)
+    {
+        if (xnOSStrCmp(dataPtr->m_usersPoseDataPerPose[i].m_poseName, strPose) == 0)
+        {
+            PoseData tmpData;
+            if (dataPtr->m_usersPoseDataPerPose[i].m_usersHash.Get(nUserId, tmpData) == XN_STATUS_OK)
+            {
+                tmpData.Reset();
+            }
+            tmpData.m_lastState = XN_POSE_DETECTION_STATE_OUT_OF_POSE;
+            tmpData.m_lastTimeInPose = 0;
+            dataPtr->m_usersPoseDataPerPose[i].m_usersHash.Set(nUserId, tmpData);
+            break; // we already found the pose.
+        }
+    }
 }
 
 XN_C_API XnStatus xnCreateDepthGenerator(
@@ -4255,7 +4583,7 @@ XN_C_API XnStatus xnCreateDepthGenerator(
 
 XN_C_API XnDepthPixel xnGetDeviceMaxDepth(XnNodeHandle hInstance)
 {
-	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_DEPTH, -1);
+	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_DEPTH, (XnDepthPixel)-1);
 	XnDepthGeneratorInterfaceContainer* pInterface = (XnDepthGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Depth.GetDeviceMaxDepth(hModuleNode);
@@ -4601,6 +4929,54 @@ XN_C_API XnStatus xnEnumerateGestures(XnNodeHandle hInstance, XnChar** pstrGestu
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	return pInterface->Gesture.EnumerateGestures(hModuleNode, pstrGestures, pnGestures);
 }
+
+
+
+XN_C_API XnUInt16 xnGetNumberOfAvailableGestures(XnNodeHandle hInstance)
+{
+    XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_GESTURE,0);
+    XnGestureGeneratorInterfaceContainer* pInterface = (XnGestureGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+    XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+    XN_VALIDATE_FUNC_PTR_RET(pInterface->Gesture.EnumerateAllGestures,0);
+    XnUInt16 nGesturesAllocated = XN_BASE_NUMBER_OF_GESTURES;
+    XnUInt16 nGesturesFound = 0;
+    XnUInt16 nLastNumGesturesAllocated = 0;
+    XnChar** pstrArr = NULL;
+    XnChar** pstrNewarr = NULL;
+    while(nGesturesFound == nLastNumGesturesAllocated)
+    {
+        pstrNewarr = XN_NEW_ARR(XnChar *, nGesturesAllocated);
+        for(XnUInt32 i = 0; i < nLastNumGesturesAllocated; i++)
+        {
+            pstrNewarr[i] = pstrArr[i];
+        }
+        for(XnUInt32 i = nLastNumGesturesAllocated; i < nGesturesAllocated; i++)
+        {
+            pstrNewarr[i] = XN_NEW_ARR(XnChar, XN_MAX_NAME_LENGTH);
+        }
+        if(pstrArr != NULL)
+        {
+            XN_DELETE_ARR(pstrArr);
+        }
+        pstrArr = pstrNewarr;
+        nLastNumGesturesAllocated = nGesturesAllocated;
+        nGesturesFound = nGesturesAllocated;
+        if(pInterface->Gesture.EnumerateAllGestures(hModuleNode, pstrNewarr, XN_MAX_NAME_LENGTH, &nGesturesFound)!=XN_STATUS_OK)
+        {
+            nGesturesFound = 0;
+            break;
+        }
+        nGesturesAllocated*=2;
+    }
+    for(XnUInt32 i = 0; i < nLastNumGesturesAllocated; i++)
+    {
+        XN_DELETE_ARR(pstrNewarr[i]);
+    }
+    XN_DELETE_ARR(pstrNewarr);
+    return nGesturesFound;
+}
+
+
 XN_C_API XnStatus xnEnumerateAllGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* pnGestures)
 {
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GESTURE);
@@ -4722,7 +5098,7 @@ static void XN_CALLBACK_TYPE xnModuleGestureIntermediateStageCompleted(const XnC
 	}
 }
 
-static void XN_CALLBACK_TYPE xnModuleGestureStateViaProgress(const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie)
+static void XN_CALLBACK_TYPE xnModuleGestureStateViaProgress(const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat /*fProgress*/, void* pCookie)
 {
 	GestureIntermediateStageCompletedCookie* pGestureCookie = (GestureIntermediateStageCompletedCookie*)pCookie;
 	if (pGestureCookie->handler != NULL)
@@ -5808,7 +6184,7 @@ XN_C_API void xnUnregisterFromCalibrationComplete(XnNodeHandle hInstance, XnCall
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 
 	CalibrationCompleteCookie* pRegCookie = (CalibrationCompleteCookie*)hCallback;
-	if (pInterface->Skeleton.UnregisterFromCalibrationComplete == NULL)
+	if (pInterface->Skeleton.UnregisterFromCalibrationComplete != NULL)
 	{
 		pInterface->Skeleton.UnregisterFromCalibrationComplete(hModuleNode, pRegCookie->hCallback);
 	}
@@ -5851,6 +6227,57 @@ XN_C_API XnStatus xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPo
 	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.GetAllAvailablePoses);
 	return pInterface->PoseDetection.GetAllAvailablePoses(hModuleNode, pstrPoses, nNameLength, pnPoses);
 }
+
+
+XN_C_API XnStatus xnGetPoseStatus(XnNodeHandle hInstance, XnUserID userID, const XnChar* poseName, XnUInt64* poseTime, XnPoseDetectionStatus* eStatus, XnPoseDetectionState* eState)
+{
+    XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+    XN_VALIDATE_OUTPUT_PTR(poseName);
+    XN_VALIDATE_OUTPUT_PTR(poseTime);
+    XN_VALIDATE_OUTPUT_PTR(eStatus);
+    XN_VALIDATE_OUTPUT_PTR(eState);
+    xn::PosePrivateData *pPosePrivateData = dynamic_cast<xn::PosePrivateData*>(hInstance->pPrivateData);
+    XN_VALIDATE_PTR(pPosePrivateData, XN_STATUS_ERROR);
+
+    return pPosePrivateData->GetPoseStatus(userID, poseName, *poseTime, *eStatus, *eState);
+}
+
+XN_C_API XnBool xnIsPoseSupported(XnNodeHandle hInstance, const XnChar* strPose)
+{
+    XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, FALSE);
+    XN_VALIDATE_PTR(strPose, FALSE);
+
+    XnUInt32 numPoses = xnGetNumberOfPoses(hInstance);
+    if(numPoses == 0)
+    {
+        return FALSE;
+    }
+    XnUInt32 len = (XnUInt32)strlen(strPose) + 1;
+    XnChar** pstrList = XN_NEW_ARR(XnChar*, numPoses);
+    for (XnUInt32 i = 0; i < numPoses; i++)
+    {
+        pstrList[i] = XN_NEW_ARR(XnChar, len);
+    }
+    XnUInt32 origNumPoses = numPoses;
+    XnStatus tmpRes = xnGetAllAvailablePoses(hInstance, pstrList, len, &numPoses);
+    if (tmpRes != XN_STATUS_OK)
+    {
+        numPoses = 0;
+    }
+    XnBool bRes = FALSE;
+    for (XnUInt32 i = 0; i < origNumPoses; i++)
+    {
+        if (i < numPoses && xnOSStrCmp(strPose, pstrList[i]) == 0)
+        {
+            bRes = TRUE;
+            numPoses = 0;
+        }
+        XN_DELETE_ARR(pstrList[i]);
+    }
+    XN_DELETE_ARR(pstrList);
+    return bRes;
+}
+
 XN_C_API XnStatus xnStartPoseDetection(XnNodeHandle hInstance, const XnChar* strPose, XnUserID user)
 {
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
@@ -6231,7 +6658,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 	// search for all codecs
 	XnNodeInfoList* pList;
 	nRetVal = xnEnumerateProductionTrees(pContext, XN_NODE_TYPE_CODEC, NULL, &pList, NULL);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Enumerate production trees", nRetVal);
 
 	XnNodeHandle hCodec = NULL;
 
@@ -6248,7 +6675,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 			nRetVal = xnCreateProductionTree(pContext, pInfo, &hCodec);
 			if (nRetVal != XN_STATUS_OK)
 			{
-				xnLogWarning(XN_MASK_OPEN_NI, "Failed to create codec %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
+				xnLoggerWarning(g_logger, "Failed to create codec %s of vendor %s to check for its type: %s", pInfo->Description.strName, pInfo->Description.strVendor, xnGetStatusString(nRetVal));
 				continue;
 			}
 
@@ -6271,6 +6698,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 
 	if (hCodec == NULL)
 	{
+		xnLogError(XN_MASK_OPEN_NI, "Unsupported codec '%.4s'", &codecID);
 		return XN_STATUS_UNSUPPORTED_CODEC;
 	}
 
@@ -6279,7 +6707,7 @@ XN_C_API XnStatus xnCreateCodec(XnContext* pContext, XnCodecID codecID, XnNodeHa
 	if (nRetVal != XN_STATUS_OK)
 	{
 		xnProductionNodeRelease(hCodec);
-		XN_LOG_ERROR_RETURN(nRetVal, XN_MASK_OPEN_NI, "Failed to init codec using given node: %s", xnGetStatusString(nRetVal));
+		XN_RETURN_WITH_ERROR_LOG(g_logger, nRetVal, "Failed to init codec using given node: %s", xnGetStatusString(nRetVal));
 	}
 
 	*phCodec = hCodec;

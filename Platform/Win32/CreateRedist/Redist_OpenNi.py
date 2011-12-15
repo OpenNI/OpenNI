@@ -1,6 +1,6 @@
 #/***************************************************************************
 #*                                                                          *
-#*  OpenNI 1.1 Alpha                                                        *
+#*  OpenNI 1.x Alpha                                                        *
 #*  Copyright (C) 2011 PrimeSense Ltd.                                      *
 #*                                                                          *
 #*  This file is part of OpenNI.                                            *
@@ -19,7 +19,6 @@
 #*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
 #*                                                                          *
 #***************************************************************************/
-
 #-------------Imports----------------------------------------------------------#
 from xml.dom.minidom import parse, parseString
 import win32con,pywintypes,win32api
@@ -33,9 +32,12 @@ import subprocess
 import shutil
 import stat
 import uuid
-import RedistBase
+path_to_base = os.path.dirname(os.path.abspath('common/redist_base.py'))
+if path_to_base not in sys.path:
+    sys.path.insert(0, path_to_base)
+import redist_base
 
-class RedistOpenNI(RedistBase.RedistBase):
+class RedistOpenNI(redist_base.RedistBase):
     def __init__(self):
         #RedistBase.__init__(self)
         super(RedistOpenNI,self).__init__()
@@ -47,26 +49,27 @@ class RedistOpenNI(RedistBase.RedistBase):
         self.product_name = 'OpenNI'
         self.doxy_file_name = 'Doxyfile'
         self.write_2010_sample_dependency = True
-	self.internal_conf_name = 'Dev'
-        
+        self.internal_conf_name = 'Dev'
+        self.SCRIPT_DIR = os.getcwd()
+
     def init_win_sdk_vars(self):
         """find Windows SDK install dir"""
         WIN_SDK_KEY = (win32con.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Microsoft SDKs\Windows")
         WIN_SDK_VALUES = [("CurrentInstallFolder", win32con.REG_SZ)]
-        self.WIN_SDK_INST_DIR = RedistBase.get_reg_values(WIN_SDK_KEY, WIN_SDK_VALUES)[0]
-        
+        self.WIN_SDK_INST_DIR = redist_base.get_reg_values(WIN_SDK_KEY, WIN_SDK_VALUES)[0]
+
     def init_version_vars(self):
         """
         Init Verison vars.
-        currently not called in script. Taken from Redist_OpenNi. 
-        """        
+        currently not called in script. Taken from Redist_OpenNi.
+        """
         version_file = open(self.WORK_DIR + "/Include/XnVersion.h").read()
-        version_major = re.search(r"define XN_MAJOR_VERSION (\d+)", version_file).groups()[0]        
-        self.version_minor = re.search(r"define XN_MINOR_VERSION (\d+)", version_file).groups()[0]	
+        version_major = re.search(r"define XN_MAJOR_VERSION (\d+)", version_file).groups()[0]
+        self.version_minor = re.search(r"define XN_MINOR_VERSION (\d+)", version_file).groups()[0]
         version_maintenance = re.search(r"define XN_MAINTENANCE_VERSION (\d+)", version_file).groups()[0]
-        version_build = re.search(r"define XN_BUILD_VERSION (\d+)", version_file).groups()[0]        
+        version_build = re.search(r"define XN_BUILD_VERSION (\d+)", version_file).groups()[0]
         self.version_string = version_major + "." + self.version_minor + "." + version_maintenance + "." + version_build
-        
+
     def build_project(self):
         #--------------Build Project---------------------------------------------------#
         self.build_proj_solution()
@@ -78,11 +81,11 @@ class RedistOpenNI(RedistBase.RedistBase):
         self.copy_files_to_redist()
         self.creating_samples()
         self.remove_read_only_attributes()
-        
+
     def build_dotnet_policy(self):
         # Build the .NET publisher policy assembly (unfortunately, this should be done manually):
         for minor in range(1, int(self.version_minor)+1):
-            policy_name = 'Policy.1.' + str(minor) + '.OpenNI.Net.dll'            
+            policy_name = 'Policy.1.' + str(minor) + '.OpenNI.Net.dll'
             cmd = self.WIN_SDK_INST_DIR + '\\Bin\\al.exe'
             cmd += ' /link:' + self.WORK_DIR + '\\Wrappers\\OpenNI.Net\\PublisherPolicy.config'
             cmd += ' /out:' + self.WORK_DIR + '\\Platform\\Win32\\' + self.bin_dir + '\\Release\\' + policy_name
@@ -102,28 +105,28 @@ class RedistOpenNI(RedistBase.RedistBase):
     def build_java_wrapper(self):
         "Builds the Java wrapper"
         self.build_other_proj(self.WORK_DIR + '\\Platform\\Win32\\Build\\Wrappers\\OpenNI.java')
-        
-    def update_installer_clr_policy(self):	
-        updater = UpdateInstallerCLRPolicy(os.path.join(self.WORK_DIR,self.inst_proj_path))	
+
+    def update_installer_clr_policy(self):
+        updater = UpdateInstallerCLRPolicy(os.path.join(self.WORK_DIR,self.inst_proj_path))
         for minor in range(1, int(self.version_minor)+1):
             [missing,broken] = updater.is_missing(minor)
             if broken:
-                self.logger.error('WXS file seems to be broken on definitions of dotnet policy for version 1.%d.'%minor)		
+                self.logger.error('WXS file seems to be broken on definitions of dotnet policy for version 1.%d.'%minor)
             elif missing:
-                self.logger.info('WXS file missing definitions of dotnet policy for version 1.%d.'%minor)		    
+                self.logger.info('WXS file missing definitions of dotnet policy for version 1.%d.'%minor)
                 updater.add_policy_clauses(minor)
-                self.logger.info('WXS was succesfully updated to contain definitions of dotnet policy for version 1.%d.'%minor)		    
+                self.logger.info('WXS was succesfully updated to contain definitions of dotnet policy for version 1.%d.'%minor)
             else:
                 self.logger.info('WXS contains definitions of dotnet policy for version 1.%d.'%minor)
 
     def copy_doxy_files(self):
-        os.system("""copy "html\*.chm" ..\..\Documentation""")    
-        
+        os.system("""copy "html\*.chm" ..\..\Documentation""")
+
     def copy_files_to_redist(self):
         #-------------Copy files to redist---------------------------------------------#
         print("* Copying files to redist dir...")
         self.logger.info("Copying files to redist dir...")
-        
+
         os.chdir(self.WORK_DIR + "\\Platform\\Win32")
 
         #license
@@ -144,7 +147,7 @@ class RedistOpenNI(RedistBase.RedistBase):
         os.system ("copy " + self.bin_dir + "\\Release\\org.OpenNI.jar Redist\\" + self.bin_dir)
 
         for minor in range(1, int(self.version_minor)+1):
-            policy_congfig_name = 'PublisherPolicy1.' + str(minor) + '.config'            
+            policy_congfig_name = 'PublisherPolicy1.' + str(minor) + '.config'
             os.system ("copy " + "..\\..\\Wrappers\\OpenNI.Net\\PublisherPolicy.config Redist\\" + self.bin_dir + "\\" + policy_congfig_name)
 
         #lib
@@ -180,20 +183,19 @@ class RedistOpenNI(RedistBase.RedistBase):
 
         # Copy the release notes
         os.system ("copy .\\ReleaseNotes.txt Redist\\Documentation\\")
-        
+
         os.chdir(self.WORK_DIR)
-        
+
     def fix_file(self,arg,dirname,fname):
         "Fixes paths for all the files in fname"
         for filename in fname:
             filePath = dirname + "\\" + filename
             if os.path.isdir(filePath):
                 continue
-                
+
             ext = ['icproj','vcproj','csproj','cpp','h','c','ini','cs','py','bat','java']
             file_ext = os.path.splitext(filename)[1][1:]
             if file_ext in ext:
-                #print("Fixing: " + filePath)
                 file = open(filePath, "r+")
                 s = file.read()
                 file.seek(0)
@@ -234,32 +236,32 @@ class RedistOpenNI(RedistBase.RedistBase):
                 file.truncate()
                 file.write(s)
                 file.close()
-            
+
     def redist_openni(self):
-	"""
-	Main Script.
-	"""
-	self.init_logger(self.redist_name)
-	self.check_args(sys.argv)
-	self.init_vars()
-	self.init_vs_vars()
-	print ("\n*** Build target is:" + self.vc_build_bits + " Doxy:" + str(self.Make_Doxy) + " Rebuild:" + sys.argv[3] + " VC Version:" + str(self.VC_version) + " ***");
-	self.init_win_sdk_vars()	
-	self.init_version_vars()	
-	self.print_message()
-	self.logger.info("PrimeSense OpenNI Redist Started")
-	self.build_project()
-	self.fixing_files()
-	self.build_samples()
-	self.update_installer_clr_policy()
-	[dev,redist] = self.make_installer(self.SCRIPT_DIR + '\\Output\\')
-	if not dev:
-	    return 1
-	else:
-	    if not redist:
-		return 1
-	self.clean_up()
-	return 0
+        """
+        Main Script.
+        """
+        self.init_logger(self.redist_name)
+        self.check_args(sys.argv)
+        self.init_vars()
+        self.init_vs_vars()
+        print (("\n*** Build target is:" + self.vc_build_bits + " Doxy:" + str(self.Make_Doxy) + " Rebuild:" + sys.argv[3] + " VC Version:" + str(self.VC_version) + " ***"))
+        self.init_win_sdk_vars()
+        self.init_version_vars()
+        self.print_message()
+        self.logger.info("PrimeSense OpenNI Redist Started")
+        self.build_project()
+        self.fixing_files()
+        self.build_samples()
+        self.update_installer_clr_policy()
+        [dev,redist] = self.make_installer(self.SCRIPT_DIR)
+        if not dev:
+            return 1
+        else:
+            if not redist:
+                return 1
+        self.clean_up()
+        return 0
 
 
 class UpdateInstallerCLRPolicy:
@@ -272,7 +274,7 @@ class UpdateInstallerCLRPolicy:
     def is_missing(self, minor):
         """
         Returns [missing,broken] if this version is missing,
-        or broken if only one of the clauses exist.        
+        or broken if only one of the clauses exist.
         """
         #checks the WXS file if 2 patterns are found
         #<Component Id="OpenNIPolicy1.%d"
@@ -298,8 +300,8 @@ class UpdateInstallerCLRPolicy:
         """
         comp_ref_str = '<ComponentRef Id=\"OpenNIPolicy1.%d\"/>'%minor
         comp_ref_anchor = '<ComponentRef Id="OpenNINET"/>'
-        RedistBase.regx_replace(comp_ref_anchor,'%s\n%s'%(comp_ref_anchor,comp_ref_str),self.wxs_file)
-        
+        redist_base.regx_replace(comp_ref_anchor,'%s\n%s'%(comp_ref_anchor,comp_ref_str),self.wxs_file)
+
         guid = uuid.uuid1()
         comp_id_str = r'<Component Id="OpenNIPolicy1.%d" Guid="%s" DiskId="1">'%(minor,str(guid)) + '\n' + \
         r'<File Id="OpenNIPolicy1.%d" Name="Policy.1.%d.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" '%(minor,minor) +  \
@@ -308,9 +310,9 @@ class UpdateInstallerCLRPolicy:
         r'Source="$(var.OpenNIFilesDir)\\bin$(var.PlatformSuffix)\PublisherPolicy1.%d.config" />'%(minor) + '\n' + \
         r'</Component>'
         comp_id_anchor = r'<Component Id="OpenNINET"'
-        RedistBase.regx_replace(comp_id_anchor,'%s\n%s'%(comp_id_str,comp_id_anchor),self.wxs_file)
+        redist_base.regx_replace(comp_id_anchor,'%s\n%s'%(comp_id_str,comp_id_anchor),self.wxs_file)
 
 if __name__ == "__main__":
-    redist = RedistOpenNI()    
+    redist = RedistOpenNI()
     rc =  redist.redist_openni()
-    redist.finish_script(rc)    
+    redist.finish_script(rc)

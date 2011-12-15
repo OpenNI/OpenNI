@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -40,10 +40,18 @@ XnVideoStream::XnVideoStream(HRESULT *phr, XnVideoSource *pParent, xn::ImageGene
 
 	xnFPSInit(&m_FPS, 90);
 
-	m_nSupportedModes = m_imageGen.GetSupportedMapOutputModesCount();
-	XnMapOutputMode* aOutputModes = new XnMapOutputMode[m_nSupportedModes];
+	XnUInt32 nSupportedModes = m_imageGen.GetSupportedMapOutputModesCount();
+	XnMapOutputMode* aOutputModes = new XnMapOutputMode[nSupportedModes];
 
-	XnStatus nRetVal = m_imageGen.GetSupportedMapOutputModes(aOutputModes, m_nSupportedModes);
+	XnStatus nRetVal = m_imageGen.GetSupportedMapOutputModes(aOutputModes, nSupportedModes);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		*phr = E_UNEXPECTED;
+		delete[] aOutputModes;
+		return;
+	}
+
+	nRetVal = m_aSupportedModes.Reserve(nSupportedModes);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		*phr = E_UNEXPECTED;
@@ -55,7 +63,7 @@ XnVideoStream::XnVideoStream(HRESULT *phr, XnVideoSource *pParent, xn::ImageGene
 	XnBool bMJPEG = m_imageGen.IsPixelFormatSupported(XN_PIXEL_FORMAT_MJPEG);
 	Mode mode;
 
-	for (XnUInt32 i = 0; i < m_nSupportedModes; ++i)
+	for (XnUInt32 i = 0; i < nSupportedModes; ++i)
 	{
 		mode.OutputMode = aOutputModes[i];
 		if (bRGB)
@@ -88,7 +96,7 @@ HRESULT XnVideoStream::FillBuffer(IMediaSample *pms)
 {
 	XN_METHOD_START;
 
-	CheckPointer(pms,E_POINTER);
+	XN_METHOD_CHECK_POINTER(pms);
 
 	if (!m_imageGen.IsGenerating())
 	{
@@ -196,7 +204,7 @@ HRESULT XnVideoStream::GetMediaType(int iPosition, __inout CMediaType *pMediaTyp
 	XN_METHOD_START;
 	HRESULT hr = S_OK;
 
-	CheckPointer(pMediaType,E_POINTER);
+	XN_METHOD_CHECK_POINTER(pMediaType);
 
 	if(iPosition < 0)
 	{
@@ -220,7 +228,7 @@ HRESULT XnVideoStream::GetMediaType(int iPosition, __inout CMediaType *pMediaTyp
 	else
 	{
 		// Have we run off the end of types?
-		if (iPosition > int(m_nSupportedModes))
+		if (iPosition > int(m_aSupportedModes.GetSize()))
 		{
 			XN_METHOD_RETURN(VFW_S_NO_MORE_ITEMS);
 		}
@@ -236,6 +244,8 @@ HRESULT XnVideoStream::GetMediaType(int iPosition, __inout CMediaType *pMediaTyp
 HRESULT XnVideoStream::SetMediaType(const CMediaType* pMediaType)
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pMediaType);
 
 	Mode mode = MediaTypeToMode(*pMediaType);
 
@@ -264,7 +274,7 @@ HRESULT XnVideoStream::CheckMediaType(const CMediaType *pMediaType)
 {
 	XN_METHOD_START;
 
-	CheckPointer(pMediaType,E_POINTER);
+	XN_METHOD_CHECK_POINTER(pMediaType);
 
 	int index = FindCapability(*pMediaType);
 	if (index == -1 || // not found
@@ -287,8 +297,8 @@ HRESULT XnVideoStream::DecideBufferSize(IMemAllocator *pIMemAlloc, ALLOCATOR_PRO
 {
 	XN_METHOD_START;
 
-	CheckPointer(pIMemAlloc,E_POINTER);
-	CheckPointer(pProperties,E_POINTER);
+	XN_METHOD_CHECK_POINTER(pIMemAlloc);
+	XN_METHOD_CHECK_POINTER(pProperties);
 
 	CAutoLock cAutoLock(m_pFilter->pStateLock());
 	HRESULT hr = S_OK;
@@ -328,6 +338,7 @@ HRESULT XnVideoStream::Active( void )
 	XnStatus nRetVal = m_imageGen.StartGenerating();
 	if (nRetVal != XN_STATUS_OK)
 	{
+		xnLogWarning(XN_MASK_FILTER, "Can't start ImageGenerator: %s", xnGetStatusString(nRetVal));
 		XN_METHOD_RETURN(E_UNEXPECTED);
 	}
 
@@ -355,7 +366,7 @@ STDMETHODIMP XnVideoStream::GetPages(CAUUID *pPages)
 {
 	XN_METHOD_START;
 
-	if (!pPages) XN_METHOD_RETURN(E_POINTER);
+	XN_METHOD_CHECK_POINTER(pPages);
 
 	pPages->cElems = 1;
 	pPages->pElems = reinterpret_cast<GUID*>(CoTaskMemAlloc(sizeof(GUID)*pPages->cElems));
@@ -371,29 +382,32 @@ STDMETHODIMP XnVideoStream::GetPages(CAUUID *pPages)
 STDMETHODIMP XnVideoStream::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 {   
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(ppv);
+
 	HRESULT hr = S_OK;
 
 	// Standard OLE stuff
 	if(riid == IID_IAMStreamConfig) 
 	{
-		xnDumpWriteString(m_Dump, "Pin query interface to IAMStreamConfig\n");
+		xnDumpFileWriteString(m_Dump, "Pin query interface to IAMStreamConfig\n");
 		hr = GetInterface(static_cast<IAMStreamConfig*>(this), ppv);
 	}
 	else if(riid == IID_IKsPropertySet)
 	{
-		xnDumpWriteString(m_Dump, "Pin query interface to IKsPropertySet\n");
+		xnDumpFileWriteString(m_Dump, "Pin query interface to IKsPropertySet\n");
 		hr = GetInterface(static_cast<IKsPropertySet*>(this), ppv);
 	}
 	else if(riid == IID_ISpecifyPropertyPages)
 	{
-		xnDumpWriteString(m_Dump, "Pin query interface to ISpecifyPropertyPages\n");
+		xnDumpFileWriteString(m_Dump, "Pin query interface to ISpecifyPropertyPages\n");
 		hr = GetInterface(static_cast<ISpecifyPropertyPages*>(this), ppv);
 	}
 	else 
 	{
 		OLECHAR strGuid[40];
 		StringFromGUID2(riid, strGuid, 40);
-		xnDumpWriteString(m_Dump, "Pin query interface to %S\n", strGuid);
+		xnDumpFileWriteString(m_Dump, "Pin query interface to %S\n", strGuid);
 		hr = CSourceStream::NonDelegatingQueryInterface(riid, ppv);
 	}
 
@@ -408,21 +422,29 @@ HRESULT STDMETHODCALLTYPE XnVideoStream::GetNumberOfCapabilities(int *piCount, i
 {
 	XN_METHOD_START;
 
-	*piCount = m_nSupportedModes;
+	XN_METHOD_CHECK_POINTER(piCount);
+	XN_METHOD_CHECK_POINTER(piSize);
+
+	*piCount = m_aSupportedModes.GetSize();
 	*piSize = sizeof(VIDEO_STREAM_CONFIG_CAPS);
 	XN_METHOD_RETURN(S_OK);
 }
 
 HRESULT STDMETHODCALLTYPE XnVideoStream::GetStreamCaps(int iIndex, AM_MEDIA_TYPE **pmt, BYTE *pSCC)
 {
-	xnDumpWriteString(m_Dump, "Calling %s for %d\n", __FUNCTION__, iIndex);
+	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pmt);
+	XN_METHOD_CHECK_POINTER(pSCC);
+
+	xnDumpFileWriteString(m_Dump, "Calling %s for %d\n", __FUNCTION__, iIndex);
 
 	CMediaType mediaType;
 	VIDEO_STREAM_CONFIG_CAPS* pvscc = (VIDEO_STREAM_CONFIG_CAPS*)pSCC;
 	HRESULT hr = GetStreamCapability(iIndex, mediaType, *pvscc);
 	if (FAILED(hr)) XN_METHOD_RETURN(hr);
 
-	xnDumpWriteString(m_Dump, "Returning %dx%d@%d using %s\n", m_aSupportedModes[iIndex].OutputMode.nXRes, m_aSupportedModes[iIndex].OutputMode.nYRes, m_aSupportedModes[iIndex].OutputMode.nFPS, xnPixelFormatToString(m_aSupportedModes[iIndex].Format));
+	xnDumpFileWriteString(m_Dump, "Returning %dx%d@%d using %s\n", m_aSupportedModes[iIndex].OutputMode.nXRes, m_aSupportedModes[iIndex].OutputMode.nYRes, m_aSupportedModes[iIndex].OutputMode.nFPS, xnPixelFormatToString(m_aSupportedModes[iIndex].Format));
 
 	*pmt = CreateMediaType(&mediaType);
 	XN_METHOD_RETURN(S_OK);
@@ -431,6 +453,12 @@ HRESULT STDMETHODCALLTYPE XnVideoStream::GetStreamCaps(int iIndex, AM_MEDIA_TYPE
 HRESULT STDMETHODCALLTYPE XnVideoStream::SetFormat(AM_MEDIA_TYPE *pmt)
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(pmt);
+	if (pmt == NULL)
+	{
+		XN_METHOD_RETURN(E_INVALIDARG);
+	}
 
 	xnLogVerbose(XN_MASK_FILTER, "SetFormat was called");
 
@@ -469,6 +497,8 @@ HRESULT STDMETHODCALLTYPE XnVideoStream::SetFormat(AM_MEDIA_TYPE *pmt)
 HRESULT STDMETHODCALLTYPE XnVideoStream::GetFormat(AM_MEDIA_TYPE **ppmt)
 {
 	XN_METHOD_START;
+
+	XN_METHOD_CHECK_POINTER(ppmt);
 
 	if (IsConnected())
 	{
@@ -548,6 +578,8 @@ HRESULT XnVideoStream::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD
 
 HRESULT XnVideoStream::SetMirror(BOOL bMirror)
 {
+	XN_METHOD_START;
+
 	XnStatus nRetVal = m_imageGen.GetMirrorCap().SetMirror(bMirror);
 	if (nRetVal != XN_STATUS_OK)
 	{
@@ -581,7 +613,7 @@ XnDouble XnVideoStream::GetCurrentFPS()
 HRESULT XnVideoStream::GetStreamCapability(int iIndex, CMediaType& mediaType, VIDEO_STREAM_CONFIG_CAPS& vscc)
 {
 	// check bounds
-	if(iIndex < 0 || iIndex >= int(m_nSupportedModes))
+	if(iIndex < 0 || iIndex >= int(m_aSupportedModes.GetSize()))
 	{
 		xnLogVerbose(XN_MASK_FILTER, "GetStreamCapability() - Index %d is out of bounds!", iIndex);
 		return S_FALSE;
@@ -683,7 +715,7 @@ int XnVideoStream::FindCapability(const CMediaType& mediaType)
 		return -1;
 	}
 
-	for (XnUInt32 i = 0; i < m_nSupportedModes; ++i)
+	for (XnUInt32 i = 0; i < m_aSupportedModes.GetSize(); ++i)
 	{
 		if (memcmp(&mode, &m_aSupportedModes[i], sizeof(mode)) == 0)
 		{

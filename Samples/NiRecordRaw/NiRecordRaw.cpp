@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -121,9 +121,6 @@ int main(int argc, char* argv[])
 	printf("\nDone recording.\n");
 
 	rawGenerator.Release();
-
-	nRetVal = context.GetProductionNodeByName("MockRaw", rawGenerator);
-	XN_ASSERT(nRetVal == XN_STATUS_BAD_NODE_NAME);
 
 	Player player;
 	nRetVal = context.OpenFileRecording(RECORDING_FILE_NAME, player);

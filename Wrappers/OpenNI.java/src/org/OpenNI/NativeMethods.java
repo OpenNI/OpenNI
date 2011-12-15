@@ -1,3 +1,24 @@
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.x Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
 package org.OpenNI;
 
 import java.nio.ByteBuffer;
@@ -128,10 +149,12 @@ class NativeMethods
 	static native int xnSetRealProperty(long hInstance, String strName, double dValue);
 	static native int xnSetStringProperty(long hInstance, String strName, String strValue);
 	static native int xnSetGeneralProperty(long hInstance, String strName, int nBufferSize, long pBuffer);
+	static native int xnSetGeneralPropertyArray(long hInstance, String strName, byte[] buffer);
 	static native int xnGetIntProperty(long hInstance, String strName, OutArg<Long> pnValue);
 	static native int xnGetRealProperty(long hInstance, String strName, OutArg<Double> pdValue);
 	static native int xnGetStringProperty(long hInstance, String strName, OutArg<String> csValue);
 	static native int xnGetGeneralProperty(long hInstance, String strName, int nBufferSize, long pBuffer);
+	static native int xnGetGeneralPropertyArray(long hInstance, String strName, byte[] buffer);
 	static native int xnLockNodeForChanges(long hInstance, OutArg<Integer> phLock);
 	static native int xnUnlockNodeForChanges(long hInstance, int hLock);
 	static native int xnLockedNodeStartChanges(long hInstance, int hLock);
@@ -263,6 +286,7 @@ class NativeMethods
 //	static native int xnGetActiveGestures(long hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
 	static native int xnGetAllActiveGestures(long hInstance, OutArg<String[]> gestures);
 //	static native int xnEnumerateGestures(long hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
+	static native int xnGetNumberOfAvailableGestures(long hInstance);
 	static native int xnEnumerateAllGestures(long hInstance, OutArg<String[]> gestures);
 	static native boolean xnIsGestureAvailable(long hInstance, String strGesture);
 	static native boolean xnIsGestureProgressSupported(long hInstance, String strGesture);
@@ -350,7 +374,8 @@ class NativeMethods
 	static native void xnUnregisterFromOutOfPose(long hInstance, long hCallback);
 	static native int xnRegisterToPoseDetectionInProgress(long hInstance, Object obj, String poseDetectionInProgressCB, OutArg<Long> phCallback);
 	static native void xnUnregisterFromPoseDetectionInProgress(long hInstance, long hCallback);
-
+	static native boolean xnIsPoseSupported(long hInstance, String strPose);
+	static native int xnGetPoseStatus(long hInstance, int user, String strPose, OutArg<Long> poseTime, OutArg<Integer> eStatus, OutArg<Integer> eState);
 	// Hands
 	static native int xnCreateHandsGenerator(
 			long pContext,

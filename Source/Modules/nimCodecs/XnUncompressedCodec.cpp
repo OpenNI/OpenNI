@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -21,6 +21,7 @@
 ****************************************************************************/
 #include "XnUncompressedCodec.h"
 #include "XnCodecIDs.h"
+#include <XnLog.h>
 
 XnCodecID XnUncompressedCodec::GetCodecID() const
 {
@@ -41,6 +42,7 @@ XnStatus XnUncompressedCodec::CompressImpl(const XnUChar* pData, XnUInt32 nDataS
 {
 	if (nDataSize > *pnCompressedDataSize)
 	{
+		xnLogError(XN_MASK_OPEN_NI, "Output buffer overflow");
 		return (XN_STATUS_OUTPUT_BUFFER_OVERFLOW);
 	}
 
@@ -53,6 +55,7 @@ XnStatus XnUncompressedCodec::DecompressImpl(const XnUChar* pCompressedData, XnU
 {
 	if (nCompressedDataSize > *pnDataSize)
 	{
+		xnLogError(XN_MASK_OPEN_NI, "Output buffer overflow");
 		return (XN_STATUS_OUTPUT_BUFFER_OVERFLOW);
 	}
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -20,6 +20,7 @@
 *                                                                           *
 ****************************************************************************/
 #include "ExportedCodec.h"
+#include <XnLog.h>
 
 ExportedCodec::ExportedCodec(XnCodecID codecId) : m_codecId(codecId)
 {
@@ -46,7 +47,7 @@ XnStatus ExportedCodec::EnumerateProductionTrees(Context& context, NodeInfoList&
 	GetDescription(&desc);
 
 	nRetVal = TreesList.Add(desc, NULL, NULL);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Add to trees list", nRetVal);
 
 	return (XN_STATUS_OK);
 }

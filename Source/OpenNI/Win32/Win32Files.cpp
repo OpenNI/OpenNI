@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -25,6 +25,7 @@
 #include <XnOS.h>
 #include <cstdlib>
 #include <cerrno>
+#include <shellapi.h>
 
 //---------------------------------------------------------------------------
 // Code
@@ -161,7 +162,7 @@ XN_C_API XnStatus xnOSOpenFile(const XnChar* cpFileName, const XnUInt32 nFlags, 
 
 	if ((nFlags & XN_OS_FILE_WRITE) && (nFlags & XN_OS_FILE_APPEND))
 	{
-		nRetVal = xnOSSeekFile(*pFile, XN_OS_SEEK_END, 0);
+		nRetVal = xnOSSeekFile64(*pFile, XN_OS_SEEK_END, 0);
 		XN_IS_STATUS_OK(nRetVal);
 		// ZZZZ Add real error checking?
 	}
@@ -295,8 +296,54 @@ XN_C_API XnStatus xnOSSeekFile(const XN_FILE_HANDLE File, const XnOSSeekType See
 	return (XN_STATUS_OK);
 }
 
+XN_C_API XnStatus xnOSSeekFile64(const XN_FILE_HANDLE File, const XnOSSeekType SeekType, const XnInt64 nOffset)
+{
+	// Local function variables
+	DWORD nRealSeekType = 0;
+	LARGE_INTEGER liPos;
+	BOOL bSucceeded = 0;
+
+	// Make sure the actual file handle isn't NULL
+	XN_RET_IF_NULL(File, XN_STATUS_OS_INVALID_FILE);
+
+	// Convert the ni seek type into OS seek type
+	switch (SeekType)
+	{
+		case XN_OS_SEEK_SET:
+			// Absolute seek from the file beginning
+			nRealSeekType = FILE_BEGIN;
+			break;
+		case XN_OS_SEEK_CUR:
+			// Relative seek from the current location
+			nRealSeekType = FILE_CURRENT;
+			break;
+		case XN_OS_SEEK_END:
+			// Absolute seek from the file ending
+			nRealSeekType = FILE_END;
+			break;
+		default:
+			return (XN_STATUS_OS_INVALID_SEEK_TYPE);
+	}
+
+	// Seek a file handle via the OS
+	liPos.QuadPart = nOffset;
+	bSucceeded = SetFilePointerEx(File, liPos, NULL, nRealSeekType);
+
+	// Make sure it succeeded
+	if (! bSucceeded)
+	{
+		return (XN_STATUS_OS_FILE_SEEK_FAILED);
+	}
+
+	// All is good...
+	return (XN_STATUS_OK);
+}
+
 XN_C_API XnStatus xnOSTellFile(const XN_FILE_HANDLE File, XnUInt32* nFilePos)
 {
+	LARGE_INTEGER liPos;
+	BOOL bSucceeded = 0;
+
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_OUTPUT_PTR(nFilePos);
 
@@ -304,13 +351,49 @@ XN_C_API XnStatus xnOSTellFile(const XN_FILE_HANDLE File, XnUInt32* nFilePos)
 	XN_RET_IF_NULL(File, XN_STATUS_OS_INVALID_FILE);
 
 	// Seek a file handle by 0 bytes in order to read the file position
-	*nFilePos = SetFilePointer(File, 0, NULL, FILE_CURRENT);
+	liPos.QuadPart = 0;
+	bSucceeded = SetFilePointerEx(File, liPos, &liPos, FILE_CURRENT);
 
 	// Make sure it succeeded (return value is valid)
-	if (*nFilePos == INVALID_SET_FILE_POINTER)
+	if (! bSucceeded)
 	{
 		return (XN_STATUS_OS_FILE_TELL_FAILED);
 	}
+
+	// Enforce uint32 limitation
+	if (liPos.HighPart)
+	{
+		return XN_STATUS_INTERNAL_BUFFER_TOO_SMALL;
+	}
+
+	*nFilePos = liPos.LowPart;
+
+	// All is good...
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnOSTellFile64(const XN_FILE_HANDLE File, XnUInt64* nFilePos)
+{
+	LARGE_INTEGER liPos;
+	BOOL bSucceeded = 0;
+
+	// Validate the input/output pointers (to make sure none of them is NULL)
+	XN_VALIDATE_OUTPUT_PTR(nFilePos);
+
+	// Make sure the actual file handle isn't NULL
+	XN_RET_IF_NULL(File, XN_STATUS_OS_INVALID_FILE);
+
+	// Seek a file handle by 0 bytes in order to read the file position
+	liPos.QuadPart = 0;
+	bSucceeded = SetFilePointerEx(File, liPos, &liPos, FILE_CURRENT);
+
+	// Make sure it succeeded (return value is valid)
+	if (! bSucceeded)
+	{
+		return (XN_STATUS_OS_FILE_TELL_FAILED);
+	}
+
+	*nFilePos = liPos.QuadPart;
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -335,9 +418,6 @@ XN_C_API XnStatus xnOSFlushFile(const XN_FILE_HANDLE File)
 
 XN_C_API XnStatus xnOSDeleteFile(const XnChar* cpFileName)
 {
-	// Local function variables
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpFileName);
 
@@ -370,8 +450,6 @@ XN_C_API XnStatus xnOSDoesFileExist(const XnChar* cpFileName, XnBool* bResult)
 
 XN_C_API XnStatus xnOSDoesDirecotyExist(const XnChar* cpDirName, XnBool* pbResult)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpDirName);
 	XN_VALIDATE_OUTPUT_PTR(pbResult);
@@ -393,6 +471,8 @@ XN_C_API XnStatus xnOSGetFileSize(const XnChar* cpFileName, XnUInt32* pnFileSize
 	// Local function variables
 	XN_FILE_HANDLE FileHandle;
 	XnStatus nRetVal = XN_STATUS_OK;
+	LARGE_INTEGER liSize;
+	BOOL bSucceeded = 0;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpFileName);
@@ -401,7 +481,44 @@ XN_C_API XnStatus xnOSGetFileSize(const XnChar* cpFileName, XnUInt32* pnFileSize
 	nRetVal = xnOSOpenFile(cpFileName, XN_OS_FILE_READ, &FileHandle);
 	XN_IS_STATUS_OK(nRetVal);
 
-	*pnFileSize = GetFileSize(FileHandle,  NULL);
+	bSucceeded = GetFileSizeEx(FileHandle, &liSize);
+	if (!bSucceeded)
+		return XN_STATUS_OS_FILE_GET_SIZE_FAILED;
+
+	// Enforce uint32 limitation
+	if (liSize.HighPart)
+	{
+		return XN_STATUS_INTERNAL_BUFFER_TOO_SMALL;
+	}
+
+	*pnFileSize = liSize.LowPart;
+
+	nRetVal = xnOSCloseFile(&FileHandle);
+	XN_IS_STATUS_OK(nRetVal);
+
+	// All is good...
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnOSGetFileSize64(const XnChar* cpFileName, XnUInt64* pnFileSize)
+{
+	// Local function variables
+	XN_FILE_HANDLE FileHandle;
+	XnStatus nRetVal = XN_STATUS_OK;
+	LARGE_INTEGER liSize;
+	BOOL bSucceeded = 0;
+
+	// Validate the input/output pointers (to make sure none of them is NULL)
+	XN_VALIDATE_INPUT_PTR(cpFileName);
+	XN_VALIDATE_OUTPUT_PTR(pnFileSize);
+
+	nRetVal = xnOSOpenFile(cpFileName, XN_OS_FILE_READ, &FileHandle);
+	XN_IS_STATUS_OK(nRetVal);
+
+	bSucceeded = GetFileSizeEx(FileHandle, &liSize);
+	if (!bSucceeded)
+		return XN_STATUS_OS_FILE_GET_SIZE_FAILED;
+	*pnFileSize = liSize.QuadPart;
 
 	nRetVal = xnOSCloseFile(&FileHandle);
 	XN_IS_STATUS_OK(nRetVal);
@@ -425,6 +542,50 @@ XN_C_API XnStatus xnOSCreateDirectory(const XnChar* cpDirName)
 	}
 
 	// All is good...
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus XN_C_DECL xnOSDeleteEmptyDirectory(const XnChar* strDirName)
+{
+	XN_VALIDATE_INPUT_PTR(strDirName);
+	
+	XnBool bRetVal = RemoveDirectory(strDirName);
+	if (!bRetVal)
+	{
+		return XN_STATUS_OS_FAILED_TO_DELETE_DIR;
+	}
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus XN_C_DECL xnOSDeleteDirectoryTree(const XnChar* strDirName)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XN_VALIDATE_INPUT_PTR(strDirName);
+
+	// file name must be double-null terminated
+	XnChar strDirNameDoubleNull[MAX_PATH+1];
+	xnOSMemSet(strDirNameDoubleNull, 0, sizeof(strDirNameDoubleNull));
+	nRetVal = xnOSStrCopy(strDirNameDoubleNull, strDirName, MAX_PATH);
+	XN_IS_STATUS_OK(nRetVal);
+
+	SHFILEOPSTRUCT shOp;
+	shOp.hwnd = NULL;
+	shOp.wFunc = FO_DELETE;
+	shOp.pFrom = strDirNameDoubleNull;
+	shOp.pTo = NULL;
+	shOp.fFlags = FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
+	shOp.fAnyOperationsAborted = 0;
+	shOp.hNameMappings = NULL;
+	shOp.lpszProgressTitle = NULL;
+
+	int ret = SHFileOperation(&shOp);
+	if (ret != 0)
+	{
+		return XN_STATUS_OS_FAILED_TO_DELETE_DIR;
+	}
+
 	return (XN_STATUS_OK);
 }
 

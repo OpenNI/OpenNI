@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -82,6 +82,76 @@ namespace xn
 		XnNodeHandle m_hNode;
 		XnCallbackHandle m_hFOVCallbackHandle;
 	};
+
+    /// @brief Internal class used to translate pose detection callbacks to an in frame status.
+    class PosePrivateData : public NodePrivateData
+    {
+    public:
+        PosePrivateData(); ///< constructor
+        virtual ~PosePrivateData(); ///< destructor
+        virtual void BeforeNodeDestroy(); ///< cleans the internals. 
+        /// @brief Initializes the class.
+        /// 
+        /// @param hUserGenerator The user generator node which holds the pose detection capability.
+        /// @return The success status.
+        XnStatus Init(XnNodeHandle hUserGenerator); 
+        /// @brief Gets the current pose status
+        /// 
+        /// @param userID The user whose pose status we are interested in.
+        /// @param poseName The pose we want to get a status on.
+        /// @param poseTime The time stamp in which the user entered into the pose (0 if not in pose). 
+        /// @param eStatus The status of the user's pose, i.e. the progress error for getting into 
+        ///                pose (XnPoseDetectionStatus, the same as received from the in progress
+        ///                callback. See @ref xnRegisterToPoseDetectionInProgress).
+        /// @param eState  The state of the user pose (i.e. in pose, out of pose).
+        /// @return The success status. The data is invalid if failed.
+        XnStatus GetPoseStatus(XnUserID userID, const XnChar* poseName, XnUInt64& poseTime, XnPoseDetectionStatus& eStatus, XnPoseDetectionState& eState);
+    private:
+        /// @brief Internal structure to hold the info for a single pose of a single user
+        struct PoseData
+        {
+            XnUInt64 m_lastTimeInPose; ///< @brief The time stamp when we last entered pose (0 if not in pose)
+            XnPoseDetectionStatus m_lastStatus; ///< @brief The last status message from in progress.
+            XnPoseDetectionState m_lastState;  ///< @brief The last state (in/out of pose). Determined by pose detected and out of pose callbacks!
+            PoseData() { Reset(); };
+            /// @brief Resets the struct to the default state which is being out of pose, with a 
+            /// general error and time 0.
+            void Reset() 
+            { 
+                m_lastState=XN_POSE_DETECTION_STATE_OUT_OF_POSE; 
+                m_lastStatus=XN_POSE_DETECTION_STATUS_ERROR;
+                m_lastTimeInPose=0;
+            }
+        };
+        /// @brief Hash to hold the pose data for users for a single pose
+        XN_DECLARE_DEFAULT_HASH(XnUserID,PoseData,UsersPoseDataHash);
+        /// @brief Structure to hold the data of a single pose
+        struct UsersPoseData
+        {
+            UsersPoseDataHash m_usersHash; ///< @brief The users data
+            XnChar *m_poseName;             ///< @brief The pose name.
+        };
+
+        UsersPoseData *m_usersPoseDataPerPose; ///< @brief An array which holds the status for each pose
+        XnUInt32 m_numPoses;        ///< @brief The size of the m_usersPoseDataPerPose array.
+
+        XnCallbackHandle m_userCallbacksHandle; ///< @brief Callback handle to unregister from user callbacks
+        XnCallbackHandle m_poseDetectHandle; ///< @brief Callback handle to unregister from user detection callbacks
+        XnCallbackHandle m_outOfPoseHandle; ///< @brief Callback handle to unregister from out of pose callbacks
+        XnCallbackHandle m_inProgressHandle; ///< @brief Callback handle to unregister from pose in progress callbacks
+        XnNodeHandle m_hUserGenerator; ///< @brief The user generator everything relates to.
+
+        /// @brief callback function
+        static void XN_CALLBACK_TYPE XnNewUserCallback(XnNodeHandle hNode, XnUserID nUserId, void* pCookie);
+        /// @brief callback function
+        static void XN_CALLBACK_TYPE XnLostUserCallback(XnNodeHandle hNode, XnUserID nUserId, void* pCookie);
+        /// @brief callback function
+        static void XN_CALLBACK_TYPE XnPoseInProgressCallback(XnNodeHandle hNode, const XnChar* strPose, XnUserID nUserId, XnPoseDetectionStatus ePoseError, void* pCookie);
+        /// @brief callback function
+        static void XN_CALLBACK_TYPE XnPoseDetectedCallback(XnNodeHandle hNode, const XnChar* strPose, XnUserID nUserId, void* pCookie);
+        /// @brief callback function
+        static void XN_CALLBACK_TYPE XnOutOfPoseDetectedCallback(XnNodeHandle hNode, const XnChar* strPose, XnUserID nUserId, void* pCookie);
+    };
 }
 
 struct XnModuleStateCookie; // Forward Declaration
@@ -89,7 +159,7 @@ XN_DECLARE_DEFAULT_HASH(XnModuleStateCookie*, XnModuleStateCookie*, XnModuleStat
 
 struct XnInternalNodeData
 {
-	XnBitSet typeHierarchy;
+	XnBitSet* pTypeHierarchy;
 	XnModuleInstance* pModuleInstance;
 	XnNodeInfo* pNodeInfo;
 	XnUInt32 nRefCount;
@@ -174,7 +244,8 @@ struct XnContext
 	XnUInt32 nRefCount;
 	XN_CRITICAL_SECTION_HANDLE hLock;
 	XnNodeInfoList* pOwnedNodes;
-	XnDump dumpRefCount;
+	XnDumpFile* pDumpRefCount;
+	XnDumpFile* pDumpDataFlow;
 	XnContextShuttingDownEvent* pShutdownEvent;
 };
 

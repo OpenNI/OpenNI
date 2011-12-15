@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -34,14 +34,22 @@
 //---------------------------------------------------------------------------
 // Macros
 //---------------------------------------------------------------------------
-#define XN_METHOD_START				xnDumpWriteString(m_Dump, "Entering %s\n", __FUNCTION__)
+#define XN_METHOD_START				xnDumpFileWriteString(m_Dump, "Entering %s\n", __FUNCTION__)
 
 #define XN_METHOD_RETURN(hr)		\
 	do								\
 	{								\
-		xnDumpWriteString(m_Dump, "%s returned %s (%d)\n", __FUNCTION__, XN_STRINGIFY(hr), hr);	\
+		xnDumpFileWriteString(m_Dump, "%s returned %s (%d)\n", __FUNCTION__, XN_STRINGIFY(hr), hr);	\
 		return hr;					\
 	} while (0)
+
+#define XN_METHOD_CHECK_POINTER(p)								\
+	if (p == NULL)												\
+	{															\
+		xnDumpFileWriteString(m_Dump, "%s returned %s (%d) (%s)\n", \
+			__FUNCTION__, "E_POINTER",							\
+			E_POINTER, XN_STRINGIFY(p));						\
+	}
 
 //---------------------------------------------------------------------------
 // Types
@@ -88,7 +96,7 @@ public:
 	STDMETHOD(GetLowLightCompensation)(XnBool *pbValue);
 	STDMETHOD(SetLowLightCompensation)(XnBool bValue);
 
-	XnDump m_Dump;
+	XnDumpFile* m_Dump;
 
 private:
 	class VideoProcAmp : public CUnknown, public IAMVideoProcAmp
@@ -106,7 +114,7 @@ private:
 		const XnChar* GetPropertyCap(long Property);
 
 		XnVideoSource* m_pSource;
-		XnDump& m_Dump;
+		XnDumpFile*& m_Dump;
 	};
 
 	class CameraControl : public CUnknown, public IAMCameraControl
@@ -124,7 +132,7 @@ private:
 		const XnChar* GetPropertyCap(long Property);
 
 		XnVideoSource* m_pSource;
-		XnDump& m_Dump;
+		XnDumpFile*& m_Dump;
 	};
 
 	HRESULT GetCapRange(const XnChar* strCap, long *pMin, long *pMax, long *pSteppingDelta, long *pDefault, long *pCapsFlags);
