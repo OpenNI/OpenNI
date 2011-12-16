@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -59,6 +59,9 @@ protected:
 	XnNodeNotifications& m_notifications;
 	void* m_pCookie;
 	ProductionNode m_node;
+
+private:
+	XN_DISABLE_COPY_AND_ASSIGN(NodeWatcher);
 };
 
 class DeviceWatcher : public NodeWatcher

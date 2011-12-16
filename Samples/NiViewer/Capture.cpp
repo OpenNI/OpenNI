@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -217,7 +217,6 @@ void captureBrowse(int)
 	ofn.lpstrFile = g_Capture.csFileName;
 	ofn.nMaxFile = sizeof(g_Capture.csFileName);
 	ofn.lpstrTitle = TEXT("Capture to...");
-	ofn.nMaxFileTitle = sizeof (ofn.lpstrTitle);
 	ofn.Flags = OFN_EXPLORER | OFN_NOCHANGEDIR;
 
 	GetSaveFileName(&ofn); 

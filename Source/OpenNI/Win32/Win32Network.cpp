@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -317,16 +317,17 @@ XN_C_API XnStatus xnOSConnectSocket(XN_SOCKET_HANDLE Socket, XnUInt32 nMillisecs
 
 	xnOSMemCopy(&SocketAddress, &Socket->SocketAddress, sizeof(SocketAddress));
 
-	// Make the socket non-blocking temporarily
-	u_long nNonBlockingSocket = 1;
-	u_long nBlockingSocket = 0;
-	if (ioctlsocket(Socket->Socket, FIONBIO, &nNonBlockingSocket) != 0)
+	// if timeout is XN_SOCKET_DEFAULT_TIMEOUT, leave the socket as a blocking one
+	if (nMillisecsTimeout != XN_SOCKET_DEFAULT_TIMEOUT)
 	{
-		XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED, XN_MASK_OS, "ioctlsocket() failed with error %d", WSAGetLastError());
-		return(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED);
+		// Make the socket non-blocking temporarily
+		u_long nNonBlockingSocket = 1;
+		if (ioctlsocket(Socket->Socket, FIONBIO, &nNonBlockingSocket) != 0)
+		{
+			XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED, XN_MASK_OS, "ioctlsocket() failed with error %d", WSAGetLastError());
+		}
 	}
 
-	//This is a non-blocking connect() call - it doesn't do anything until we call select()
 	nRetVal = connect(Socket->Socket, &SocketAddress, sizeof(SocketAddress));
 	if ((nRetVal == SOCKET_ERROR) && (WSAGetLastError() != WSAEWOULDBLOCK))
 	{
@@ -334,34 +335,39 @@ XN_C_API XnStatus xnOSConnectSocket(XN_SOCKET_HANDLE Socket, XnUInt32 nMillisecs
 		return(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED);
 	}
 
-	FD_ZERO(&fdWriteHandles);
-	FD_SET(Socket->Socket, &fdWriteHandles);
-	FD_ZERO(&fdExceptHandles);
-	FD_SET(Socket->Socket, &fdExceptHandles);
-	nRetVal = select(1 /* ignored */, NULL, &fdWriteHandles, &fdExceptHandles, pTimeout);
-	// in any case, make the socket blocking again before we check select()'s success
-	ioctlsocket(Socket->Socket, FIONBIO, &nBlockingSocket);
+	if (nMillisecsTimeout != XN_SOCKET_DEFAULT_TIMEOUT)
+	{
+		FD_ZERO(&fdWriteHandles);
+		FD_SET(Socket->Socket, &fdWriteHandles);
+		FD_ZERO(&fdExceptHandles);
+		FD_SET(Socket->Socket, &fdExceptHandles);
+		nRetVal = select(1 /* ignored */, NULL, &fdWriteHandles, &fdExceptHandles, pTimeout);
 
-	if (nRetVal == 0)
-	{
-		return (XN_STATUS_OS_NETWORK_TIMEOUT);
-	}
-	else if (nRetVal == SOCKET_ERROR)
-	{
-		XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED, XN_MASK_OS, "select() returned WinSock error: %d", WSAGetLastError());
-	}
-	else
-	{
-		// select returned due to socket state change. Check if an error occurred or everything is OK.
-		if (FD_ISSET(Socket->Socket, &fdExceptHandles))
+		// in any case, make the socket blocking again before we check select()'s success
+		u_long nBlockingSocket = 0;
+		ioctlsocket(Socket->Socket, FIONBIO, &nBlockingSocket);
+
+		if (nRetVal == 0)
 		{
-			XnUInt32 nLastError = 0;
-			XnInt32 nLastErrorSize = sizeof(nLastError);
-			getsockopt(Socket->Socket, SOL_SOCKET, SO_ERROR, (char*)&nLastError, &nLastErrorSize);
-			XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED, XN_MASK_OS, "Connect failed with error: %u", nLastError);
+			return (XN_STATUS_OS_NETWORK_TIMEOUT);
 		}
-		// else, it means it's in the writable state, which means connect succeeded.
-		XN_ASSERT(FD_ISSET(Socket->Socket, &fdWriteHandles));
+		else if (nRetVal == SOCKET_ERROR)
+		{
+			XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED, XN_MASK_OS, "select() returned WinSock error: %d", WSAGetLastError());
+		}
+		else
+		{
+			// select returned due to socket state change. Check if an error occurred or everything is OK.
+			if (FD_ISSET(Socket->Socket, &fdExceptHandles))
+			{
+				XnUInt32 nLastError = 0;
+				XnInt32 nLastErrorSize = sizeof(nLastError);
+				getsockopt(Socket->Socket, SOL_SOCKET, SO_ERROR, (char*)&nLastError, &nLastErrorSize);
+				XN_LOG_ERROR_RETURN(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED, XN_MASK_OS, "Connect failed with error: %u", nLastError);
+			}
+			// else, it means it's in the writable state, which means connect succeeded.
+			XN_ASSERT(FD_ISSET(Socket->Socket, &fdWriteHandles));
+		}
 	}
 
 	// All is good...
@@ -410,9 +416,9 @@ XN_C_API XnStatus xnOSSendNetworkBuffer(XN_SOCKET_HANDLE Socket, const XnChar* c
 	// Make sure the actual socket handle isn't NULL
 	XN_RET_IF_NULL(Socket->Socket, XN_STATUS_OS_INVALID_SOCKET);
 
-	// Send the data over our UDP socket to the server and make sure the wanted number of bytes were actually sent
+	// Send the data over our socket to the server and make sure the wanted number of bytes were actually sent
 	nRetVal = send(Socket->Socket, cpBuffer, nBufferSize, 0);
-	if (nRetVal != nBufferSize)
+	if (nRetVal != (int)nBufferSize)
 	{
 		return (XN_STATUS_OS_NETWORK_SEND_FAILED);
 	}
@@ -436,7 +442,7 @@ XN_C_API XnStatus xnOSSendToNetworkBuffer(XN_SOCKET_HANDLE Socket, const XnChar*
 
 	// Send the data over our UDP socket to the server and make sure the wanted number of bytes were actually sent
 	nRetVal = sendto(Socket->Socket, cpBuffer, nBufferSize, 0, (SOCKADDR*)&SocketTo->SocketAddress, sizeof(SOCKADDR));
-	if (nRetVal != nBufferSize)
+	if (nRetVal != (int)nBufferSize)
 	{
 		return (XN_STATUS_OS_NETWORK_SEND_FAILED);
 	}
@@ -492,7 +498,6 @@ XN_C_API XnStatus xnOSReceiveNetworkBuffer(XN_SOCKET_HANDLE Socket, XnChar* cpBu
 XN_C_API XnStatus xnOSReceiveFromNetworkBuffer(XN_SOCKET_HANDLE Socket, XnChar* cpBuffer, XnUInt32* pnBufferSize, XN_SOCKET_HANDLE* SocketFrom)
 {
 	// Local function variables
-	XnInt32 nRetVal = 0;
 	XnInt32 nLen = sizeof(SOCKADDR);	
 
 	// Validate the input/output pointers (to make sure none of them is NULL)

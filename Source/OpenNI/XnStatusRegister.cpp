@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -53,8 +53,8 @@ static XnStatus s_XN_OK_result = xnRegisterErrorCodeMessages(0, 0, 1, &s_OK_Data
 XnErrorCodeData* xnGetErrorCodeData(const XnStatus Status)
 {
 	// search for it
-	XnUInt32 nGroup = XN_STATUS_GROUP(Status);
-	XnUInt32 nCode = XN_STATUS_CODE(Status);
+	XnUInt16 nGroup = XN_STATUS_GROUP(Status);
+	XnUInt16 nCode = XN_STATUS_CODE(Status);
 
 	if (g_pErrorGroups == NULL)
 	{
@@ -100,9 +100,9 @@ XN_C_API XnStatus xnRegisterErrorCodeMessages(XnUInt16 nGroup, XnUInt16 nFirst, 
 		data.csName = xnOSStrDup(pErrorCodeData[nIndex].csName);
 
 		XnErrorCodeData prevData = {0};
-		pStatusHash->Get(data.nCode, prevData);
+		pStatusHash->Get((XnUInt16)data.nCode, prevData);
 
-		nRetVal = pStatusHash->Set(data.nCode, data);
+		nRetVal = pStatusHash->Set((XnUInt16)data.nCode, data);
 		XN_IS_STATUS_OK(nRetVal);
 
 		// if prev contained anything, free it

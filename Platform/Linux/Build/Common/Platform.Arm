@@ -1,0 +1,3 @@
+ifeq "$(CFG)" "Release"
+    CFLAGS += -mcpu=cortex-a8 -mfpu=neon -ftree-vectorize -mfloat-abi=softfp -ffast-math -fsingle-precision-constant
+endif

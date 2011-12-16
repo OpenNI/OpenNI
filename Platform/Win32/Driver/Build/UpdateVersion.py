@@ -1,6 +1,6 @@
 #/***************************************************************************
 #*                                                                          *
-#*  OpenNI 1.1 Alpha                                                        *
+#*  OpenNI 1.x Alpha                                                        *
 #*  Copyright (C) 2011 PrimeSense Ltd.                                      *
 #*                                                                          *
 #*  This file is part of OpenNI.                                            *
@@ -30,7 +30,7 @@ import datetime
 VERSION_MAJOR = 3
 VERSION_MINOR = 1
 VERSION_MAINTENANCE = 2
-VERSION_BUILD = 0
+VERSION_BUILD = 2
 
 # ---------------------- FUNCTIONS -----------------------
 def regx_replace(findStr,repStr,filePath):

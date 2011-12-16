@@ -1,4 +1,25 @@
-﻿using System;
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.x Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UserID = System.Int32;
@@ -162,6 +183,16 @@ namespace OpenNI
 			return poses;
 		}
 
+        public bool IsPoseSupported(string pose)
+        {
+            return SafeNativeMethods.xnIsPoseSupported(this.InternalObject,pose);
+        }
+
+        public void GetPoseStatus(UserID userID, string poseName, out UInt64 poseTime, out PoseDetectionStatus eStatus, out PoseDetectionState eState)
+        {
+            int status = SafeNativeMethods.xnGetPoseStatus(this.InternalObject,userID, poseName, out poseTime,out eStatus,out eState);
+            WrapperUtils.ThrowOnError(status);
+        }
 		public void StartPoseDetection(string pose, UserID user)
         {
             int status = SafeNativeMethods.xnStartPoseDetection(this.InternalObject, pose, user);
@@ -172,6 +203,7 @@ namespace OpenNI
 			int status = SafeNativeMethods.xnStopPoseDetection(this.InternalObject, user); 
 			WrapperUtils.ThrowOnError(status);
         }
+
 
         #region Pose Detected
         private event EventHandler<PoseDetectedEventArgs> poseDetectedEvent;

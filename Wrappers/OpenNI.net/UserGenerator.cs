@@ -1,4 +1,25 @@
-﻿using System;
+/****************************************************************************
+*                                                                           *
+*  OpenNI 1.x Alpha                                                         *
+*  Copyright (C) 2011 PrimeSense Ltd.                                       *
+*                                                                           *
+*  This file is part of OpenNI.                                             *
+*                                                                           *
+*  OpenNI is free software: you can redistribute it and/or modify           *
+*  it under the terms of the GNU Lesser General Public License as published *
+*  by the Free Software Foundation, either version 3 of the License, or     *
+*  (at your option) any later version.                                      *
+*                                                                           *
+*  OpenNI is distributed in the hope that it will be useful,                *
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
+*  GNU Lesser General Public License for more details.                      *
+*                                                                           *
+*  You should have received a copy of the GNU Lesser General Public License *
+*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
+*                                                                           *
+****************************************************************************/
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UserID = System.Int32;
@@ -50,6 +71,12 @@ namespace OpenNI
             this.internalLostUser = new SafeNativeMethods.XnUserHandler(this.InternalLostUser);
             this.internalUserExit = new SafeNativeMethods.XnUserHandler(this.InternalUserExit);
             this.internalUserReEnter = new SafeNativeMethods.XnUserHandler(this.InternalUserReEnter);
+            if (IsCapabilitySupported(Capabilities.Skeleton))
+                m_skeletonCapability = new SkeletonCapability(this);
+            else m_skeletonCapability = null;
+            if (IsCapabilitySupported(Capabilities.PoseDetection))
+                m_poseDetectionCapability = new PoseDetectionCapability(this);
+            else m_poseDetectionCapability = null;
         }
 
         public UserGenerator(Context context, Query query, EnumerationErrors errors) :
@@ -118,14 +145,14 @@ namespace OpenNI
         {
 			get
 			{
-				return new SkeletonCapability(this);
+				return m_skeletonCapability;
 			}
         }
 		public PoseDetectionCapability PoseDetectionCapability
         {
 			get
 			{
-				return new PoseDetectionCapability(this);
+				return m_poseDetectionCapability;
 			}
         }
 
@@ -260,5 +287,31 @@ namespace OpenNI
         private SafeNativeMethods.XnUserHandler internalUserReEnter;
         private IntPtr userReEnterHandle;
         #endregion
+
+        ///  @todo this is a temporary solution for capability not being disposed by anyone external
+        public override void Dispose()
+        {
+            if (m_skeletonCapability != null)
+            {
+                m_skeletonCapability.InternalDispose();
+                m_skeletonCapability = null;
+            }
+            if (m_poseDetectionCapability != null)
+            {
+                m_poseDetectionCapability.InternalDispose();
+                m_poseDetectionCapability = null;
+            }
+            
+            base.Dispose();
+        }
+
+        // protected members
+
+        // internal capabilities to avoid doing "new" all the time. They are initialized in
+        // the construction and are null if not supported.
+        // NOTE: everyone getting a capability will get THE SAME capability! i.e. dispose should not be 
+        // called!
+        protected SkeletonCapability m_skeletonCapability;
+        protected PoseDetectionCapability m_poseDetectionCapability;
     }
 }

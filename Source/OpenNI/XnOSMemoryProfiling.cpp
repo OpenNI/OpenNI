@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -68,7 +68,7 @@ typedef struct
 //---------------------------------------------------------------------------
 static XnMemBlockDataLinkedList g_allocatedMemory = {NULL, NULL};
 static XN_CRITICAL_SECTION_HANDLE g_hCS;
-static XnDump m_dump;
+static XnDumpFile* g_dump;
 
 //---------------------------------------------------------------------------
 // Code
@@ -106,14 +106,14 @@ XN_C_API void* xnOSLogMemAlloc(void* pMemBlock, XnAllocationType nAllocType, XnU
 		printf("**  WARNING: Memory Profiling is on!                      **\n");
 		printf("************************************************************\n");
 
-		m_dump = XN_DUMP_CLOSED;
-
 		bReentrent = TRUE;
 		xnOSCreateCriticalSection(&g_hCS);
 
 #ifdef XN_MEMORY_PROFILING_DUMP
-		xnDumpForceInit(&m_dump, "Entry,Address,AllocType,Bytes,Function,File,Line,AdditionalInfo\n", "MemProfiling.log");
+		xnDumpSetMaskState("MemProf", TRUE);
 #endif
+		g_dump = xnDumpFileOpen("MemProf", "MemProfiling.log");
+		xnDumpFileWriteString(g_dump, "Entry,Address,AllocType,Bytes,Function,File,Line,AdditionalInfo\n");
 		bReentrent = FALSE;
 	}
 
@@ -132,7 +132,7 @@ XN_C_API void* xnOSLogMemAlloc(void* pMemBlock, XnAllocationType nAllocType, XnU
 	pNode->Data.nLine = nLine;
 	pNode->Data.csAdditional = csAdditional;
 	pNode->Data.nFrames = XN_MEM_PROF_MAX_FRAMES;
-	xnDumpWriteString(m_dump, "Alloc,0x%x,%s,%u,%s,%s,%u,%s\n", pMemBlock, XnGetAllocTypeString(nAllocType), nBytes, csFunction, csFile, nLine, csAdditional);
+	xnDumpFileWriteString(g_dump, "Alloc,0x%x,%s,%u,%s,%s,%u,%s\n", pMemBlock, XnGetAllocTypeString(nAllocType), nBytes, csFunction, csFile, nLine, csAdditional);
 
 	// try to get call stack (skip 2 frames - this one and the alloc func)
 	XnChar* pstrFrames[XN_MEM_PROF_MAX_FRAMES];
@@ -184,7 +184,7 @@ XN_C_API void xnOSLogMemFree(const void* pMemBlock)
 			if (g_allocatedMemory.pLast == pNode)
 				g_allocatedMemory.pLast = pPrev;
 
-			xnDumpWriteString(m_dump, "Free,0x%x\n", pMemBlock);
+			xnDumpFileWriteString(g_dump, "Free,0x%x\n", pMemBlock);
 
 			// deallocate memory
 			xnOSFree(pNode);

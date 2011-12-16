@@ -49,23 +49,25 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="$(var.PlatformProgramFilesFolder)">
         <Directory Id="INSTALLLOCATION" Name="!(loc.ProductName)">
-          <Directory Id="INSTALLLOCATIONTools" Name="Tools"/>
+         <Directory Id="INSTALLLOCATIONTools" Name="Tools"/>
           <Directory Id="INSTALLLOCATIONDriver" Name="Driver"/>
           <Directory Id="INSTALLLOCATIONBin" Name="Bin$(var.PlatformSuffix)">
             <Directory Id="INSTALLLOCATIONBinLog" Name="Log"/>  
           </Directory>
           <Directory Id="INSTALLLOCATIONData" Name="Data"/>
-          <Directory Id="INSTALLLOCATIONSAMPLES" Name="Samples">
-            <Directory Id="INSTALLLOCATIONSAMPLESBIN" Name="Bin$(var.PlatformSuffix)">
-              <Directory Id="INSTALLLOCATIONSAMPLESBINRELEASE" Name="Release">
-                <Directory Id="INSTALLLOCATIONSAMPLESBINRELEASELOG" Name="Log"/>
+          
+          <Directory Id="INSTALLLOCATIONSamples" Name="Samples">
+            <Directory Id="INSTALLLOCATIONSamplesBin" Name="Bin$(var.PlatformSuffix)">
+               <Directory Id="INSTALLLOCATIONSamplesBinRelease" Name="Release">
+               <Directory Id="INSTALLLOCATIONSamplesBinReleaseLog" Name="Log"/>
               </Directory>
-              <Directory Id="INSTALLLOCATIONSAMPLESBINDEBUG" Name="Debug">
-                <Directory Id="INSTALLLOCATIONSAMPLESBINDEBUGLOG" Name="Log"/>
-              </Directory>            
+              
+              <Directory Id="INSTALLLOCATIONSamplesBinDebug" Name="Debug">
+                <Directory Id="INSTALLLOCATIONSamplesBinDebugLog" Name="Log"/>
+              </Directory> 
             </Directory>
           </Directory>
-        </Directory>    
+          </Directory>  
       </Directory>
 
       <Directory Id="ProgramMenuFolder">
@@ -77,7 +79,6 @@
         </Directory>
       </Directory>
 
-
     </Directory>
 
     <DirectoryRef Id="INSTALLLOCATIONBinLog">
@@ -86,6 +87,7 @@
         <RemoveFolder Id="RemoveLogDir" On="uninstall"/>
       </Component>
     </DirectoryRef>
+    
 
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="ApplicationShortcut" Guid="3B13870F-0D69-401C-8B5C-862E13874449" >
@@ -97,21 +99,26 @@
         <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
     </DirectoryRef>
-
     <?if $(var.BinaryOnlyRedist)="False"?>
-      <DirectoryRef Id="INSTALLLOCATIONSAMPLESBINRELEASELOG">
+
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinDebugLog">
+      <Component Id="RemoveDebugLogDir" Guid="0AC4A0E8-CDE7-43c4-BDFA-FE0176AFFE21" KeyPath="yes">
+
+        <RemoveFile Id="RemoveDebugLogFiles" On="uninstall" Name="*.*" />
+          <RemoveFolder Id="RemoveDebugLogDir" On="uninstall"/>
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinReleaseLog">
         <Component Id="RemoveReleaseLogDir" Guid="7934C4DA-4CE1-41bb-8EE8-B974706B1C22" KeyPath="yes">
           <RemoveFile Id="RemoveReleaseLogFiles" On="uninstall" Name="*.*" />
           <RemoveFolder Id="RemoveReleaseLogDir" On="uninstall"/>
         </Component>
       </DirectoryRef>
+<?endif?>
+    <?if $(var.BinaryOnlyRedist)="False"?>
+     
 
-      <DirectoryRef Id="INSTALLLOCATIONSAMPLESBINDEBUGLOG">
-        <Component Id="RemoveDebugLogDir" Guid="0AC4A0E8-CDE7-43c4-BDFA-FE0176AFFE21" KeyPath="yes">
-          <RemoveFile Id="RemoveDebugLogFiles" On="uninstall" Name="*.*" />
-          <RemoveFolder Id="RemoveDebugLogDir" On="uninstall"/>
-        </Component>
-      </DirectoryRef>
+   
          
       <DirectoryRef Id="DocumentationShortcutFolder">
         <Component Id="DocumentationShortcut" Guid="2B5269BD-5CEA-4072-8E11-B4AA98AD382D" >
@@ -119,10 +126,17 @@
              Name="API Reference $(var.VersionNumber)"
              Description="API Reference $(var.VersionNumber)"
              Target="[INSTALLLOCATION]Documentation\OpenNI.chm"
-             WorkingDirectory="INSTALLLOCATION"/>          
-          <RemoveFolder Id="DocumentationShortcutFolder" On="uninstall"/>
+             WorkingDirectory="INSTALLLOCATION"/>                             
+          
+          <Shortcut Id="UserGuideMenuShortcut"
+             Name="User Guide $(var.VersionNumber)"
+             Description="User Guide $(var.VersionNumber)"
+             Target="[INSTALLLOCATION]Documentation\OpenNI_UserGuide.pdf"
+             WorkingDirectory="INSTALLLOCATION"/>
+            
+          <RemoveFolder Id="DocumentationShortcutFolder" On="install"/>
           <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-        </Component>                 
+        </Component>
       </DirectoryRef>
 
        <DirectoryRef Id="SamplesShortcutFolder">
@@ -131,12 +145,12 @@
               Name="NiSimpleRead$(var.PlatformSuffix)"
               Description="NiSimpleRead$(var.PlatformSuffix)"
               Target="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiSimpleRead$(var.PlatformSuffix).exe"
-              WorkingDirectory="INSTALLLOCATIONSAMPLESBINRELEASE"/>
+              WorkingDirectory="INSTALLLOCATIONSamplesBinRelease"/>
           <Shortcut Id="NiSimpleViewerMenuShortcut"
             Name="NiViewer$(var.PlatformSuffix)"
             Description="NiViewer$(var.PlatformSuffix)"
             Target="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiViewer$(var.PlatformSuffix).exe"
-            WorkingDirectory="INSTALLLOCATIONSAMPLESBINRELEASE"/>                  
+            WorkingDirectory="INSTALLLOCATIONSamplesBinRelease"/>                  
           <Shortcut Id="SampleDirMenuShortcut"
              Name="Samples Directory $(var.PlatformSuffix)"
              Description="Samples Directory"
@@ -147,11 +161,15 @@
         </Component>
       </DirectoryRef>
     <?endif?>
+
     
+      
+
     <DirectoryRef Id="TARGETDIR">
       <Component Id="RegistryEntries" Guid="D48D0BF7-6004-4403-B390-54C46454C394"  >
-        <RegistryKey Root="HKLM" Key="Software\OpenNI" Action="createAndRemoveOnUninstall">
-          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]" />
+        
+        <RegistryKey Root="HKLM" Key="Software\OpenNI" Action="none" >
+          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]"  />
           <RegistryValue Type="string" Name="Version" Value="$(var.VersionNumber)"/>
         </RegistryKey>
         
@@ -176,7 +194,11 @@
 
     <!-- Install OpenNI.net-->
     <DirectoryRef Id="TARGETDIR" >
-      <Component Id="OpenNINET" Guid="60718C69-87CB-45C0-A8A0-1B60E072D20A" DiskId="1">
+      <Component Id="OpenNIPolicy1.4" Guid="fd00a05e-0ee2-11e1-95b9-b8ac6f32ccfa" DiskId="1">
+<File Id="OpenNIPolicy1.4" Name="Policy.1.4.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\Policy.1.4.OpenNI.Net.dll" />
+<File Id="OpenNIPolicyConfig1.4" Name="PublisherPolicy1.4.config" KeyPath="no" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\PublisherPolicy1.4.config" />
+</Component>
+<Component Id="OpenNINET" Guid="60718C69-87CB-45C0-A8A0-1B60E072D20A" DiskId="1">
         <File Id="OpenNINET" Name="OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\OpenNI.Net.dll" />
       </Component>
       <Component Id="OpenNIPolicy1.1" Guid="ED633D34-ADC1-4b87-B3F6-930B8D600E0C" DiskId="1">
@@ -319,12 +341,12 @@
     </CustomAction>
 
     <!-- Set the components defined in our fragment files that will be used for our feature  -->
-    <Feature Id="OpenNIFeature" Title="!(loc.ProductName)" Level="1" >
+    <Feature Id="OpenNIFeature" Title="!(loc.ProductName)" Level="1"  >
       <?if $(var.BinaryOnlyRedist)="False"?>
         <ComponentGroupRef Id="OpenNIFiles" />              
         <ComponentRef Id="DocumentationShortcut" />
         <ComponentRef Id="SamplesShortcut" />
-        <ComponentRef Id="RemoveReleaseLogDir"/>
+       <ComponentRef Id="RemoveReleaseLogDir"/>
         <ComponentRef Id="RemoveDebugLogDir"/>
       <?else?>        
         <ComponentGroupRef Id="OpenNIBinaryFiles"/>
@@ -333,6 +355,7 @@
       <ComponentRef Id="ApplicationShortcut" />
       <ComponentRef Id="RegistryEntries" />
       <ComponentRef Id="OpenNINET"/>
+<ComponentRef Id="OpenNIPolicy1.4"/>
       <ComponentRef Id="OpenNIPolicy1.1"/>
       <ComponentRef Id="OpenNIPolicy1.2"/>
       <ComponentRef Id="OpenNIPolicy1.3"/>

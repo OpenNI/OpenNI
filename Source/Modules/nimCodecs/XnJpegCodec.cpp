@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -87,21 +87,22 @@ XnStatus XnJpegCodec::Init(const ProductionNode& node)
 
 	// register for changes in resolution or cropping
 	nRetVal = image.RegisterToMapOutputModeChange(NodeConfigurationChangedCallback, this, m_hOutputModeCallback);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Register to map output mode change", nRetVal);
 
 	if (image.IsCapabilitySupported(XN_CAPABILITY_CROPPING))
 	{
 		nRetVal = image.GetCroppingCap().RegisterToCroppingChange(NodeConfigurationChangedCallback, this, m_hCroppingCallback);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_LOG_ERROR("Register to cropping change", nRetVal);
 	}
 
 	// now init
 	nRetVal = XnStreamInitCompressImageJ(&m_CompJPEGContext);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Init image compressor", nRetVal);
 
 	nRetVal = XnStreamInitUncompressImageJ(&m_UncompJPEGContext);
 	if (nRetVal != XN_STATUS_OK)
 	{
+		xnLogError(XN_MASK_OPEN_NI, "Init image uncompressor");
 		XnStreamFreeCompressImageJ(&m_CompJPEGContext);
 		return (nRetVal);
 	}
@@ -109,7 +110,7 @@ XnStatus XnJpegCodec::Init(const ProductionNode& node)
 	m_image = image;
 
 	nRetVal = OnNodeConfigurationChanged();
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Handle node configuration change", nRetVal);
 
 	m_bValid = TRUE;
 
@@ -130,6 +131,7 @@ XnStatus XnJpegCodec::CompressImpl(const XnUChar* pData, XnUInt32 nDataSize, XnU
 {
 	if (!m_bValid)
 	{
+		xnLogError(XN_MASK_OPEN_NI, "Codec is not valid");
 		return XN_STATUS_ERROR;
 	}
 
@@ -161,7 +163,7 @@ XnStatus XnJpegCodec::OnNodeConfigurationChanged()
 	
 	XnMapOutputMode outputMode;
 	nRetVal = m_image.GetMapOutputMode(outputMode);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Get map output mode", nRetVal);
 
 	m_nXRes = outputMode.nXRes;
 	m_nYRes = outputMode.nYRes;
@@ -170,7 +172,7 @@ XnStatus XnJpegCodec::OnNodeConfigurationChanged()
 	{
 		XnCropping cropping;
 		nRetVal = m_image.GetCroppingCap().GetCropping(cropping);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_LOG_ERROR("Get cropping", nRetVal);
 
 		if (cropping.bEnabled)
 		{
@@ -183,15 +185,16 @@ XnStatus XnJpegCodec::OnNodeConfigurationChanged()
 
 	switch (pixelFormat)
 	{
-	case XN_PIXEL_FORMAT_RGB24:
-		m_bRGB = TRUE;
-		break;
-	case XN_PIXEL_FORMAT_GRAYSCALE_8_BIT:
-		m_bRGB = FALSE;
-		break;
-	case XN_PIXEL_FORMAT_YUV422:
-	case XN_PIXEL_FORMAT_GRAYSCALE_16_BIT:
-		XN_LOG_ERROR_RETURN(XN_STATUS_ERROR, XN_MASK_OPEN_NI, "Jpeg currently supports only RGB24 and Grayscale8 pixel formats!");
+		case XN_PIXEL_FORMAT_RGB24:
+			m_bRGB = TRUE;
+			break;
+		case XN_PIXEL_FORMAT_GRAYSCALE_8_BIT:
+			m_bRGB = FALSE;
+			break;
+		case XN_PIXEL_FORMAT_YUV422:
+		case XN_PIXEL_FORMAT_GRAYSCALE_16_BIT:
+		default:
+			XN_LOG_ERROR_RETURN(XN_STATUS_ERROR, XN_MASK_OPEN_NI, "Jpeg currently supports only RGB24 and Grayscale8 pixel formats!");
 	}
 
 	m_nQuality = XN_STREAM_COMPRESSION_JPEG_DEFAULT_QUALITY;

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -21,6 +21,9 @@
 ****************************************************************************/
 #include "MockGenerator.h"
 #include <XnPropNames.h>
+#include <XnLog.h>
+
+#define XN_MOCK_LOG_MASK	"Mock"
 
 MockGenerator::MockGenerator(const XnChar* strName, XnBool bAggregateData /* = FALSE */) :
 	MockProductionNode(strName),
@@ -109,7 +112,10 @@ XnStatus MockGenerator::SetGeneralProperty(const XnChar* strName, XnUInt32 nBuff
 XnStatus MockGenerator::SetNextData(const void *pData, XnUInt32 nSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
+
+	//Make sure the node is in Generating state so it would be recorded properly
+	SetGenerating(TRUE);
+
 	DataInfo& nextData = m_data[m_nNextDataIdx];
 
 	if (!m_bAggregateData)

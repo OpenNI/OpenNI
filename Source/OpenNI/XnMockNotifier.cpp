@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -44,44 +44,44 @@ MockNotifier& MockNotifier::GetInstance()
 	return _instance;
 }
 
-XnStatus MockNotifier::OnNodeAddedImpl(void* pCookie, const XnChar* strNodeName, XnProductionNodeType type, XnCodecID compression)
+XnStatus MockNotifier::OnNodeAddedImpl(void* /*pCookie*/, const XnChar* /*strNodeName*/, XnProductionNodeType /*type*/, XnCodecID /*compression*/)
 {
 	XN_ASSERT(FALSE);
 	return XN_STATUS_NOT_IMPLEMENTED;
 }
 
-XnStatus MockNotifier::OnNodeRemovedImpl(void* pCookie, const XnChar* strNodeName)
+XnStatus MockNotifier::OnNodeRemovedImpl(void* /*pCookie*/, const XnChar* /*strNodeName*/)
 {
 	XN_ASSERT(FALSE);
 	return XN_STATUS_NOT_IMPLEMENTED;
 }
 
-XnStatus MockNotifier::OnNodeIntPropChangedImpl(void* pCookie, const XnChar* strNodeName, const XnChar* strPropName, XnUInt64 nValue)
+XnStatus MockNotifier::OnNodeIntPropChangedImpl(void* pCookie, const XnChar* /*strNodeName*/, const XnChar* strPropName, XnUInt64 nValue)
 {
 	return xnSetIntProperty((XnNodeHandle)pCookie, strPropName, nValue);
 }
 
-XnStatus MockNotifier::OnNodeRealPropChangedImpl(void* pCookie, const XnChar* strNodeName, const XnChar* strPropName, XnDouble dValue)
+XnStatus MockNotifier::OnNodeRealPropChangedImpl(void* pCookie, const XnChar* /*strNodeName*/, const XnChar* strPropName, XnDouble dValue)
 {
 	return xnSetRealProperty((XnNodeHandle)pCookie, strPropName, dValue);
 }
 
-XnStatus MockNotifier::OnNodeStringPropChangedImpl(void* pCookie, const XnChar* strNodeName, const XnChar* strPropName, const XnChar* strValue)
+XnStatus MockNotifier::OnNodeStringPropChangedImpl(void* pCookie, const XnChar* /*strNodeName*/, const XnChar* strPropName, const XnChar* strValue)
 {
 	return xnSetStringProperty((XnNodeHandle)pCookie, strPropName, strValue);
 }
 
-XnStatus MockNotifier::OnNodeGeneralPropChangedImpl(void* pCookie, const XnChar* strNodeName, const XnChar* strPropName, XnUInt32 nBufferSize, const void* pBuffer)
+XnStatus MockNotifier::OnNodeGeneralPropChangedImpl(void* pCookie, const XnChar* /*strNodeName*/, const XnChar* strPropName, XnUInt32 nBufferSize, const void* pBuffer)
 {
 	return xnSetGeneralProperty((XnNodeHandle)pCookie, strPropName, nBufferSize, pBuffer);
 }
 
-XnStatus MockNotifier::OnNodeStateReadyImpl(void* pCookie, const XnChar* strNodeName)
+XnStatus MockNotifier::OnNodeStateReadyImpl(void* pCookie, const XnChar* /*strNodeName*/)
 {
 	return xnSetIntProperty((XnNodeHandle)pCookie, XN_PROP_STATE_READY, 1);
 }
 
-XnStatus MockNotifier::OnNodeNewDataImpl(void* pCookie, const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void* pData, XnUInt32 nSize)
+XnStatus MockNotifier::OnNodeNewDataImpl(void* /*pCookie*/, const XnChar* /*strNodeName*/, XnUInt64 /*nTimeStamp*/, XnUInt32 /*nFrame*/, const void* /*pData*/, XnUInt32 /*nSize*/)
 {
 	XN_ASSERT(FALSE);
 	return XN_STATUS_INVALID_OPERATION;

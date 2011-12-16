@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -466,8 +466,7 @@ int main(int argc, char** argv)
 		// Turn on log
 		xnLogInitSystem();
 		xnLogSetConsoleOutput(TRUE);
-		xnLogSetMaskState(XN_LOG_MASK_ALL, TRUE);
-		xnLogSetSeverityFilter(XN_LOG_VERBOSE);
+		xnLogSetMaskMinSeverity(XN_LOG_MASK_ALL, XN_LOG_VERBOSE);
 	}
 
 	// Initialize OpenNI

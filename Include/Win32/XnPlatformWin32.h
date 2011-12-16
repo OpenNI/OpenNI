@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -127,31 +127,31 @@ typedef FARPROC				XnFarProc;
 typedef size_t				XnSizeT;
 
 /** Max unsigned 8-bit value */ 
-#define XN_MAX_UINT8 255
+#define XN_MAX_UINT8 _UI8_MAX
 /** Max unsigned 16-bit value */ 
-#define XN_MAX_UINT16 65535
+#define XN_MAX_UINT16 _UI16_MAX
 /** Max unsigned 32-bit value */ 
-#define XN_MAX_UINT32 4294967295
+#define XN_MAX_UINT32 _UI32_MAX
 /** Max unsigned 64-bit value */ 
-#define XN_MAX_UINT64 18446744073709551615
+#define XN_MAX_UINT64 _UI64_MAX
 
 /** Min signed 8-bit value */ 
-#define XN_MIN_INT8 -127
+#define XN_MIN_INT8 _I8_MIN
 /** Min signed 16-bit value */ 
-#define XN_MIN_INT16 -32767
+#define XN_MIN_INT16 _I16_MIN
 /** Min signed 32-bit value */ 
-#define XN_MIN_INT32 -2147483647
+#define XN_MIN_INT32 _I32_MIN
 /** Min signed 64-bit value */ 
-#define XN_MIN_INT64 -9223372036854775807
+#define XN_MIN_INT64 _I64_MIN
 
 /** Max signed 8-bit value */ 
-#define XN_MAX_INT8 127
+#define XN_MAX_INT8 _I8_MAX
 /** Max signed 16-bit value */ 
-#define XN_MAX_INT16 32767
+#define XN_MAX_INT16 _I16_MAX
 /** Max signed 32-bit value */ 
-#define XN_MAX_INT32 2147483647
+#define XN_MAX_INT32 _I32_MAX
 /** Max signed 64-bit value */ 
-#define XN_MAX_INT64 9223372036854775807
+#define XN_MAX_INT64 _I64_MAX
 
 /** Min double value */
 #define XN_MIN_DOUBLE DBL_MIN 

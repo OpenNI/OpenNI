@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -53,14 +53,13 @@
 	}
 
 #define XN_VALIDATE_CAPABILITY_STRUCT(name, pStruct)	\
-	do													\
 	{													\
 		XnStatus nTempRetVal = ValidateFunctionGroup(	\
 			XN_STRINGIFY(name),							\
 			(void**)pStruct,							\
 			sizeof(*pStruct)/sizeof(void*));			\
 		XN_IS_STATUS_OK(nTempRetVal);					\
-	} while (0)
+	}
 
 #define XN_VALIDATE_CAPABILITY(pInterface, name)												\
 	XN_VALIDATE_CAPABILITY_STRUCT(name, pInterface->p##name##Interface)
@@ -72,24 +71,24 @@ static XnVersion EXTENSIONS_VERSION = { 1, 1, 0, 0 };
 
 typedef const void* (XN_CALLBACK_TYPE* GetDataPrototype)(XnModuleNodeHandle hGenerator);
 
-static const void* XN_CALLBACK_TYPE GetDataNull(XnModuleNodeHandle hGenerator)
+static const void* XN_CALLBACK_TYPE GetDataNull(XnModuleNodeHandle /*hGenerator*/)
 {
 	return NULL;
 }
 
 typedef XnUInt32 (XN_CALLBACK_TYPE* GetBytesPerPixelPrototype)(XnModuleNodeHandle hGenerator);
 
-static XnUInt32 XN_CALLBACK_TYPE GetDepthBytesPerPixel(XnModuleNodeHandle hNode)
+static XnUInt32 XN_CALLBACK_TYPE GetDepthBytesPerPixel(XnModuleNodeHandle /*hNode*/)
 {
 	return sizeof(XnDepthPixel);
 }
 
-static XnUInt32 XN_CALLBACK_TYPE GetIRBytesPerPixel(XnModuleNodeHandle hNode)
+static XnUInt32 XN_CALLBACK_TYPE GetIRBytesPerPixel(XnModuleNodeHandle /*hNode*/)
 {
 	return sizeof(XnIRPixel);
 }
 
-static XnUInt32 XN_CALLBACK_TYPE GetSceneBytesPerPixel(XnModuleNodeHandle hNode)
+static XnUInt32 XN_CALLBACK_TYPE GetSceneBytesPerPixel(XnModuleNodeHandle /*hNode*/)
 {
 	return sizeof(XnLabel);
 }
@@ -1015,7 +1014,7 @@ XnStatus XnModuleLoader::LoadMapGenerator(XnVersion& moduleOpenNIVersion, XnModu
 	return (XN_STATUS_OK);
 }
 
-XnStatus XnModuleLoader::ValidateProductionNodeInterface(XnVersion& moduleOpenNIVersion, XnModuleProductionNodeInterface* pInterface)
+XnStatus XnModuleLoader::ValidateProductionNodeInterface(XnVersion& /*moduleOpenNIVersion*/, XnModuleProductionNodeInterface* pInterface)
 {
 	XN_VALIDATE_FUNC_NOT_NULL(pInterface, IsCapabilitySupported);
 
@@ -1336,7 +1335,7 @@ XnStatus XnModuleLoader::ValidateScriptNodeInterface(XnVersion& moduleOpenNIVers
 	return (XN_STATUS_OK);
 }
 
-XnStatus XnModuleLoader::ValidateNodeNotifications(XnVersion& moduleOpenNIVersion, XnNodeNotifications* pNodeNotifications)
+XnStatus XnModuleLoader::ValidateNodeNotifications(XnVersion& /*moduleOpenNIVersion*/, XnNodeNotifications* pNodeNotifications)
 {
 	XN_VALIDATE_FUNC_NOT_NULL(pNodeNotifications, OnNodeAdded);
 	XN_VALIDATE_FUNC_NOT_NULL(pNodeNotifications, OnNodeRemoved);

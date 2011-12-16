@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -31,6 +31,7 @@
 // Defines
 //---------------------------------------------------------------------------
 #define SAMPLE_XML_PATH "../../../../Data/SamplesConfig.xml"
+#define SAMPLE_XML_PATH_LOCAL "SamplesConfig.xml"
 
 //---------------------------------------------------------------------------
 // Macros
@@ -48,6 +49,13 @@
 
 using namespace xn;
 
+XnBool fileExists(const char *fn)
+{
+	XnBool exists;
+	xnOSDoesFileExist(fn, &exists);
+	return exists;
+}
+
 int main()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -56,7 +64,15 @@ int main()
 	ScriptNode scriptNode;
 	EnumerationErrors errors;
 
-	nRetVal = context.InitFromXmlFile(SAMPLE_XML_PATH, scriptNode, &errors);
+	const char *fn = NULL;
+	if	(fileExists(SAMPLE_XML_PATH)) fn = SAMPLE_XML_PATH;
+	else if (fileExists(SAMPLE_XML_PATH_LOCAL)) fn = SAMPLE_XML_PATH_LOCAL;
+	else {
+		printf("Could not find '%s' nor '%s'. Aborting.\n" , SAMPLE_XML_PATH, SAMPLE_XML_PATH_LOCAL);
+		return XN_STATUS_ERROR;
+	}
+	printf("Reading config from: '%s'\n", fn);
+	nRetVal = context.InitFromXmlFile(fn, scriptNode, &errors);
 
 	if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
 	{

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -43,9 +43,9 @@ public:
 	typedef const T* ConstIterator;
 
 	/** Default constructor. Initializes the array to BASE_SIZE. **/
-	XnArray()
+	XnArray(XnUInt32 nBaseSize = BASE_SIZE)
 	{
-		Init();
+		Init(nBaseSize);
 	}
 
 	/** Copy constructor. Initializes this array from another array of the same type. **/
@@ -273,13 +273,13 @@ public:
 		return m_pData[nIndex];
 	}
 
-	/** @returns a modifiable itertor pointing to the beginning of this array. **/
+	/** @returns a modifiable iterator pointing to the beginning of this array. **/
 	Iterator begin()
 	{
 		return &m_pData[0];
 	}
 
-	/** @returns a const itertor pointing to the beginning of this array. **/
+	/** @returns a const iterator pointing to the beginning of this array. **/
 	ConstIterator begin() const
 	{
 		return &m_pData[0];
@@ -298,10 +298,10 @@ public:
 	}
 
 private:
-	void Init()
+	void Init(XnUInt32 nBaseSize = BASE_SIZE)
 	{
-		m_pData = XN_NEW_ARR(T, BASE_SIZE);
-		m_nAllocatedSize = BASE_SIZE;
+		m_pData = XN_NEW_ARR(T, nBaseSize);
+		m_nAllocatedSize = nBaseSize;
 		m_nSize = 0;
 	}
 

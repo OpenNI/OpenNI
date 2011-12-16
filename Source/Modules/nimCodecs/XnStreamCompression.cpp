@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -26,6 +26,8 @@
 #include <XnStatus.h>
 #include <jerror.h>
 #include <XnLog.h>
+
+#define XN_MASK_STREAM_COMPRESSION "xnStreamCompression"
 
 //---------------------------------------------------------------------------
 // Code
@@ -357,6 +359,7 @@ XnStatus XnStreamUncompressDepth16Z(const XnUInt8* pInput, const XnUInt32 nInput
 
 	if (nInputSize < sizeof(XnUInt16))
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size too small");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -500,6 +503,7 @@ XnStatus XnStreamUncompressDepth16ZWithEmbTable(const XnUInt8* pInput, const XnU
 
 	if (nInputSize < sizeof(XnUInt16))
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size too small");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -784,6 +788,7 @@ XnStatus XnStreamUncompressImage8Z(const XnUInt8* pInput, const XnUInt32 nInputS
 
 	if (nInputSize < sizeof(XnUInt8))
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size too small");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -931,11 +936,13 @@ XnStatus XnStreamUncompressConf4(const XnUInt8* pInput, const XnUInt32 nInputSiz
 
 	if (nInputSize < sizeof(XnUInt8))
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size too small");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
 	if (nInputSize % 2 != 0)
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size not word-aligned");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -1066,6 +1073,7 @@ XnStatus XnStreamCompressImage8J(XnStreamCompJPEGContext* pStreamCompJPEGContext
 
 		*pnOutputSize = 0;
 
+		xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 		return (XN_STATUS_ERROR);
 	} 
 
@@ -1124,6 +1132,7 @@ XnStatus XnStreamCompressImage24J(XnStreamCompJPEGContext* pStreamCompJPEGContex
 
 		*pnOutputSize = 0;
 
+		xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 		return (XN_STATUS_ERROR);
 	} 
 
@@ -1228,6 +1237,7 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 
 	if (nInputSize == 0)
 	{
+		xnLogError(XN_MASK_JPEG, "Input size is 0");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -1246,6 +1256,7 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 
 		*pnOutputSize = 0;
 
+		xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 		return (XN_STATUS_ERROR);
 	} 
 
@@ -1263,6 +1274,7 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 
 		*pnOutputSize = 0;
 
+		xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 		return (XN_STATUS_OUTPUT_BUFFER_OVERFLOW);
 	}
 
@@ -1277,6 +1289,7 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 
 			*pnOutputSize = 0;
 
+			xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 			return (XN_STATUS_OUTPUT_BUFFER_OVERFLOW);
 		}
 

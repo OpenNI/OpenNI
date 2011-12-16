@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -32,31 +32,31 @@
 // Defines
 //---------------------------------------------------------------------------
 #define XN_LOG_DIR_NAME			"Log"
-#define XN_LOG_MASKS_STRING_LEN	600
 #define XN_MASK_LOG				"Log"
 #define XN_LOG_MASK_ALL			"ALL"
+#define XN_LOG_MAX_MASK_NAME	16
 
 //---------------------------------------------------------------------------
 // Enums
 //---------------------------------------------------------------------------
 typedef enum XnLogSeverity
 {
-	XN_LOG_VERBOSE,
-	XN_LOG_INFO,
-	XN_LOG_WARNING,
-	XN_LOG_ERROR
+	XN_LOG_VERBOSE = 0,
+	XN_LOG_INFO = 1,
+	XN_LOG_WARNING = 2,
+	XN_LOG_ERROR = 3,
+	XN_LOG_SEVERITY_NONE = 10,
 } XnLogSeverity;
-
-typedef enum XnLogFilteringType
-{
-	XN_LOG_WRITE_NONE,
-	XN_LOG_WRITE_ALL,
-	XN_LOG_WRITE_MASKS
-} XnLogFilteringType;
 
 //---------------------------------------------------------------------------
 // Structs
 //---------------------------------------------------------------------------
+typedef struct XnLogger
+{
+	volatile XnLogSeverity nMinSeverity;
+	void* pInternal;
+} XnLogger;
+
 typedef struct XnLogEntry
 {
 	XnUInt64 nTimestamp;

@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -29,11 +29,25 @@
 #include "XnStatus.h"
 
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
-	#include <usb100.h>
-	typedef struct USB_ENDPOINT_DESCRIPTOR XnUSBEndpointDescriptor;
-	typedef struct USB_INTERFACE_DESCRIPTOR XnUSBInterfaceDescriptor;
-	typedef struct USB_CONFIGURATION_DESCRIPTOR XnUSBConfigDescriptor;
-	typedef struct USB_DEVICE_DESCRIPTOR XnUSBDeviceDescriptor;
+
+	#include <Win32/usb100.h>
+	typedef USB_ENDPOINT_DESCRIPTOR XnUSBEndpointDescriptor;
+	typedef USB_INTERFACE_DESCRIPTOR XnUSBInterfaceDescriptor;
+	typedef USB_CONFIGURATION_DESCRIPTOR XnUSBConfigDescriptor;
+	typedef USB_DEVICE_DESCRIPTOR XnUSBDeviceDescriptor;
+
+	#define USB_DT_CONFIG_SIZE 0
+	#define USB_DT_CONFIG 0
+	#define USB_CONFIG_ATT_ONE 0
+	#define USB_DT_ENDPOINT_SIZE 0
+	#define USB_DT_ENDPOINT 0
+	#define USB_ENDPOINT_XFER_BULK 0
+	#define USB_DT_INTERFACE_SIZE 0
+	#define USB_DT_INTERFACE 0
+	#define USB_CLASS_VENDOR_SPEC 0
+	#define USB_DT_DEVICE_SIZE 0
+	#define USB_DT_DEVICE 0
+
 #elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM)
 	#include <linux/usb/ch9.h>
 	typedef struct usb_endpoint_descriptor XnUSBEndpointDescriptor;
@@ -84,9 +98,11 @@ typedef void (*XnUSBDeviceNewControlRequestCallback)(XnUSBDevice* pDevice, void*
 XN_C_API XnStatus XN_C_DECL xnUSBDeviceInit(const XnUSBDeviceDescriptorHolder* pDeviceDescriptor, XnUInt32 nControlMessageMaxSize, XnUSBDevice** ppDevice);
 XN_C_API void XN_C_DECL xnUSBDeviceShutdown(XnUSBDevice* pDevice);
 XN_C_API XnBool XN_C_DECL xnUSBDeviceIsControlRequestPending(XnUSBDevice* pDevice);
+
+//pnRequestSize is max size on input, actual size on output
 XN_C_API XnStatus XN_C_DECL xnUSBDeviceReceiveControlRequest(XnUSBDevice* pDevice, XnUChar* pBuffer, XnUInt32* pnRequestSize);
 XN_C_API XnStatus XN_C_DECL xnUSBDeviceSendControlReply(XnUSBDevice* pDevice, const XnUChar* pBuffer, XnUInt32 nReplySize);
 XN_C_API XnStatus XN_C_DECL xnUSBDeviceSetNewControlRequestCallback(XnUSBDevice* pDevice, XnUSBDeviceNewControlRequestCallback pFunc, void* pCookie);
-XN_C_API XnStatus XN_C_DECL xnUSBDeviceWriteEndpoint(XnUSBDevice* pDevice, XnUInt8 nAddress, XnUChar* pData, XnUInt32 nDataSize);
+XN_C_API XnStatus XN_C_DECL xnUSBDeviceWriteEndpoint(XnUSBDevice* pDevice, XnUInt8 nAddress, const XnUChar* pData, XnUInt32 nDataSize);
 
 #endif

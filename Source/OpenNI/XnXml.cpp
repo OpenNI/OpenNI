@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -57,8 +57,6 @@ XnStatus xnXmlLoadDocument(TiXmlDocument& doc, const XnChar* strFileName)
 
 XnStatus xnXmlGetChildElement(const TiXmlElement* pElem, const XnChar* strName, const TiXmlElement** ppChild)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	*ppChild = pElem->FirstChildElement(strName);
 	if (*ppChild == NULL)
 	{
@@ -72,8 +70,6 @@ XnStatus xnXmlGetChildElement(const TiXmlElement* pElem, const XnChar* strName, 
 
 XnStatus xnXmlReadStringAttribute(const TiXmlElement* pElem, const XnChar* strName, const XnChar** pstrValue)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	*pstrValue = pElem->Attribute(strName);
 	if (*pstrValue == NULL)
 	{
@@ -126,6 +122,64 @@ XnStatus xnXmlReadIntAttribute(const TiXmlElement* pElem, const XnChar* strName,
 			pElem->Value(), strName, pElem->Row(), pElem->Column());
 	}
 	
+	return (XN_STATUS_OK);
+}
+
+XnStatus xnXmlReadUInt32Attribute(const TiXmlElement* pElem, const XnChar* strName, XnUInt32* pnValue)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	const XnChar* strValue;
+	nRetVal = xnXmlReadStringAttribute(pElem, strName, &strValue);
+	XN_IS_STATUS_OK(nRetVal);
+
+	if (sscanf(strValue, "%u", pnValue) == 0)
+	{
+		XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, 
+			"Invalid '%s' xml entry - '%s' attribute value should be a positive number (line %u, col %u)!", 
+			pElem->Value(), strName, pElem->Row(), pElem->Column());
+	}
+
+	return (XN_STATUS_OK);
+}
+
+XnStatus xnXmlReadUInt16Attribute(const TiXmlElement* pElem, const XnChar* strName, XnUInt16* pnValue)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XnUInt32 nValue;
+	nRetVal = xnXmlReadUInt32Attribute(pElem, strName, &nValue);
+	XN_IS_STATUS_OK(nRetVal);
+
+	if (nValue > XN_MAX_UINT16)
+	{
+		XN_LOG_WARNING_RETURN(XN_STATUS_BAD_PARAM, XN_MASK_OPEN_NI, 
+			"Invalid '%s' xml entry - '%s' attribute value should be unsigned 16-bit number (line %u, col %u)!",
+			pElem->Value(), strName, pElem->Row(), pElem->Column());
+	}
+
+	*pnValue = (XnUInt16)nValue;
+	
+	return (XN_STATUS_OK);
+}
+
+XnStatus xnXmlReadUInt8Attribute(const TiXmlElement* pElem, const XnChar* strName, XnUInt8* pnValue)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XnUInt32 nValue;
+	nRetVal = xnXmlReadUInt32Attribute(pElem, strName, &nValue);
+	XN_IS_STATUS_OK(nRetVal);
+
+	if (nValue > XN_MAX_UINT8)
+	{
+		XN_LOG_WARNING_RETURN(XN_STATUS_BAD_PARAM, XN_MASK_OPEN_NI, 
+			"Invalid '%s' xml entry - '%s' attribute value should be unsigned 8-bit number (line %u, col %u)!",
+			pElem->Value(), strName, pElem->Row(), pElem->Column());
+	}
+
+	*pnValue = (XnUInt8)nValue;
+
 	return (XN_STATUS_OK);
 }
 

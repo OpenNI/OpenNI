@@ -1,6 +1,6 @@
 /****************************************************************************
 *                                                                           *
-*  OpenNI 1.1 Alpha                                                         *
+*  OpenNI 1.x Alpha                                                         *
 *  Copyright (C) 2011 PrimeSense Ltd.                                       *
 *                                                                           *
 *  This file is part of OpenNI.                                             *
@@ -151,6 +151,13 @@ namespace xn
 	class ModuleProductionNode
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleProductionNode()
+		{
+			xnOSMemSet(m_aInterfaces, 0, sizeof(m_aInterfaces));
+			m_aInterfaces[XN_NODE_TYPE_PRODUCTION_NODE] = this;
+		}
+#endif
 		virtual ~ModuleProductionNode() {}
 		virtual XnBool IsCapabilitySupported(const XnChar* /*strCapabilityName*/) { return FALSE; }
 		virtual XnStatus SetIntProperty(const XnChar* /*strName*/, XnUInt64 /*nValue*/) { return XN_STATUS_ERROR; }
@@ -165,6 +172,11 @@ namespace xn
 		virtual ModuleLockAwareInterface* GetLockAwareInterface() { return NULL; }
 		virtual ModuleErrorStateInterface* GetErrorStateInterface() { return NULL; }
 		virtual ModuleGeneralIntInterface* GetGeneralIntInterface(const XnChar* /*strCap*/) { return NULL; }
+
+	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		void* m_aInterfaces[XN_NODE_TYPE_FIRST_EXTENSION];
+#endif
 	};
 
 	class ModuleDeviceIdentificationInterface
@@ -179,6 +191,9 @@ namespace xn
 	class ModuleDevice : virtual public ModuleProductionNode
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleDevice() { m_aInterfaces[XN_NODE_TYPE_DEVICE] = this; }
+#endif
 		virtual ~ModuleDevice() {}
 		virtual ModuleDeviceIdentificationInterface* GetIdentificationInterface() { return NULL; }
 	};
@@ -219,6 +234,9 @@ namespace xn
 	class ModuleGenerator : virtual public ModuleProductionNode
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleGenerator() { m_aInterfaces[XN_NODE_TYPE_GENERATOR] = this;}
+#endif
 		virtual ~ModuleGenerator() {}
 		virtual XnStatus StartGenerating() = 0;
 		virtual XnBool IsGenerating() = 0;
@@ -257,6 +275,9 @@ namespace xn
 		virtual public ModuleNodeNotifications
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleRecorder() { m_aInterfaces[XN_NODE_TYPE_RECORDER] = this; }
+#endif
 		virtual ~ModuleRecorder() {}
 		virtual XnStatus SetOutputStream(void* pCookie, XnRecorderOutputStreamInterface* pStream) = 0;
 	};
@@ -264,6 +285,9 @@ namespace xn
 	class ModulePlayer : virtual public ModuleProductionNode
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModulePlayer() { m_aInterfaces[XN_NODE_TYPE_PLAYER] = this; }
+#endif
 		virtual ~ModulePlayer() {}
 		virtual XnStatus SetInputStream(void* pStreamCookie, XnPlayerInputStreamInterface* pStream) = 0;
 		virtual XnStatus ReadNext() = 0;
@@ -304,6 +328,9 @@ namespace xn
 	class ModuleMapGenerator : virtual public ModuleGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleMapGenerator() { m_aInterfaces[XN_NODE_TYPE_MAP_GENERATOR] = this; }
+#endif
 		virtual ~ModuleMapGenerator() {}
 		virtual XnUInt32 GetSupportedMapOutputModesCount() = 0;
 		virtual XnStatus GetSupportedMapOutputModes(XnMapOutputMode aModes[], XnUInt32& nCount) = 0;
@@ -330,6 +357,9 @@ namespace xn
 	class ModuleDepthGenerator : virtual public ModuleMapGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleDepthGenerator() { m_aInterfaces[XN_NODE_TYPE_DEPTH] = this; }
+#endif
 		virtual ~ModuleDepthGenerator() {}
 		virtual const void* GetData() { return GetDepthMap(); }
 		virtual XnUInt32 GetBytesPerPixel() { return sizeof(XnDepthPixel); }
@@ -344,6 +374,9 @@ namespace xn
 	class ModuleImageGenerator : virtual public ModuleMapGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleImageGenerator() { m_aInterfaces[XN_NODE_TYPE_IMAGE] = this; }
+#endif
 		virtual ~ModuleImageGenerator() {}
 		virtual const void* GetData() { return GetImageMap(); }
 		virtual XnUInt32 GetBytesPerPixel() { return xnGetBytesPerPixelForPixelFormat(GetPixelFormat()); }
@@ -358,6 +391,9 @@ namespace xn
 	class ModuleIRGenerator : virtual public ModuleMapGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleIRGenerator() { m_aInterfaces[XN_NODE_TYPE_IR] = this; }
+#endif
 		virtual ~ModuleIRGenerator() {}
 		virtual const void* GetData() { return GetIRMap(); }
 		virtual XnUInt32 GetBytesPerPixel() { return sizeof(XnIRPixel); }
@@ -367,6 +403,9 @@ namespace xn
 	class ModuleGestureGenerator : virtual public ModuleGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleGestureGenerator() { m_aInterfaces[XN_NODE_TYPE_GESTURE] = this; }
+#endif
 		virtual ~ModuleGestureGenerator() {}
 		virtual const void* GetData() { return NULL; }
 		virtual XnStatus AddGesture(const XnChar* strGesture, XnBoundingBox3D* pArea) = 0;
@@ -391,6 +430,9 @@ namespace xn
 	class ModuleSceneAnalyzer : virtual public ModuleMapGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleSceneAnalyzer() { m_aInterfaces[XN_NODE_TYPE_SCENE] = this; }
+#endif
 		virtual ~ModuleSceneAnalyzer() {}
 		virtual const void* GetData() { return GetLabelMap(); }
 		virtual XnUInt32 GetBytesPerPixel() { return sizeof(XnLabel); }
@@ -409,6 +451,9 @@ namespace xn
 	class ModuleHandsGenerator : virtual public ModuleGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleHandsGenerator() { m_aInterfaces[XN_NODE_TYPE_HANDS] = this; }
+#endif
 		virtual ~ModuleHandsGenerator() {}
 		virtual const void* GetData() { return NULL; }
 		virtual XnStatus RegisterHandCallbacks(XnModuleHandCreate CreateCB, XnModuleHandUpdate UpdateCB, XnModuleHandDestroy DestroyCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
@@ -492,6 +537,9 @@ namespace xn
 	class ModuleUserGenerator : virtual public ModuleGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleUserGenerator() { m_aInterfaces[XN_NODE_TYPE_USER] = this;}
+#endif
 		virtual ~ModuleUserGenerator() {}
 		virtual const void* GetData() { return NULL; }
 		virtual XnUInt16 GetNumberOfUsers() = 0;
@@ -512,6 +560,9 @@ namespace xn
 	class ModuleAudioGenerator : virtual public ModuleGenerator
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleAudioGenerator() { m_aInterfaces[XN_NODE_TYPE_AUDIO] = this; }
+#endif
 		virtual ~ModuleAudioGenerator() {}
 		virtual const void* GetData() { return GetAudioBuffer(); }
 		virtual XnUChar* GetAudioBuffer() = 0;
@@ -526,6 +577,9 @@ namespace xn
 	class ModuleCodec : virtual public ModuleProductionNode
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleCodec() { m_aInterfaces[XN_NODE_TYPE_CODEC] = this; }
+#endif
 		virtual ~ModuleCodec() {}
 		virtual XnCodecID GetCodecID() const = 0;
 		virtual XnStatus Init(const ProductionNode& node) = 0;
@@ -536,6 +590,9 @@ namespace xn
 	class ModuleScriptNode : virtual public ModuleProductionNode
 	{
 	public:
+#ifdef XN_NO_DYNAMIC_CAST
+		ModuleScriptNode() { m_aInterfaces[XN_NODE_TYPE_SCRIPT] = this; }
+#endif
 		virtual ~ModuleScriptNode() {}
 		virtual const XnChar* GetSupportedFormat() = 0;
 		virtual XnStatus LoadScriptFromFile(const XnChar* strFileName) = 0;
