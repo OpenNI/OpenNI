@@ -32,7 +32,7 @@ XnCodec::~XnCodec()
 
 }
 
-XnStatus XnCodec::Init(const ProductionNode& node)
+XnStatus XnCodec::Init(const ProductionNode& /*node*/)
 {
 	return XN_STATUS_OK;
 }

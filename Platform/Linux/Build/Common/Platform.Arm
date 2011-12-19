@@ -1,3 +1,12 @@
 ifeq "$(CFG)" "Release"
-    CFLAGS += -mcpu=cortex-a8 -mfpu=neon -ftree-vectorize -mfloat-abi=softfp -ffast-math -fsingle-precision-constant
+
+    # Hardware specifying flags
+    CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp #-mcpu=cortex-a8
+
+    # Optimization level, minus currently buggy optimizing methods (which break bit-exact)
+    CFLAGS += -O3 -fno-tree-pre -fno-strict-aliasing
+
+    # More optimization flags
+    CFLAGS += -ftree-vectorize -ffast-math -funsafe-math-optimizations -fsingle-precision-constant
+
 endif

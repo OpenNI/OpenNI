@@ -3,21 +3,36 @@ ifndef CFG
     CFG = Release
 endif
 
-ifndef PLATFORM
-    MACHINE = $(shell uname -m)
-    ifneq (,$(findstring x86_64,$(MACHINE)))
-        PLATFORM = x64
-    else ifneq (,$(findstring x86,$(MACHINE)))
-        PLATFORM = x86
-    else ifneq (,$(findstring i686,$(MACHINE)))
-        PLATFORM = x86
-    else ifneq (,$(findstring i386,$(MACHINE)))
-        PLATFORM = x86
-    else ifneq (,$(findstring arm,$(MACHINE)))
-        PLATFORM = Arm
-    else
-        DUMMY:=$(error Unknown Platform)
-    endif
+# find out the platform on which we're running
+MACHINE = $(shell uname -m)
+ifneq (,$(findstring x86_64,$(MACHINE)))
+	HOST_PLATFORM = x64
+else ifneq (,$(findstring x86,$(MACHINE)))
+	HOST_PLATFORM = x86
+else ifneq (,$(findstring i686,$(MACHINE)))
+	HOST_PLATFORM = x86
+else ifneq (,$(findstring i386,$(MACHINE)))
+	HOST_PLATFORM = x86
+else ifneq (,$(findstring arm,$(MACHINE)))
+	HOST_PLATFORM = Arm
+else
+	DUMMY:=$(error Can't determine host platform)
+endif
+
+# now check if this is a cross-compilation or not
+ifeq "$(PLATFORM)" ""
+	PLATFORM = $(HOST_PLATFORM)
+else
+	ifneq "$(PLATFORM)" "$(HOST_PLATFORM)"
+		# cross compiling. Take CXX and STAGING_DIR from environment
+		PLATFORM_UPPER = $(shell echo $(PLATFORM) | tr 'a-z' 'A-Z')
+		DUMMY:=$(eval CXX = $($(PLATFORM_UPPER)_CXX))
+		DUMMY:=$(eval TARGET_SYS_ROOT = $($(PLATFORM_UPPER)_STAGING))
+		
+		ifeq "$(and $(CXX), $(TARGET_SYS_ROOT))" ""
+			DUMMY:=$(error Cross-Compilation error. Can't find $(PLATFORM_UPPER)_CXX and $(PLATFORM_UPPER)_STAGING)
+		endif
+	endif
 endif
 
 # expand file list

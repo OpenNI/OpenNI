@@ -1,9 +1,9 @@
 @echo off
 
 set MAJOR_VERSION=1
-set MINOR_VERSION=4
-set MAINTENANCE_VERSION=0
-set BUILD_VERSION=2
+set MINOR_VERSION=5
+set MAINTENANCE_VERSION=2
+set BUILD_VERSION=7
 
 
 @echo ************************

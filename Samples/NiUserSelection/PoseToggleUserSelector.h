@@ -37,6 +37,7 @@
 /// 
 /// This user selector allows users to be selected when the perform a pose and unselects them when
 /// they perform it again.
+/// @ingroup UserSelectionPoseSelectors
 class PoseToggleUserSelector : public PoseUserSelector
 {
 public:
@@ -75,6 +76,7 @@ protected:
     /// @return The success code.
     virtual XnStatus DetectOutOfPose(XnUserID nUserId);
 
+    /// @brief Internal hash for when a user got out of pose.
     XN_DECLARE_DEFAULT_HASH(XnUserID,XnUInt64,UserOutOfPoseHash);
 
     UserOutOfPoseHash m_usersOutOfPoseTime; ///< @brief holds for each user, the first time they were out of pose AFTER being tracked. 0 means no data.

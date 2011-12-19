@@ -577,7 +577,7 @@ To build and run a sample application:
 		(default: C:\\Program Files\\OpenNI)
 -# In OpenNI directory browse to: Samples\\NiSimpleViewer.
 -# Open the suitable project file, NiSimpleViewer_2008.vcproj, and build the application. If the build
-		fails, contact Prime Sense support.
+		fails, contact PrimeSense support.
 -# After successfully building the project, before trying to run it, please ensure that the 
 		SamplesConfig.xml file is correctly configured:
 		-# Browse to the 'Data' directory (the default location of this directory is C:\\Program Files\\OpenNI\\Data).

@@ -55,7 +55,10 @@ XnStatus SinglePoseUserSelector::StartTracking(XnUserID nUserId)
         {
             continue; // this is the new one, not interesting...
         }
-        UpdateUserSelectionState(iter.Key(),XN_SELECTION_UNSELECTED,0);
+        if(iter.Value()->m_eState!=XN_SELECTION_FAILED)
+        {
+            UpdateUserSelectionState(iter.Key(),XN_SELECTION_UNSELECTED,0);
+        }        
         m_pTrackingInitializer->AbortTracking(iter.Key()); // stop tracking
     }
     return XN_STATUS_OK;

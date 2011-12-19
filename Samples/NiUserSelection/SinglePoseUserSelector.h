@@ -35,9 +35,15 @@
 /// 
 /// This basic user selector select users which perform a certain pose. The difference between this
 /// and PoseUserSelector is that when a user is selected in this selector, all others stop tracking.
+/// @ingroup UserSelectionPoseSelectors
 class  SinglePoseUserSelector : public PoseUserSelector
 {
 public:
+    /// @brief Constructor
+    /// 
+    /// @param pUserGenerator The user generator to use
+    /// @param pTrackingInitializer The tracking initializer to use
+    /// @param poseToTrack The pose name used to select
     SinglePoseUserSelector(xn::UserGenerator *pUserGenerator,TrackingInitializer *pTrackingInitializer, const char *poseToTrack);
     ~SinglePoseUserSelector();
 protected:

@@ -21,13 +21,19 @@
 ****************************************************************************/
 #include "SampleManager.h"
 
+/// @defgroup UserSelectionMain User selection main
+/// @brief User selection main.cpp functions
+/// @ingroup UserSelectionSampleFiles
+
 /// @brief Method which prints the usage and exits the program.
-/// 
-/// @param filename 
+///
+/// @param filename The filename of the executable
+/// @ingroup UserSelectionMain
 void UsageAndExit(char* filename)
 {
-    printf("\nUsage: %s [-recordingFilename Filename] [-s selectorType]\n\n\n" , filename);
+    printf("\nUsage: %s [-recordingFilename Filename] [-s selectorType] [-ShowLowConfidence]\n\n\n" , filename);
     printf("-RecordingFilename Filename         Use the recording in Filename for input.\n\n");
+    printf("-ShowLowConfidence                  Draws limbs with low confidence as dotted/dashed lines (hidden by default)\n\n");
     printf("-s selectorType                     Chooses the selector type to use (i.e. how to select which users to track).\n");
     printf("                -ClosestSelector N: The N closest users are tracked.\n");
     printf("                -SingleWave:        Whichever user waved last is tracked.\n");
@@ -40,13 +46,15 @@ void UsageAndExit(char* filename)
 }
 
 
+
 /// @brief The main function of the sample
 /// 
 /// This is the main function of the sample. Its purpose is to be the starting point for the
 /// sample and according to the command line arguments, to decide which sample behavior to use.
+/// @ingroup UserSelectionMain
 int main(int argc, char** argv)
 {    
-    SampleManager* pSampleManager=NULL;
+    SampleManager* pSampleManager=NULL; // will hold the sample manager which initializes and runs the sample
     if(argc>1)
     {
         // check if the argument is asking for help...
@@ -103,7 +111,7 @@ int main(int argc, char** argv)
             }
         }
     }
-    if(pSampleManager==NULL)
+    if(pSampleManager==NULL) // by default we use the closest detector option
     {
         pSampleManager=XN_NEW(ClosestSampleManager,1); // choose the default.
     }

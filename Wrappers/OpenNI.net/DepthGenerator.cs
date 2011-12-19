@@ -93,11 +93,21 @@ namespace OpenNI
 			remove { this.fovChanged.Event -= value; }
 		}
 
+        public void ConvertProjectiveToRealWorld(Point3D[] projectivePoints, Point3D[] realWorldPoints)
+        {
+            if (realWorldPoints.Length < projectivePoints.Length)
+            {
+                throw new ArgumentException("Destination array is too small", "realWorldPoints");
+            }
+
+            int status = SafeNativeMethods.xnConvertProjectiveToRealWorld(this.InternalObject, (uint)projectivePoints.Length, projectivePoints, realWorldPoints);
+            WrapperUtils.ThrowOnError(status);
+        }
+
 		public Point3D[] ConvertProjectiveToRealWorld(Point3D[] projectivePoints)
 		{
 			Point3D[] realWorld = new Point3D[projectivePoints.Length];
-			int status = SafeNativeMethods.xnConvertProjectiveToRealWorld(this.InternalObject, (uint)projectivePoints.Length, projectivePoints, realWorld);
-			WrapperUtils.ThrowOnError(status);
+            ConvertProjectiveToRealWorld(projectivePoints, realWorld);
 			return realWorld;
 		}
 
@@ -109,11 +119,21 @@ namespace OpenNI
             return ConvertProjectiveToRealWorld(projectivePoints)[0];
         }
 
+        public void ConvertRealWorldToProjective(Point3D[] realWorldPoints, Point3D[] projectivePoints)
+        {
+            if (projectivePoints.Length < realWorldPoints.Length)
+            {
+                throw new ArgumentException("Destination array is too small", "projectivePoints");
+            }
+
+            int status = SafeNativeMethods.xnConvertRealWorldToProjective(this.InternalObject, (uint)realWorldPoints.Length, realWorldPoints, projectivePoints);
+            WrapperUtils.ThrowOnError(status);
+        }
+
         public Point3D[] ConvertRealWorldToProjective(Point3D[] realWorldPoints)
         {
             Point3D[] projective = new Point3D[realWorldPoints.Length];
-            int status = SafeNativeMethods.xnConvertRealWorldToProjective(this.InternalObject, (uint)realWorldPoints.Length, realWorldPoints, projective);
-            WrapperUtils.ThrowOnError(status);
+            ConvertRealWorldToProjective(realWorldPoints, projective);
             return projective;
         }
         

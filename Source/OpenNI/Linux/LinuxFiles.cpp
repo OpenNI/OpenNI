@@ -23,10 +23,18 @@
 // Includes
 //---------------------------------------------------------------------------
 
-// This define enables Large File Support (64bit version of I/O functions and data types).
-// for more information - 'man 7 feature_test_macros'
-// Moreover, it MUST be defined before ANY other include from this file.
-#define _FILE_OFFSET_BITS	64
+#ifndef ANDROID
+	// This define enables Large File Support (64bit version of I/O functions and data types).
+	// for more information - 'man 7 feature_test_macros'
+	// Moreover, it MUST be defined before ANY other include from this file.
+	#define _FILE_OFFSET_BITS	64
+	
+	#define OFF_T off_t
+	#define LSEEK lseek
+#else
+	#define OFF_T off64_t
+	#define LSEEK lseek64
+#endif
 
 #include <XnOS.h>
 #include <libgen.h>
@@ -236,7 +244,7 @@ XN_C_API XnStatus xnOSSeekFile(const XN_FILE_HANDLE File, const XnOSSeekType See
 {
 	// Local function variables
 	int nRealSeekType = 0;
-	off_t nRetOffset = 0;
+	OFF_T nRetOffset = 0;
 
 	// Make sure the actual file handle isn't invalid
 	if (File == XN_INVALID_FILE_HANDLE)
@@ -264,10 +272,10 @@ XN_C_API XnStatus xnOSSeekFile(const XN_FILE_HANDLE File, const XnOSSeekType See
 	}
 
 	// Seek a file handle via the OS
-	nRetOffset = lseek(File, (off_t)nOffset, nRealSeekType);
+	nRetOffset = LSEEK(File, (OFF_T)nOffset, nRealSeekType);
 
 	// Make sure it succeeded (return value is valid) and that we reached the expected file offset
-	if (nRetOffset == (off_t)-1)
+	if (nRetOffset == (OFF_T)-1)
 	{
 		return (XN_STATUS_OS_FILE_SEEK_FAILED);
 	}
@@ -280,14 +288,14 @@ XN_C_API XnStatus xnOSSeekFile64(const XN_FILE_HANDLE File, const XnOSSeekType S
 {
 	// Local function variables
 	int nRealSeekType = 0;
-	off_t nRetOffset = 0;
+	OFF_T nRetOffset = 0;
 
 	// Make sure the actual file handle isn't invalid
 	if (File == XN_INVALID_FILE_HANDLE)
 	{
 		return XN_STATUS_OS_INVALID_FILE;
 	}
-
+	
 	// Convert the Xiron seek type into OS seek type
 	switch (SeekType)
 	{
@@ -308,10 +316,10 @@ XN_C_API XnStatus xnOSSeekFile64(const XN_FILE_HANDLE File, const XnOSSeekType S
 	}
 
 	// Seek a file handle via the OS
-	nRetOffset = lseek(File, nOffset, nRealSeekType);
+	nRetOffset = LSEEK(File, nOffset, nRealSeekType);
 
 	// Make sure it succeeded (return value is valid) and that we reached the expected file offset
-	if (nRetOffset == (off_t)-1)
+	if (nRetOffset == (OFF_T)-1)
 	{
 		return (XN_STATUS_OS_FILE_SEEK_FAILED);
 	}
@@ -332,16 +340,16 @@ XN_C_API XnStatus xnOSTellFile(const XN_FILE_HANDLE File, XnUInt32* pnFilePos)
 	}
 	
 	// Seek a file handle by 0 bytes in order to read the file position
-	off_t nFilePos = lseek(File, 0, SEEK_CUR);
+	OFF_T nFilePos = LSEEK(File, 0, SEEK_CUR);
 
 	// Make sure it succeeded (return value is valid)
-	if (nFilePos == (off_t)-1)
+	if (nFilePos == (OFF_T)-1)
 	{
 		return (XN_STATUS_OS_FILE_TELL_FAILED);
 	}
 
 	// Enforce uint32 limitation
-	if (nFilePos >> 32)
+	if ((nFilePos >> 32) != 0)
 	{
 		return XN_STATUS_INTERNAL_BUFFER_TOO_SMALL;
 	}
@@ -364,10 +372,10 @@ XN_C_API XnStatus xnOSTellFile64(const XN_FILE_HANDLE File, XnUInt64* pnFilePos)
 	}
 	
 	// Seek a file handle by 0 bytes in order to read the file position
-	off_t nFilePos = lseek(File, 0, SEEK_CUR);
+	OFF_T nFilePos = LSEEK(File, 0, SEEK_CUR);
 
 	// Make sure it succeeded (return value is valid)
-	if (nFilePos == (off_t)-1)
+	if (nFilePos == (OFF_T)-1)
 	{
 		return (XN_STATUS_OS_FILE_TELL_FAILED);
 	}

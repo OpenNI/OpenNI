@@ -63,17 +63,29 @@ XnStatus SampleManager::StartSample(int argc, char **argv)
         RETURN_WITH_CLEANUP(XN_STATUS_ERROR, "Failed to initialize user selector and tracking initializers"); 
     }
 
+    // test if we show low confidence joints (if this is true we show low confidence joints as
+    // dotted lines (confidence 0.5) or dashed lines (confidence lower than 0.5). If false we just
+    // do not draw low confidence joints.
+    XnBool bShowLowConfidence = FALSE;
+    for(int i=1; i<argc; i++)
+    {
+        if(xnOSStrCmp(argv[i] , "-ShowLowConfidence") == 0)
+        {
+            bShowLowConfidence = TRUE;
+        }
+    }
     // start the actual running (handled by the scene drawer).
     // note pUserTracker is deleted inside DrawScene when quitting.
     SceneDrawer *singleton=SceneDrawer::GetInstance();
     // This starts the actual program. NOTE: the DrawScene method never ends except for
     // using the exit call to end the program. 
-    singleton->DrawScene(m_pUserTracker,argc,argv,this);
+    singleton->DrawScene(m_pUserTracker,argc,argv,this, bShowLowConfidence);
     return XN_STATUS_OK; 
 }
 
 void SampleManager::Cleanup()
 {
+    // delete everything in an ordered manner. Make sure pointers are null afterwards.
     if(m_pUserSelector!=NULL)
     {
         XN_DELETE(m_pUserSelector);
@@ -129,7 +141,7 @@ XnStatus DefaultInitializerWithCalibPose::SetSelectors()
 
     // figure out which type of user selection to use.
     // Option 1: if we need calibration pose - that is the type to use (and exit if we can't support it)
-    // Option 2: if do not need calibration pose we choose wave (assuming it is supported, otherwise, exit).
+    // Option 2: if do not need calibration pose we choose the overridden selector
     if(pUserGenerator->GetSkeletonCap().NeedPoseForCalibration()==TRUE)
     {
         // first we get the pose from the skeleton capability
@@ -140,7 +152,7 @@ XnStatus DefaultInitializerWithCalibPose::SetSelectors()
     }
     else
     {
-        // get a single user wave pose selector
+        // get the overridden user selector
         m_pUserSelector=CreateUserSelector(pUserGenerator,m_pTrackingInitializer);
     }
 
@@ -167,6 +179,7 @@ SingleWaveSampleManager::SingleWaveSampleManager()
 {
 
 }
+
 UserSelector * SingleWaveSampleManager::CreateUserSelector(xn::UserGenerator *pUserGenerator,
                                                            TrackingInitializer *pTrackingInitializer)
 {

@@ -29,8 +29,8 @@ import datetime
 # ----------------------- PARAMS -------------------------
 VERSION_MAJOR = 3
 VERSION_MINOR = 1
-VERSION_MAINTENANCE = 2
-VERSION_BUILD = 2
+VERSION_MAINTENANCE = 3
+VERSION_BUILD = 1
 
 # ---------------------- FUNCTIONS -----------------------
 def regx_replace(findStr,repStr,filePath):

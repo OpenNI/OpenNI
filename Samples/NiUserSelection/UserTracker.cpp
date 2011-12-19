@@ -36,6 +36,7 @@
 
 float *UserTracker::s_pDepthHist=NULL;
 
+// initialization of different colors for different users
 XnFloat UserTracker::s_Colors[][3] =
 {
     {0,1,1},
@@ -210,7 +211,7 @@ void UserTracker::CalcHistogram(const XnDepthPixel* pDepth, XnUInt16 xRes,XnUInt
 
     for (XnUInt16 nIndex=1; nIndex<MAX_DEPTH; nIndex++)
     {
-        s_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (s_pDepthHist[nIndex] / nNumberOfPoints)));
+        s_pDepthHist[nIndex] = (256 * (1.0f - (s_pDepthHist[nIndex] / nNumberOfPoints)));
     }
 }
 
@@ -255,11 +256,11 @@ void UserTracker::FillTexture(unsigned char* pTexBuf, XnUInt16 nTexWidth, XnUInt
 
                 if (nValue != 0)
                 {
-                    nValue = s_pDepthHist[nValue]; // translate to the multiplier from the histogram
+                    XnFloat newValue = s_pDepthHist[nValue]; // translate to the multiplier from the histogram
 
-                    pTexBuf[0] = nValue * s_Colors[nColorID][0]; 
-                    pTexBuf[1] = nValue * s_Colors[nColorID][1];
-                    pTexBuf[2] = nValue * s_Colors[nColorID][2];
+                    pTexBuf[0] = (unsigned char)(newValue * s_Colors[nColorID][0]); 
+                    pTexBuf[1] = (unsigned char)(newValue * s_Colors[nColorID][1]);
+                    pTexBuf[2] = (unsigned char)(newValue * s_Colors[nColorID][2]);
                 }
             }
 
@@ -315,7 +316,7 @@ XnStatus UserTracker::GetUserStringPos(XnUserID nUserId, XnPoint3D &com, char *s
     return XN_STATUS_OK;
 }
 
-XnStatus UserTracker::GetLimbs(XnUserID nUserID, XnPoint3D *limbs,XnUInt16 &numLimbs)
+XnStatus UserTracker::GetLimbs(XnUserID nUserID, XnPoint3D *pLimbs,XnFloat *pConfidence, XnUInt16 &numLimbs)
 {
     // following is a static array of the limbs to draw. Each pair represents a line which
     // should be drawn
@@ -352,19 +353,26 @@ XnStatus UserTracker::GetLimbs(XnUserID nUserID, XnPoint3D *limbs,XnUInt16 &numL
         if(limbCount>=numLimbs)
             break; // we can't put any new ones
 
-        m_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(nUserID, jointsToPrint[i][0], joint1);
-        m_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(nUserID, jointsToPrint[i][1], joint2);
-
-        if (joint1.fConfidence < 0.5 || joint2.fConfidence < 0.5)
+        if(m_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(nUserID, jointsToPrint[i][0], joint1)!=XN_STATUS_OK)
         {
-            continue; // we don't want to print the joint as it is too low confidence.
+            continue; // bad joint
         }
-        limbs[limbCount*2] = joint1.position;
-        limbs[(limbCount*2)+1] = joint2.position;
+        if(m_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(nUserID, jointsToPrint[i][1], joint2)!=XN_STATUS_OK)
+        {
+            continue; // bad joint
+        }
+
+        pConfidence[limbCount]=joint1.fConfidence;
+        if(pConfidence[limbCount]>joint2.fConfidence)
+        {
+            pConfidence[limbCount]=joint2.fConfidence;
+        }
+        pLimbs[limbCount*2] = joint1.position;
+        pLimbs[(limbCount*2)+1] = joint2.position;
         limbCount++;
     }
     if(limbCount>0)
-        m_DepthGenerator.ConvertRealWorldToProjective(limbCount*2, limbs, limbs);
+        m_DepthGenerator.ConvertRealWorldToProjective(limbCount*2, pLimbs, pLimbs);
     numLimbs=limbCount;
     return XN_STATUS_OK;
 }

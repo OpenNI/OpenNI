@@ -312,8 +312,6 @@ XnUInt32 MockGenerator::GetRequiredBufferSize()
 
 XnStatus MockGenerator::ResizeBuffer(XnUInt32 nIndex, XnUInt32 nNeededSize)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	DataInfo& dataInfo = m_data[nIndex];
 	if (nNeededSize > dataInfo.nAllocatedSize)
 	{

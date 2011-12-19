@@ -31,6 +31,7 @@
 //---------------------------------------------------------------------------
 
 /// @brief Enumeration of legal user selection states
+/// @ingroup UserSelectionClasses
 typedef enum XnSelectionState 
 {
     XN_SELECTION_UNSELECTED = 0,  ///< @brief The user is not selected and is available for selection
@@ -41,6 +42,7 @@ typedef enum XnSelectionState
 } XnSelectionState; ///< @brief Enum for states of a user
 
 /// @brief Holds the state and sub state of a user.
+/// @ingroup UserSelectionClasses
 class UserSelectionState
 {
 public:

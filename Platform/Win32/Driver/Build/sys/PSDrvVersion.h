@@ -21,8 +21,8 @@
 ****************************************************************************/
 #define PSUSBDRV_MAJOR_VERSION 3
 #define PSUSBDRV_MINOR_VERSION 1
-#define PSUSBDRV_MAINTENANCE_VERSION 2
-#define PSUSBDRV_BUILD_VERSION 2
+#define PSUSBDRV_MAINTENANCE_VERSION 3
+#define PSUSBDRV_BUILD_VERSION 1
 
 #define PSDRV_STRINGIFY(n) PSDRV_STRINGIFY_HELPER(n)
 #define PSDRV_STRINGIFY_HELPER(n) #n

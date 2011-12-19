@@ -55,10 +55,11 @@ SceneDrawer *SceneDrawer::m_pSingleton=NULL;
 
 
 
-void SceneDrawer::DrawScene(UserTracker *pUserTrackerObj,int argc, char **argv,SampleManager *pSample)
+void SceneDrawer::DrawScene(UserTracker *pUserTrackerObj,int argc, char **argv,SampleManager *pSample, XnBool bShowLowConfidence)
 {
     m_pUserTrackerObj=pUserTrackerObj;
     m_pSample=pSample;
+    m_bShowLowConfidence=bShowLowConfidence;
 
 #ifndef USE_GLES
     glInit(&argc, argv);
@@ -109,8 +110,8 @@ SceneDrawer::SceneDrawer()
     g_bPause=FALSE;
 
     // buffer initialization
-    limbsPos=XN_NEW_ARR(XnPoint3D,(MAX_LIMBS*2));
-
+    pLimbsPosArr=XN_NEW_ARR(XnPoint3D,(MAX_LIMBS*2));
+    pConfidenceArr=XN_NEW_ARR(XnFloat,MAX_LIMBS);
 
     // following are dummy assignments which will be overriden when DrawScene is called
     // (either in DrawScene itself or in InitTexture
@@ -179,6 +180,11 @@ void SceneDrawer::DrawLabels(XnUserID nUserId)
     XnFloat userExitPose=m_pUserTrackerObj->GetExitPoseState(nUserId)*100.0f;
     if(res!=XN_STATUS_OK)
         return; // bad user!
+    xnOSMemSet(strUserLabel, 0, sizeof(strUserLabel));
+    res=m_pUserTrackerObj->GetUserStringPos(nUserId,com,strUserLabel,MAX_USER_LABEL_LEN-1);
+    if(res!=XN_STATUS_OK)
+        return; // bad user!
+
     if (!g_bPrintState)
     {
         if(userExitPose>0)
@@ -193,10 +199,6 @@ void SceneDrawer::DrawLabels(XnUserID nUserId)
     }
     else 
     {
-        xnOSMemSet(strUserLabel, 0, sizeof(strUserLabel));
-        res=m_pUserTrackerObj->GetUserStringPos(nUserId,com,strUserLabel,MAX_USER_LABEL_LEN-1);
-        if(res!=XN_STATUS_OK)
-            return; // bad user!
         if(userExitPose>0)
         {
             sprintf(strOutputLabel, "%d - %s - Exit wait %3.0f%% done.", nUserId,strUserLabel,userExitPose);
@@ -220,12 +222,16 @@ void SceneDrawer::DrawLabels(XnUserID nUserId)
 #endif
 }
 
+
+#define drawOneLine(x1,y1,x2,y2)  \
+    glVertex2f ((x1),(y1)); glVertex2f ((x2),(y2)); ;
+
 void SceneDrawer::DrawSkeleton(XnUserID nUserId)
 {
     XnFloat color[3];
 
     XnUInt16 numLimbs=MAX_LIMBS;
-    if(m_pUserTrackerObj->GetLimbs(nUserId,limbsPos,numLimbs)!=XN_STATUS_OK)
+    if(m_pUserTrackerObj->GetLimbs(nUserId,pLimbsPosArr,pConfidenceArr,numLimbs)!=XN_STATUS_OK)
         return; // no limbs to draw
     if(numLimbs==0)
         return; // no limbs to draw
@@ -233,24 +239,43 @@ void SceneDrawer::DrawSkeleton(XnUserID nUserId)
     if(res!=XN_STATUS_OK)
         return; // bad user!
 
-#ifndef USE_GLES
-    glBegin(GL_LINES);
-#endif
     glColor4f(1-color[0], 1-color[1], 1-color[2], 1);
     for(XnUInt16 j=0; j<numLimbs; j++)
     {
 #ifndef USE_GLES
-        glVertex3i(limbsPos[j*2].X, limbsPos[j*2].Y, 0);
-        glVertex3i(limbsPos[(j*2)+1].X, limbsPos[(j*2)+1].Y, 0);
+        if(pConfidenceArr[j]<=0.5)
+        {
+            if(m_bShowLowConfidence==FALSE)
+            {
+                continue; // we simply do not show this limb...
+            }
+            glEnable(GL_LINE_STIPPLE);
+            if(pConfidenceArr[j]==0.5)
+            {
+                glLineStipple(1,0x0101);
+            }
+            else
+            {
+                glLineStipple(1,0x00FF);
+            }            
+        }
+        glBegin(GL_LINES);
+        glVertex2f(pLimbsPosArr[j*2].X, pLimbsPosArr[j*2].Y);
+        glVertex2f(pLimbsPosArr[(j*2)+1].X, pLimbsPosArr[(j*2)+1].Y);
+        glEnd();
+        if(pConfidenceArr[j]<=0.5)
+        {
+            glDisable(GL_LINE_STIPPLE);
+        }
 #else
-        GLfloat verts[4] = {limbsPos[j*2].X, limbsPos[j*2].Y, limbsPos[(j*2)+1].X, limbsPos[(j*2)+1].Y};
+        GLfloat verts[4] = {pLimbsPosArr[j*2].X, pLimbsPosArr[j*2].Y, pLimbsPosArr[(j*2)+1].X, pLimbsPosArr[(j*2)+1].Y};
         glVertexPointer(2, GL_FLOAT, 0, verts);
         glDrawArrays(GL_LINES, 0, 2);
         glFlush();
 #endif
     }
 #ifndef USE_GLES
-    glEnd();
+   // glEnd();
 #endif
 }
 
@@ -358,10 +383,6 @@ void SceneDrawer::glutDisplay (void)
 #ifndef USE_GLES
 void SceneDrawer::glutIdle (void)
 {
-    SceneDrawer *singleton=GetInstance();
-    if(singleton->g_bPause)
-        singleton->m_pUserTrackerObj->UpdateFrame();
-
     // Display the frame
     glutPostRedisplay();
 }
@@ -409,7 +430,7 @@ void SceneDrawer::glInit (int * pargc, char ** argv)
     glutInit(pargc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
-    glutCreateWindow ("Prime Sense User Tracker Viewer");
+    glutCreateWindow ("User Selection Sample");
     //glutFullScreen();
     glutSetCursor(GLUT_CURSOR_NONE);
 

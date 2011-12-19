@@ -1,6 +1,41 @@
 Detailed Change log:
 --------------------
 
+Version 1.5.2.7 (Unstable version - Dec 18th 2011)
+--------------------------------------------------
+  * Java UserTracker sample will now draw the limbs only when both joints have a non-zero confidence.
+  * .NET samples will now show their source files in the visual studio project.
+  * NiUserSelection - Enhanced the documentation.
+  * PoseDetectionCapability::StopPoseDetection will now return proper errors.
+  * .Net Wrappers: Disposing a device node now also destroys the node.
+  * xnNodeInfoGetTreeStringRepresentation was added to all wrappers.
+  * Linux: keep ref count for the libusb events thread, so it will be shutdown automatically when all read threads have stopped.
+  * Added option to show low confidence limbs as dotted lines in the user selection sample.
+  * Recordings playbacks: make sure seek is also performed in a lock, so it wouldn't collide with the reader thread.
+  * Bug Fix: The samples cannot be copied to another folder and be compiled.
+  * Data Dump: Adding frame sync information checks.
+  * NiUseExtension sample: added a clear message about the need to register the extension module.
+  * .Net Wrappers: Added the DataPtr property to Generator class.
+  * .Net wrappers: Fixed a bug where MapGenerator.BytesPerPixel was missing.
+  * .Net Wrappers: FindExistingNode now returns null instead of throwing an exception if no node exists.
+  * Java Wrappers: StartPoseDetection and StopPoseDetection are declared deprecated, and were replaced by startPoseDetection and stopPoseDetection.
+  * Linux: Cross compilation is now based on environment variables.
+  * .Net Wrappers: Projective/RealWorld conversion - added a version which accepts a preallocated array.
+  * USB Driver version was updated to 3.1.3.1.
+  * NiBackRecorder: removed unneeded calls to Release().
+  * NiConvertXToONI: removed unused seekNode.
+  * Android: makefiles are now compatible to ndk v7.
+  * .Net Wrapper: Added the missing DeviceIdentificationCapability class.
+  * New API: xnStopSinglePoseDetection.
+  * Bug Fix: Seeking before the first WaitXUpdateAll() caused undetermined behavior.
+  * Android: Added the NiSimpleSkeleton sample.
+  * Java Wrappers: Added missing enum values.
+  * .NET Wrappers: Added missing enum values.
+  * Android UserTracker sample: Adjusted to work without a calibration pose.
+  * USB Driver: adding support for PrimeSense's 0601 product ID.
+  * Log: initializing from INI file would reset the output directory.  
+  * Bug fix: Seeking to the current frame did no re-read it, while seeking to another frame did read it. This caused a bug where seeking to the same frame twice would cause it to return twice.
+
 Version 1.4.0.2 (Unstable version - Nov 17th 2011)
 --------------------------------------------------
   * Linux bug fix: The USB read thread was using memcpy with overlapping source and dest addresses which caused newer libc libraries to fail. The solution is to use memmove.

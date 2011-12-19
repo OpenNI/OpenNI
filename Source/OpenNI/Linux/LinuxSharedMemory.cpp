@@ -256,6 +256,11 @@ XN_C_API XnStatus xnOSOpenSharedMemory(const XnChar* strName, XnUInt32 nAccessFl
 	return XN_STATUS_OS_FAILED_TO_CREATE_SHARED_MEMORY;
 }
 
+XN_C_API XnStatus xnOSOpenSharedMemoryEx(const XnChar* strName, XnUInt32 nAccessFlags, XnBool bAllowOtherUsers, XN_SHARED_MEMORY_HANDLE* phSharedMem)
+{
+	return XN_STATUS_OS_FAILED_TO_CREATE_SHARED_MEMORY;
+}
+
 XN_C_API XnStatus xnOSCloseSharedMemory(XN_SHARED_MEMORY_HANDLE hSharedMem)
 {
 	xnOSFreeAligned(hSharedMem);

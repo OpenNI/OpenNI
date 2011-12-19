@@ -353,6 +353,14 @@ JNIEXPORT jobject JNICALL Java_org_OpenNI_NativeMethods_xnNodeInfoGetDescription
 
 /*
  * Class:     org_OpenNI_NativeMethods
+ * Method:    xnNodeInfoGetTreeStringRepresentation
+ * Signature: (JLorg/OpenNI/OutArg;)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnNodeInfoGetTreeStringRepresentation
+  (JNIEnv *, jclass, jlong, jobject);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
  * Method:    xnNodeInfoGetInstanceName
  * Signature: (J)Ljava/lang/String;
  */
@@ -1990,6 +1998,14 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStartPoseDetection
  */
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStopPoseDetection
   (JNIEnv *, jclass, jlong, jint);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
+ * Method:    xnStopSinglePoseDetection
+ * Signature: (JILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStopSinglePoseDetection
+  (JNIEnv *, jclass, jlong, jint, jstring);
 
 /*
  * Class:     org_OpenNI_NativeMethods

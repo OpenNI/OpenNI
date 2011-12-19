@@ -760,6 +760,16 @@ Java_org_OpenNI_NativeMethods_xnNodeInfoGetDescription(JNIEnv *env, jclass cls, 
 	return CreateProductionNodeDescription(env, pDesc);
 }
 
+JNIEXPORT jint JNICALL 
+Java_org_OpenNI_NativeMethods_xnNodeInfoGetTreeStringRepresentation(JNIEnv *env, jclass , jlong pNodeInfo, jobject result)
+{
+	XnChar strResult[4096];
+	XnStatus nRetVal = xnNodeInfoGetTreeStringRepresentation((XnNodeInfo*)pNodeInfo, strResult, 4096);
+	XN_IS_STATUS_OK(nRetVal);
+	SetOutArgStringValue(env, result, strResult);
+	return XN_STATUS_OK;
+}
+
 JNIEXPORT jstring JNICALL 
 Java_org_OpenNI_NativeMethods_xnNodeInfoGetInstanceName(JNIEnv *env, jclass cls, jlong pNodeInfo)
 {
@@ -2406,6 +2416,11 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStartPoseDetection(JNIEnv
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStopPoseDetection(JNIEnv *, jclass, jlong hNode, jint user)
 {
 	return xnStopPoseDetection((XnNodeHandle)hNode, user);
+}
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStopSinglePoseDetection(JNIEnv * env, jclass, jlong hNode, jint user, jstring strPose)
+{
+	JavaString jPose(env, strPose);
+	return xnStopSinglePoseDetection((XnNodeHandle)hNode, user, jPose);
 }
 void XN_CALLBACK_TYPE PoseDetectionHandler(XnNodeHandle hNode, const XnChar* strPose, XnUserID user, void* pCookie)
 {

@@ -176,14 +176,8 @@ ostype = os.popen('uname -s').read().rstrip()
 machinetype = os.popen('uname -m').read().rstrip()
 
 if len(sys.argv) >= 2:
-    if len(sys.argv) < 4:
-        print "Usage:", sys.argv[0], "<Platform> <CXX> <STAGING_DIR>"
-        finish_script(1)
-        
     PLATFORM = sys.argv[1]
-    cxx = sys.argv[2]
-    staging = sys.argv[3]
-    makeArgs = "PLATFORM=" + PLATFORM + " CXX=" + cxx + " TARGET_SYS_ROOT=" + staging
+    MAKE_ARGS = 'PLATFORM=' + PLATFORM
 else:
     if machinetype == "x86_64":
         PLATFORM = "x64"
@@ -195,9 +189,9 @@ else:
         print "Unknown platform:", machinetype
         finish_script(1)
 
-    makeArgs = "PLATFORM=" + PLATFORM
+    MAKE_ARGS = ''
 
-makeArgs += ' -j'+calc_jobs_number()
+MAKE_ARGS += ' -j' + calc_jobs_number()
 
 if ostype == "Darwin":
     TARGET = "MacOSX"
@@ -250,20 +244,8 @@ logger.info("Building OpenNI...")
 
 # Build
 #execute_check("gacutil -u OpenNI.net > " + SCRIPT_DIR + "/Output/gacutil.txt", "Remove from GAC")
-result = os.system('make ' + makeArgs + ' -C ../Build clean > ' + SCRIPT_DIR + '/Output/Build' + PROJECT_NAME + '_clean.txt')
-execute_check('make ' + makeArgs + ' -C ../Build > ' + SCRIPT_DIR + '/Output/Build' + PROJECT_NAME + '.txt', "Building")
-
-# Get the build output
-lines = open(SCRIPT_DIR+"/Output/Build" + PROJECT_NAME + ".txt").readlines()
-build_result = lines[-1]
-print(build_result)
-logger.info(build_result)
-
-# Check for failed build
-if result != 0:
-    print "Building Failed!!"
-    logger.critical("Building Failed!")
-    finish_script(1)
+execute_check('make ' + MAKE_ARGS + ' -C ' + SCRIPT_DIR + '/../Build clean > ' + SCRIPT_DIR + '/Output/Build' + PROJECT_NAME + '_clean.txt', 'Cleaning')
+execute_check('make ' + MAKE_ARGS + ' -C ' + SCRIPT_DIR + '/../Build > ' + SCRIPT_DIR + '/Output/Build' + PROJECT_NAME + '.txt', 'Building')
 
 #--------------Doxygen---------------------------------------------------------#
 print "* Creating Doxygen..."
@@ -449,13 +431,13 @@ print "* Building Samples in release configuration......"
 logger.info("Building Samples in release configuration...")
 
 # Build project solution
-execute_check("make " + makeArgs + " -C " + REDIST_DIR + "/Samples/Build " + " > "+SCRIPT_DIR+"/Output/BuildSmpRelease.txt", "Build samples in release")
+execute_check("make " + MAKE_ARGS + " -C " + REDIST_DIR + "/Samples/Build " + " > "+SCRIPT_DIR+"/Output/BuildSmpRelease.txt", "Build samples in release")
 
 print "* Building Samples in debug configuration......"
 logger.info("Building Samples in debug configuration...")
 
 # Build project solution
-execute_check("make " + makeArgs + " CFG=Debug -C " + REDIST_DIR + "/Samples/Build > "+SCRIPT_DIR+"/Output/BuildSmpDebug.txt", "Build samples in debug")
+execute_check("make " + MAKE_ARGS + " CFG=Debug -C " + REDIST_DIR + "/Samples/Build > "+SCRIPT_DIR+"/Output/BuildSmpDebug.txt", "Build samples in debug")
 
 # delete intermidiate files
 for sample in samples_list:

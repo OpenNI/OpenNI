@@ -155,10 +155,5 @@ int main(int argc, char* argv[])
 
 	printf("\n");
 
-	recorder.Release();
-	depth.Release();
-	player.Release();
-	context.Release();
-
 	return 0;
 }

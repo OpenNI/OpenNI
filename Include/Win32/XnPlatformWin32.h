@@ -215,10 +215,23 @@ typedef size_t				XnSizeT;
 #endif
 
 #ifdef __INTEL_COMPILER
-	#define XN_DEPRECATED_WARNING_IDS	1786
+	#define XN_DEPRECATED_WARNING_IDS			1786
+	#define XN_HIDES_PARENT_METHOD_WARNING_ID	1125
+	#define XN_CONDITION_IS_CONST_WARNING_ID	
 #else
-	#define XN_DEPRECATED_WARNING_IDS	4995 4996
+	#define XN_DEPRECATED_WARNING_IDS			4995 4996
+	#define XN_HIDES_PARENT_METHOD_WARNING_ID	
+	#define XN_CONDITION_IS_CONST_WARNING_ID	4127
 #endif
+
+#define XN_PRAGMA_START_DISABLED_WARNING_SECTION(warnings)			\
+	__pragma(warning(push))											\
+	__pragma(warning(disable:XN_HIDES_PARENT_METHOD_WARNING_ID))
+
+#define XN_PRAGMA_STOP_DISABLED_WARNING_SECTION						\
+	__pragma(warning(pop))
+
+	
 
 /** Declares a global shared library export function. */ 
 #define XN_API_EXPORT_INIT()															\

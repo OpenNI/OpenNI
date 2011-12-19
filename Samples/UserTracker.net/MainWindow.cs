@@ -77,7 +77,7 @@ namespace UserTracker.net
                 this.skeletonCapbility.StartTracking(e.ID);
                 this.joints.Add(e.ID, new Dictionary<SkeletonJoint, SkeletonJointPosition>());
             }
-            else
+            else if (e.Status != CalibrationStatus.ManualAbort)
             {
                 if (this.skeletonCapbility.DoesNeedPoseForCalibration)
                 {

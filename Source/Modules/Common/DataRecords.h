@@ -47,8 +47,8 @@ enum RecordType
 	RECORD_SEEK_TABLE               = 0x0E,
 };
 
-enum {INVALID_NODE_ID = -1};
-enum {INVALID_TIMESTAMP = -1};
+#define INVALID_NODE_ID ((XnUInt32)-1)
+#define INVALID_TIMESTAMP ((XnUInt64)-1)
 
 struct RecordingHeader
 {
@@ -65,7 +65,7 @@ class Record
 public:
 	Record(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header);
 	Record(const Record &other);
-	XnUInt32 GetType() const;
+	RecordType GetType() const;
 	XnUInt32 GetNodeID() const;
 	XnUInt32 GetSize() const; //GetSize() returns just the fields' size, not including the payload
 	XnUInt32 GetPayloadSize() const;

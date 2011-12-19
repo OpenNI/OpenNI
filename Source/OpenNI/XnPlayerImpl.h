@@ -45,13 +45,15 @@ public:
 	XnStatus EnumerateNodes(XnNodeInfoList** ppList);
 	XnStatus SetPlaybackSpeed(XnDouble dSpeed);
 	XnDouble GetPlaybackSpeed();
-	void ResetTimeReference();
 	void TriggerPlayback();
 	XnStatus ReadNext();
+	XnStatus SeekToTimestamp(XnInt64 nTimeOffset, XnPlayerSeekOrigin origin);
+	XnStatus SeekToFrame(const XnChar* strNodeName, XnInt32 nFrameOffset, XnPlayerSeekOrigin origin);
 
 private:
 	XnModulePlayerInterface& ModulePlayer();
 	XnModuleNodeHandle ModuleHandle();
+	void ResetTimeReference();
 
 	static XnStatus XN_CALLBACK_TYPE OpenFile(void* pCookie);
 	static XnStatus XN_CALLBACK_TYPE ReadFile(void* pCookie, void *pBuffer, XnUInt32 nSize, XnUInt32 *pnBytesRead);

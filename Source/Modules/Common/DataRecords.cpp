@@ -57,9 +57,9 @@ Record::Record(const Record &other) :
 	//We don't set the header info here, cuz it was already set by the other record
 }
 
-XnUInt32 Record::GetType() const
+RecordType Record::GetType() const
 {
-	return m_pHeader->m_nRecordType;
+	return (RecordType)m_pHeader->m_nRecordType;
 }
 
 XnUInt32 Record::GetNodeID() const

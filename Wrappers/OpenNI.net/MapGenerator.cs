@@ -142,6 +142,14 @@ namespace OpenNI
 			remove { this.mapOutputModeChanged.Event -= value; }
 		}
 
+        public int BytesPerPixel
+        {
+            get
+            {
+                return (int)SafeNativeMethods.xnGetBytesPerPixel(this.InternalObject);
+            }
+        }
+
 		public CroppingCapability CroppingCapability
 		{
 			get { return m_croppingCapablity; }

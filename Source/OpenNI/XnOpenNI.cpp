@@ -160,7 +160,7 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	pContext->pDumpDataFlow = xnDumpFileOpen(XN_DUMP_MASK_DATA_FLOW, "DataFlow.csv");
 
 	xnDumpFileWriteString(pContext->pDumpRefCount, "Timestamp,Object,RefCount,Comment\n");
-	xnDumpFileWriteString(pContext->pDumpDataFlow, "Timestamp,Action,Object\n");
+	xnDumpFileWriteString(pContext->pDumpDataFlow, "Timestamp,Action,Object,DataTimestamp\n");
 
 	// validate memory allocations
 	if (pContext->pLicenses == NULL ||
@@ -1043,48 +1043,89 @@ XN_C_API const void* xnNodeInfoGetAdditionalData(XnNodeInfo* pNodeInfo)
 	return pNodeInfo->pAdditionalData;
 }
 
-XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, XnChar* csResult, XnUInt32 nSize)
+XnStatus xnNodeInfoGetTreeStringRepresentationImpl(XnNodeInfo* pNodeInfo, XnChar* csResult, XnUInt32 nSize, XnUInt32 nDepth)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	
-	XN_VALIDATE_INPUT_PTR(pNodeInfo);
-	XN_VALIDATE_OUTPUT_PTR(csResult);
+	XnUInt32 nLen = 0;
+	XnUInt32 nWritten = 0;
 
-	nRetVal = xnProductionNodeDescriptionToString(&pNodeInfo->Description, csResult, nSize);
+	XnChar strIndentation[100] = "";
+	if (nDepth >= 100)
+	{
+		XN_ASSERT(FALSE);
+		return XN_STATUS_INTERNAL_BUFFER_TOO_SMALL;
+	}
+
+	for (XnUInt32 i = 0; i < nDepth; ++i)
+	{
+		strIndentation[i] = '\t';
+	}
+
+	nRetVal = xnOSStrCopy(csResult + nLen, strIndentation, nSize - nLen);
 	XN_IS_STATUS_OK(nRetVal);
+
+	nLen = xnOSStrLen(csResult);
+	
+	nRetVal = xnProductionNodeDescriptionToString(&pNodeInfo->Description, csResult + nLen, nSize - nLen);
+	XN_IS_STATUS_OK(nRetVal);
+
+	if (pNodeInfo->strInstanceName[0] != '\0')
+	{
+		nLen = xnOSStrLen(csResult);
+		nRetVal = xnOSStrFormat(csResult + nLen, nSize - nLen, &nWritten, "[\"%s\"]", pNodeInfo->strInstanceName);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	if (pNodeInfo->strCreationInfo[0] != '\0')
+	{
+		nLen = xnOSStrLen(csResult);
+		nRetVal = xnOSStrFormat(csResult + nLen, nSize - nLen, &nWritten, "(%s)", pNodeInfo->strCreationInfo);
+		XN_IS_STATUS_OK(nRetVal);
+	}
 
 	if (pNodeInfo->pNeededTrees != NULL)
 	{
 		// add list of needed nodes
-		nRetVal = xnOSStrAppend(csResult, " -> ( ", nSize);
-		XN_IS_STATUS_OK(nRetVal);
-
 		XnBool bFirst = TRUE;
-		XnUInt32 nLen = 0;
 
 		for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pNodeInfo->pNeededTrees); 
 			xnNodeInfoListIteratorIsValid(it);
 			it = xnNodeInfoListGetNext(it))
 		{
-			if (!bFirst)
+			nLen = xnOSStrLen(csResult);
+
+			if (bFirst)
 			{
-				nRetVal = xnOSStrAppend(csResult, " and ", nSize);
+				nRetVal = xnOSStrFormat(csResult + nLen, nSize - nLen, &nWritten, " ->\n", strIndentation);
 				XN_IS_STATUS_OK(nRetVal);
 			}
 
 			nLen = xnOSStrLen(csResult);
 
-			nRetVal = xnNodeInfoGetTreeStringRepresentation(pNodeInfo, csResult + nLen, nSize - nLen);
+			nRetVal = xnNodeInfoGetTreeStringRepresentationImpl(xnNodeInfoListGetCurrent(it), csResult + nLen, nSize - nLen, nDepth + 1);
 			XN_IS_STATUS_OK(nRetVal);
 
 			bFirst = FALSE;
 		}
 
-		nRetVal = xnOSStrAppend(csResult, ")", nSize);
-		XN_IS_STATUS_OK(nRetVal);
+		if (bFirst)
+		{
+			// no needed nodes. add new line ourselves
+			nLen = xnOSStrLen(csResult);
+			nRetVal = xnOSStrFormat(csResult + nLen, nSize - nLen, &nWritten, "\n", strIndentation);
+			XN_IS_STATUS_OK(nRetVal);
+		}
 	}
 	
 	return (XN_STATUS_OK);
+}
+
+XN_C_API XnStatus xnNodeInfoGetTreeStringRepresentation(XnNodeInfo* pNodeInfo, XnChar* csResult, XnUInt32 nSize)
+{
+	XN_VALIDATE_INPUT_PTR(pNodeInfo);
+	XN_VALIDATE_OUTPUT_PTR(csResult);
+
+	return xnNodeInfoGetTreeStringRepresentationImpl(pNodeInfo, csResult, nSize, 0);
 }
 
 //---------------------------------------------------------------------------
@@ -1473,7 +1514,7 @@ void XN_CALLBACK_TYPE xnGeneratorHasNewData(XnNodeHandle hNode, void* /*pCookie*
 	xnOSSetEvent(hNode->pContext->hNewDataEvent);
 	XnUInt64 nNow;
 	xnOSGetHighResTimeStamp(&nNow);
-	xnDumpFileWriteString(hNode->pContext->pDumpDataFlow, "%llu,NewDataAvailable,%s\n", nNow, hNode->pNodeInfo->strInstanceName);
+	xnDumpFileWriteString(hNode->pContext->pDumpDataFlow, "%llu,NewDataAvailable,%s,\n", nNow, hNode->pNodeInfo->strInstanceName);
 }
 
 void XN_CALLBACK_TYPE xnNodeLockChanged(XnNodeHandle hNode, void* /*pCookie*/)
@@ -2365,6 +2406,10 @@ XnBool xnDidNodeAdvanced(XnNodeHandle hNode)
 		}
 
 		// check for frame sync 
+		XnUInt64 nNow;
+		xnOSGetHighResTimeStamp(&nNow);
+		xnDumpFileWriteString(hNode->pContext->pDumpDataFlow, "%llu,FrameSyncCheck,%s,%llu\n", nNow, hNode->pNodeInfo->strInstanceName, nTimestamp);
+		xnDumpFileWriteString(hNode->pContext->pDumpDataFlow, "%llu,FrameSyncCheck,%s,%llu\n", nNow, hNode->hFrameSyncedWith->pNodeInfo->strInstanceName, nOtherTimestamp);
 		XnUInt64 nDiff = (nTimestamp >= nOtherTimestamp) ? (nTimestamp - nOtherTimestamp) : (nOtherTimestamp - nTimestamp);
 		return (nDiff <= XN_FRAME_SYNC_THRESHOLD);
 	}
@@ -2491,7 +2536,7 @@ XN_C_API XnStatus xnWaitAndUpdateAll(XnContext* pContext)
 
 	XnUInt64 nNow;
 	xnOSGetHighResTimeStamp(&nNow);
-	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitAndUpdateAll,Application,%s\n", nNow);
+	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitAndUpdateAll,Application,%s,\n", nNow);
 
 	// wait on new data event
 	nRetVal = xnWaitForCondition(pContext, xnDidAllNodesAdvanced, pContext);
@@ -2518,7 +2563,7 @@ XN_C_API XnStatus xnWaitOneUpdateAll(XnContext* pContext, XnNodeHandle hNode)
 
 	XnUInt64 nNow;
 	xnOSGetHighResTimeStamp(&nNow);
-	xnDumpFileWriteString(hNode->pContext->pDumpDataFlow, "%llu,WaitOneUpdateAll,Application,%s\n", nNow, hNode->pNodeInfo->strInstanceName);
+	xnDumpFileWriteString(hNode->pContext->pDumpDataFlow, "%llu,WaitOneUpdateAll,Application,%s,\n", nNow, hNode->pNodeInfo->strInstanceName);
 
 	// wait on new data event
 	nRetVal = xnWaitForCondition(pContext, xnDidNodeAdvanced, hNode);
@@ -2539,7 +2584,7 @@ XN_C_API XnStatus xnWaitNoneUpdateAll(XnContext* pContext)
 
 	XnUInt64 nNow;
 	xnOSGetHighResTimeStamp(&nNow);
-	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitNoneUpdateAll,Application\n", nNow);
+	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitNoneUpdateAll,Application,\n", nNow);
 
 	nRetVal = xnPlayRecording(pContext, TRUE);
 	XN_IS_STATUS_OK(nRetVal);
@@ -2574,7 +2619,7 @@ XN_C_API XnStatus xnWaitAnyUpdateAll(XnContext* pContext)
 
 	XnUInt64 nNow;
 	xnOSGetHighResTimeStamp(&nNow);
-	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitAnyUpdateAll,Application\n", nNow);
+	xnDumpFileWriteString(pContext->pDumpDataFlow, "%llu,WaitAnyUpdateAll,Application,\n", nNow);
 	
 	// wait on new data event
 	nRetVal = xnWaitForCondition(pContext, xnDidAnyNodeAdvanced, pContext);
@@ -2595,7 +2640,7 @@ XN_C_API XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance)
 
 	XnUInt64 nNow;
 	xnOSGetHighResTimeStamp(&nNow);
-	xnDumpFileWriteString(hInstance->pContext->pDumpDataFlow, "%llu,WaitAndUpdateData,Application\n", nNow);
+	xnDumpFileWriteString(hInstance->pContext->pDumpDataFlow, "%llu,WaitAndUpdateData,Application,\n", nNow);
 
 	// wait on new data event
 	nRetVal = xnWaitForCondition(hInstance->pContext, xnDidNodeAdvanced, hInstance);
@@ -3470,7 +3515,7 @@ static XnStatus xnUpdateDataImpl(XnNodeHandle hInstance)
 
 	XnUInt64 nNow;
 	xnOSGetHighResTimeStamp(&nNow);
-	xnDumpFileWriteString(hInstance->pContext->pDumpDataFlow, "%llu,Update,%s\n", nNow, hInstance->pNodeInfo->strInstanceName);
+	xnDumpFileWriteString(hInstance->pContext->pDumpDataFlow, "%llu,Update,%s,%llu\n", nNow, hInstance->pNodeInfo->strInstanceName, xnGetTimestamp(hInstance));
 
 	return XN_STATUS_OK;
 }
@@ -3805,21 +3850,7 @@ XN_C_API XnStatus xnSeekPlayerToTimeStamp(XnNodeHandle hPlayer,
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
 	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
-	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
-	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
-
-	// disable playback speed - so seeking would be immediate
-	XnDouble dPlaybackSpeed = pPlayerImpl->GetPlaybackSpeed();
-	pPlayerImpl->SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
-
-	// seek
-	XnStatus nRetVal = pInterface->Player.SeekToTimeStamp(hModuleNode, nTimeOffset, origin);
-
-	// restore playback speed
-	pPlayerImpl->SetPlaybackSpeed(dPlaybackSpeed);
-	pPlayerImpl->ResetTimeReference();
-
-	return (nRetVal);
+	return pPlayerImpl->SeekToTimestamp(nTimeOffset, origin);
 }
 
 XN_C_API XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer, 
@@ -3833,21 +3864,7 @@ XN_C_API XnStatus xnSeekPlayerToFrame(XnNodeHandle hPlayer,
 	//Get player impl object
 	xn::PlayerImpl *pPlayerImpl = dynamic_cast<xn::PlayerImpl*>(hPlayer->pPrivateData);
 	XN_VALIDATE_PTR(pPlayerImpl, XN_STATUS_ERROR);
-	XnPlayerInterfaceContainer* pInterface = (XnPlayerInterfaceContainer*)hPlayer->pModuleInstance->pLoaded->pInterface;
-	XnModuleNodeHandle hModuleNode = hPlayer->pModuleInstance->hNode;
-
-	// disable playback speed - so seeking would be immediate
-	XnDouble dPlaybackSpeed = pPlayerImpl->GetPlaybackSpeed();
-	pPlayerImpl->SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
-
-	// seek
-	XnStatus nRetVal = pInterface->Player.SeekToFrame(hModuleNode, strNodeName, nFrameOffset, origin);
-
-	// restore playback speed
-	pPlayerImpl->SetPlaybackSpeed(dPlaybackSpeed);
-	pPlayerImpl->ResetTimeReference();
-
-	return (nRetVal);
+	return pPlayerImpl->SeekToFrame(strNodeName, nFrameOffset, origin);
 }
 
 XN_C_API XnStatus xnTellPlayerTimestamp(XnNodeHandle hPlayer, XnUInt64* pnTimestamp)
@@ -4487,7 +4504,7 @@ XnStatus xn::PosePrivateData::GetPoseStatus(XnUserID userID, const XnChar* poseN
             return XN_STATUS_OK;
         }
     }
-    return XN_STATUS_NO_SUCH_USER;
+    return XN_STATUS_NO_MATCH;
 }
 
 void XN_CALLBACK_TYPE xn::PosePrivateData::XnNewUserCallback(XnNodeHandle /*hNode*/, XnUserID nUserId, void* pCookie)
@@ -6294,6 +6311,17 @@ XN_C_API XnStatus xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user)
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
 	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.StopPoseDetection);
 	return pInterface->PoseDetection.StopPoseDetection(hModuleNode, user);
+}
+XN_C_API XnStatus xnStopSinglePoseDetection(XnNodeHandle hInstance, XnUserID user, const XnChar* strPose)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_USER);
+	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	if (pInterface->PoseDetection.StopSinglePoseDetection == NULL)
+	{
+		return pInterface->PoseDetection.StopPoseDetection(hModuleNode, user);
+	}
+	return pInterface->PoseDetection.StopSinglePoseDetection(hModuleNode, user, strPose);
 }
 
 typedef struct PoseCookie

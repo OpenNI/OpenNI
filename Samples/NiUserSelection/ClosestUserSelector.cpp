@@ -24,6 +24,10 @@
 //---------------------------------------------------------------------------
 #include "ClosestUserSelector.h"
 
+/// @brief Utility macro which validates a condition and if it fails it prints an error message.
+/// 
+/// This macro is aimed to be called from within the constructor as if it fails it invalidates the
+/// object (m_bValid=false).
 #define VALIDATE(cond, errorMsg)                                    \
     if(!(cond))                                                     \
 {                                                                   \
@@ -33,8 +37,10 @@
 }                                                                   \
 
 
-
+/// @brief The square distance for changes of COM (set for 20cm squared) to be considered moved 
+/// in order to avoid the modifier @ref DIST_MOD_FOR_FAILURE.
 #define MIN_SQR_DIST_TO_RETRY 40000
+/// @brief A modifier for failing to calibrated (set at 10m).
 #define DIST_MOD_FOR_FAILURE 10000
 //---------------------------------------------------------------------------
 // Code
@@ -67,7 +73,9 @@ ClosestUserSelector::~ClosestUserSelector()
 
 void ClosestUserSelector::UpdateFrame()
 {
+    // clear the user list so we can fill it out.
     ClearUserList();
+
     // find out who are the closest ones.
     for(UserStateHash::Iterator iter=m_hUsersState.begin(); iter!=m_hUsersState.end(); ++iter)
     {
@@ -76,8 +84,13 @@ void ClosestUserSelector::UpdateFrame()
         XnPoint3D newCom;
         if(m_pUserGenerator->GetCoM(newUser,newCom)!=XN_STATUS_OK)
             continue; // irrelevant user.
+        if(newCom.Z<=0)
+        {
+            continue; // this is not someone we can use.
+        }
         if(val->m_eState == XN_SELECTION_FAILED)
         {
+            // we failed last time so we might want to give a penalty
             UserStatusWithCom* valWithCom=(UserStatusWithCom*)val;
             XnFloat distSqr=0.0f;
             XnFloat diff;
@@ -89,7 +102,7 @@ void ClosestUserSelector::UpdateFrame()
             distSqr += diff * diff;
             if(distSqr<MIN_SQR_DIST_TO_RETRY)
             {
-                newCom.Z+=DIST_MOD_FOR_FAILURE;
+                newCom.Z+=DIST_MOD_FOR_FAILURE; // we haven't moved too much since we failed, lets give a penalty
             }
 
         }
@@ -101,25 +114,36 @@ void ClosestUserSelector::UpdateFrame()
                 newCom.Z=1.0f; // minimum dist!
             }
         }
-        InsertNewUser(newUser,newCom.Z);
+        InsertNewUser(newUser,newCom.Z); // add it to the list in an ordered manner
     }
 
 
+    // go over the list and start or stop tracking.
     for(UserStateHash::Iterator iter=m_hUsersState.begin(); iter!=m_hUsersState.end(); ++iter)
     {
         UserSelectionState* pState=iter.Value();
         XnUInt32 curUser=iter.Key();
         if(TestIfShouldTrack(curUser))
         {
+            // this means the user is in the list of those which need to track
             if(pState->m_eState == XN_SELECTION_SELECTED || pState->m_eState == XN_SELECTION_TRACKING)
             {
                 continue; // we are already tracking so nothing to do...
             }
+            // make the user selected
             UpdateUserSelectionState(curUser, XN_SELECTION_SELECTED, 0);
-            m_pTrackingInitializer->StartTracking(curUser); 
+            XnBool bForce=FALSE;
+            if(pState->m_eState==XN_SELECTION_FAILED)
+            {
+                // if we failed in the past we can't count on the calibration data
+                bForce=TRUE;
+            }
+            // start tracking
+            m_pTrackingInitializer->StartTracking(curUser,bForce); 
         }
         else
         {
+            // if we are here we shouldn't track
             if(pState->m_eState == XN_SELECTION_SELECTED || pState->m_eState == XN_SELECTION_TRACKING)
             {
                 // we need to unselect it...
@@ -132,6 +156,8 @@ void ClosestUserSelector::UpdateFrame()
 
 void ClosestUserSelector::ClearUserList()
 {
+    // go over the internal list and make all values invalid (user 0 which is background and
+    // negative z for the COM which is impossible as it is behind the sensor
     for(XnUInt32 i=0; i<m_nMaxNumUsers; i++)
     {
         m_pUsersList[i].m_userID=0;
@@ -141,11 +167,12 @@ void ClosestUserSelector::ClearUserList()
 
 void ClosestUserSelector::InsertNewUser(XnUserID userID, XnFloat COMZ)
 {
+    // go over all users and figure out where to put the new one
     for(XnUInt32 i=0; i<m_nMaxNumUsers; i++)
     {
         if(m_pUsersList[i].m_COMZ>0 && m_pUsersList[i].m_COMZ<COMZ)
         {
-            continue;
+            continue; // the current user is closer, move along
         }
         // if we are here then this is a place to put the new one.
         if(m_pUsersList[i].m_COMZ>0)
@@ -164,15 +191,16 @@ void ClosestUserSelector::InsertNewUser(XnUserID userID, XnFloat COMZ)
 
 XnBool ClosestUserSelector::TestIfShouldTrack(XnUserID userID)
 {
+    // go over all users and see if it is legal
     for(XnUserID i=0; i<m_nMaxNumUsers; i++)
     {
         if(m_pUsersList[i].m_userID==userID)
         {
-            return TRUE;
+            return TRUE; // we found the user so it should be tracked
         }
         if(m_pUsersList[i].m_COMZ<0)
         {
-            return FALSE;
+            return FALSE; // we got to a negative Z so since everything is ordered this means we didn't find the user
         }
     }
     return FALSE;

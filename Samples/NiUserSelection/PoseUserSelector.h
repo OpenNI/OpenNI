@@ -40,6 +40,7 @@
 /// The pose is define in initialization.
 /// The base class selects all users which perform the pose but inheriting classes can override this
 /// behavior by using the ForgetTracking method.
+/// @ingroup UserSelectionPoseSelectors
 class PoseUserSelector : public UserSelector
 {
 public:
@@ -81,9 +82,9 @@ protected:
 
     /// @brief translate a calibration error to a string
     /// 
-    /// @param The calibration error
+    /// @param eError The calibration error
     /// @return The string version of the error.
-    const XnChar* GetPoseErrorString(XnPoseDetectionStatus error);
+    const XnChar* GetPoseErrorString(XnPoseDetectionStatus eError);
 
 
     TrackingInitializer *m_pTrackingInitializer; ///< @brief The tracking initializer used to start tracking

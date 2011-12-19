@@ -33,7 +33,7 @@ def copy_zip_to_repository(SourcePath,RepositoryPath, BuildDate, PackageVersion,
 
 def open_package_file(path):
     files = open(path).readlines()
-    packageNumber = find_package_number("!define PACKAGE_VER     \"(\S+)\"", files)
+    packageNumber = find_package_number("!define PACKAGE_VER\s+\"(\S+)\"", files)
     return packageNumber
 
 if __name__ == "__main__":

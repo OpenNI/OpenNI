@@ -147,17 +147,17 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 
 	if (riid == IID_ISpecifyPropertyPages)
 	{
-		xnDumpFileWriteString(m_Dump, "Filter query interface to ISpecifyPropertyPages\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to ISpecifyPropertyPages\n");
 		hr = GetInterface(static_cast<ISpecifyPropertyPages*>(this), ppv);
 	}
 	else if (riid == IID_IAMVideoControl)
 	{
-		xnDumpFileWriteString(m_Dump, "Filter query interface to IAMVideoControl\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to IAMVideoControl\n");
 		hr = GetInterface(static_cast<IAMVideoControl*>(this), ppv);
 	}
 	else if (riid == IID_IAMVideoProcAmp)
 	{
-		xnDumpFileWriteString(m_Dump, "Filter query interface to IAMVideoProcAmp\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to IAMVideoProcAmp\n");
 		if (m_pVideoProcAmp == NULL)
 		{
 			m_pVideoProcAmp = new VideoProcAmp(this);
@@ -171,7 +171,7 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 	}
 	else if (riid == IID_IAMCameraControl)
 	{
-		xnDumpFileWriteString(m_Dump, "Filter query interface to IAMCameraControl\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to IAMCameraControl\n");
 		if (m_pCameraControl == NULL)
 		{
 			m_pCameraControl = new CameraControl(this);
@@ -185,14 +185,14 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 	}
 	else if (riid == IID_IAdditionalOpenNIControls)
 	{
-		xnDumpFileWriteString(m_Dump, "Filter query interface to IAdditionalControls\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to IAdditionalControls\n");
 		hr = GetInterface(static_cast<IAdditionalControls*>(this), ppv);
 	}
 	else
 	{
 		OLECHAR strGuid[40];
 		StringFromGUID2(riid, strGuid, 40);
-		xnDumpFileWriteString(m_Dump, "Filter query interface to %S\n", strGuid);
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to %S\n", strGuid);
 
 		hr = CSource::NonDelegatingQueryInterface(riid, ppv);
 	}

@@ -37,13 +37,13 @@
 /// @brief Class to follow exit pose state for each user
 /// 
 /// The goal of this class is to find exit and track exit pose state for each user.
+/// @ingroup UserSelectionSampleFiles
 class ExitPoseDetector
 {
 public:
     /// @brief Constructor
     /// 
-    /// @param argc The number of command line arguments (same as main)
-    /// @param argv The command line arguments (same as main)
+    /// @param userGenNode The user generator node to use
     ExitPoseDetector(xn::UserGenerator userGenNode);
 
     /// @brief Destructor
@@ -61,11 +61,11 @@ public:
     XnUInt64 GetExitPoseTimeStamp(XnUserID nUserId);
 
 private:
-    // defines the UserExitPoseTimes hash which holds the last time an exit pose was found for each 
-    // user. A value of 0 means an illegal time (e.g. because out of pose was found).
+    /// @brief Defines the UserExitPoseTimes hash which holds the last time an exit pose was found 
+    /// for each user. A value of 0 means an illegal time (e.g. because out of pose was found).
     XN_DECLARE_DEFAULT_HASH(XnUserID,XnUInt64,UserExitPoseTimes);
 
-    UserExitPoseTimes m_userExitPoseTimes;
+    UserExitPoseTimes m_userExitPoseTimes; ///< @brief holds the hash which holds the last time and exit pose was found for each user.
 
     /// @brief A handle to unregister pose detection callbacks
     XnCallbackHandle m_hPoseDetectCallback;             
@@ -76,7 +76,7 @@ private:
 
     xn::UserGenerator m_userGenerator; ///< @brief The user generator to use.
 
-    XnBool m_bValid; // holds true if we have a valid value. This only happens after initialization!
+    XnBool m_bValid; ///< @brief holds true if we have a valid value. This only happens after initialization!
 
     /// @brief Callback for pose detection
     static void XN_CALLBACK_TYPE PoseDetectedCallback(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nUserId, void* pCookie);

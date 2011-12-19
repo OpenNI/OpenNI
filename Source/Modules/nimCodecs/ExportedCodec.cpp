@@ -39,7 +39,7 @@ void ExportedCodec::GetDescription(XnProductionNodeDescription* pDescription)
 	pDescription->Version.nBuild = XN_BUILD_VERSION;
 }
 
-XnStatus ExportedCodec::EnumerateProductionTrees(Context& context, NodeInfoList& TreesList, xn::EnumerationErrors* pErrors)
+XnStatus ExportedCodec::EnumerateProductionTrees(Context& /*context*/, NodeInfoList& TreesList, xn::EnumerationErrors* /*pErrors*/)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -52,10 +52,8 @@ XnStatus ExportedCodec::EnumerateProductionTrees(Context& context, NodeInfoList&
 	return (XN_STATUS_OK);
 }
 
-XnStatus ExportedCodec::Create(Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, ModuleProductionNode** ppInstance)
+XnStatus ExportedCodec::Create(Context& /*context*/, const XnChar* /*strInstanceName*/, const XnChar* /*strCreationInfo*/, NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, ModuleProductionNode** ppInstance)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	XnCodec* pCodec = CreateCodec();
 	XN_VALIDATE_ALLOC_PTR(pCodec);
 

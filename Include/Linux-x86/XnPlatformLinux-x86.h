@@ -178,6 +178,12 @@ typedef size_t				XnSizeT;
 /** Indicates a deprecated function */
 #define XN_API_DEPRECATED(msg) __attribute__((warning("This function is deprecated: " msg)))
 
+#define XN_DEPRECATED_WARNING_IDS			
+#define XN_HIDES_PARENT_METHOD_WARNING_ID	
+#define XN_CONDITION_IS_CONST_WARNING_ID
+#define XN_PRAGMA_START_DISABLED_WARNING_SECTION(warnings)
+#define XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
+
 /** Declares a global shared library export function. */ 
 #define XN_API_EXPORT_INIT()
 

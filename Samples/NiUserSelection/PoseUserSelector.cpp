@@ -122,7 +122,7 @@ XnStatus PoseUserSelector::StartTracking(XnUserID nUserId)
     {
         return nRetVal; // we can't continue because we can't update the state!
     }
-    return m_pTrackingInitializer->StartTracking(nUserId);
+    return m_pTrackingInitializer->StartTracking(nUserId,FALSE);
 }
 
 XnStatus PoseUserSelector::AddNewUser(XnUserID nUserId)

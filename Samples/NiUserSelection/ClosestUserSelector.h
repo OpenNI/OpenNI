@@ -36,10 +36,17 @@
 
 /// @brief Closest users based selector
 /// 
-/// This user selector selects user and tracks that user. If a new user becomes closer, it stops tracking the old one and tracks the new, closer user.
+/// This user selector selects user and tracks that user. If a new user becomes closer, it stops 
+/// tracking the old one and tracks the new, closer user.
+/// @ingroup UserSelectionClosestSelectors
 class ClosestUserSelector : public UserSelector
 {
 public:
+    /// @brief Constructor
+    /// 
+    /// @param pUserGenerator The user generator to use
+    /// @param pTrackingInitializer The tracking initializer to use
+    /// @param nMaxNumUsers The maximum number of tracked users
     ClosestUserSelector(xn::UserGenerator* pUserGenerator, TrackingInitializer* pTrackingInitializer, XnUInt32 nMaxNumUsers);
     ~ClosestUserSelector();
 
@@ -51,24 +58,41 @@ protected:
     virtual XnStatus UpdateUserSelectionState(XnUserID nUserId, XnSelectionState eState , XnInt64 subState);
 
 
-    TrackingInitializer* m_pTrackingInitializer; ///< The tracking initializer used to start tracking
-    XnUInt32 m_nMaxNumUsers;
+    TrackingInitializer* m_pTrackingInitializer; ///< @brief The tracking initializer used to start tracking
+    XnUInt32 m_nMaxNumUsers; ///< @brief The maximum number of allowed users to track.
+
+    /// @brief Internal struct to hold the user information
+    /// 
+    /// This class is used to hold the Z of the center of mass for each user
+    /// @ingroup UserSelectionClosestSelectors
     struct UserInfo
     {
-        XnUserID m_userID;
-        XnFloat m_COMZ;
+        XnUserID m_userID;  ///< @brief User ID of the user
+        XnFloat m_COMZ;     ///< @brief Z value of the center of mass.
     };
 
-    UserInfo* m_pUsersList;
+    UserInfo* m_pUsersList; ///< An array holding the user info for all users (to order them).
 
+    /// @brief Internal method to clear the user list information.
     void ClearUserList();
+    /// @brief Internal method to add a user to the list of users
+    /// 
+    /// @param userID the user ID of the user to add
+    /// @param COMZ the z value of the center of mass of the user
     void InsertNewUser(XnUserID userID, XnFloat COMZ);
+    /// @brief Internal method to test if the user is close enough to be counted for tracking.
+    /// 
+    /// @param userID The user to test.
+    /// @return True if the user should be tracked, false otherwise.
     XnBool TestIfShouldTrack(XnUserID userID);
 
+    /// @brief An extending class for the user selection state which holds the center of mass as an
+    /// additional value.
+    /// @ingroup UserSelectionClosestSelectors
     class UserStatusWithCom : public UserSelectionState
     {
     public:
-        XnPoint3D m_COM;
+        XnPoint3D m_COM; ///< The user's center of mass when it failed to calibrate.
     };
 
 };

@@ -127,7 +127,7 @@ XnUInt32 XnJpegCodec::GetOverheadSize() const
 	return 0;
 }
 
-XnStatus XnJpegCodec::CompressImpl(const XnUChar* pData, XnUInt32 nDataSize, XnUChar* pCompressedData, XnUInt32* pnCompressedDataSize) const
+XnStatus XnJpegCodec::CompressImpl(const XnUChar* pData, XnUInt32 /*nDataSize*/, XnUChar* pCompressedData, XnUInt32* pnCompressedDataSize) const
 {
 	if (!m_bValid)
 	{
@@ -204,7 +204,7 @@ XnStatus XnJpegCodec::OnNodeConfigurationChanged()
 	return (XN_STATUS_OK);
 }
 
-void XN_CALLBACK_TYPE XnJpegCodec::NodeConfigurationChangedCallback( ProductionNode& node, void* pCookie )
+void XN_CALLBACK_TYPE XnJpegCodec::NodeConfigurationChangedCallback(ProductionNode& /*node*/, void* pCookie)
 {
 	XnJpegCodec* pThis = (XnJpegCodec*)pCookie;
 	pThis->OnNodeConfigurationChanged();

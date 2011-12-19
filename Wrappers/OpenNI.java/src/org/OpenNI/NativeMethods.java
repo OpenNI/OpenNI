@@ -96,7 +96,7 @@ class NativeMethods
 	//static native void xnNodeInfoFree(long pNodeInfo);
 	static native int xnNodeInfoSetInstanceName(long pNodeInfo, String strInstanceName);
 	static native ProductionNodeDescription xnNodeInfoGetDescription(long pNodeInfo);
-	//static native int xnNodeInfoGetTreeStringRepresentation(long pNodeInfo, OutArg<String> result);
+	static native int xnNodeInfoGetTreeStringRepresentation(long pNodeInfo, OutArg<String> result);
 	static native String xnNodeInfoGetInstanceName(long pNodeInfo);
 	static native String xnNodeInfoGetCreationInfo(long pNodeInfo);
 	static native long xnNodeInfoGetNeededNodes(long pNodeInfo);
@@ -368,6 +368,7 @@ class NativeMethods
 	static native int xnGetAllAvailablePoses(long hInstance, OutArg<String[]> pstrPoses);
 	static native int xnStartPoseDetection(long hInstance, String strPose, int user);
 	static native int xnStopPoseDetection(long hInstance, int user);
+	static native int xnStopSinglePoseDetection(long hInstance, int user, String strPose);
 	static native int xnRegisterToPoseDetected(long hInstance, Object obj, String cb, OutArg<Long> phCallback);
 	static native void xnUnregisterFromPoseDetected(long hInstance, long hCallback);
 	static native int xnRegisterToOutOfPose(long hInstance, Object obj, String cb, OutArg<Long> phCallback);

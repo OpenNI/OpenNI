@@ -38,25 +38,59 @@
 /// 
 /// The goal of this class is to start performing the actual tracking of a user. It returns the 
 /// results to the UserSelector which called it.
+/// @ingroup UserSelectionInitializers
 class DefaultTrackingInitializer : public TrackingInitializer
 {
 public:
-    virtual XnStatus StartTracking(XnUserID nUserId);
+    virtual XnStatus StartTracking(XnUserID nUserId, XnBool bForce);
     virtual XnStatus AbortTracking(XnUserID nUserId);
 
-    DefaultTrackingInitializer(xn::UserGenerator *pUserGeneratorr);
+    /// @brief Constructor
+    /// 
+    /// @param pUserGenerator The user generator to use
+    DefaultTrackingInitializer(xn::UserGenerator *pUserGenerator);
     virtual ~DefaultTrackingInitializer();
 protected:
+    /// @brief Method called by the calibration start callback
+    /// 
+    /// @param nUserId The user the calibration started on
     virtual XnStatus CalibrationStart(XnUserID nUserId);
+
+    /// @brief Method called by the calibration complete callback
+    /// 
+    /// @param nUserId The user the calibration finished on
+    /// @param eStatus The status (success/fail and why)
     virtual XnStatus CalibrationComplete(XnUserID nUserId,XnCalibrationStatus eStatus);
+    /// @brief Method called by the calibration in progress callback
+    /// 
+    /// @param nUserId The user the calibration progress is on
+    /// @param eStatus The status (success/fail and why)
     virtual XnStatus CalibrationInProgress(XnUserID nUserId,XnCalibrationStatus eStatus);
 
-    XnCallbackHandle m_hInProgressCallback;
-    XnCallbackHandle m_hCalibrationStartCallback;
-    XnCallbackHandle m_hCalibrationCompleteCallback;
+    XnCallbackHandle m_hInProgressCallback; ///< @brief Callback handle to unregister the calibration in progress callback
+    XnCallbackHandle m_hCalibrationStartCallback; ///< @brief Callback handle to unregister the calibration start callback
+    XnCallbackHandle m_hCalibrationCompleteCallback; ///< @brief Callback handle to unregister the calibration complete callback
 
+    /// @brief Callback method for calibration start events
+    ///
+    /// @param capability The skeleton capability which raised the event.
+    /// @param nUserId The user the event relates to
+    /// @param pCookie A user supplied cookie.
     static void XN_CALLBACK_TYPE CalibrationStartCallback(xn::SkeletonCapability& capability, XnUserID nUserId, void* pCookie);
+
+    /// @brief Callback method for calibration complete events
+    ///
+    /// @param capability The skeleton capability which raised the event.
+    /// @param nUserId The user the event relates to
+    /// @param eStatus The status (success/fail and why)
+    /// @param pCookie A user supplied cookie.
     static void XN_CALLBACK_TYPE CalibrationCompleteCallback(xn::SkeletonCapability& capability, XnUserID nUserId, XnCalibrationStatus eStatus, void* pCookie);
+    /// @brief Callback method for calibration in progress events
+    ///
+    /// @param capability The skeleton capability which raised the event.
+    /// @param nUserId The user the event relates to
+    /// @param eStatus The status (success/fail and why)
+    /// @param pCookie A user supplied cookie.
     static void XN_CALLBACK_TYPE CalibrationInProgressCallback(xn::SkeletonCapability& capability, XnUserID nUserId, XnCalibrationStatus eStatus, void* pCookie);
 
 };

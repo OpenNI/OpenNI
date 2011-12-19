@@ -201,26 +201,42 @@ class RedistOpenNI(redist_base.RedistBase):
                 file.seek(0)
 
                 olds = s
-                s = re.sub(r"..\\..\\..\\..\\..\\",r"..\\..\\",s)
-                s = re.sub(r"../../../../../",r"../../",s)
+                # Fix include paths
+                s = re.sub(r"../../../../../Include",r"$(OPEN_NI_INCLUDE)",s)
+                s = re.sub(r"..\\..\\..\\..\\..\\Include",r"$(OPEN_NI_INCLUDE)",s)
+                
+                sample_name = os.path.basename(dirname)
+                s = re.sub(r"..\\..\\..\\..\\..\\Samples\\" + sample_name, r".", s)
+                s = re.sub(r"../../../../../Samples/" + sample_name, r".", s)
+                
+                # fix path to "Data" folder
                 s = re.sub(r"..\\\\..\\\\..\\\\..\\\\Data\\",r"..\\\\..\\\\..\\\\Data\\",s)
                 s = re.sub(r"..\\..\\..\\..\\Data\\",r"..\\..\\..\\Data\\",s)
                 s = re.sub("../../../../Data/",r"../../../Data/",s)
+
+                # fix path to res files
                 s = re.sub(r"..\\..\\Res\\",r"..\\Res\\",s)
-                s = re.sub(r"..\\..\\Samples\\[\w.]+\\", r"", s)
+
+                # fix path to java build script
                 s = re.sub(r"..\\..\\BuildJava.py", r"..\\Build\\BuildJava.py", s)
+                
+                # fix bin and lib path for 32 bit configuration
+                s = re.sub(r"../../../Bin/",r"../Bin/",s)
+                s = re.sub(r"..\\..\\..\\Bin\\",r"../Bin/",s)
+                s = re.sub(r"../../../Lib/\$\(ConfigurationName\)",r"$(OPEN_NI_LIB)",s)
+                s = re.sub(r"..\\..\\..\\Lib\\\$\(ConfigurationName\)",r"$(OPEN_NI_LIB)",s)
+                
+                # fix bin and lib path for 64 bit configuration
+                s = re.sub(r"../../../Bin64/",r"../Bin64/",s)
+                s = re.sub(r"..\\..\\..\\Bin64\\",r"../Bin64/",s)
+                s = re.sub(r"../../../Lib64/\$\(ConfigurationName\)",r"$(OPEN_NI_LIB64)",s)
+                s = re.sub(r"..\\..\\..\\Lib64\\\$\(ConfigurationName\)",r"$(OPEN_NI_LIB64)",s)
 
-                if self.vc_build_bits=="32":
-                    s = re.sub(r"../../../Bin/",r"../Bin/",s)
-                    s = re.sub(r"..\\..\\..\\Bin\\",r"../Bin/",s)
-                    s = re.sub(r"../../../Lib/\$\(ConfigurationName\)",r"../../Lib/",s)
-                    s = re.sub(r"..\\..\\..\\Lib\\\$\(ConfigurationName\)",r"../../Lib/",s)
-                else:
-                    s = re.sub(r"../../../Bin64/",r"../Bin64/",s)
-                    s = re.sub(r"..\\..\\..\\Bin64\\",r"../Bin64/",s)
-                    s = re.sub(r"../../../Lib64/\$\(ConfigurationName\)",r"../../Lib64/",s)
-                    s = re.sub(r"..\\..\\..\\Lib64\\\$\(ConfigurationName\)",r";../../Lib64/",s)
-
+                # fix general path problems
+                s = re.sub(r"..\\..\\..\\..\\..\\",r"..\\..\\",s)
+                s = re.sub(r"../../../../../",r"../../",s)
+                
+                # remove source control integraion (if exists)
                 s = re.sub(r".*SccProjectName=\".*", r"", s);
                 s = re.sub(r".*SSccAuxPath=\".*", r"", s);
                 s = re.sub(r".*SccLocalPath=\".*", r"", s);
@@ -228,7 +244,7 @@ class RedistOpenNI(redist_base.RedistBase):
                 # fix csproj link problem
                 if file_ext == "csproj":
                     sample_name = os.path.basename(dirname)
-                    link_re = r"<Compile Include=\"(?P<file>.*)\">\n"
+                    link_re = r"<Compile Include=\"\.\\(?P<file>.*)\">\n"
                     link_re += r"\s*<Link>(?P=file)</Link>"
                     compiled_re = re.compile(link_re, re.MULTILINE)
                     s = compiled_re.sub("<Compile Include=\"\g<file>\">", s)
@@ -252,6 +268,12 @@ class RedistOpenNI(redist_base.RedistBase):
         self.logger.info("PrimeSense OpenNI Redist Started")
         self.build_project()
         self.fixing_files()
+        
+        # set OpenNI environment variables to point to the redist folder (so that samples can compile correctly)
+        REDIST_DIR = os.path.join(self.WORK_DIR,"Platform","Win32","Redist")
+        os.environ['OPEN_NI_INCLUDE'] = REDIST_DIR + "\\Include"
+        os.environ['OPEN_NI_LIB'] = REDIST_DIR + "\\Lib"
+        os.environ['OPEN_NI_LIB64'] = REDIST_DIR + "\\Lib64"
         self.build_samples()
         self.update_installer_clr_policy()
         [dev,redist] = self.make_installer(self.SCRIPT_DIR)

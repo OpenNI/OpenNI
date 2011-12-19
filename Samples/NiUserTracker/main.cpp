@@ -138,6 +138,11 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability
 	{
 		// Calibration failed
 		printf("%d Calibration failed for user %d\n", epochTime, nId);
+        if(eStatus==XN_CALIBRATION_STATUS_MANUAL_ABORT)
+        {
+            printf("Manual abort occured, stop attempting to calibrate!");
+            return;
+        }
 		if (g_bNeedPose)
 		{
 			g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_strPose, nId);
@@ -283,7 +288,7 @@ void glInit (int * pargc, char ** argv)
 	glutInit(pargc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
-	glutCreateWindow ("Prime Sense User Tracker Viewer");
+	glutCreateWindow ("User Tracker Viewer");
 	//glutFullScreen();
 	glutSetCursor(GLUT_CURSOR_NONE);
 

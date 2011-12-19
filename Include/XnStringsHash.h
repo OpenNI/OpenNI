@@ -109,16 +109,8 @@ public:
 * Declares a hash table from strings to @a ValueType that's named @a ClassName and uses default translator
 * to translate values.
 */
-#if XN_PLATFORM == XN_PLATFORM_WIN32
-#define XN_DECLARE_STRINGS_HASH(ValueType, ClassName)				\
-	__pragma(warning(push)) \
-	__pragma(warning(disable: 4127)) \
-	XN_DECLARE_STRINGS_HASH_DECL(, ValueType, ClassName) \
-	__pragma(warning(pop))
-#else
-#define XN_DECLARE_STRINGS_HASH(ValueType, ClassName)				\
+#define XN_DECLARE_STRINGS_HASH(ValueType, ClassName)		\
 	XN_DECLARE_STRINGS_HASH_DECL(, ValueType, ClassName)
-#endif
 
 XN_DECLARE_STRINGS_HASH(XnValue, XnStringsHash)
 

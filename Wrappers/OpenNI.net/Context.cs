@@ -285,7 +285,11 @@ namespace OpenNI
 		{
 			IntPtr nodeHandle;
 			int status = SafeNativeMethods.xnFindExistingRefNodeByType(this.InternalObject, type, out nodeHandle);
-			WrapperUtils.ThrowOnError(status);
+            if (status != 0)
+            {
+                return null;
+            }
+
 			ProductionNode node = CreateProductionNodeObject(nodeHandle, type);
 
 			// release the handle

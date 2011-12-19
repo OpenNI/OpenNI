@@ -483,7 +483,7 @@ typedef struct XnFieldOfView
 {
 	/** Horizontal Field Of View, in radians. */
 	XnDouble fHFOV;
-	/** Horizontal Field Of View, in radians. */
+	/** Vertical Field Of View, in radians. */
 	XnDouble fVFOV;
 } XnFieldOfView;
 

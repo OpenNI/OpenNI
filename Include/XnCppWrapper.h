@@ -1206,7 +1206,8 @@ namespace xn
 
 		/** @copybrief xnNodeInfoGetCreationInfo
 		 * For full details and usage, see @ref xnNodeInfoGetCreationInfo
-		 */		inline const XnChar* GetCreationInfo() const
+		 */		
+		inline const XnChar* GetCreationInfo() const
 		{
 			return xnNodeInfoGetCreationInfo(m_pInfo);
 		}
@@ -1231,6 +1232,14 @@ namespace xn
 		inline const void* GetAdditionalData() const
 		{
 			return xnNodeInfoGetAdditionalData(m_pInfo);
+		}
+
+		/** @copybrief xnNodeInfoGetTreeStringRepresentation
+		 * For full details and usage, see @ref xnNodeInfoGetTreeStringRepresentation
+		 */
+		inline XnStatus GetTreeStringRepresentation(XnChar* csResultBuffer, XnUInt32 nBufferSize) const
+		{
+			return xnNodeInfoGetTreeStringRepresentation(m_pInfo, csResultBuffer, nBufferSize);
 		}
 
 	private:
@@ -4601,6 +4610,14 @@ namespace xn
 		inline XnStatus StopPoseDetection(XnUserID user)
 		{
 			return xnStopPoseDetection(GetHandle(), user);
+		}
+
+		/** @copybrief xnStopSinglePoseDetection
+		 * For full details and usage, see @ref xnStopSinglePoseDetection
+		 */
+		inline XnStatus StopSinglePoseDetection(XnUserID user, const XnChar* strPose)
+		{
+			return xnStopSinglePoseDetection(GetHandle(), user, strPose);
 		}
 
 		/** @copybrief xnRegisterToPoseCallbacks

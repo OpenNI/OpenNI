@@ -249,7 +249,7 @@ XnStatus openDeviceFromXmlWithChoice(const char* csXmlFile, EnumerationErrors& e
 	printf("Choose device to open (1): ");
 
 	int chosen = 1;
-	scanf("%d", &chosen);
+	int nRetval = scanf("%d", &chosen);
 
 	// create it
 	NodeInfoList::Iterator it = list.Begin();

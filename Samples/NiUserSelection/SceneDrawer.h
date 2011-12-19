@@ -47,18 +47,22 @@
 /// @note This class can be ignored by anyone who wishes to learn only the OpenNI elements.
 /// 
 /// @note This class is implemented based on the singleton pattern i.e. we can only have one drawer!
+/// @ingroup UserSelectionGraphics
 class SceneDrawer
 {
 public:
     /// @brief Start running the scene
     /// 
     /// This method starts running the scene. It will not return until the program exits!
-    /// @param m_pUserTrackerObj A pointer to the user tracker object. This is where the scene drawer
+    /// @param pUserTrackerObj A pointer to the user tracker object. This is where the scene drawer
     /// takes the information to draw and provides feedback from keyboard. @note The CleanUp method
     /// will be called on the user tracker when the program exits from inside the DrawScene method!.
-    /// @param argc Number of command line arguments (same as main()).
-    /// @param argv The command line arguments (same as main()).
-    void DrawScene(UserTracker *pUserTrackerObj,int argc, char **argv,SampleManager *pSample);
+    /// @param argc Number of command line arguments (same as @ref main()).
+    /// @param argv The command line arguments (same as @ref main()).
+    /// @param pSample The sample manager to use
+    /// @param bShowLowConfidence When this is true, low confidence limbs will be shown as dotted or 
+    ///        dashed lines instead of disappearing
+    void DrawScene(UserTracker *pUserTrackerObj,int argc, char **argv,SampleManager *pSample, XnBool bShowLowConfidence);
 
     /// @brief gets the singleton instance.
     static SceneDrawer *GetInstance();
@@ -121,9 +125,9 @@ private:
 
     /// @brief Internal method to perform initialization for OpenGL when using glut (rather than GLES)
     /// 
-    /// @param argc Number of command line arguments (same as main()).
-    /// @param argv The command line arguments (same as main()).
-    void glInit (int * pargc, char ** argv);
+    /// @param pargc Number of command line arguments (same as @ref main()).
+    /// @param pargv The command line arguments (same as @ref main()).
+    void glInit (int * pargc, char ** pargv);
 #endif // USE_GLES
 
 
@@ -143,8 +147,10 @@ private:
     unsigned char* pDepthTexBuf;
     int texWidth, texHeight;
     GLfloat texcoords[8];
-    XnPoint3D* limbsPos;
     /// @}
+    XnPoint3D* pLimbsPosArr; ///< @brief used to store the limbs information
+    XnFloat * pConfidenceArr; ///< @brief used to store the confidence of the limbs information
+
 
     /// @name PrintMemebers
     /// members used for deciding what to draw
@@ -164,6 +170,10 @@ private:
     XnBool g_bPrintState;
 
     XnBool g_bPause; ///< @brief True when pausing (i.e. UserTracker not updated).
+
+    /// @brief When this is true, low confidence limbs will be shown as dotted or 
+    ///        dashed lines instead of disappearing
+    XnBool m_bShowLowConfidence; 
 
     SampleManager *m_pSample;
     /// @}

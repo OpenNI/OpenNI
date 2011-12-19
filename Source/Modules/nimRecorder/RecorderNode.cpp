@@ -284,7 +284,7 @@ XnStatus RecorderNode::OnNodeStateReady(const XnChar* strNodeName)
 	return XN_STATUS_OK;
 }
 
-XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void* pData, XnUInt32 nSize)
+XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 /*nFrame*/, const void* pData, XnUInt32 nSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -525,7 +525,7 @@ XnStatus RecorderNode::UpdateNodeSeekInfo(const XnChar* strNodeName, const Recor
 		{
 			*pPayload = *it;
 		}
-		XN_ASSERT((recordedNodeInfo.nMaxFrameNum+1) == (pPayload - (DataIndexEntry*)m_pPayloadData));
+		XN_ASSERT((recordedNodeInfo.nMaxFrameNum+1) == XnUInt32(pPayload - (DataIndexEntry*)m_pPayloadData));
 
 		nRetVal = WriteToStream(strNodeName, m_pPayloadData, (XnUInt8*)pPayload - m_pPayloadData);
 		if (nRetVal != XN_STATUS_OK)

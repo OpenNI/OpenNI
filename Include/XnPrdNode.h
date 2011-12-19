@@ -2041,6 +2041,14 @@ XN_C_API XnStatus XN_C_DECL xnStartPoseDetection(XnNodeHandle hInstance,const  X
 */
 XN_C_API XnStatus XN_C_DECL xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user);
 /**
+* @brief Stop detection of a specific pose for a specific user
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	user		[in]		Id of user
+* @param	strPose		[in]		Name of the pose
+*/
+XN_C_API XnStatus XN_C_DECL xnStopSinglePoseDetection(XnNodeHandle hInstance, XnUserID user, const XnChar* strPose);
+/**
 * @brief Register to callbacks for pose events
 *
 * @param	hInstance	[in]		A handle to the instance

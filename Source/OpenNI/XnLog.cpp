@@ -325,6 +325,14 @@ XN_C_API void xnLogWriteBanner(const XnLogWriter* pWriter)
 {
 	XnBufferedLogEntry entry;
 
+	// write system time
+	time_t currtime;
+	time(&currtime);
+	XnChar strTime[200];
+	strftime(strTime, sizeof(strTime) - 1, "%Y-%m-%d %H:%M:%S", localtime(&currtime)); 
+	xnLogCreateEntry(&entry, XN_MASK_LOG, XN_LOG_INFO, __FILE__, __LINE__, "New log started on %s", strTime);
+	pWriter->WriteEntry(&entry, pWriter->pCookie);
+
 	// write version
 	xnLogCreateEntry(&entry, XN_MASK_LOG, XN_LOG_INFO, __FILE__, __LINE__, "OpenNI version is %s", XN_VERSION_STRING);
 	pWriter->WriteEntry(&entry, pWriter->pCookie);
@@ -395,7 +403,8 @@ XN_C_API XnStatus xnLogInitFromINIFile(const XnChar* cpINIFileName, const XnChar
 	xnLogReadMasksFromINI(cpINIFileName, cpSectionName, "LogMasks", xnLogBCSetMaskState);
 	xnLogReadMasksFromINI(cpINIFileName, cpSectionName, "DumpMasks", xnDumpSetMaskState);
 
-	LogData::GetInstance().Reset();
+	LogData::GetInstance().SetMinSeverityGlobally(XN_LOG_SEVERITY_NONE);
+
 	nRetVal = xnOSReadIntFromINI(cpINIFileName, cpSectionName, "LogLevel", &nTemp);
 	if (nRetVal == XN_STATUS_OK)
 	{

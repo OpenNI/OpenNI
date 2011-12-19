@@ -102,8 +102,6 @@ int main(int argc, char* argv[])
 	nRetVal = recorder.SetDestination(XN_RECORD_MEDIUM_FILE, strOutputFile);
 	CHECK_RC(nRetVal, "Set recorder destination file");
 
-	ProductionNode seekNode;
-
 	// add all nodes to recorder
 	for (NodeInfoList::Iterator it = nodes.Begin(); it != nodes.End(); ++it)
 	{
@@ -138,7 +136,7 @@ int main(int argc, char* argv[])
 	nRetVal = player.SetRepeat(FALSE);
 	XN_IS_STATUS_OK(nRetVal);
 
-	int nFrame = 0;
+	XnUInt32 nFrame = 0;
 
 	while ((nRetVal = context.WaitAnyUpdateAll()) != XN_STATUS_EOF)
 	{

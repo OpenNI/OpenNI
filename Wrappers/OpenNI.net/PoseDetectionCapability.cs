@@ -129,6 +129,19 @@ namespace OpenNI
         private PoseDetectionStatus status;
     }
 
+    /// Utility structure to provide information about the state and status of a pose
+    public struct PoseDetectionStateStatus
+    {
+        public Int64 m_poseTime; ///< @brief The time stamp in which the user entered into the pose (0 if not in pose). 
+
+        /// @brief The status of the user's pose.
+        /// 
+        /// The progress error for getting into pose (PoseDetectionStatus, the same as received from
+        /// the in progress callback. See @ref xnRegisterToPoseDetectionInProgress).
+        public PoseDetectionStatus m_eStatus;
+        public PoseDetectionState m_eState; ///< @brief The state of the user pose (i.e. in pose, out of pose).
+    }
+
     public class PoseDetectionCapability : Capability
     {
 		internal PoseDetectionCapability(ProductionNode node)
@@ -188,10 +201,14 @@ namespace OpenNI
             return SafeNativeMethods.xnIsPoseSupported(this.InternalObject,pose);
         }
 
-        public void GetPoseStatus(UserID userID, string poseName, out UInt64 poseTime, out PoseDetectionStatus eStatus, out PoseDetectionState eState)
+        public PoseDetectionStateStatus GetPoseStatus(UserID userID, string poseName)
         {
-            int status = SafeNativeMethods.xnGetPoseStatus(this.InternalObject,userID, poseName, out poseTime,out eStatus,out eState);
+            UInt64 outPoseTime;
+            PoseDetectionStateStatus poseStatus = new PoseDetectionStateStatus();
+            int status = SafeNativeMethods.xnGetPoseStatus(this.InternalObject,userID, poseName, out outPoseTime,out poseStatus.m_eStatus,out poseStatus.m_eState);
+            poseStatus.m_poseTime = (Int64)outPoseTime;
             WrapperUtils.ThrowOnError(status);
+            return poseStatus;
         }
 		public void StartPoseDetection(string pose, UserID user)
         {
@@ -202,6 +219,11 @@ namespace OpenNI
         {
 			int status = SafeNativeMethods.xnStopPoseDetection(this.InternalObject, user); 
 			WrapperUtils.ThrowOnError(status);
+        }
+        public void StopSinglePoseDetection(UserID user, string pose)
+        {
+            int status = SafeNativeMethods.xnStopSinglePoseDetection(this.InternalObject, user, pose);
+            WrapperUtils.ThrowOnError(status);
         }
 
 

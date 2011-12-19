@@ -34,6 +34,7 @@
 #include "../XnUSBInternal.h"
 #include <XnOS.h>
 #include <XnLog.h>
+#include <XnOSCpp.h>
 
 //---------------------------------------------------------------------------
 // Defines
@@ -61,7 +62,9 @@ struct xnUSBInitData
 	libusb_context* pContext;
 	XN_THREAD_HANDLE hThread;
 	XnBool bShouldThreadRun;
-} g_InitData = {NULL, NULL, FALSE};
+	XnUInt32 nThreads;
+	XN_CRITICAL_SECTION_HANDLE hLock;
+} g_InitData = {NULL, NULL, FALSE, 0, NULL};
 
 XnStatus xnUSBPlatformSpecificShutdown();
 
@@ -94,6 +97,9 @@ XnStatus xnUSBPlatformSpecificInit()
 	{
 		return (XN_STATUS_USB_INIT_FAILED);
 	}
+
+	XnStatus nRetVal = xnOSCreateCriticalSection(&g_InitData.hLock);
+	XN_IS_STATUS_OK(nRetVal);
 	
 	//libusb_set_debug(g_InitData.pContext, 3);
 	
@@ -101,9 +107,13 @@ XnStatus xnUSBPlatformSpecificInit()
 	return (XN_STATUS_OK);	
 }
 
-XnStatus xnUSBStartReading()
+XnStatus xnUSBAsynchThreadAddRef()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
+
+	XnAutoCSLocker locker(g_InitData.hLock);
+
+	++g_InitData.nThreads;
 	
 	if (g_InitData.hThread == NULL)
 	{
@@ -133,17 +143,15 @@ XnStatus xnUSBStartReading()
 	return (XN_STATUS_OK);	
 }
 
-XnStatus xnUSBPlatformSpecificShutdown()
+void xnUSBAsynchThreadStop()
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	if (g_InitData.hThread != NULL)
 	{
 		// mark for thread to exit
 		g_InitData.bShouldThreadRun = FALSE;
 		
 		// wait for it to exit
-		nRetVal = xnOSWaitForThreadExit(g_InitData.hThread, XN_USB_HANDLE_EVENTS_TIMEOUT);
+		XnStatus nRetVal = xnOSWaitForThreadExit(g_InitData.hThread, XN_USB_HANDLE_EVENTS_TIMEOUT);
 		if (nRetVal != XN_STATUS_OK)
 		{
 			xnOSTerminateThread(&g_InitData.hThread);
@@ -154,6 +162,31 @@ XnStatus xnUSBPlatformSpecificShutdown()
 		}
 		
 		g_InitData.hThread = NULL;
+	}
+}
+
+void xnUSBAsynchThreadRelease()
+{
+	XnAutoCSLocker locker(g_InitData.hLock);
+
+	--g_InitData.nThreads;
+
+	if (g_InitData.nThreads == 0)
+	{
+		xnUSBAsynchThreadStop();
+	}
+}
+
+XnStatus xnUSBPlatformSpecificShutdown()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	xnUSBAsynchThreadStop();
+
+	if (g_InitData.hLock != NULL)
+	{
+		xnOSCloseCriticalSection(&g_InitData.hLock);
+		g_InitData.hLock = NULL;
 	}
 	
 	if (g_InitData.pContext != NULL)
@@ -950,6 +983,8 @@ void xnCleanupThreadData(XnUSBReadThreadData* pThreadData)
 	}
 	
 	XN_ALIGNED_FREE_AND_NULL(pThreadData->pBuffersInfo);
+
+	xnUSBAsynchThreadRelease();
 }
 
 /** Checks if any transfer of the thread is queued. */
@@ -1131,7 +1166,7 @@ XN_C_API XnStatus xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBuff
 	XN_VALIDATE_EP_HANDLE(pEPHandle);
 	XN_VALIDATE_INPUT_PTR(pCallbackFunction);
 	
-	nRetVal = xnUSBStartReading();
+	nRetVal = xnUSBAsynchThreadAddRef();
 	XN_IS_STATUS_OK(nRetVal);
 	
 	xnLogVerbose(XN_MASK_USB, "Starting a USB read thread...");
@@ -1140,6 +1175,7 @@ XN_C_API XnStatus xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBuff
 
 	if (pThreadData->bIsRunning == TRUE)
 	{
+		xnUSBAsynchThreadRelease();
 		return (XN_STATUS_USB_READTHREAD_ALREADY_INIT);
 	}
 
@@ -1151,7 +1187,12 @@ XN_C_API XnStatus xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBuff
 	pThreadData->nTimeOut = nTimeOut;
 
 	// allocate buffers
-	XN_VALIDATE_ALIGNED_CALLOC(pThreadData->pBuffersInfo, XnUSBBuffersInfo, nNumBuffers, XN_DEFAULT_MEM_ALIGN);
+	pThreadData->pBuffersInfo = (XnUSBBuffersInfo*)xnOSCallocAligned(nNumBuffers, sizeof(XnUSBBuffersInfo), XN_DEFAULT_MEM_ALIGN);
+	if (pThreadData->pBuffersInfo == NULL)
+	{
+		xnCleanupThreadData(pThreadData);
+		return XN_STATUS_ALLOC_FAILED;
+	}
 	
 	int nNumIsoPackets = 0;
 	int nMaxPacketSize = 0;

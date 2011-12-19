@@ -166,50 +166,47 @@ typedef enum {
 /** Creates a new type object and validates that allocation succeeded. */
 #if XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_WIN32_VAARGS_STYLE
 	#define XN_VALIDATE_NEW(ptr, type, ...)						\
-		__pragma(warning (push))								\
-		__pragma(warning (disable: 4127))						\
-		do {													\
+		{														\
 			(ptr) = XN_NEW(type, __VA_ARGS__);					\
 			if ((ptr) == NULL)									\
 			{													\
 				return (XN_STATUS_ALLOC_FAILED);				\
 			}													\
-		} while (0)												\
-		__pragma(warning (pop))
+		}
 
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_GCC_VAARGS_STYLE
 	#define XN_VALIDATE_NEW(ptr, type, ...)						\
-		do {													\
+		{														\
 			(ptr) = XN_NEW(type, ##__VA_ARGS__);				\
 			if ((ptr) == NULL)									\
 			{													\
 				return (XN_STATUS_ALLOC_FAILED);				\
 			}													\
-		} while (0)
+		} 
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_ARC_VAARGS_STYLE
 	#define XN_VALIDATE_NEW(ptr, type...)						\
-		do {													\
+		{														\
 			(ptr) = XN_NEW(type);								\
 			if ((ptr) == NULL)									\
 			{													\
 				return (XN_STATUS_ALLOC_FAILED);				\
 			}													\
-		} while (0)
+		} 
 #else
 	#define XN_VALIDATE_NEW(ptr, type)							\
-		do {													\
+		{														\
 			(ptr) = XN_NEW(type);								\
 			if ((ptr) == NULL)									\
 			{													\
 				return (XN_STATUS_ALLOC_FAILED);				\
 			}													\
-		} while (0)
+		}
 #endif
 
 /** Creates a new type object, validates that allocation succeeded, and initializes the object (type must have an Init function). */
 #if XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_WIN32_VAARGS_STYLE
 	#define XN_VALIDATE_NEW_AND_INIT(ptr, type, ...)			\
-		do {													\
+		{														\
 			XN_VALIDATE_NEW(ptr, type, __VA_ARGS__);			\
 			XnStatus rc = (ptr)->Init();						\
 			if (rc != XN_STATUS_OK)								\
@@ -217,10 +214,10 @@ typedef enum {
 				XN_DELETE(ptr);									\
 				return (rc);									\
 			}													\
-		} while (0)
+		} 
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_GCC_VAARGS_STYLE
 	#define XN_VALIDATE_NEW_AND_INIT(ptr, type, ...)			\
-		do {													\
+		{														\
 			XN_VALIDATE_NEW(ptr, type, ##__VA_ARGS__);			\
 			XnStatus rc = (ptr)->Init();						\
 			if (rc != XN_STATUS_OK)								\
@@ -228,10 +225,10 @@ typedef enum {
 				XN_DELETE(ptr);									\
 				return (rc);									\
 			}													\
-		} while (0)
+		} 
 #elif XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_ARC_VAARGS_STYLE
 	#define XN_VALIDATE_NEW_AND_INIT(ptr, type...)				\
-		do {													\
+		{														\
 			XN_VALIDATE_NEW(ptr, type);							\
 			XnStatus rc = (ptr)->Init();						\
 			if (rc != XN_STATUS_OK)								\
@@ -239,10 +236,10 @@ typedef enum {
 				XN_DELETE(ptr);									\
 				return (rc);									\
 			}													\
-		} while (0)
+		} 
 #else
 	#define XN_VALIDATE_NEW_AND_INIT(ptr, type)					\
-		do {													\
+		{														\
 			XN_VALIDATE_NEW(ptr, type);							\
 			XnStatus rc = (ptr)->Init();						\
 			if (rc != XN_STATUS_OK)								\
@@ -250,7 +247,7 @@ typedef enum {
 				XN_DELETE(ptr);									\
 				return (rc);									\
 			}													\
-		} while (0)
+		} 
 #endif
 
 // Strings
@@ -392,7 +389,7 @@ XN_C_API void XN_C_DECL xnOSWriteMemoryReport(const XnChar* csFileName);
 		}
 
 		// called only if ctor threw exception
-		static void operator delete(void* p, const XnChar* csFunction, const XnChar* csFile, XnUInt32 nLine, const XnChar* csAdditional)
+		static void operator delete(void* p, const XnChar* /*csFunction*/, const XnChar* /*csFile*/, XnUInt32 /*nLine*/, const XnChar* /*csAdditional*/)
 		{
 			xnOSLogMemFree(p);
 			xnOSFree(p);
@@ -411,7 +408,7 @@ XN_C_API void XN_C_DECL xnOSWriteMemoryReport(const XnChar* csFileName);
 		}
 
 		// called only if ctor threw exception
-		static void operator delete[](void* p, const XnChar* csFunction, const XnChar* csFile, XnUInt32 nLine, const XnChar* csAdditional)
+		static void operator delete[](void* p, const XnChar* /*csFunction*/, const XnChar* /*csFile*/, XnUInt32 /*nLine*/, const XnChar* /*csAdditional*/)
 		{
 			xnOSLogMemFree(p);
 			xnOSFree(p);

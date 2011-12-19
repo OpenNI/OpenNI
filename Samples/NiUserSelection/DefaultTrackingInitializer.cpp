@@ -41,26 +41,27 @@ DefaultTrackingInitializer::DefaultTrackingInitializer(xn::UserGenerator *pUserG
     {
         m_hCalibrationStartCallback=NULL;
         m_bValid=FALSE;
-        return; // we need a skeleton, otherwise, we don't have calibration
+        return; // if we can't register to the calibration, we shouldn't do anything
     }
     res=m_pUserGenerator->GetSkeletonCap().RegisterToCalibrationComplete(CalibrationCompleteCallback,this,m_hCalibrationStartCallback);
     if(res!=XN_STATUS_OK)
     {
         m_hCalibrationStartCallback=NULL;
         m_bValid=FALSE;
-        return; // we need a skeleton, otherwise, we don't have calibration
+        return; // if we can't register to the calibration, we shouldn't do anything
     }
     res=m_pUserGenerator->GetSkeletonCap().RegisterToCalibrationInProgress(CalibrationInProgressCallback,this,m_hInProgressCallback);
     if(res!=XN_STATUS_OK)
     {
         m_hInProgressCallback=NULL;
         m_bValid=FALSE;
-        return; // we need a skeleton, otherwise, we don't have calibration
+        return; // if we can't register to the calibration, we shouldn't do anything
     }
 }
 
 DefaultTrackingInitializer::~DefaultTrackingInitializer()
 {
+    // clean up
     if(m_pUserGenerator==NULL)
         return;
     if(m_hCalibrationStartCallback!=NULL)
@@ -83,10 +84,12 @@ DefaultTrackingInitializer::~DefaultTrackingInitializer()
 
 
 
-XnStatus DefaultTrackingInitializer::StartTracking(XnUserID nUserId)
+XnStatus DefaultTrackingInitializer::StartTracking(XnUserID nUserId, XnBool bForce)
 {
     if(m_pUserGenerator->GetSkeletonCap().IsTracking(nUserId)==TRUE)
     {
+        // we don't need to do anything (other than notifying the user selector) as we are 
+        // already tracking
         if(m_pUserSelector!=NULL)
         {
             return m_pUserSelector->UpdateUserTracking(nUserId,TRUE,0); // already tracking
@@ -95,17 +98,22 @@ XnStatus DefaultTrackingInitializer::StartTracking(XnUserID nUserId)
             return XN_STATUS_OK;
         
     }
-    return m_pUserGenerator->GetSkeletonCap().RequestCalibration(nUserId,TRUE);
+    // request calibration.
+    return m_pUserGenerator->GetSkeletonCap().RequestCalibration(nUserId,bForce);
 }
 
 
 XnStatus DefaultTrackingInitializer::AbortTracking(XnUserID nUserId)
 {
+    // note: the assumption is that this will not be called if not either calibrating or
+    // tracking (although it will just fail if neither).
     if(m_pUserGenerator->GetSkeletonCap().IsTracking(nUserId)==TRUE)
     {
+        // if we are tracking we just need to stop tracking
         XnStatus res=m_pUserGenerator->GetSkeletonCap().StopTracking(nUserId);
         return res;
     }
+    // if we are not tracking we need to abort the calibration.
     return m_pUserGenerator->GetSkeletonCap().AbortCalibration(nUserId);
 }
 

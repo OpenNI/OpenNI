@@ -42,7 +42,7 @@ public class UserTracker extends Component
 			{
 				if (skeletonCap.needPoseForCalibration())
 				{
-					poseDetectionCap.StartPoseDetection(calibPose, args.getId());
+					poseDetectionCap.startPoseDetection(calibPose, args.getId());
 				}
 				else
 				{
@@ -60,7 +60,7 @@ public class UserTracker extends Component
 		public void update(IObservable<UserEventArgs> observable,
 				UserEventArgs args)
 		{
-			System.out.println("Lost use " + args.getId());
+			System.out.println("Lost user " + args.getId());
 			joints.remove(args.getId());
 		}
 	}
@@ -80,11 +80,11 @@ public class UserTracker extends Component
 					skeletonCap.startTracking(args.getUser());
 	                joints.put(new Integer(args.getUser()), new HashMap<SkeletonJoint, SkeletonJointPosition>());
 			}
-			else
+			else if (args.getStatus() != CalibrationProgressStatus.MANUAL_ABORT)
 			{
 				if (skeletonCap.needPoseForCalibration())
 				{
-					poseDetectionCap.StartPoseDetection(calibPose, args.getUser());
+					poseDetectionCap.startPoseDetection(calibPose, args.getUser());
 				}
 				else
 				{
@@ -106,7 +106,7 @@ public class UserTracker extends Component
 			System.out.println("Pose " + args.getPose() + " detected for " + args.getUser());
 			try
 			{
-				poseDetectionCap.StopPoseDetection(args.getUser());
+				poseDetectionCap.stopPoseDetection(args.getUser());
 				skeletonCap.requestSkeletonCalibration(args.getUser(), true);
 			} catch (StatusException e)
 			{
@@ -303,7 +303,7 @@ public class UserTracker extends Component
 		Point3D pos1 = jointHash.get(joint1).getPosition();
 		Point3D pos2 = jointHash.get(joint2).getPosition();
 
-		if (jointHash.get(joint1).getConfidence() == 0 || jointHash.get(joint1).getConfidence() == 0)
+		if (jointHash.get(joint1).getConfidence() == 0 || jointHash.get(joint2).getConfidence() == 0)
 			return;
 
 		g.drawLine((int)pos1.getX(), (int)pos1.getY(), (int)pos2.getX(), (int)pos2.getY());

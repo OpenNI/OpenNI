@@ -1377,6 +1377,14 @@ XnStatus XN_CALLBACK_TYPE __ModuleStopPoseDetection(XnModuleNodeHandle hGenerato
 	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
 	return pInterface->StopPoseDetection(user);
 }
+XnStatus XN_CALLBACK_TYPE __ModuleStopSinglePoseDetection(XnModuleNodeHandle hGenerator, XnUserID user, const XnChar* strPose)
+{
+	ModuleProductionNode* pProdNode = (ModuleProductionNode*)hGenerator;
+	ModuleUserGenerator* pNode = dynamic_cast<ModuleUserGenerator*>(pProdNode);
+	ModulePoseDetectionInteface* pInterface = pNode->GetPoseDetectionInteface();
+	_XN_VALIDATE_CAPABILITY_INTERFACE(pInterface);
+	return pInterface->StopSinglePoseDetection(user, strPose);
+}
 
 XnStatus XN_CALLBACK_TYPE __ModuleRegisterToPoseCallbacks(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback PoseDetectionStartCB, XnModulePoseDetectionCallback PoseDetectionEndCB, void* pCookie, XnCallbackHandle* phCallback)
 {
@@ -1899,6 +1907,7 @@ void XN_CALLBACK_TYPE __ModuleGetPoseDetectionInterface(XnModulePoseDetectionCap
 	pInteface->GetAllAvailablePoses = __ModuleGetAllAvailablePoses;
 	pInteface->StartPoseDetection = __ModuleStartPoseDetection;
 	pInteface->StopPoseDetection = __ModuleStopPoseDetection;
+	pInteface->StopSinglePoseDetection = __ModuleStopSinglePoseDetection;
 	pInteface->RegisterToPoseCallbacks = __ModuleRegisterToPoseCallbacks;
 	pInteface->UnregisterFromPoseCallbacks = __ModuleUnregisterFromPoseCallbacks;
 

@@ -41,6 +41,7 @@
 /// used as an interface for all user selection implementations. The assumption is that the user
 /// selector will receive a user generator node and will output which users are at which state as
 /// well as deciding which users to track.
+/// @ingroup UserSelectionClasses
 class UserSelector
 {
 public:
@@ -79,7 +80,7 @@ public:
 
    /// @brief Method to Fill in the string label for a user (state + sub state).
    /// 
-   /// @param nUserID The user whose label we want
+   /// @param nUserId The user whose label we want
    /// @param strLabel Where to put the label
    /// @param maxStrLen The maximum allowed string length.
    /// @return The success status
@@ -124,7 +125,7 @@ protected:
 
     /// @brief translate a calibration error to a string
     /// 
-    /// @param The calibration error
+    /// @param eError The calibration error
     /// @return The string version of the error.
     const XnChar* GetCalibrationErrorString(XnCalibrationStatus eError);
 
@@ -142,7 +143,7 @@ protected:
     /// @return The success code.
     virtual XnStatus UpdateUserSelectionState(XnUserID nUserId, XnSelectionState eState , XnInt64 subState);
 
-    // defines the UserHash hash which holds a state for each user
+    /// @brief Defines the UserHash hash which holds a state for each user
     XN_DECLARE_DEFAULT_HASH(XnUserID,UserSelectionState *,UserStateHash);
 
     xn::UserGenerator *m_pUserGenerator; ///< @brief the user generator to get user information from

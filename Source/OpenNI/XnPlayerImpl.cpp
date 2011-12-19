@@ -155,8 +155,6 @@ XnStatus PlayerImpl::SetSource(XnRecordMedium sourceType, const XnChar* strSourc
 	nRetVal = SetPlaybackSpeed(dPlaybackSpeed);
 	XN_IS_STATUS_OK(nRetVal);
 
-	TriggerPlayback();
-
 	return XN_STATUS_OK;
 }
 
@@ -213,6 +211,9 @@ XnStatus PlayerImpl::EnumerateNodes(XnNodeInfoList** ppList)
 
 XnStatus PlayerImpl::SetPlaybackSpeed(XnDouble dSpeed)
 {
+	// do that in a lock (other thread might be in the middle of playback/seek)
+	XnAutoCSLocker locker(m_hPlaybackLock);
+
 	if (dSpeed < 0)
 	{
 		return XN_STATUS_BAD_PARAM;
@@ -242,6 +243,53 @@ XnModulePlayerInterface& PlayerImpl::ModulePlayer()
 XnModuleNodeHandle PlayerImpl::ModuleHandle()
 {
 	return m_hPlayer->pModuleInstance->hNode;
+}
+
+XnStatus PlayerImpl::SeekToTimestamp(XnInt64 nTimeOffset, XnPlayerSeekOrigin origin)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	// do the whole thing in a lock (so it wouldn't conflict with other threads playing / seeking)
+	XnAutoCSLocker locker(m_hPlaybackLock);
+
+	// disable playback speed - so seeking would be immediate
+	XnDouble dPlaybackSpeed = GetPlaybackSpeed();
+	SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
+
+	nRetVal = ModulePlayer().SeekToTimeStamp(ModuleHandle(), nTimeOffset, origin);
+
+	// restore playback speed
+	SetPlaybackSpeed(dPlaybackSpeed);
+	ResetTimeReference();
+
+	// check if seeking failed
+	XN_IS_STATUS_OK(nRetVal);
+
+	return XN_STATUS_OK;
+}
+
+
+XnStatus PlayerImpl::SeekToFrame(const XnChar* strNodeName, XnInt32 nFrameOffset, XnPlayerSeekOrigin origin)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	// do the whole thing in a lock (so it wouldn't conflict with other threads playing / seeking)
+	XnAutoCSLocker locker(m_hPlaybackLock);
+
+	// disable playback speed - so seeking would be immediate
+	XnDouble dPlaybackSpeed = GetPlaybackSpeed();
+	SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
+
+	nRetVal = ModulePlayer().SeekToFrame(ModuleHandle(), strNodeName, nFrameOffset, origin);
+
+	// restore playback speed
+	SetPlaybackSpeed(dPlaybackSpeed);
+	ResetTimeReference();
+
+	// check if seeking failed
+	XN_IS_STATUS_OK(nRetVal);
+
+	return XN_STATUS_OK;
 }
 
 XnStatus XN_CALLBACK_TYPE PlayerImpl::OpenFile(void* pCookie)

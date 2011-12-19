@@ -23,11 +23,12 @@
 import sys
 import os
 import re
+from datetime import date
 
 VERSION_MAJOR = 1
-VERSION_MINOR = 4
-VERSION_MAINTENANCE = 0
-VERSION_BUILD = 2
+VERSION_MINOR = 5
+VERSION_MAINTENANCE = 2
+VERSION_BUILD = 7
 
 class UpdateVersion:
     def main(self):
@@ -72,6 +73,7 @@ class UpdateVersion:
         self.update_wix("../Install/OpenNI/Includes/OpenNIVariables.wxi")
         self.update_publisher_policy("../../../Wrappers/OpenNI.Net/PublisherPolicy.config")
         self.update_doxygen("../../../Source/DoxyGen/Doxyfile")
+        self.update_release_notes("../../../Platform/Win32/Build/ReleaseNotes.txt")
 
         try:
             self.update_redist_defs("../../../ExportOpenSource.bat")
@@ -145,5 +147,26 @@ class UpdateVersion:
     def update_doxygen (self,filePath):
         print (("Updating doxygen: " + filePath))
         self.regx_replace("PROJECT_NAME\s*=\s*\"OpenNI (\d+)\.(\d+)\.(\d+)\"", "PROJECT_NAME = \"OpenNI " + str(self.version_major) + "." + str(self.version_minor) + "." + str(self.version_maintenance) + "\"", filePath)
+
+    def update_release_notes (self,filePath):
+        print (("Updating release notes: " + filePath))
+
+        tempName = filePath + '~~~'
+        os.system("attrib -r " + filePath)
+        input = open(filePath)
+        output = open(tempName, 'w')
+        lines = input.readlines()
+        input.close()
+        today = date.today()
+
+        lines[0] = 'OpenNI ' + str(self.version_major) + '.' + str(self.version_minor) + '.' + str(self.version_maintenance) + ' Build ' + str(self.version_build) + '\n'
+        lines[1] = today.strftime('%B ') + str(today.day) + ' ' + str(today.year) + '\n'
+        
+        for s in lines:
+            output.write(s)
+        output.close()
+        os.remove(filePath)
+        os.rename(tempName,filePath)        
+        
 if __name__ == '__main__':
     UpdateVersion().main()

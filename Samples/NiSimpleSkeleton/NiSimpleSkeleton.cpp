@@ -25,6 +25,12 @@
 #include <XnCppWrapper.h>
 
 //---------------------------------------------------------------------------
+// Defines
+//---------------------------------------------------------------------------
+#define SAMPLE_XML_PATH "../../../../Data/SamplesConfig.xml"
+#define SAMPLE_XML_PATH_LOCAL "SamplesConfig.xml"
+
+//---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
 xn::Context g_Context;
@@ -40,6 +46,12 @@ XnChar g_strPose[20] = "";
 // Code
 //---------------------------------------------------------------------------
 
+XnBool fileExists(const char *fn)
+{
+	XnBool exists;
+	xnOSDoesFileExist(fn, &exists);
+	return exists;
+}
 
 // Callback: New user was detected
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
@@ -95,6 +107,11 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability
     {
         // Calibration failed
         printf("%d Calibration failed for user %d\n", epochTime, nId);
+        if(eStatus==XN_CALIBRATION_STATUS_MANUAL_ABORT)
+        {
+            printf("Manual abort occured, stop attempting to calibrate!");
+            return;
+        }
         if (g_bNeedPose)
         {
             g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_strPose, nId);
@@ -107,21 +124,28 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability
 }
 
 
-#define SAMPLE_XML_PATH "../../../../Data/SamplesConfig.xml"
-
-#define CHECK_RC(nRetVal, what)										\
-    if (nRetVal != XN_STATUS_OK)									\
-{																    \
+#define CHECK_RC(nRetVal, what)					    \
+    if (nRetVal != XN_STATUS_OK)				    \
+{								    \
     printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));    \
-    return nRetVal;												    \
+    return nRetVal;						    \
 }
 
 int main(int argc, char **argv)
 {
     XnStatus nRetVal = XN_STATUS_OK;
-
     xn::EnumerationErrors errors;
-    nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, g_scriptNode, &errors);
+
+    const char *fn = NULL;
+    if    (fileExists(SAMPLE_XML_PATH)) fn = SAMPLE_XML_PATH;
+    else if (fileExists(SAMPLE_XML_PATH_LOCAL)) fn = SAMPLE_XML_PATH_LOCAL;
+    else {
+        printf("Could not find '%s' nor '%s'. Aborting.\n" , SAMPLE_XML_PATH, SAMPLE_XML_PATH_LOCAL);
+        return XN_STATUS_ERROR;
+    }
+    printf("Reading config from: '%s'\n", fn);
+
+    nRetVal = g_Context.InitFromXmlFile(fn, g_scriptNode, &errors);
     if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
     {
         XnChar strError[1024];

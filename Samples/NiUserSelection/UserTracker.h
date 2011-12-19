@@ -45,13 +45,14 @@
 /// OpenNI related (as opposed from the "main" and any drawing (OpenGL or otherwise).
 /// since the drawing would require various inputs to know what to draw, this class exposes 
 /// interfaces for this purpose.
+/// @ingroup UserSelectionSampleFiles
 class UserTracker
 {
 public:
     /// @brief Constructor
     /// 
-    /// @param argc The number of command line arguments (same as main)
-    /// @param argv The command line arguments (same as main)
+    /// @param argc The number of command line arguments (same as @ref main())
+    /// @param argv The command line arguments (same as @ref main())
     /// @param timeSpanForExitPose the number of microseconds exit pose must be 
     UserTracker(int argc, char **argv, XnUInt64 timeSpanForExitPose);
 
@@ -120,17 +121,19 @@ public:
     /// @brief Fills the limbs array. 
     /// 
     /// This method fills an array of limbs to draw. These limbs represent the skeleton.
-    /// @param nUserID the user whose limbs we need.
-    /// @param limbs An array of points. The array is of size 2*numlimbs as each limb is defined by 
+    /// @param nUserId the user whose limbs we need.
+    /// @param pLimbs An array of points. The array is of size 2*numLimbs as each limb is defined by 
     /// two points (i.e. Limb 'i' will be defined by limbs[i*2] and limbs[i*2+1]).
-    /// @param numlimbs The maximum allowed number of limbs in the input and is changed to the
+    /// @param pConfidence An array of floats. The array is the size of numLimbs and holds the 
+    /// confidence for each limb (the worst of the two joints connecting it).
+    /// @param numLimbs The maximum allowed number of limbs in the input and is changed to the
     ///                 number of actually found limbs.
     /// @return The success status (data irrelevant if not XN_STATUS_OK)
-    XnStatus GetLimbs(XnUserID nUserID, XnPoint3D *limbs,XnUInt16 &numLimbs);
+    XnStatus GetLimbs(XnUserID nUserId, XnPoint3D *pLimbs,XnFloat *pConfidence, XnUInt16 &numLimbs);
 
     /// @brief gets the color (an array of 3 floats) for a specific user.
     /// 
-    /// @param nUserID the user whose color we need.
+    /// @param nUserId the user whose color we need.
     /// @param userColor An array (assumed to be of size 3) to be filled with the color in RGB format
     /// @return The success status (data irrelevant if not XN_STATUS_OK)
     XnStatus GetUserColor(XnUserID nUserId, XnFloat* userColor);
@@ -146,11 +149,24 @@ public:
     /// @}
 
 protected:
-    // calculate the cumulative histogram. Add an explanation here.
+    /// @brief Internal method calculate the cumulative histogram. 
+    /// 
+    /// The accumulative histogram is used to decide on the color for each depth value.
+    /// This method receives the texture of depth data and fills the internal static histogram with
+    /// data.
+    /// @param pDepth The texture itself
+    /// @param xRes The size (x axis) of the texture
+    /// @param yRes The size (y axis) of the texture
     void CalcHistogram(const XnDepthPixel* pDepth, XnUInt16 xRes,XnUInt16 yRes);
-    // gets the depth data. Not sure if shouldn't be entered internally to FillTexture
+    /// @brief Gets the depth data. 
+    ///
+    /// This method provides an accessor to the depth texture.
+    /// @return The depth texutre
     const XnDepthPixel*GetDepthData();
-    // gets the scene data. Not sure if shouldn't be entered internally to FillTexture
+    /// @brief gets the scene data. 
+    /// 
+    /// This method receives the labels of user pixels in the scene
+    /// @return The user labels matrix.
     const XnLabel*GetUsersPixelsData();
 
 
@@ -158,20 +174,20 @@ protected:
     TrackingInitializer *m_pTrackingInitializer; ///< @brief a pointer to the tracking initializer to use
     xn::Context m_Context; ///< @brief The context of all OpenNI behavior
     xn::ScriptNode m_ScriptNode; ///< @brief the script node used when opening using XML. Used for orderly release
-    xn::DepthGenerator m_DepthGenerator; ///< A depth generator (the base for depth info)
-    xn::UserGenerator m_UserGenerator; ///< A user generator (will hold user and skeleton data).
-    xn::Player m_Player; ///< The node used for the player (to play recordings).
+    xn::DepthGenerator m_DepthGenerator; ///< @brief A depth generator (the base for depth info)
+    xn::UserGenerator m_UserGenerator; ///< @brief A user generator (will hold user and skeleton data).
+    xn::Player m_Player; ///< @brief The node used for the player (to play recordings).
 
-    ExitPoseDetector *m_pExitPoseDetector;
-    XnUInt64 m_timeSpanForExitPose;
+    ExitPoseDetector *m_pExitPoseDetector; ///< @brief a pointer to the exit pose detector (used to exit the game with a pose).
+    XnUInt64 m_timeSpanForExitPose; ///< @brief the time (in microseconds) to hold the exit pose for exiting
 private:
-    static float* s_pDepthHist; // the cumulative histogram (explain it is nulled and changed in CalcHistogram each frame.
-    static XnFloat s_Colors[][3]; // the list of colors (make sure it is initialized correctly)
-    static XnUInt32 s_nColors; // the number of colors
+    static float* s_pDepthHist; ///< @brief The cumulative histogram. This is created each frame from scratch.
+    static XnFloat s_Colors[][3]; ///< @brief The list of colors
+    static XnUInt32 s_nColors; ///< @brief The number of colors
 
 
-    XnBool m_bRecord; // if we are recording or not.
-    XnBool m_bValid; // holds true if we have a valid value. This only happens after initialization!
+    XnBool m_bRecord; ///< @brief If we are recording or not.
+    XnBool m_bValid; ///< @brief Holds true if we have a valid value. This only happens after initialization!
 };
 
 
