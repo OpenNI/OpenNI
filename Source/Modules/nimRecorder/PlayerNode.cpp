@@ -68,6 +68,7 @@ const XnUInt64 PlayerNode::RECORD_MAX_SIZE =
 	PlayerNode::DATA_MAX_SIZE; //Maximum data size
 
 const XnVersion PlayerNode::OLDEST_SUPPORTED_FILE_FORMAT_VERSION = {1, 0, 0, 4};
+const XnVersion PlayerNode::FIRST_FILESIZE64BIT_FILE_FORMAT_VERSION = {1, 0, 1, 0};
 
 PlayerNode::PlayerNode(xn::Context &context, const XnChar* strName) :
 	m_bOpen(FALSE),
@@ -158,7 +159,7 @@ XnStatus PlayerNode::SetRepeat(XnBool bRepeat)
 	return XN_STATUS_OK;
 }
 
-XnStatus PlayerNode::SeekToTimeStamp(XnInt64 nTimeOffset, XnPlayerSeekOrigin origin)
+XnStatus PlayerNode::SeekToTimeStamp(XnInt64 /*nTimeOffset*/, XnPlayerSeekOrigin /*origin*/)
 {
 	/*
 	switch (origin)
@@ -218,12 +219,12 @@ XnStatus PlayerNode::SeekToFrame(const XnChar* strNodeName, XnInt32 nFrameOffset
 	return XN_STATUS_OK;
 }
 
-XnStatus PlayerNode::UndoRecord(PlayerNode::RecordUndoInfo& undoInfo, XnUInt32 nDestPos, XnBool& bUndone)
+XnStatus PlayerNode::UndoRecord(PlayerNode::RecordUndoInfo& undoInfo, XnUInt64 nDestPos, XnBool& bUndone)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
-	XnUInt32 nOriginalPos = TellStream();
+	XnUInt64 nOriginalPos = TellStream();
 	bUndone = FALSE;
-	Record record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	Record record(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 	while ((undoInfo.nRecordPos > nDestPos) && (undoInfo.nUndoRecordPos != 0))
 	{
 		nRetVal = SeekStream(XN_OS_SEEK_SET, undoInfo.nUndoRecordPos);
@@ -335,14 +336,18 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 		//Just go back to position of current frame
 		nRetVal = SeekStream(XN_OS_SEEK_SET, pPlayerNodeInfo->nLastDataPos);
 		XN_IS_STATUS_OK(nRetVal);
+		// and re-read it
+		nRetVal = ReadNext();
+		XN_IS_STATUS_OK(nRetVal);
 
 		return XN_STATUS_OK;
 	}
 
+	// not same frame. Find seek locations of each stream
 	DataIndexEntry** pDataIndex = GetSeekLocationsFromDataIndex(nNodeID, nDestFrame);
 	if (pDataIndex != NULL)
 	{
-		XnUInt32 nLastPos = 0;
+		XnUInt64 nLastPos = 0;
 
 		// move each node to its relevant data
 		for (XnUInt32 i = 0; i < m_nMaxNodes; i++)
@@ -356,7 +361,7 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 				XN_IS_STATUS_OK(nRetVal);
 
 				// check for latest position. This will be directly after the frame we seeked to.
-				XnUInt32 nPos = TellStream();
+				XnUInt64 nPos = TellStream();
 				if (nPos > nLastPos)
 				{
 					nLastPos = nPos;
@@ -369,24 +374,17 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 	}
 	else
 	{
-		// perform old seek
-		XnUInt32 nStartPos = TellStream();
+		// perform old seek (no data indexes)
+		XnUInt64 nStartPos = TellStream();
 		XnUInt32 nNextFrame = pPlayerNodeInfo->nCurFrame + 1;
-		XnUInt32 nFrames = pPlayerNodeInfo->nFrames;
 		XnStatus nRetVal = XN_STATUS_OK;
 
-		if (nDestFrame == pPlayerNodeInfo->nCurFrame)
-		{
-			//Just go back to position of current frame
-			nRetVal = SeekStream(XN_OS_SEEK_SET, pPlayerNodeInfo->nLastDataPos);
-			XN_IS_STATUS_OK(nRetVal);
-		}
-		else if (nDestFrame < nNextFrame)
+		if (nDestFrame < nNextFrame)
 		{
 			//Seek backwards
-			XnUInt32 nDestRecordPos = pPlayerNodeInfo->newDataUndoInfo.nRecordPos;
-			XnUInt32 nUndoRecordPos = pPlayerNodeInfo->newDataUndoInfo.nUndoRecordPos;
-			NewDataRecordHeader record(m_pRecordBuffer, RECORD_MAX_SIZE);
+			XnUInt64 nDestRecordPos = pPlayerNodeInfo->newDataUndoInfo.nRecordPos;
+			XnUInt64 nUndoRecordPos = pPlayerNodeInfo->newDataUndoInfo.nUndoRecordPos;
+			NewDataRecordHeader record(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 			
 			/*Scan back through the frames' undo positions until we get to a frame number that is smaller or equal
 			  to nDestFrame. We put the position of the frame we find in nDestRecordPos. */
@@ -605,7 +603,7 @@ XnStatus PlayerNode::ReadNext()
 XnStatus PlayerNode::ProcessRecord(XnBool bProcessPayload)
 {
 	//Read a record and handle it
-	Record record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	Record record(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 	XnStatus nRetVal = ReadRecord(record);
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = HandleRecord(record, bProcessPayload);
@@ -640,6 +638,15 @@ XnStatus PlayerNode::OpenStream()
 		XN_LOG_ERROR_RETURN(XN_STATUS_UNSUPPORTED_VERSION, XN_MASK_OPEN_NI, "Unsupported file format version: %u.%u.%u.%u", header.version.nMajor, header.version.nMinor, header.version.nMaintenance, header.version.nBuild);
 	}
 
+	/* Do we need to parse an old 32bit-filesize file? */
+	if (xnVersionCompare(&header.version, &FIRST_FILESIZE64BIT_FILE_FORMAT_VERSION) >= 0)
+	{
+		m_bIs32bitFileFormat = FALSE;
+	} else {
+		m_bIs32bitFileFormat = TRUE;
+	}
+
+	m_fileVersion = header.version;
 	m_nGlobalMaxTimeStamp = header.nGlobalMaxTimeStamp;
 	m_nMaxNodes = header.nMaxNodeID + 1;
 	XN_ASSERT(m_nMaxNodes > 0);
@@ -677,8 +684,10 @@ XnStatus PlayerNode::Read(void *pData, XnUInt32 nSize, XnUInt32 &nBytesRead)
 XnStatus PlayerNode::ReadRecordHeader(Record &record)
 {
 	XnUInt32 nBytesRead = 0;
-	XnStatus nRetVal = Read(record.GetData(), Record::HEADER_SIZE, nBytesRead);
-	if (nBytesRead != Record::HEADER_SIZE)
+	XnStatus nRetVal = Read(record.GetData(), record.HEADER_SIZE, nBytesRead);
+	XN_IS_STATUS_OK(nRetVal);
+
+	if (nBytesRead != record.HEADER_SIZE)
 	{
 		XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Incorrect number of bytes read");
 	}
@@ -693,9 +702,9 @@ XnStatus PlayerNode::ReadRecordHeader(Record &record)
 
 XnStatus PlayerNode::ReadRecordFields(Record &record)
 {
-	XnUInt32 nBytesToRead = record.GetSize() - Record::HEADER_SIZE;
+	XnUInt32 nBytesToRead = record.GetSize() - record.HEADER_SIZE;
 	XnUInt32 nBytesRead = 0;
-	XnStatus nRetVal = Read(record.GetData() + Record::HEADER_SIZE, nBytesToRead, nBytesRead);
+	XnStatus nRetVal = Read(record.GetData() + record.HEADER_SIZE, nBytesToRead, nBytesRead);
 	XN_IS_STATUS_OK(nRetVal);
 	if (nBytesRead < nBytesToRead)
 	{
@@ -713,16 +722,16 @@ XnStatus PlayerNode::ReadRecord(Record &record)
 	return XN_STATUS_OK;
 }
 
-XnStatus PlayerNode::SeekStream(XnOSSeekType seekType, XnInt32 nOffset)
+XnStatus PlayerNode::SeekStream(XnOSSeekType seekType, XnInt64 nOffset)
 {
 	XN_VALIDATE_INPUT_PTR(m_pInputStream);
-	return m_pInputStream->Seek(m_pStreamCookie, seekType, nOffset);
+	return m_pInputStream->Seek64(m_pStreamCookie, seekType, nOffset);
 }
 
-XnUInt32 PlayerNode::TellStream()
+XnUInt64 PlayerNode::TellStream()
 {
-	XN_VALIDATE_PTR(m_pInputStream, (XnUInt32)-1);
-	return m_pInputStream->Tell(m_pStreamCookie);
+	XN_VALIDATE_PTR(m_pInputStream, (XnUInt64)-1);
+	return m_pInputStream->Tell64(m_pStreamCookie);
 }
 
 XnStatus PlayerNode::CloseStream()
@@ -819,7 +828,7 @@ XnStatus PlayerNode::RemovePlayerNodeInfo(XnUInt32 nNodeID)
 	return XN_STATUS_OK;
 }
 
-XnStatus PlayerNode::HandleNodeAddedImpl(XnUInt32 nNodeID, XnProductionNodeType type, const XnChar* strName, XnCodecID compression, XnUInt32 nNumberOfFrames, XnUInt64 nMinTimestamp, XnUInt64 nMaxTimestamp)
+XnStatus PlayerNode::HandleNodeAddedImpl(XnUInt32 nNodeID, XnProductionNodeType type, const XnChar* strName, XnCodecID compression, XnUInt32 nNumberOfFrames, XnUInt64 /*nMinTimestamp*/, XnUInt64 nMaxTimestamp)
 {
 	XN_VALIDATE_INPUT_PTR(m_pNodeNotifications);
 
@@ -888,13 +897,13 @@ XnStatus PlayerNode::HandleNodeAdded_1_0_0_4_Record(NodeAdded_1_0_0_4_Record rec
 	if (xnIsTypeGenerator(type))
 	{
 		// we need to look for the DataBegin record to have number of frames, etc.
-		XnUInt32 nStartPos = TellStream();
+		XnUInt64 nStartPos = TellStream();
 
 		// NOTE: this overwrites the current NodeAdded record buffer!!!
 		nRetVal = SeekToRecordByType(nNodeID, RECORD_NODE_DATA_BEGIN);
 		if (nRetVal == XN_STATUS_OK)
 		{
-			NodeDataBeginRecord dataBeginRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
+			NodeDataBeginRecord dataBeginRecord(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 			nRetVal = ReadRecord(dataBeginRecord);
 			XN_IS_STATUS_OK(nRetVal);
 
@@ -908,7 +917,7 @@ XnStatus PlayerNode::HandleNodeAdded_1_0_0_4_Record(NodeAdded_1_0_0_4_Record rec
 			nRetVal = SeekToRecordByType(record.GetNodeID(), RECORD_NEW_DATA);
 			if (nRetVal == XN_STATUS_OK)
 			{
-				NewDataRecordHeader newDataRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
+				NewDataRecordHeader newDataRecord(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 				nRetVal = ReadRecord(newDataRecord);
 				XN_IS_STATUS_OK(nRetVal);
 
@@ -952,6 +961,7 @@ XnStatus PlayerNode::HandleNodeAddedRecord(NodeAddedRecord record)
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	nRetVal = record.Decode();
+
 	XN_IS_STATUS_OK(nRetVal);
 
 	DEBUG_LOG_RECORD(record, "NodeAdded");
@@ -964,12 +974,12 @@ XnStatus PlayerNode::HandleNodeAddedRecord(NodeAddedRecord record)
 	// get seek table (if exists)
 	if (record.GetNumberOfFrames() > 0 && record.GetSeekTablePosition() != 0)
 	{
-		XnUInt32 nCurrPos = TellStream();
+		XnUInt64 nCurrPos = TellStream();
 
 		nRetVal = SeekStream(XN_OS_SEEK_SET, record.GetSeekTablePosition());
 		XN_IS_STATUS_OK(nRetVal);
 
-		DataIndexRecordHeader seekTableHeader(m_pRecordBuffer, RECORD_MAX_SIZE);
+		DataIndexRecordHeader seekTableHeader(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 		nRetVal = ReadRecord(seekTableHeader);
 		XN_IS_STATUS_OK(nRetVal);
 
@@ -988,12 +998,12 @@ XnStatus PlayerNode::SeekToRecordByType(XnUInt32 nNodeID, RecordType type)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
-	Record record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	Record record(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 
-	XnUInt32 nStartPos = TellStream();
+	XnUInt64 nStartPos = TellStream();
 
 	XnBool bFound = FALSE;
-	XnUInt32 nPosBeforeRecord = 0;
+	XnUInt64 nPosBeforeRecord = 0;
 	while (!bFound && nRetVal == XN_STATUS_OK)
 	{
 		nPosBeforeRecord = TellStream();
@@ -1112,10 +1122,22 @@ XnStatus PlayerNode::HandleIntPropRecord(IntPropRecord record)
 		return XN_STATUS_CORRUPT_FILE;
 	}
 
+	const XnChar* strPropName = record.GetPropName();
+	XnUInt64 nValue = record.GetValue();
+
+	// old files workaround: some old files recorded nodes as not generating though having frames.
+	// make them generating.
+	if (strcmp(strPropName, XN_PROP_IS_GENERATING) == 0 &&
+		nValue == FALSE &&
+		pPlayerNodeInfo->nFrames > 0)
+	{
+		nValue = TRUE;
+	}
+
 	nRetVal = m_pNodeNotifications->OnNodeIntPropChanged(m_pNotificationsCookie, 
 		pPlayerNodeInfo->strName,
-		record.GetPropName(),
-		record.GetValue());
+		strPropName,
+		nValue);
 	XN_IS_STATUS_OK(nRetVal);
 
 	nRetVal = SaveRecordUndoInfo(pPlayerNodeInfo, 
@@ -1236,15 +1258,15 @@ XnStatus PlayerNode::HandleNodeStateReadyRecord(NodeStateReadyRecord record)
 		  with the name pPlayerNodeInfo->strName should have been created by now. If it wasn't,
 		  GetProductionNodeByName() will fail. */
 		nRetVal = m_context.GetProductionNodeByName(pPlayerNodeInfo->strName, node);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_LOG_ERROR("Get codec production node", nRetVal);
 
 		nRetVal = m_context.CreateCodec(pPlayerNodeInfo->compression, node, pPlayerNodeInfo->codec);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_LOG_ERROR("Create codec", nRetVal);
 
 		// we need to make the codec a needed node, so that if xnForceShutdown() is called, we will be
 		// destroyed *before* it does (as we hold a reference to it).
 		nRetVal = xnAddNeededNode(GetSelfNodeHandle(), pPlayerNodeInfo->codec);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_LOG_ERROR("Add needed node", nRetVal);
 	}
 
 	pPlayerNodeInfo->bStateReady = TRUE;
@@ -1326,6 +1348,7 @@ XnStatus PlayerNode::HandleNewDataRecord(NewDataRecordHeader record, XnBool bRea
 		XN_IS_STATUS_OK(nRetVal);
 		if (nBytesRead < record.GetPayloadSize())
 		{
+			XN_ASSERT(FALSE);
 			XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Not enough bytes read");
 		}
 
@@ -1344,19 +1367,19 @@ XnStatus PlayerNode::HandleNewDataRecord(NewDataRecordHeader record, XnBool bRea
 			//Decode data with codec
 			nRetVal = pPlayerNodeInfo->codec.DecodeData(pCompressedData, nCompressedDataSize, 
 				m_pUncompressedData, DATA_MAX_SIZE, &nUncompressedDataSize);
-			XN_IS_STATUS_OK(nRetVal);
+			XN_IS_STATUS_OK_ASSERT(nRetVal);
 			pUncompressedData = m_pUncompressedData;
 		}
 
 		nRetVal = m_pNodeNotifications->OnNodeNewData(m_pNotificationsCookie, pPlayerNodeInfo->strName, 
 			record.GetTimeStamp(), record.GetFrameNumber(), pUncompressedData, nUncompressedDataSize);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_ASSERT(nRetVal);
 	}
 	else
 	{
 		//Just skip the data
 		nRetVal = SkipRecordPayload(record);
-		XN_IS_STATUS_OK(nRetVal);
+		XN_IS_STATUS_OK_ASSERT(nRetVal);
 	}
 
 	return XN_STATUS_OK;
@@ -1368,7 +1391,7 @@ XnStatus PlayerNode::HandleDataIndexRecord(DataIndexRecordHeader record, XnBool 
 	
 	XN_VALIDATE_INPUT_PTR(m_pNodeNotifications);
 	nRetVal = record.Decode();
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_ASSERT(nRetVal);
 	DEBUG_LOG_RECORD(record, "DataIndex");
 
 	XN_ASSERT(record.GetNodeID() != INVALID_NODE_ID);
@@ -1391,10 +1414,14 @@ XnStatus PlayerNode::HandleDataIndexRecord(DataIndexRecordHeader record, XnBool 
 			return XN_STATUS_CORRUPT_FILE;
 		}
 
-		if (record.GetPayloadSize() != (pPlayerNodeInfo->nFrames+1) * sizeof(DataIndexEntry))
+		XnUInt32 DIESize;
+		if (m_bIs32bitFileFormat) 	DIESize = sizeof(DataIndexEntry_old32);
+		else						DIESize = sizeof(DataIndexEntry);
+
+		if (record.GetPayloadSize() != (pPlayerNodeInfo->nFrames+1) * DIESize)
 		{
 			XN_ASSERT(FALSE);
-			XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Seek table has %u entries, but node has %u frames!", record.GetPayloadSize() / sizeof(DataIndexEntry), pPlayerNodeInfo->nFrames);
+			XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Seek table has %u entries, but node has %u frames!", record.GetPayloadSize() / DIESize, pPlayerNodeInfo->nFrames);
 		}
 
 		// allocate our data index
@@ -1403,8 +1430,24 @@ XnStatus PlayerNode::HandleDataIndexRecord(DataIndexRecordHeader record, XnBool 
 
 		//Now read the actual data
 		XnUInt32 nBytesRead = 0;
-		nRetVal = Read(pPlayerNodeInfo->pDataIndex, record.GetPayloadSize(), nBytesRead);
-		XN_IS_STATUS_OK(nRetVal);
+
+		if (m_bIs32bitFileFormat)
+		{
+			DataIndexEntry_old32 old32;
+			XnUInt32 nRead = 0;
+			for(XnUInt32 n = 0; n < pPlayerNodeInfo->nFrames+1; n++)
+			{
+				nRetVal = Read(&old32, sizeof(DataIndexEntry_old32), nRead);
+				XN_IS_STATUS_OK(nRetVal); nBytesRead += nRead;
+				DataIndexEntry::FillFromOld32Entry(&pPlayerNodeInfo->pDataIndex[n], &old32);
+			}
+		}
+		else
+		{
+			nRetVal = Read(pPlayerNodeInfo->pDataIndex, record.GetPayloadSize(), nBytesRead);
+			XN_IS_STATUS_OK(nRetVal);
+		}
+
 		if (nBytesRead < record.GetPayloadSize())
 		{
 			XN_LOG_ERROR_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Not enough bytes read");
@@ -1490,7 +1533,7 @@ XnStatus PlayerNode::SeekToTimeStampAbsolute(XnUInt64 nDestTimeStamp)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	XnUInt64 nRecordTimeStamp = 0LL;
-	XnUInt32 nStartPos = TellStream(); //We'll revert to this in case nDestTimeStamp is beyond end of stream
+	XnUInt64 nStartPos = TellStream(); //We'll revert to this in case nDestTimeStamp is beyond end of stream
 	XN_IS_STATUS_OK(nRetVal);
 
 	if (nDestTimeStamp < m_nTimeStamp)
@@ -1507,7 +1550,7 @@ XnStatus PlayerNode::SeekToTimeStampAbsolute(XnUInt64 nDestTimeStamp)
 		nDestTimeStamp = m_nGlobalMaxTimeStamp;
 	}
 
-	Record record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	Record record(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 	XnBool bEnd = FALSE;
 	XnUInt32 nBytesRead = 0;
 
@@ -1520,11 +1563,11 @@ XnStatus PlayerNode::SeekToTimeStampAbsolute(XnUInt64 nDestTimeStamp)
 			case RECORD_NEW_DATA:
 			{
 				//We already read Record::HEADER_SIZE, now read the rest of the new data record header
-				nRetVal = Read(m_pRecordBuffer + Record::HEADER_SIZE, 
-					NewDataRecordHeader::MAX_SIZE - Record::HEADER_SIZE, 
+				nRetVal = Read(m_pRecordBuffer + record.HEADER_SIZE, 
+					NewDataRecordHeader::MAX_SIZE - record.HEADER_SIZE, 
 					nBytesRead);
 				XN_IS_STATUS_OK(nRetVal);
-				if (nBytesRead < NewDataRecordHeader::MAX_SIZE - Record::HEADER_SIZE)
+				if (nBytesRead < NewDataRecordHeader::MAX_SIZE - record.HEADER_SIZE)
 				{
 					return XN_STATUS_CORRUPT_FILE;
 				}
@@ -1568,9 +1611,9 @@ XnStatus PlayerNode::SeekToTimeStampAbsolute(XnUInt64 nDestTimeStamp)
 			case RECORD_NODE_STATE_READY:
 			{
 				//Read rest of record and handle it normally
-				nRetVal = Read(m_pRecordBuffer + Record::HEADER_SIZE, record.GetSize() - Record::HEADER_SIZE, nBytesRead);
+				nRetVal = Read(m_pRecordBuffer + record.HEADER_SIZE, record.GetSize() - record.HEADER_SIZE, nBytesRead);
 				XN_IS_STATUS_OK(nRetVal);
-				Record record(m_pRecordBuffer, RECORD_MAX_SIZE);
+				Record record(m_pRecordBuffer, RECORD_MAX_SIZE, m_bIs32bitFileFormat);
 				nRetVal = HandleRecord(record, TRUE);
 				XN_IS_STATUS_OK(nRetVal);
 				break;
@@ -1619,8 +1662,8 @@ PlayerNode::PlayerNodeInfo* PlayerNode::GetPlayerNodeInfoByName(const XnChar* st
 
 XnStatus PlayerNode::SaveRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, 
 										const XnChar* strPropName, 
-										XnUInt32 nRecordPos, 
-										XnUInt32 nUndoRecordPos)
+										XnUInt64 nRecordPos,
+										XnUInt64 nUndoRecordPos)
 {
 	RecordUndoInfo recordUndoInfo;
 	recordUndoInfo.nRecordPos = nRecordPos;
@@ -1630,7 +1673,7 @@ XnStatus PlayerNode::SaveRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo,
 	return XN_STATUS_OK;
 }
 
-XnStatus PlayerNode::GetRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const XnChar* strPropName, XnUInt32& nRecordPos, XnUInt32& nUndoRecordPos)
+XnStatus PlayerNode::GetRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const XnChar* strPropName, XnUInt64& nRecordPos, XnUInt64& nUndoRecordPos)
 {
 	RecordUndoInfo *pRecordUndoInfo = NULL;
 	XnStatus nRetVal = pPlayerNodeInfo->recordUndoInfoMap.Get(strPropName, pRecordUndoInfo);

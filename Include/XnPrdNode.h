@@ -1419,6 +1419,16 @@ XN_C_API XnStatus XN_C_DECL xnEnumerateGestures(XnNodeHandle hInstance, XnChar**
  * @param	nGestures		[in,out]	The size of the preallocated memory. Changed to number of gestures
  */
 XN_C_API XnStatus XN_C_DECL xnEnumerateAllGestures(XnNodeHandle hInstance, XnChar** pstrGestures, XnUInt32 nNameLength, XnUInt16* nGestures);
+
+/**
+ * @brief Get the number of all gestures available
+ * 
+ * @param	hInstance		[in]		A handle to the instance
+ * @return the number of gestures available
+ */
+XN_C_API XnUInt16 XN_C_DECL xnGetNumberOfAvailableGestures(XnNodeHandle hInstance);
+
+
 /**
  * @brief Check if a specific gesture is available in this generator
  * 
@@ -1991,6 +2001,30 @@ XN_C_API XnStatus XN_C_DECL xnGetAvailablePoses(XnNodeHandle hInstance, XnChar**
 * @param	pnPoses		[in,out]	In input - size of the preallocated memory, in output - the number of pose names
 */
 XN_C_API XnStatus XN_C_DECL xnGetAllAvailablePoses(XnNodeHandle hInstance, XnChar** pstrPoses, XnUInt32 nNameLength, XnUInt32* pnPoses);
+
+/**
+* @brief Tests if a pose is supported
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	strPose 	[in]		The pose string to test
+* @return   True if the pose is supported and False otherwise.
+*/
+XN_C_API XnBool XN_C_DECL xnIsPoseSupported(XnNodeHandle hInstance, const XnChar* strPose);
+
+/** 
+* @brief Gets the current pose status
+*
+* @param	hInstance	[in]	A handle to the instance
+* @param    userID      [in]    The user whose pose status we are interested in.
+* @param    poseName    [in]    The pose we want to get a status on.
+* @param    poseTime    [out]   The time stamp in which the user entered into the pose (0 if not in pose). 
+* @param    eStatus     [out]   The status of the user's pose, i.e. the progress error for getting into 
+*                               pose (XnPoseDetectionStatus, the same as received from the in progress
+*                               callback. See @ref xnRegisterToPoseDetectionInProgress).
+* @param    eState      [out]   The state of the user pose (i.e. in pose, out of pose).
+* @return   The success status. The data is invalid if failed.
+*/
+XN_C_API XnStatus xnGetPoseStatus(XnNodeHandle hInstance, XnUserID userID, const XnChar* poseName, XnUInt64* poseTime, XnPoseDetectionStatus* eStatus, XnPoseDetectionState* eState);
 /**
 * @brief Start detection of a specific pose for a specific user
 *
@@ -2006,6 +2040,14 @@ XN_C_API XnStatus XN_C_DECL xnStartPoseDetection(XnNodeHandle hInstance,const  X
 * @param	user		[in]		Id of user
 */
 XN_C_API XnStatus XN_C_DECL xnStopPoseDetection(XnNodeHandle hInstance, XnUserID user);
+/**
+* @brief Stop detection of a specific pose for a specific user
+*
+* @param	hInstance	[in]		A handle to the instance
+* @param	user		[in]		Id of user
+* @param	strPose		[in]		Name of the pose
+*/
+XN_C_API XnStatus XN_C_DECL xnStopSinglePoseDetection(XnNodeHandle hInstance, XnUserID user, const XnChar* strPose);
 /**
 * @brief Register to callbacks for pose events
 *
@@ -2299,6 +2341,7 @@ XN_C_API XnStatus XN_C_DECL xnSetRecorderDestination(XnNodeHandle hRecorder, XnR
  * @param	hRecorder	[in]	A handle to the recorder
  * @param	pDestType	[out]	The type of medium the recorder is set to record.
  * @param	strDest		[out]	Recording destination. If destType is XN_RECORD_MEDIUM_FILE, this specifies a file name.
+ * @param	nBufSize	[in]	The size of the strDest buffer.
  */
 XN_C_API XnStatus XN_C_DECL xnGetRecorderDestination(XnNodeHandle hRecorder, XnRecordMedium* pDestType, XnChar* strDest, XnUInt32 nBufSize);
 

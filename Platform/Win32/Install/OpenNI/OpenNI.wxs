@@ -49,115 +49,184 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="$(var.PlatformProgramFilesFolder)">
         <Directory Id="INSTALLLOCATION" Name="!(loc.ProductName)">
-          <Directory Id="INSTALLLOCATIONTools" Name="Tools"/>
+         <Directory Id="INSTALLLOCATIONTools" Name="Tools"/>
+          <Directory Id="INSTALLLOCATIONSamples" Name="Samples">
+            <Directory Id="INSTALLLOCATIONSamplesBin" Name="Bin$(var.PlatformSuffix)">
+               <Directory Id="INSTALLLOCATIONSamplesBinRelease" Name="Release">
+                <Directory Id="INSTALLLOCATIONSamplesBinReleaseLog" Name="Log"/>
+              </Directory>
+              
+              <Directory Id="INSTALLLOCATIONSamplesBinDebug" Name="Debug">
+                <Directory Id="INSTALLLOCATIONSamplesBinDebugLog" Name="Log"/>
+              </Directory> 
+            </Directory>
+          </Directory>
           <Directory Id="INSTALLLOCATIONDriver" Name="Driver"/>
           <Directory Id="INSTALLLOCATIONBin" Name="Bin$(var.PlatformSuffix)">
             <Directory Id="INSTALLLOCATIONBinLog" Name="Log"/>  
-          </Directory>
+          </Directory>  
           <Directory Id="INSTALLLOCATIONData" Name="Data"/>
-          <Directory Id="INSTALLLOCATIONSAMPLES" Name="Samples">
-            <Directory Id="INSTALLLOCATIONSAMPLESBIN" Name="Bin$(var.PlatformSuffix)">
-              <Directory Id="INSTALLLOCATIONSAMPLESBINRELEASE" Name="Release">
-                <Directory Id="INSTALLLOCATIONSAMPLESBINRELEASELOG" Name="Log"/>
-              </Directory>
-              <Directory Id="INSTALLLOCATIONSAMPLESBINDEBUG" Name="Debug">
-                <Directory Id="INSTALLLOCATIONSAMPLESBINDEBUGLOG" Name="Log"/>
-              </Directory>            
-            </Directory>
-          </Directory>
-        </Directory>    
+          
+          
       </Directory>
+      </Directory>
+
 
       <Directory Id="ProgramMenuFolder">
         <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductShortName)" >
-          <?if $(var.BinaryOnlyRedist)="False"?>
-          <Directory Id="DocumentationShortcutFolder" Name="Documentation"/>
-          <Directory Id="SamplesShortcutFolder" Name="Samples"/>
+          <?if $(var.BinaryOnlyRedist)="False"?>          
+            <Directory Id="DocumentationShortcutFolder" Name="Documentation"/>
+            <Directory Id="SamplesShortcutFolder" Name="Samples"/>
           <?endif?>
         </Directory>
-      </Directory>
-
-
+      </Directory>     
+      
     </Directory>
 
+    
     <DirectoryRef Id="INSTALLLOCATIONBinLog">
-      <Component Id="RemoveLogDir" Guid="45BC94F5-FA27-4d42-AFD8-E18B65F9A52D" KeyPath="yes">        
-        <RemoveFile Id="RemoveLogFiles" On="uninstall" Name="*.*" />
-        <RemoveFolder Id="RemoveLogDir" On="uninstall"/>
-      </Component>
-    </DirectoryRef>
-
-    <DirectoryRef Id="ApplicationProgramsFolder">
-      <Component Id="ApplicationShortcut" Guid="3B13870F-0D69-401C-8B5C-862E13874449" >
-        <Shortcut Id="UninstallProduct"
-                Name="Uninstall OpenNI"
-                Target="[SystemFolder]msiexec.exe"
-                Arguments="/x [ProductCode]"/>
-        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
-        <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-      </Component>
-    </DirectoryRef>
-
-    <?if $(var.BinaryOnlyRedist)="False"?>
-      <DirectoryRef Id="INSTALLLOCATIONSAMPLESBINRELEASELOG">
-        <Component Id="RemoveReleaseLogDir" Guid="7934C4DA-4CE1-41bb-8EE8-B974706B1C22" KeyPath="yes">
-          <RemoveFile Id="RemoveReleaseLogFiles" On="uninstall" Name="*.*" />
-          <RemoveFolder Id="RemoveReleaseLogDir" On="uninstall"/>
+      <?if $(var.Platform)="x86"?>
+        <Component Id="RemoveLogDir$(var.Platform)" Guid="D8F6BD18-BBB3-4ED5-82A5-78D89D96D738" KeyPath="yes">
+        <RemoveFile Id="RemoveLogFiles$(var.Platform)" On="uninstall" Name="*.*" />
+        <RemoveFolder Id="RemoveLogDirFolder$(var.Platform)" On="uninstall"/>
         </Component>
-      </DirectoryRef>
+       <?else?>
+         <Component Id="RemoveLogDir$(var.Platform)" Guid="D8F6BD18-BBB3-4ED5-82A5-78D89D962738" KeyPath="yes">
+            <RemoveFile Id="RemoveLogFiles$(var.Platform)" On="uninstall" Name="*.*" />
+            <RemoveFolder Id="RemoveLogDirFolder$(var.Platform)" On="uninstall"/>
+         </Component>
+         <?endif?>       
+    </DirectoryRef>
+    
+    <!--NEW NODE SEMION-->
+   <DirectoryRef Id="INSTALLLOCATIONBin">
+     <?if $(var.Platform)="x86"?>
+      <Component Id="RemoveBinDir$(var.Platform)" Guid="45BC94F5-FA27-4d42-AFD8-E18B65F9A52D" KeyPath="yes">
+        <RemoveFile Id="RemoveBinFiles$(var.Platform)" On="uninstall" Name="*.*" />
+        <RemoveFolder Id="RemoveBinDir$(var.Platform)" On="uninstall"/>
+      </Component>
+     <?else?>
+       <Component Id="RemoveBinDir$(var.Platform)" Guid="45BC94F5-FA27-4d42-AAD8-E18B65F9A52D" KeyPath="yes">
+         <RemoveFile Id="RemoveBinFiles$(var.Platform)" On="uninstall" Name="*.*" />
+         <RemoveFolder Id="RemoveBinDir$(var.Platform)" On="uninstall"/>
+       </Component>
+     <?endif?>
+    </DirectoryRef>
 
-      <DirectoryRef Id="INSTALLLOCATIONSAMPLESBINDEBUGLOG">
+   
+    <?if $(var.BinaryOnlyRedist)="False"?>
+
+
+    <?if $(var.Platform)="x86"?>
+    
+    <!-- New node create SamplesBinDebugLog folder  -->
+      <DirectoryRef Id="INSTALLLOCATIONSamplesBinDebugLog">
+      <Component Id="SamplesBinDebugLog" Guid="7C42E243-C475-486F-B08C-606737C3CC73" KeyPath="yes">
+      </Component>
+    </DirectoryRef>
+
+    <!-- New node create SamplesBinReleaseLog folder  -->
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinReleaseLog">
+      <Component Id="SamplesBinReleaseLog" Guid="3FD0DBF9-C87C-43A1-A4A9-208969EE9060" KeyPath="yes">
+      </Component>
+   </DirectoryRef>
+    
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinDebugLog">
         <Component Id="RemoveDebugLogDir" Guid="0AC4A0E8-CDE7-43c4-BDFA-FE0176AFFE21" KeyPath="yes">
           <RemoveFile Id="RemoveDebugLogFiles" On="uninstall" Name="*.*" />
           <RemoveFolder Id="RemoveDebugLogDir" On="uninstall"/>
         </Component>
       </DirectoryRef>
+
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinDebug">
+      <Component Id="RemoveDebugDir" Guid="0AC4A018-CDE7-43c4-BDFA-FE0176AFFE21" KeyPath="yes">
+        <RemoveFile Id="RemoveDebugFiles" On="uninstall" Name="*.*" />
+        <RemoveFolder Id="RemoveDebugDir" On="uninstall"/>
+      </Component>
+    </DirectoryRef>
+    <?else?>
+    <!-- New node create SamplesBinDebugLog folder  -->
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinDebugLog">
+      <Component Id="SamplesBinDebugLog" Guid="7C42E243-C425-486F-B08C-606737C3CC73" KeyPath="yes">
+      </Component>
+    </DirectoryRef>
+
+    <!-- New node create SamplesBinReleaseLog folder  -->
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinReleaseLog">
+      <Component Id="SamplesBinReleaseLog" Guid="3FD0DBF9-C81C-43A1-A4A9-208969EE9060" KeyPath="yes">
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinDebugLog">
+      <Component Id="RemoveDebugLogDir" Guid="0AC4A0E8-CDE7-4377-BDFA-FE0176AFFE21" KeyPath="yes">
+        <RemoveFile Id="RemoveDebugLogFiles" On="uninstall" Name="*.*" />
+        <RemoveFolder Id="RemoveDebugLogDir" On="uninstall"/>
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="INSTALLLOCATIONSamplesBinDebug">
+      <Component Id="RemoveDebugDir" Guid="0AC4A018-CDE7-43c4-BDFA-FE0176AFFE22" KeyPath="yes">
+        <RemoveFile Id="RemoveDebugFiles" On="uninstall" Name="*.*" />
+        <RemoveFolder Id="RemoveDebugDir" On="uninstall"/>
+      </Component>
+    </DirectoryRef>
+      <?endif?>
+    <?endif?>
+    
          
-      <DirectoryRef Id="DocumentationShortcutFolder">
-        <Component Id="DocumentationShortcut" Guid="2B5269BD-5CEA-4072-8E11-B4AA98AD382D" >
-          <Shortcut Id="APIRefMenuShortcut"
-             Name="API Reference $(var.VersionNumber)"
-             Description="API Reference $(var.VersionNumber)"
-             Target="[INSTALLLOCATION]Documentation\OpenNI.chm"
-             WorkingDirectory="INSTALLLOCATION"/>                             
+      <DirectoryRef Id="ApplicationProgramsFolder">
+        <Component Id="DocumentationShortcut" Guid="*" >
+
+          <Shortcut Id="UninstallProduct"
+                Name="Uninstall OpenNI"
+                Target="[SystemFolder]msiexec.exe"
+                Arguments="/x [ProductCode]" Directory="ApplicationProgramsFolder"/>
+          <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"  Directory="ApplicationProgramsFolder"/>
           
-          <Shortcut Id="UserGuideMenuShortcut"
-             Name="User Guide $(var.VersionNumber)"
-             Description="User Guide $(var.VersionNumber)"
-             Target="[INSTALLLOCATION]Documentation\OpenNI_UserGuide.pdf"
-             WorkingDirectory="INSTALLLOCATION"/>
-          <RemoveFolder Id="DocumentationShortcutFolder" On="uninstall"/>
+          <?if $(var.BinaryOnlyRedist)="False"?>
+            <Shortcut Id="APIRefMenuShortcut"
+               Name="API Reference $(var.VersionNumber)"
+               Description="API Reference $(var.VersionNumber)"
+               Target="[INSTALLLOCATION]Documentation\OpenNI.chm"
+               WorkingDirectory="INSTALLLOCATION" />                             
+            
+            <Shortcut Id="UserGuideMenuShortcut"
+               Name="User Guide $(var.VersionNumber)"
+               Description="User Guide $(var.VersionNumber)"
+               Target="[INSTALLLOCATION]Documentation\OpenNI_UserGuide.pdf"
+               WorkingDirectory="INSTALLLOCATION"/>
+            
+            <Shortcut Id="NiSimpleReadMenuShortcut"
+             Name="NiSimpleRead$(var.PlatformSuffix)"
+             Description="NiSimpleRead$(var.PlatformSuffix)"
+             Target="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiSimpleRead$(var.PlatformSuffix).exe"
+             WorkingDirectory="INSTALLLOCATIONSamplesBinRelease" Directory="SamplesShortcutFolder"/>
+            <Shortcut Id="NiSimpleViewerMenuShortcut"
+              Name="NiViewer$(var.PlatformSuffix)"
+              Description="NiViewer$(var.PlatformSuffix)"
+              Target="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiViewer$(var.PlatformSuffix).exe"
+              WorkingDirectory="INSTALLLOCATIONSamplesBinRelease" Directory="SamplesShortcutFolder"/>
+            <Shortcut Id="SampleDirMenuShortcut"
+               Name="Samples Directory $(var.PlatformSuffix)"
+               Description="Samples Directory"
+               Target="[INSTALLLOCATION]Samples\"
+               WorkingDirectory="INSTALLLOCATION" Directory="SamplesShortcutFolder"/>
+            
+            <RemoveFolder Id="SamplesShortcutFolder" On="uninstall" Directory="SamplesShortcutFolder"/>          
+            <RemoveFolder Id="RemoveDocumentationShortcutFolder" On="install" Directory="DocumentationShortcutFolder"/>
+          <?endif?>
+          
           <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
         </Component>
       </DirectoryRef>
 
-       <DirectoryRef Id="SamplesShortcutFolder">
-        <Component Id="SamplesShortcut" Guid="2C2BA43F-A81B-4BD1-9D93-170C4E833E96" >
-          <Shortcut Id="NiSimpleReadMenuShortcut"
-              Name="NiSimpleRead$(var.PlatformSuffix)"
-              Description="NiSimpleRead$(var.PlatformSuffix)"
-              Target="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiSimpleRead$(var.PlatformSuffix).exe"
-              WorkingDirectory="INSTALLLOCATIONSAMPLESBINRELEASE"/>
-          <Shortcut Id="NiSimpleViewerMenuShortcut"
-            Name="NiViewer$(var.PlatformSuffix)"
-            Description="NiViewer$(var.PlatformSuffix)"
-            Target="[INSTALLLOCATION]Samples\Bin$(var.PlatformSuffix)\Release\NiViewer$(var.PlatformSuffix).exe"
-            WorkingDirectory="INSTALLLOCATIONSAMPLESBINRELEASE"/>                  
-          <Shortcut Id="SampleDirMenuShortcut"
-             Name="Samples Directory $(var.PlatformSuffix)"
-             Description="Samples Directory"
-             Target="[INSTALLLOCATION]Samples\"
-             WorkingDirectory="INSTALLLOCATION"/>
-          <RemoveFolder Id="SamplesShortcutFolder" On="uninstall"/>
-          <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-        </Component>
-      </DirectoryRef>
-    <?endif?>
-    
-    <DirectoryRef Id="TARGETDIR">
-      <Component Id="RegistryEntries" Guid="D48D0BF7-6004-4403-B390-54C46454C394"  >
-        <RegistryKey Root="HKLM" Key="Software\OpenNI" Action="createAndRemoveOnUninstall">
-          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]" />
+
+         
+    <DirectoryRef Id="TARGETDIR">      
+      <Component Id="RegistryEntries"  Guid="*" >
+        
+        <RegistryKey Root="HKLM" Key="Software\OpenNI" Action="none" >
+          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]"  />
           <RegistryValue Type="string" Name="Version" Value="$(var.VersionNumber)"/>
         </RegistryKey>
         
@@ -180,9 +249,18 @@
       </Component>
     </DirectoryRef>
 
+
     <!-- Install OpenNI.net-->
     <DirectoryRef Id="TARGETDIR" >
-      <Component Id="OpenNINET" Guid="60718C69-87CB-45C0-A8A0-1B60E072D20A" DiskId="1">
+      <Component Id="OpenNIPolicy1.4" Guid="4bb7335e-1049-11e1-9352-b8ac6f2d7539" DiskId="1">
+<File Id="OpenNIPolicy1.4" Name="Policy.1.4.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\Policy.1.4.OpenNI.Net.dll" />
+<File Id="OpenNIPolicyConfig1.4" Name="PublisherPolicy1.4.config" KeyPath="no" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\PublisherPolicy1.4.config" />
+</Component>
+<Component Id="OpenNIPolicy1.5" Guid="b100518f-19a2-11e1-a67c-080027007877" DiskId="1">
+<File Id="OpenNIPolicy1.5" Name="Policy.1.5.OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\Policy.1.5.OpenNI.Net.dll" />
+<File Id="OpenNIPolicyConfig1.5" Name="PublisherPolicy1.5.config" KeyPath="no" Source="$(var.OpenNIFilesDir)\bin$(var.PlatformSuffix)\PublisherPolicy1.5.config" />
+</Component>
+<Component Id="OpenNINET" Guid="60718C69-87CB-45C0-A8A0-1B60E072D20A" DiskId="1">
         <File Id="OpenNINET" Name="OpenNI.Net.dll" Assembly=".net" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\OpenNI.Net.dll" />
       </Component>
       <Component Id="OpenNIPolicy1.1" Guid="ED633D34-ADC1-4b87-B3F6-930B8D600E0C" DiskId="1">
@@ -200,15 +278,16 @@
     </DirectoryRef>
     
     <DirectoryRef Id="TARGETDIR" >
-      <Component Id="EnviromentVars" Guid="9270882A-E2CA-4F91-BB6B-87F483A0D3D0" DiskId="1">
-
+      
+      <Component Id="EnviromentVars" Guid="*" DiskId="1" >
+      
         <Environment Id="OPENNIINSTALLPATH"
                             Action="set"
                             Part="all"
                             Name="OPEN_NI_INSTALL_PATH$(var.PlatformSuffix)"
                             Permanent="no"
                             System="yes"
-                            Value="[INSTALLLOCATION]"/>
+                            Value="[INSTALLLOCATION]" />
 
         <Environment Id="OPENNIBIN"
                             Action="set"
@@ -234,12 +313,16 @@
                             System="yes"
                             Value="[INSTALLLOCATION]Lib$(var.PlatformSuffix)"/>
         
+
+
         <Environment Id="ClassPath" Action="set" Part="last" Name="CLASSPATH" Permanent="yes" System="yes"
                            Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)\org.OpenNI.jar"/>
         
         <Environment Id="Path" Action="set" Part="last" Name="Path" Permanent="yes" System="yes"
                      Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)"/>
-                
+        
+        <RegistryValue Root="HKCU" Key="Software\OpenNI" Name="installedEnv$(var.PlatformSuffix)" Type="integer" Value="1" KeyPath="yes"/> 
+        
       </Component>
       
     </DirectoryRef>
@@ -254,7 +337,7 @@
     <!--  Install the visual studio 2008 DLLs-->
     <DirectoryRef Id="TARGETDIR">
       <?if $(var.Platform)="x86"?>
-        <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86.msm" DiskId="1" Language="0"/>
+        <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86.msm" DiskId="1" Language="0" />
       <?else?>
         <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" Language="0"/>
       <?endif?>
@@ -264,19 +347,7 @@
     <CustomAction Id='drivex86Install' Directory="INSTALLLOCATIONDriver" Return="ignore" Impersonate="no" Execute="deferred"
                   ExeCommand="&quot;[INSTALLLOCATIONDriver]dpinst-x86.exe&quot; /sw /el" />    
     <CustomAction Id='driveamd64Install' Directory="INSTALLLOCATIONDriver" Return="ignore" Impersonate="no" Execute="deferred"
-                  ExeCommand="&quot;[INSTALLLOCATIONDriver]dpinst-amd64.exe&quot; /sw /el"/>
-    
-    <!-- Register Recorder     -->
-    <CustomAction Id='RegRecorder' Directory="INSTALLLOCATIONBin" Return="check" Impersonate="no"  Execute="deferred"
-                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; nimRecorder$(var.PlatformSuffix).dll"/>
-    
-    <!-- Register MockNodes-->
-    <CustomAction Id='RegMockNodes' Directory="INSTALLLOCATIONBin" Return="check" Impersonate="no"  Execute="deferred"
-                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; nimMockNodes$(var.PlatformSuffix).dll"/>
-    
-    <!-- Register Codecs-->
-    <CustomAction Id='RegCodecs' Directory="INSTALLLOCATIONBin" Return="check" Impersonate="no" Execute="deferred"
-                  ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; nimCodecs$(var.PlatformSuffix).dll"/>
+                  ExeCommand="&quot;[INSTALLLOCATIONDriver]dpinst-amd64.exe&quot; /sw /el"/>       
 
     <!-- UnRegister Recorder     -->
     <CustomAction Id='UnRegRecorder' Directory="INSTALLLOCATIONBin" Return="ignore"  Impersonate="no" Execute="deferred"
@@ -290,7 +361,72 @@
     <CustomAction Id='UnRegCodecs' Directory="INSTALLLOCATIONBin" Return="ignore"  Impersonate="no" Execute="deferred"
                   ExeCommand="&quot;[INSTALLLOCATIONBin]niReg$(var.PlatformSuffix).exe&quot; -u nimCodecs$(var.PlatformSuffix).dll" />
 
-                      
+
+    <!-- Create the modules XML -->
+    <CustomAction Id="SetModulesXML" Property="ModulesXML" Value="[INSTALLLOCATION]"/>
+    <CustomAction Id="ModulesXML" Script="vbscript" Execute="deferred" Return="check" Impersonate="no"  Win64="$(var.Win64)">
+      <![CDATA[                  
+     Dim objFSO 
+      Dim objTextFile 
+      Const ForReading = 1, ForWriting = 2	    
+      
+      path = Session.Property("CustomActionData") 
+	  'path = "C:\Program Files (x86)\OpenNI"
+      
+      Set objFSO = CreateObject("Scripting.FileSystemObject")
+      
+      If (objFSO.FileExists(path + "\Data\modules.xml")) Then  
+        
+        Set objFSOTarget = CreateObject("scripting.filesystemobject")
+
+        Set objFilesSource = objFSO.OpenTextFile(path +"\Data\modules.xml",ForReading,True,0) 
+        Set objFilesTarget = objFSO.OpenTextFile(path +"\Data\modules.xml1",ForWriting,True,0)         
+
+        Do While objFilesSource.AtEndOfStream = FALSE
+		
+          strCurrentLine = objFilesSource.ReadLine
+          strCurrentLineNoSpace = Replace(strCurrentLine," ","")
+          
+          if StrComp(Left(strCurrentLineNoSpace,10),"<Modules/>") = 0 then            
+			objFilesTarget.WriteLine ("<Modules>")
+            objFilesTarget.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimRecorder$(var.PlatformSuffix).dll" + chr(&H22) + " />")
+            objFilesTarget.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimMockNodes$(var.PlatformSuffix).dll" + chr(&H22) +" />")
+            objFilesTarget.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimCodecs$(var.PlatformSuffix).dll"+ chr(&H22) + " />")       
+			objFilesTarget.WriteLine ("</Modules>")
+          else 
+			if StrComp(Left(strCurrentLineNoSpace,8),"<Modules") = 0 then
+				objFilesTarget.WriteLine strCurrentLine
+				objFilesTarget.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimRecorder$(var.PlatformSuffix).dll" + chr(&H22) + " />")
+				objFilesTarget.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimMockNodes$(var.PlatformSuffix).dll" + chr(&H22) +" />")
+				objFilesTarget.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimCodecs$(var.PlatformSuffix).dll"+ chr(&H22) + " />")       
+							
+			else
+				objFilesTarget.WriteLine strCurrentLine
+			end if
+          end if
+        Loop
+
+        objFilesSource.Close
+        objFilesTarget.Close
+      
+        'objFSOTarget.CopyFile path + "\Data\modules.xml", path + "\Data\modules.xml2"
+		    objFSOTarget.DeleteFile path + "\Data\modules.xml"
+        objFSOTarget.MoveFile path + "\Data\modules.xml1", path + "\Data\modules.xml"
+        
+      Else        
+        Set objTextFile = objFSO.CreateTextFile(path +"\Data\modules.xml", True)
+        
+        objTextFile.WriteLine ("<Modules>")
+        objTextFile.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimRecorder$(var.PlatformSuffix).dll" + chr(&H22) + " />")
+        objTextFile.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimMockNodes$(var.PlatformSuffix).dll" + chr(&H22) +" />")
+        objTextFile.WriteLine ("	<Module path=" + chr(&H22) + path + "bin$(var.PlatformSuffix)\nimCodecs$(var.PlatformSuffix).dll"+ chr(&H22) + " />")
+        objTextFile.WriteLine ("</Modules>")
+        
+        objTextFile.Close       
+      End If
+      ]]>
+    </CustomAction>
+    
     <!-- Set Environment for the current process -->
     <CustomAction Id="SetOpenNIPathData" Property="OpenNIPath" Value="[INSTALLLOCATION]"/>
     <CustomAction Id="OpenNIPath" Script="vbscript" Execute="deferred" Return="check" Impersonate="no"  Win64="$(var.Win64)">
@@ -300,15 +436,19 @@
       ]]>
     </CustomAction>
 
+    
+    
+    
     <!-- Remove OpenNI path from the env PATH  -->
-    <CustomAction Id="SetRemoveOpenNIPathData" Property="RemoveOpenNIPath" Value="[INSTALLLOCATIONBin]|[%Path]"/>
+    <CustomAction Id="SetRemoveOpenNIPathData" Property="RemoveOpenNIPath" Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)|[%Path]"/>
     <CustomAction Id="RemoveOpenNIPath" Script="vbscript" Execute="deferred" Impersonate="no"  Win64="$(var.Win64)">
       <![CDATA[
       strArgs = Session.Property("CustomActionData")      
-      Args = Split( strArgs, "|" )      
-      str = Replace(Args(1),Args(0),"")            
+      Args = Split( strArgs, "|" )            
+      str = Replace(Args(1),Args(0)+";","")      
+      str = Replace(Args(1),Args(0),"")      
       set WSHShell = CreateObject("WScript.Shell")
-      WSHShell.Environment.item("PATH") = str
+      WSHShell.Environment.item("PATH") = str      
       ]]>
     </CustomAction>
 
@@ -317,37 +457,52 @@
     <CustomAction Id="RemoveOpenNIClassPath" Script="vbscript" Execute="deferred" Impersonate="no"  Win64="$(var.Win64)">
       <![CDATA[
       strArgs = Session.Property("CustomActionData")      
-      Args = Split( strArgs, "|" )      
+      Args = Split( strArgs, "|" )  
+      str = Replace(Args(1),Args(0)+";","")   
       str = Replace(Args(1),Args(0),"")      
       set WSHShell = CreateObject("WScript.Shell")      
       WSHShell.Environment.item("CLASSPATH") = str      
       ]]>
     </CustomAction>
 
+ 
     <!-- Set the components defined in our fragment files that will be used for our feature  -->
-    <Feature Id="OpenNIFeature" Title="!(loc.ProductName)" Level="1" >
+    <Feature Id="OpenNIFeature" Title="!(loc.ProductName)" Level="1"  >
+       <!--New id var-->
+      <ComponentRef Id="RemoveLogDir$(var.Platform)"/>
+      <ComponentRef Id="RemoveBinDir$(var.Platform)"/>
       <?if $(var.BinaryOnlyRedist)="False"?>
-        <ComponentGroupRef Id="OpenNIFiles" />              
-        <ComponentRef Id="DocumentationShortcut" />
-        <ComponentRef Id="SamplesShortcut" />
-        <ComponentRef Id="RemoveReleaseLogDir"/>
+        <ComponentGroupRef Id="OpenNIFiles" />
         <ComponentRef Id="RemoveDebugLogDir"/>
+        <ComponentRef Id="RemoveDebugDir" />              
+        <ComponentRef Id="SamplesBinDebugLog"/>      
+        <ComponentRef Id="SamplesBinReleaseLog"/>
       <?else?>        
-        <ComponentGroupRef Id="OpenNIBinaryFiles"/>
+        <ComponentGroupRef Id="OpenNIBinaryFiles"/>      
       <?endif?>
       
-      <ComponentRef Id="ApplicationShortcut" />
-      <ComponentRef Id="RegistryEntries" />
+      <ComponentRef Id="DocumentationShortcut" />
+      <ComponentRef Id="RegistryEntries" />     
       <ComponentRef Id="OpenNINET"/>
+
+      
       <ComponentRef Id="OpenNIPolicy1.1"/>
       <ComponentRef Id="OpenNIPolicy1.2"/>
       <ComponentRef Id="OpenNIPolicy1.3"/>
+      <ComponentRef Id="OpenNIPolicy1.4"/>      
+      <ComponentRef Id="OpenNIPolicy1.5"/>
+      
       <ComponentRef Id="EnviromentVars"/>
-      <ComponentRef Id="RemoveLogDir"/>
+
+      
+     
+
+
+
     </Feature>
 
-    <Feature Id="VCRedist" Title="Visual C++ 9.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
-      <MergeRef Id="VCRedist"/>
+    <Feature Id="VCRedist" Title="Visual C++ 9.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1" >
+      <MergeRef Id="VCRedist" />
     </Feature>
     
     <WixVariable Id="WixUICostingPopupOptOut" Value="0" />
@@ -363,9 +518,10 @@
       <Custom Action="SetOpenNIPathData" Before="OpenNIPath"/>
       <Custom Action="OpenNIPath" Before="PublishProduct"/>
 
-      <Custom Action='RegRecorder' After='OpenNIPath'>NOT Installed </Custom>
-      <Custom Action='RegMockNodes' After='RegRecorder'>NOT Installed </Custom>     
-      <Custom Action='RegCodecs' After='RegMockNodes'>NOT Installed </Custom>
+      <Custom Action="SetModulesXML" Before="ModulesXML">NOT Installed</Custom>
+      <Custom Action="ModulesXML" Before="InstallFinalize">NOT Installed</Custom>
+      
+
       <Custom Action='UnRegRecorder' Before='RemoveFiles'> REMOVE ~= "ALL" </Custom>
       <Custom Action='UnRegMockNodes' Before='RemoveFiles'> REMOVE ~= "ALL" </Custom>
       <Custom Action='UnRegCodecs' Before='RemoveFiles'> REMOVE ~= "ALL" </Custom>

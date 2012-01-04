@@ -26,7 +26,7 @@ DOXYFILE_ENCODING      = UTF-8
 # identify the project. Note that if you do not use Doxywizard you need 
 # to put quotes around the project name if it contains spaces.
 
-PROJECT_NAME = "OpenNI 1.3.3"
+PROJECT_NAME = "OpenNI 1.5.2"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. 
 # This could be handy for archiving the generated documentation or 
@@ -1520,7 +1520,9 @@ INCLUDE_FILE_PATTERNS  =
 # instead of the = operator.
 
 PREDEFINED             = XN_CALLBACK_TYPE= \
-                         XN_API_DEPRECATED(x)=
+                         XN_API_DEPRECATED(x)= \
+                         __XN_NO_BC__ \
+                         XN_PLATFORM_VAARGS_TYPE=XN_PLATFORM_USE_WIN32_VAARGS_STYLE
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 

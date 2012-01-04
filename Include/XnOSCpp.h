@@ -60,8 +60,7 @@ public:
 	{
 		if (!m_bLocked)
 		{
-			XnStatus nRetVal = xnOSEnterCriticalSection(&m_hCS);
-			XN_ASSERT(nRetVal == XN_STATUS_OK);
+			xnOSEnterCriticalSection(&m_hCS);
 			m_bLocked = TRUE;
 		}
 	}
@@ -70,8 +69,7 @@ public:
 	{
 		if (m_bLocked)
 		{
-			XnStatus nRetVal = xnOSLeaveCriticalSection(&m_hCS);
-			XN_ASSERT(nRetVal == XN_STATUS_OK);
+			xnOSLeaveCriticalSection(&m_hCS);
 			m_bLocked = FALSE;
 		}
 	}
@@ -128,14 +126,14 @@ public:
 		return xnOSCreateEvent(&m_hEvent, bManualReset);
 	}
 
-	XnStatus Create(const XnChar* strName, XnBool bManualReset)
+	XnStatus Create(const XnChar* strName, XnBool bManualReset, XnBool bAllowOtherUsers = FALSE)
 	{
-		return xnOSCreateNamedEvent(&m_hEvent, strName, bManualReset);
+		return xnOSCreateNamedEventEx(&m_hEvent, strName, bManualReset, bAllowOtherUsers);
 	}
 
-	XnStatus Open(const XnChar* strName)
+	XnStatus Open(const XnChar* strName, XnBool bEnableOtherUsers = FALSE)
 	{
-		return xnOSOpenNamedEvent(&m_hEvent, strName);
+		return xnOSOpenNamedEventEx(&m_hEvent, strName, bEnableOtherUsers);
 	}
 
 	XnStatus Close()

@@ -43,24 +43,24 @@ public class AlternativeViewpointCapability extends CapabilityBase
 		};
 	}
 	
-	boolean isViewpointSupported(ProductionNode other)
+	public boolean isViewpointSupported(ProductionNode other)
 	{
 		return NativeMethods.xnIsViewPointSupported(toNative(), other.toNative());
 	}
 	
-	void setViewpoint(ProductionNode other) throws StatusException
+	public void setViewpoint(ProductionNode other) throws StatusException
 	{
 		int status = NativeMethods.xnSetViewPoint(toNative(), other.toNative());
 		WrapperUtils.throwOnError(status);
 	}
 	
-	void resetViewpoint() throws StatusException
+	public void resetViewpoint() throws StatusException
 	{
 		int status = NativeMethods.xnResetViewPoint(toNative());
 		WrapperUtils.throwOnError(status);
 	}
 	
-	boolean isViewpointAs(ProductionNode other)
+	public boolean isViewpointAs(ProductionNode other)
 	{
 		return NativeMethods.xnIsViewPointAs(toNative(), other.toNative());
 	}

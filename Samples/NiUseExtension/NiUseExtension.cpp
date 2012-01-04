@@ -65,7 +65,18 @@ int main()
 
 	RotatingDevice rotatingDevice;
 	nRetVal = rotatingDevice.Create(context);
-	CHECK_RC(nRetVal, "Create Rotating Device");
+	if (nRetVal != XN_STATUS_OK)
+	{
+		printf("Create Rotating Device failed: %s\n\n", xnGetStatusString(nRetVal));
+		printf("In order to run this sample, NiSampleExtensionModule must be registered with OpenNI.\n");
+		printf("Please run:\n");
+		printf("\tniReg NiSampleExtensionModule.dll\n");
+		printf("before running this sample, and\n");
+		printf("\tniReg -u NiSampleExtensionModule.dll\n");
+		printf("afterwards.\n");
+
+		return nRetVal;
+	}
 
 	nRetVal = rotatingDevice.SetViewAngle(2.17);
 	CHECK_RC(nRetVal, "Create Rotating Device");

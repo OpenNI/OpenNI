@@ -96,7 +96,7 @@ class NativeMethods
 	//static native void xnNodeInfoFree(long pNodeInfo);
 	static native int xnNodeInfoSetInstanceName(long pNodeInfo, String strInstanceName);
 	static native ProductionNodeDescription xnNodeInfoGetDescription(long pNodeInfo);
-	//static native int xnNodeInfoGetTreeStringRepresentation(long pNodeInfo, OutArg<String> result);
+	static native int xnNodeInfoGetTreeStringRepresentation(long pNodeInfo, OutArg<String> result);
 	static native String xnNodeInfoGetInstanceName(long pNodeInfo);
 	static native String xnNodeInfoGetCreationInfo(long pNodeInfo);
 	static native long xnNodeInfoGetNeededNodes(long pNodeInfo);
@@ -286,6 +286,7 @@ class NativeMethods
 //	static native int xnGetActiveGestures(long hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
 	static native int xnGetAllActiveGestures(long hInstance, OutArg<String[]> gestures);
 //	static native int xnEnumerateGestures(long hInstance, XnChar** pstrGestures, XnUInt16* nGestures);
+	static native int xnGetNumberOfAvailableGestures(long hInstance);
 	static native int xnEnumerateAllGestures(long hInstance, OutArg<String[]> gestures);
 	static native boolean xnIsGestureAvailable(long hInstance, String strGesture);
 	static native boolean xnIsGestureProgressSupported(long hInstance, String strGesture);
@@ -367,13 +368,15 @@ class NativeMethods
 	static native int xnGetAllAvailablePoses(long hInstance, OutArg<String[]> pstrPoses);
 	static native int xnStartPoseDetection(long hInstance, String strPose, int user);
 	static native int xnStopPoseDetection(long hInstance, int user);
+	static native int xnStopSinglePoseDetection(long hInstance, int user, String strPose);
 	static native int xnRegisterToPoseDetected(long hInstance, Object obj, String cb, OutArg<Long> phCallback);
 	static native void xnUnregisterFromPoseDetected(long hInstance, long hCallback);
 	static native int xnRegisterToOutOfPose(long hInstance, Object obj, String cb, OutArg<Long> phCallback);
 	static native void xnUnregisterFromOutOfPose(long hInstance, long hCallback);
 	static native int xnRegisterToPoseDetectionInProgress(long hInstance, Object obj, String poseDetectionInProgressCB, OutArg<Long> phCallback);
 	static native void xnUnregisterFromPoseDetectionInProgress(long hInstance, long hCallback);
-
+	static native boolean xnIsPoseSupported(long hInstance, String strPose);
+	static native int xnGetPoseStatus(long hInstance, int user, String strPose, OutArg<Long> poseTime, OutArg<Integer> eStatus, OutArg<Integer> eState);
 	// Hands
 	static native int xnCreateHandsGenerator(
 			long pContext,

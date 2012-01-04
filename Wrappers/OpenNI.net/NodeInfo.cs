@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace OpenNI
 {
@@ -46,7 +47,9 @@ namespace OpenNI
 		{
 			get
 			{
-				return SafeNativeMethods.xnNodeInfoGetDescription(this.InternalObject);
+                IntPtr pDescription = SafeNativeMethods.xnNodeInfoGetDescription(this.InternalObject);
+                ProductionNodeDescription description = ProductionNodeDescription.Empty;
+                return (ProductionNodeDescription)Marshal.PtrToStructure(pDescription, typeof(ProductionNodeDescription));
 			}
 		}
 
@@ -94,6 +97,15 @@ namespace OpenNI
 				}
 			}
 		}
+
+        public override string ToString()
+        {
+            const int size = 4096;
+            StringBuilder sb = new StringBuilder(size);
+            int status = SafeNativeMethods.xnNodeInfoGetTreeStringRepresentation(this.InternalObject, sb, size);
+            WrapperUtils.ThrowOnError(status);
+            return sb.ToString();
+        }
 
 		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{

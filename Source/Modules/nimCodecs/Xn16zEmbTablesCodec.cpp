@@ -41,7 +41,7 @@ XnStatus Xn16zEmbTablesCodec::Init(const ProductionNode& node)
 	XnStatus nRetVal = XN_STATUS_OK;
 	
 	nRetVal = XnCodec::Init(node);
-	XN_IS_STATUS_OK(nRetVal);
+	XN_IS_STATUS_OK_LOG_ERROR("Init codec", nRetVal);
 	
 	if (node.GetInfo().GetDescription().Type != XN_NODE_TYPE_DEPTH)
 	{

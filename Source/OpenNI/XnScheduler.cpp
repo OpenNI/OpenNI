@@ -154,8 +154,6 @@ XN_THREAD_PROC xnSchedulerThreadFunc(XN_THREAD_PARAM pThreadParam)
 
 void FreeScheduler(XnScheduler* pScheduler)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	// stop thread
 	if (pScheduler->hThread)
 	{

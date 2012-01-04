@@ -323,8 +323,10 @@ static XnBool xnIsNodeMatch(XnContext* pContext, const XnNodeQuery* pQuery, XnNo
 		{
 			const XnProductionNodeDescription* pDescription = xnNodeInfoGetDescription(pNodeInfo);
 			xnLogVerbose(XN_MASK_OPEN_NI, "Creating node '%s' of type '%s' for querying...", pDescription->strName, xnProductionNodeTypeToString(pDescription->Type));
-			if (XN_STATUS_OK != xnCreateProductionTree(pContext, pNodeInfo, &hNode))
+			XnStatus nRetVal = xnCreateProductionTree(pContext, pNodeInfo, &hNode);
+			if (nRetVal != XN_STATUS_OK)
 			{
+				xnLogWarning(XN_MASK_OPEN_NI, "Failed to create node of type '%s' for querying: %s", xnProductionNodeTypeToString(pDescription->Type), xnGetStatusString(nRetVal));
 				return (FALSE);
 			}
 		}

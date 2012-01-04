@@ -37,15 +37,13 @@ XnVideoSource::XnVideoSource(LPUNKNOWN lpunk, HRESULT *phr) :
 	CSource(g_videoName, lpunk, CLSID_OpenNIVideo),
 	m_pVideoProcAmp(NULL),
 	m_pCameraControl(NULL),
-	m_Dump(XN_DUMP_CLOSED)
+	m_Dump(xnDumpFileOpen(XN_MASK_FILTER, "FilterFlow.log"))
 {
 	ASSERT(phr != NULL);
 
 	xnLogVerbose(XN_MASK_FILTER, "Creating video source filter");
 
 	CAutoLock cAutoLock(&m_cStateLock);
-
-	xnDumpInit(&m_Dump, XN_MASK_FILTER, "", "FilterFlow.log");
 
 	// initialize OpenNI
 	XnStatus nRetVal = m_context.Init();
@@ -149,17 +147,17 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 
 	if (riid == IID_ISpecifyPropertyPages)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to ISpecifyPropertyPages\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to ISpecifyPropertyPages\n");
 		hr = GetInterface(static_cast<ISpecifyPropertyPages*>(this), ppv);
 	}
 	else if (riid == IID_IAMVideoControl)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to IAMVideoControl\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to IAMVideoControl\n");
 		hr = GetInterface(static_cast<IAMVideoControl*>(this), ppv);
 	}
 	else if (riid == IID_IAMVideoProcAmp)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to IAMVideoProcAmp\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to IAMVideoProcAmp\n");
 		if (m_pVideoProcAmp == NULL)
 		{
 			m_pVideoProcAmp = new VideoProcAmp(this);
@@ -173,7 +171,7 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 	}
 	else if (riid == IID_IAMCameraControl)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to IAMCameraControl\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to IAMCameraControl\n");
 		if (m_pCameraControl == NULL)
 		{
 			m_pCameraControl = new CameraControl(this);
@@ -187,14 +185,14 @@ STDMETHODIMP XnVideoSource::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 	}
 	else if (riid == IID_IAdditionalOpenNIControls)
 	{
-		xnDumpWriteString(m_Dump, "Filter query interface to IAdditionalControls\n");
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to IAdditionalControls\n");
 		hr = GetInterface(static_cast<IAdditionalControls*>(this), ppv);
 	}
 	else
 	{
 		OLECHAR strGuid[40];
 		StringFromGUID2(riid, strGuid, 40);
-		xnDumpWriteString(m_Dump, "Filter query interface to %S\n", strGuid);
+		xnDumpFileWriteString(m_Dump, "\tFilter query interface to %S\n", strGuid);
 
 		hr = CSource::NonDelegatingQueryInterface(riid, ppv);
 	}

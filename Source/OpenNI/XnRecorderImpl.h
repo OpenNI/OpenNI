@@ -71,14 +71,18 @@ namespace xn
 		static XnStatus XN_CALLBACK_TYPE OpenFile(void* pCookie);
 		static XnStatus XN_CALLBACK_TYPE WriteFile(void* pCookie, const XnChar* strNodeName, 
 			const void* pData, XnUInt32 nSize);
-		static XnStatus XN_CALLBACK_TYPE SeekFile(void* pCookie, XnOSSeekType seekType, const XnUInt32 nOffset);
+		static XnStatus XN_CALLBACK_TYPE SeekFile  (void* pCookie, XnOSSeekType seekType, const XnInt32 nOffset);
+		static XnStatus XN_CALLBACK_TYPE SeekFile64(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset);
 		static XnUInt32 XN_CALLBACK_TYPE TellFile(void* pCookie);
+		static XnUInt64 XN_CALLBACK_TYPE TellFile64(void* pCookie);
 		static void XN_CALLBACK_TYPE CloseFile(void* pCookie);
 
 		XnStatus OpenFileImpl();
 		XnStatus WriteFileImpl(const XnChar* strNodeName, const void* pData, XnUInt32 nSize);
-		XnStatus SeekFileImpl(XnOSSeekType seekType, const XnUInt32 nOffset);
+		XnStatus SeekFileImpl  (XnOSSeekType seekType, const XnInt32 nOffset);
+		XnStatus SeekFile64Impl(XnOSSeekType seekType, const XnInt64 nOffset);
 		XnUInt32 TellFileImpl();
+		XnUInt64 TellFile64Impl();
 		void CloseFileImpl();
 
 		XnCodecID GetDefaultCodecID(ProductionNode& node);
@@ -90,7 +94,8 @@ namespace xn
 
 		XnRecordMedium m_destType;
 		XnChar m_strFileName[XN_FILE_MAX_PATH];
-		FILE* m_pOutFile;
+		XnBool m_bIsFileOpen;
+		XN_FILE_HANDLE m_hOutFile;
 		XnNodeHandle m_hRecorder;
 		XN_DECLARE_DEFAULT_HASH(XnNodeHandle, NodeWatcher*, NodeWatchersMap);
 		NodeWatchersMap m_nodeWatchersMap;

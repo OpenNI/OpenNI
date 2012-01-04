@@ -61,12 +61,14 @@ public abstract class OpenNIBaseActivity extends Activity {
 			Log.e(TAG,"Could not initialize Activity:", e);
 			return;
 		}
+
+        shouldRun = true;
         mainLoopThread = new Thread() {
         	public void run() {
         		mainLoop();
         	};
         };
-        shouldRun = true;
+        mainLoopThread.setName("OpenNI MainLoop Thread");
         mainLoopThread.start();
     	
     	// TODO Auto-generated method stub
@@ -106,7 +108,9 @@ public abstract class OpenNIBaseActivity extends Activity {
 				if(killOnTimeout)
 				{
 					Log.i(TAG,"onPause() without onStop() timed out (" + killOnTimeoutMillisec + "ms): It's time to DIE!");
-					openNITerminate();				
+					openNITerminate();
+					Log.d(TAG, "triggering finish()...");
+					finish();				
 				}
 			}
 		}, killOnTimeoutMillisec);
@@ -196,7 +200,7 @@ public abstract class OpenNIBaseActivity extends Activity {
 				mainLoopThread.join();
 				mainLoopThread = null;
 				break;
-			} catch (InterruptedException e) { /* i dont care. */}
+			} catch (InterruptedException e) { /* i don't care. */}
 		}
 		// now clean up!
 		isOpenNIInitialized = false;

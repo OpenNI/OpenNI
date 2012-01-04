@@ -55,7 +55,7 @@ void ExportedPlayer::GetDescription(XnProductionNodeDescription* pDescription)
 	pDescription->Version.nBuild = XN_BUILD_VERSION;
 }
 
-XnStatus ExportedPlayer::EnumerateProductionTrees(xn::Context& context, xn::NodeInfoList& TreesList, xn::EnumerationErrors* pErrors)
+XnStatus ExportedPlayer::EnumerateProductionTrees(xn::Context& /*context*/, xn::NodeInfoList& TreesList, xn::EnumerationErrors* /*pErrors*/)
 {
 	XnProductionNodeDescription description;
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -67,9 +67,8 @@ XnStatus ExportedPlayer::EnumerateProductionTrees(xn::Context& context, xn::Node
 	return XN_STATUS_OK;
 }
 
-XnStatus ExportedPlayer::Create(xn::Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, xn::NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, xn::ModuleProductionNode** ppInstance)
+XnStatus ExportedPlayer::Create(xn::Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, xn::NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, xn::ModuleProductionNode** ppInstance)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
 	XN_VALIDATE_INPUT_PTR(strInstanceName);
 	XN_VALIDATE_INPUT_PTR(strCreationInfo);
 	XN_VALIDATE_OUTPUT_PTR(ppInstance);

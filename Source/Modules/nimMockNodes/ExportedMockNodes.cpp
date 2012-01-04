@@ -51,15 +51,14 @@ void ExportedMockNodeBase::GetDescription(XnProductionNodeDescription* pDescript
 	pDescription->Version.nBuild = XN_BUILD_VERSION;
 }
 
-XnStatus ExportedMockNodeBase::EnumerateProductionTrees(xn::Context& context, xn::NodeInfoList& TreesList, xn::EnumerationErrors* pErrors)
+XnStatus ExportedMockNodeBase::EnumerateProductionTrees(xn::Context& /*context*/, xn::NodeInfoList& /*TreesList*/, xn::EnumerationErrors* /*pErrors*/)
 {
 	// Don't return this in a regular enumeration. Instead, mock nodes are created directly by OpenNI.
 	return XN_STATUS_OK;
 }
 
-XnStatus ExportedMockNodeBase::Create(xn::Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, xn::NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, xn::ModuleProductionNode** ppInstance)
+XnStatus ExportedMockNodeBase::Create(xn::Context& /*context*/, const XnChar* strInstanceName, const XnChar* /*strCreationInfo*/, xn::NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, xn::ModuleProductionNode** ppInstance)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
 	XN_VALIDATE_OUTPUT_PTR(ppInstance);
 
 	*ppInstance = CreateImpl(strInstanceName);

@@ -88,7 +88,7 @@ XnStatus RecorderNode::OnNodeAdded(const XnChar* strNodeName, XnProductionNodeTy
 
 	m_nConfigurationID++;
 
-	NodeAddedRecord nodeAddedRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
+	NodeAddedRecord nodeAddedRecord(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	nodeAddedRecord.SetNodeName(strNodeName);
 	nodeAddedRecord.SetNodeType(type);
 	nodeAddedRecord.SetCompression(compression);
@@ -101,7 +101,7 @@ XnStatus RecorderNode::OnNodeAdded(const XnChar* strNodeName, XnProductionNodeTy
 		return nRetVal;
 	}
 
-	XnUInt32 nNodeAddedPos = TellStream();
+	XnUInt64 nNodeAddedPos = TellStream();
 	nRetVal = WriteRecordToStream(strNodeName, nodeAddedRecord);
 	if (nRetVal != XN_STATUS_OK)
 	{
@@ -145,12 +145,12 @@ XnStatus RecorderNode::OnNodeIntPropChanged(const XnChar* strNodeName, const XnC
 {
 	m_nConfigurationID++;
 
-	XnUInt32 nUndoRecordPos = 0;
+	XnUInt64 nUndoRecordPos = 0;
 	RecordedNodeInfo* pRecordedNodeInfo = NULL;
 	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
 	XN_IS_STATUS_OK(nRetVal);
 
-	IntPropRecord intPropRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
+	IntPropRecord intPropRecord(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	intPropRecord.SetNodeID(pRecordedNodeInfo->nNodeID);
 	intPropRecord.SetPropName(strPropName);
 	intPropRecord.SetValue(nValue);
@@ -178,12 +178,12 @@ XnStatus RecorderNode::OnNodeRealPropChanged(const XnChar* strNodeName, const Xn
 {
 	m_nConfigurationID++;
 
-	XnUInt32 nUndoRecordPos = 0;
+	XnUInt64 nUndoRecordPos = 0;
 	RecordedNodeInfo* pRecordedNodeInfo = NULL;
 	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
 	XN_IS_STATUS_OK(nRetVal);
 
-	RealPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	RealPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	record.SetNodeID(pRecordedNodeInfo->nNodeID);
 	record.SetPropName(strPropName);
 	record.SetValue(dValue);
@@ -210,11 +210,11 @@ XnStatus RecorderNode::OnNodeStringPropChanged(const XnChar* strNodeName, const 
 {
 	m_nConfigurationID++;
 
-	XnUInt32 nUndoRecordPos = 0;
+	XnUInt64 nUndoRecordPos = 0;
 	RecordedNodeInfo* pRecordedNodeInfo = NULL;
 	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
 	XN_IS_STATUS_OK(nRetVal);
-	StringPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	StringPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	record.SetNodeID(pRecordedNodeInfo->nNodeID);
 	record.SetPropName(strPropName);
 	record.SetValue(strValue);
@@ -242,10 +242,10 @@ XnStatus RecorderNode::OnNodeGeneralPropChanged(const XnChar* strNodeName, const
 	m_nConfigurationID++;
 
 	RecordedNodeInfo* pRecordedNodeInfo = NULL;
-	XnUInt32 nUndoRecordPos = 0;
+	XnUInt64 nUndoRecordPos = 0;
 	XnStatus nRetVal = UpdateNodePropInfo(strNodeName, strPropName, pRecordedNodeInfo, nUndoRecordPos);
 	XN_IS_STATUS_OK(nRetVal);
-	GeneralPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	GeneralPropRecord record(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	record.SetNodeID(pRecordedNodeInfo->nNodeID);
 	record.SetPropName(strPropName);
 	record.SetPropData(pBuffer);
@@ -275,7 +275,7 @@ XnStatus RecorderNode::OnNodeStateReady(const XnChar* strNodeName)
 
 	RecordedNodeInfo* pRecordedNodeInfo = GetRecordedNodeInfo(strNodeName);
 	XN_VALIDATE_PTR(pRecordedNodeInfo, XN_STATUS_BAD_NODE_NAME);
-	NodeStateReadyRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	NodeStateReadyRecord record(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	record.SetNodeID(pRecordedNodeInfo->nNodeID);
 	XnStatus nRetVal = record.Encode();
 	XN_IS_STATUS_OK(nRetVal);
@@ -284,7 +284,7 @@ XnStatus RecorderNode::OnNodeStateReady(const XnChar* strNodeName)
 	return XN_STATUS_OK;
 }
 
-XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 nFrame, const void* pData, XnUInt32 nSize)
+XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeStamp, XnUInt32 /*nFrame*/, const void* pData, XnUInt32 nSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -339,12 +339,12 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 
 	pRecordedNodeInfo->nMaxTimeStamp = nTimeStamp;
 
-	XnUInt32 nUndoRecordPos = 0;
+	XnUInt64 nUndoRecordPos = 0;
 	nRetVal = UpdateNodePropInfo(strNodeName, XN_PROP_NEWDATA, pRecordedNodeInfo, nUndoRecordPos);
 	XN_IS_STATUS_OK(nRetVal);
 
 	//Prepare data header
-	NewDataRecordHeader recordHeader(m_pRecordBuffer, RECORD_MAX_SIZE);
+	NewDataRecordHeader recordHeader(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	recordHeader.SetNodeID(pRecordedNodeInfo->nNodeID);
 	recordHeader.SetTimeStamp(nTimeStamp);
 	recordHeader.SetFrameNumber(++pRecordedNodeInfo->nMaxFrameNum);
@@ -425,22 +425,24 @@ XnStatus RecorderNode::WriteRecordToStream(const XnChar* strNodeName, Record &re
 	return WriteToStream(strNodeName, record.GetData(), record.GetSize());
 }
 
-XnStatus RecorderNode::SeekStream(XnOSSeekType seekType, XnUInt32 nOffset)
+XnStatus RecorderNode::SeekStream(XnOSSeekType seekType, XnUInt64 nOffset)
 {
 	XN_VALIDATE_INPUT_PTR(m_pOutputStream);
-	return m_pOutputStream->Seek(m_pStreamCookie, seekType, nOffset);
+	XN_VALIDATE_INPUT_PTR(m_pOutputStream->Seek64);
+	return m_pOutputStream->Seek64(m_pStreamCookie, seekType, nOffset);
 }
 
-XnUInt32 RecorderNode::TellStream()
+XnUInt64 RecorderNode::TellStream()
 {
 	XN_VALIDATE_INPUT_PTR(m_pOutputStream);
-	return m_pOutputStream->Tell(m_pStreamCookie);
+	XN_VALIDATE_INPUT_PTR(m_pOutputStream->Tell64);
+	return m_pOutputStream->Tell64(m_pStreamCookie);
 }
 
 XnStatus RecorderNode::FinalizeStream()
 {
 	XN_VALIDATE_INPUT_PTR(m_pOutputStream);
-	EndRecord endRecord(m_pRecordBuffer, RECORD_MAX_SIZE);
+	EndRecord endRecord(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	XnStatus nRetVal = endRecord.Encode();
 	XN_IS_STATUS_OK(nRetVal);
 	/* Write End Record */
@@ -484,7 +486,7 @@ XnStatus RecorderNode::WriteNodeDataBegin(const XnChar* strNodeName)
 {
 	RecordedNodeInfo* pRecordedNodeInfo = GetRecordedNodeInfo(strNodeName);
 	XN_VALIDATE_PTR(pRecordedNodeInfo, XN_STATUS_BAD_NODE_NAME);
-	NodeDataBeginRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	NodeDataBeginRecord record(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	record.SetNodeID(pRecordedNodeInfo->nNodeID);
 	XnStatus nRetVal = record.Encode();
 	XN_IS_STATUS_OK(nRetVal);
@@ -499,12 +501,12 @@ XnStatus RecorderNode::UpdateNodeSeekInfo(const XnChar* strNodeName, const Recor
 
 	if (recordedNodeInfo.bGotData)
 	{
-		XnUInt32 nSeekTablePos = 0;
+		XnUInt64 nSeekTablePos = 0;
 
 		nSeekTablePos = TellStream();
 
 		// write seek table
-		DataIndexRecordHeader seekTableHeader(m_pRecordBuffer, RECORD_MAX_SIZE);
+		DataIndexRecordHeader seekTableHeader(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 		seekTableHeader.SetNodeID(recordedNodeInfo.nNodeID);
 		seekTableHeader.SetPayloadSize((recordedNodeInfo.nMaxFrameNum+1) * sizeof(DataIndexEntry));
 		nRetVal = seekTableHeader.Encode();
@@ -523,7 +525,7 @@ XnStatus RecorderNode::UpdateNodeSeekInfo(const XnChar* strNodeName, const Recor
 		{
 			*pPayload = *it;
 		}
-		XN_ASSERT((recordedNodeInfo.nMaxFrameNum+1) == (pPayload - (DataIndexEntry*)m_pPayloadData));
+		XN_ASSERT((recordedNodeInfo.nMaxFrameNum+1) == XnUInt32(pPayload - (DataIndexEntry*)m_pPayloadData));
 
 		nRetVal = WriteToStream(strNodeName, m_pPayloadData, (XnUInt8*)pPayload - m_pPayloadData);
 		if (nRetVal != XN_STATUS_OK)
@@ -533,14 +535,14 @@ XnStatus RecorderNode::UpdateNodeSeekInfo(const XnChar* strNodeName, const Recor
 			return nRetVal;
 		}
 
-		XnUInt32 nStartPos = TellStream();
+		XnUInt64 nStartPos = TellStream();
 
 		//Seek to position of node added record
 		nRetVal = SeekStream(XN_OS_SEEK_SET, recordedNodeInfo.nNodeAddedPos);
 		XN_IS_STATUS_OK(nRetVal);
 
 		// re-write this record, this time with seek data
-		NodeAddedRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+		NodeAddedRecord record(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 		record.SetNodeID(recordedNodeInfo.nNodeID);
 		record.SetNodeName(strNodeName);
 		record.SetCompression(recordedNodeInfo.compression);
@@ -575,7 +577,7 @@ XnStatus RecorderNode::RemoveNode(const XnChar* strNodeName)
 	nRetVal = m_recordedNodesInfo.Remove(strNodeName, recordedNodeInfo);
 	XN_IS_STATUS_OK(nRetVal);
 
-	NodeRemovedRecord record(m_pRecordBuffer, RECORD_MAX_SIZE);
+	NodeRemovedRecord record(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);
 	record.SetNodeID(recordedNodeInfo.nNodeID);
 	record.SetUndoRecordPos(recordedNodeInfo.nNodeAddedPos);
 
@@ -604,7 +606,7 @@ XnStatus RecorderNode::RemoveNode(const XnChar* strNodeName)
 
 
 XnStatus RecorderNode::UpdateNodePropInfo(const XnChar* strNodeName, const XnChar* strPropName, 
-										  RecordedNodeInfo*& pRecordedNodeInfo, XnUInt32& nUndoPos)
+										  RecordedNodeInfo*& pRecordedNodeInfo, XnUInt64& nUndoPos)
 {
 	XnStatus nRetVal = m_recordedNodesInfo.Get(strNodeName, pRecordedNodeInfo);
 	XN_IS_STATUS_OK(nRetVal);

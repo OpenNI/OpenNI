@@ -62,6 +62,7 @@ namespace Sample
 				pQuery == NULL ? NULL : pQuery->GetUnderlyingObject(),
 				&hNode,
 				pErrors == NULL ? NULL : pErrors->GetUnderlying());
+			XN_IS_STATUS_OK(nRetVal);
 			TakeOwnership(hNode);
 			return XN_STATUS_OK;
 		}

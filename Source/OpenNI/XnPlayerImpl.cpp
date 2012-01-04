@@ -39,7 +39,9 @@ XnPlayerInputStreamInterface PlayerImpl::s_fileInputStream =
 	&ReadFile,
 	&SeekFile,
 	&TellFile,
-	&CloseFile
+	&CloseFile,
+	&SeekFile64,
+	&TellFile64
 };
 
 XnNodeNotifications PlayerImpl::s_nodeNotifications =
@@ -56,9 +58,12 @@ XnNodeNotifications PlayerImpl::s_nodeNotifications =
 
 PlayerImpl::PlayerImpl() : 
 	m_hPlayer(NULL), 
-	m_pInFile(NULL),
+	m_bIsFileOpen(FALSE),
 	m_bHasTimeReference(FALSE),
-	m_dPlaybackSpeed(1.0)
+	m_dPlaybackSpeed(1.0),
+	m_hPlaybackThread(NULL),
+	m_hPlaybackEvent(NULL),
+	m_bPlaybackThreadShutdown(FALSE)
 {
 	xnOSMemSet(m_strSource, 0, sizeof(m_strSource));
 }
@@ -86,12 +91,36 @@ XnStatus PlayerImpl::Init(XnNodeHandle hPlayer)
 	nRetVal = ModulePlayer().RegisterToEndOfFileReached(ModuleHandle(), EndOfFileReachedCallback, this, &hDummy);
 	XN_IS_STATUS_OK(nRetVal);
 
+	nRetVal = xnOSCreateCriticalSection(&m_hPlaybackLock);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnOSCreateEvent(&m_hPlaybackEvent, FALSE);
+	XN_IS_STATUS_OK(nRetVal);
+
+	nRetVal = xnOSCreateThread(PlaybackThread, this, &m_hPlaybackThread);
+	XN_IS_STATUS_OK(nRetVal);
+
 	return XN_STATUS_OK;
 }
 
 void PlayerImpl::BeforeNodeDestroy()
 {
-	//Do nothing here - we only destroy in the destructor.
+	// we need to close the thread *before* the node is destroyed (as the thread uses it)
+	m_bPlaybackThreadShutdown = TRUE;
+
+	if (m_hPlaybackThread != NULL)
+	{
+		// signal the event, so the thread will wake up
+		xnOSSetEvent(m_hPlaybackEvent);
+		xnOSWaitAndTerminateThread(&m_hPlaybackThread, 1000);
+		m_hPlaybackThread = NULL;
+	}
+
+	if (m_hPlaybackEvent != NULL)
+	{
+		xnOSCloseEvent(&m_hPlaybackEvent);
+		m_hPlaybackEvent = NULL;
+	}
 }
 
 XnStatus PlayerImpl::SetSource(XnRecordMedium sourceType, const XnChar* strSource)
@@ -142,6 +171,12 @@ void PlayerImpl::Destroy()
 {
 	CloseFileImpl();
 
+	if (m_hPlaybackLock != NULL)
+	{
+		xnOSCloseCriticalSection(&m_hPlaybackLock);
+		m_hPlaybackLock = NULL;
+	}
+
 	for (PlayedNodesHash::Iterator it = m_playedNodes.begin(); it != m_playedNodes.end(); ++it)
 	{
 		PlayedNodeInfo& nodeInfo = it.Value();
@@ -176,6 +211,9 @@ XnStatus PlayerImpl::EnumerateNodes(XnNodeInfoList** ppList)
 
 XnStatus PlayerImpl::SetPlaybackSpeed(XnDouble dSpeed)
 {
+	// do that in a lock (other thread might be in the middle of playback/seek)
+	XnAutoCSLocker locker(m_hPlaybackLock);
+
 	if (dSpeed < 0)
 	{
 		return XN_STATUS_BAD_PARAM;
@@ -207,6 +245,53 @@ XnModuleNodeHandle PlayerImpl::ModuleHandle()
 	return m_hPlayer->pModuleInstance->hNode;
 }
 
+XnStatus PlayerImpl::SeekToTimestamp(XnInt64 nTimeOffset, XnPlayerSeekOrigin origin)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	// do the whole thing in a lock (so it wouldn't conflict with other threads playing / seeking)
+	XnAutoCSLocker locker(m_hPlaybackLock);
+
+	// disable playback speed - so seeking would be immediate
+	XnDouble dPlaybackSpeed = GetPlaybackSpeed();
+	SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
+
+	nRetVal = ModulePlayer().SeekToTimeStamp(ModuleHandle(), nTimeOffset, origin);
+
+	// restore playback speed
+	SetPlaybackSpeed(dPlaybackSpeed);
+	ResetTimeReference();
+
+	// check if seeking failed
+	XN_IS_STATUS_OK(nRetVal);
+
+	return XN_STATUS_OK;
+}
+
+
+XnStatus PlayerImpl::SeekToFrame(const XnChar* strNodeName, XnInt32 nFrameOffset, XnPlayerSeekOrigin origin)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	// do the whole thing in a lock (so it wouldn't conflict with other threads playing / seeking)
+	XnAutoCSLocker locker(m_hPlaybackLock);
+
+	// disable playback speed - so seeking would be immediate
+	XnDouble dPlaybackSpeed = GetPlaybackSpeed();
+	SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
+
+	nRetVal = ModulePlayer().SeekToFrame(ModuleHandle(), strNodeName, nFrameOffset, origin);
+
+	// restore playback speed
+	SetPlaybackSpeed(dPlaybackSpeed);
+	ResetTimeReference();
+
+	// check if seeking failed
+	XN_IS_STATUS_OK(nRetVal);
+
+	return XN_STATUS_OK;
+}
+
 XnStatus XN_CALLBACK_TYPE PlayerImpl::OpenFile(void* pCookie)
 {
 	PlayerImpl* pThis = (PlayerImpl*)pCookie;
@@ -229,11 +314,25 @@ XnStatus XN_CALLBACK_TYPE PlayerImpl::SeekFile(void* pCookie, XnOSSeekType seekT
 	return pThis->SeekFileImpl(seekType, nOffset);
 }
 
+XnStatus XN_CALLBACK_TYPE PlayerImpl::SeekFile64(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset)
+{
+	PlayerImpl* pThis = (PlayerImpl*)pCookie;
+	XN_VALIDATE_INPUT_PTR(pThis);
+	return pThis->SeekFile64Impl(seekType, nOffset);
+}
+
 XnUInt32 XN_CALLBACK_TYPE PlayerImpl::TellFile(void* pCookie)
 {
 	PlayerImpl* pThis = (PlayerImpl*)pCookie;
 	XN_VALIDATE_PTR(pThis, (XnUInt32)-1);
 	return pThis->TellFileImpl();
+}
+
+XnUInt64 XN_CALLBACK_TYPE PlayerImpl::TellFile64(void* pCookie)
+{
+	PlayerImpl* pThis = (PlayerImpl*)pCookie;
+	XN_VALIDATE_PTR(pThis, (XnUInt64)-1);
+	return pThis->TellFile64Impl();
 }
 
 void XN_CALLBACK_TYPE PlayerImpl::CloseFile(void* pCookie)
@@ -249,74 +348,75 @@ void XN_CALLBACK_TYPE PlayerImpl::CloseFile(void* pCookie)
 
 XnStatus PlayerImpl::OpenFileImpl()
 {
-	if (m_pInFile != NULL)
+	if (m_bIsFileOpen)
 	{
 		//Already open
 		return XN_STATUS_OK;
 	}
 	
-	m_pInFile = fopen(m_strSource, "rb");
-	if (m_pInFile == NULL)
+	XnStatus nRetVal = xnOSOpenFile(m_strSource, XN_OS_FILE_READ, &m_hInFile);
+
+	if (nRetVal != XN_STATUS_OK)
 	{
 		xnLogWarning(XN_MASK_OPEN_NI, "Failed to open file '%s' for reading", m_strSource);
-		return XN_STATUS_OS_FILE_NOT_FOUND;
+		return XN_STATUS_OS_FILE_OPEN_FAILED;
 	}
+	m_bIsFileOpen = TRUE;
 
 	return XN_STATUS_OK;
 }
 
 XnStatus PlayerImpl::ReadFileImpl(void* pData, XnUInt32 nSize, XnUInt32 &nBytesRead)
 {
-	XN_VALIDATE_PTR(m_pInFile, XN_STATUS_ERROR);
-	nBytesRead = (XnUInt32)fread(pData, 1, nSize, m_pInFile);
-	if (ferror(m_pInFile))
-	{
-		return XN_STATUS_OS_FILE_READ_FAILED;
-	}
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+
+	nBytesRead = nSize;
+
+	return xnOSReadFile(m_hInFile, pData, &nBytesRead);
 	//nBytesRead could be smaller than nSize at the end, but that's not an error
-	return XN_STATUS_OK;
 }
 
 XnStatus PlayerImpl::SeekFileImpl(XnOSSeekType seekType, XnInt32 nOffset)
 {
-	XN_VALIDATE_PTR(m_pInFile, XN_STATUS_ERROR);
-	long nOrigin = 0;
-	switch (seekType)
-	{
-		case XN_OS_SEEK_CUR:
-			nOrigin = SEEK_CUR;
-			break;
-		case XN_OS_SEEK_END:
-			nOrigin = SEEK_END;
-			break;
-		case SEEK_SET:
-			nOrigin = SEEK_SET;
-			break;
-		default:
-			XN_ASSERT(FALSE);
-			return XN_STATUS_BAD_PARAM;
-	}
-	
-	if (fseek(m_pInFile, nOffset, nOrigin) != 0)
-	{
-		return XN_STATUS_ERROR;
-	}
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	return xnOSSeekFile64(m_hInFile, seekType, nOffset);
+}
 
-	return XN_STATUS_OK;	
+XnStatus PlayerImpl::SeekFile64Impl(XnOSSeekType seekType, XnInt64 nOffset)
+{
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	return xnOSSeekFile64(m_hInFile, seekType, nOffset);
 }
 
 XnUInt32 PlayerImpl::TellFileImpl()
 {
-	XN_VALIDATE_PTR(m_pInFile, (XnUInt32)-1);
-	return ftell(m_pInFile);
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	XnUInt64 pos;
+	XnStatus nRetVal = xnOSTellFile64(m_hInFile, &pos);
+	XN_IS_STATUS_OK_RET(nRetVal, (XnUInt32) -1);
+	// Enforce uint32 limitation
+	if (pos >> 32)
+		return (XnUInt32) -1;
+
+	return (XnUInt32)pos;
+}
+
+XnUInt64 PlayerImpl::TellFile64Impl()
+{
+	XN_IS_BOOL_OK_RET(m_bIsFileOpen, XN_STATUS_ERROR);
+	XnUInt64 pos;
+	XnStatus nRetVal = xnOSTellFile64(m_hInFile, &pos);
+	XN_IS_STATUS_OK_RET(nRetVal, (XnUInt64) -1);
+
+	return pos;
 }
 
 void PlayerImpl::CloseFileImpl()
 {
-	if (m_pInFile != NULL)	
+	if (m_bIsFileOpen)
 	{
-		fclose(m_pInFile);
-		m_pInFile = NULL;
+		xnOSCloseFile(&m_hInFile);
+		m_bIsFileOpen = FALSE;
 	}
 }
 
@@ -376,7 +476,7 @@ XnStatus XN_CALLBACK_TYPE PlayerImpl::OnNodeNewData(void* pCookie, const XnChar*
 	return pThis->SetNodeNewData(strNodeName, nTimeStamp, nFrame, pData, nSize);
 }
 
-XnStatus PlayerImpl::AddNode(const XnChar* strNodeName, XnProductionNodeType type, XnCodecID compression)
+XnStatus PlayerImpl::AddNode(const XnChar* strNodeName, XnProductionNodeType type, XnCodecID /*compression*/)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
@@ -648,6 +748,58 @@ void PlayerImpl::EndOfFileReachedCallback(void* pCookie)
 {
 	PlayerImpl* pThis = (PlayerImpl*)pCookie;
 	pThis->OnEndOfFileReached();
+}
+
+void PlayerImpl::PlaybackThread()
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	while (!m_bPlaybackThreadShutdown)
+	{
+		nRetVal = xnOSWaitEvent(m_hPlaybackEvent, XN_WAIT_INFINITE);
+		if (nRetVal != XN_STATUS_OK && nRetVal != XN_STATUS_OS_EVENT_TIMEOUT)
+		{
+			xnLogWarning(XN_MASK_OPEN_NI, "Failed to wait for event: %s", xnGetStatusString(nRetVal));
+			xnOSSleep(1);
+			continue;
+		}
+
+		if (m_bPlaybackThreadShutdown)
+		{
+			return;
+		}
+
+		nRetVal = xnPlayerReadNext(m_hPlayer);
+		if (nRetVal != XN_STATUS_OK)
+		{
+			xnLogWarning(XN_MASK_OPEN_NI, "Failed to playback: %s", xnGetStatusString(nRetVal));
+			xnOSSleep(1);
+			continue;
+		}
+	}
+}
+
+XN_THREAD_PROC PlayerImpl::PlaybackThread(XN_THREAD_PARAM pThreadParam)
+{
+	PlayerImpl* pThis = (PlayerImpl*)pThreadParam;
+	pThis->PlaybackThread();
+	XN_THREAD_PROC_RETURN(XN_STATUS_OK);
+}
+
+void PlayerImpl::TriggerPlayback()
+{
+	XnStatus nRetVal = xnOSSetEvent(m_hPlaybackEvent);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLogWarning(XN_MASK_OPEN_NI, "Failed to trigger playback: %s", xnGetStatusString(nRetVal));
+	}
+}
+
+XnStatus PlayerImpl::ReadNext()
+{
+	// Always read inside a lock (to make it thread safe)
+	XnAutoCSLocker lock(m_hPlaybackLock);
+	return ModulePlayer().ReadNext(ModuleHandle());
 }
 
 }

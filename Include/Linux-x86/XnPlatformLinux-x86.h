@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 
 //---------------------------------------------------------------------------
 // Platform Basic Definition
@@ -99,31 +100,31 @@ typedef void (*XnFarProc)(void *);
 typedef size_t				XnSizeT;
 
 /** Max unsigned 8-bit value */ 
-#define XN_MAX_UINT8 255
+#define XN_MAX_UINT8 UCHAR_MAX
 /** Max unsigned 16-bit value */ 
-#define XN_MAX_UINT16 65535
+#define XN_MAX_UINT16 USHRT_MAX
 /** Max unsigned 32-bit value */ 
-#define XN_MAX_UINT32 4294967295UL
+#define XN_MAX_UINT32 UINT_MAX
 /** Max unsigned 64-bit value */ 
-#define XN_MAX_UINT64 18446744073709551615ULL
+#define XN_MAX_UINT64 ULLONG_MAX
 
 /** Min signed 8-bit value */ 
-#define XN_MIN_INT8 -128
+#define XN_MIN_INT8 SCHAR_MIN
 /** Min signed 16-bit value */ 
-#define XN_MIN_INT16 -32768
+#define XN_MIN_INT16 SHRT_MIN
 /** Min signed 32-bit value */ 
-#define XN_MIN_INT32 -2147483648
+#define XN_MIN_INT32 INT_MIN
 /** Min signed 64-bit value */ 
-#define XN_MIN_INT64 -9223372036854775808LL
+#define XN_MIN_INT64 LLONG_MIN
 
 /** Max signed 8-bit value */ 
-#define XN_MAX_INT8 127
+#define XN_MAX_INT8 SCHAR_MAX
 /** Max signed 16-bit value */ 
-#define XN_MAX_INT16 32767
+#define XN_MAX_INT16 SHRT_MAX
 /** Max signed 32-bit value */ 
-#define XN_MAX_INT32 2147483647
+#define XN_MAX_INT32 INT_MAX
 /** Max signed 64-bit value */ 
-#define XN_MAX_INT64 9223372036854775807LL
+#define XN_MAX_INT64 LLONG_MAX
 
 //---------------------------------------------------------------------------
 // Memory
@@ -176,6 +177,12 @@ typedef size_t				XnSizeT;
 
 /** Indicates a deprecated function */
 #define XN_API_DEPRECATED(msg) __attribute__((warning("This function is deprecated: " msg)))
+
+#define XN_DEPRECATED_WARNING_IDS			
+#define XN_HIDES_PARENT_METHOD_WARNING_ID	
+#define XN_CONDITION_IS_CONST_WARNING_ID
+#define XN_PRAGMA_START_DISABLED_WARNING_SECTION(warnings)
+#define XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
 
 /** Declares a global shared library export function. */ 
 #define XN_API_EXPORT_INIT()

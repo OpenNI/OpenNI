@@ -173,8 +173,6 @@ XN_C_API XnStatus xnProfilingInitFromINI(const XnChar* cpINIFileName, const XnCh
 
 XN_C_API XnStatus xnProfilingShutdown()
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	if (g_ProfilingData.hThread != NULL)
 	{
 		g_ProfilingData.bKillThread = TRUE;

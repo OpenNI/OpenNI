@@ -50,8 +50,9 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="4"
+				DisableSpecificWarnings="4127"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -129,8 +130,9 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4127"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -215,8 +217,9 @@
 				EnableEnhancedInstructionSet="2"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4127"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -300,11 +303,11 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;XN_EXPORTS"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
-				EnableEnhancedInstructionSet="2"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4127"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -594,6 +597,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\Source\OpenNI\Win32\XnOSWin32Internal.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\Source\OpenNI\XnUSB.cpp"
 					>
 				</File>
@@ -863,6 +870,18 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\Include\XnDump.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\OpenNI\XnDumpFileWriter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Source\OpenNI\XnDumpFileWriter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\Include\XnDumpWriters.h"
 					>
 				</File>
 				<File

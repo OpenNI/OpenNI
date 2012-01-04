@@ -41,6 +41,12 @@ XnStatus xnXmlReadBoolAttribute(const TiXmlElement* pElem, const XnChar* strName
 
 XnStatus xnXmlReadIntAttribute(const TiXmlElement* pElem, const XnChar* strName, XnInt* pnValue);
 
+XnStatus xnXmlReadUInt32Attribute(const TiXmlElement* pElem, const XnChar* strName, XnUInt32* pnValue);
+
+XnStatus xnXmlReadUInt16Attribute(const TiXmlElement* pElem, const XnChar* strName, XnUInt16* pnValue);
+
+XnStatus xnXmlReadUInt8Attribute(const TiXmlElement* pElem, const XnChar* strName, XnUInt8* pnValue);
+
 XnStatus xnXmlReadRealAttribute(const TiXmlElement* pElem, const XnChar* strName, XnDouble* pdValue);
 
 XnStatus xnXmlReadTextAsInt(const TiXmlElement* pElem, XnInt* pnValue);

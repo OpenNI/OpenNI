@@ -521,6 +521,7 @@ namespace xn
 
 		virtual XnStatus StartPoseDetection(const XnChar* strPose, XnUserID user) = 0;
 		virtual XnStatus StopPoseDetection(XnUserID user) = 0;
+		virtual XnStatus StopSinglePoseDetection(XnUserID user, const XnChar* strPose) = 0;
 
 		virtual XnStatus RegisterToPoseDetectionCallbacks(XnModulePoseDetectionCallback StartPoseCB, XnModulePoseDetectionCallback EndPoseCB, void* pCookie, XnCallbackHandle& hCallback) = 0;
 		virtual void UnregisterFromPoseDetectionCallbacks(XnCallbackHandle hCallback) = 0;

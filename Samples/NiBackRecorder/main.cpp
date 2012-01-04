@@ -37,7 +37,7 @@
 		return rc;													\
 	}
 
-#define CHECK_RC_ERR(rc, what, error)			\
+#define CHECK_RC_ERR(rc, what, errors)			\
 {												\
 	if (rc == XN_STATUS_NO_NODE_PRESENT)		\
 	{											\
@@ -284,7 +284,8 @@ public:
 	CyclicBuffer(xn::Context& context, xn::DepthGenerator& depthGenerator, xn::ImageGenerator& imageGenerator, const RecConfiguration& config) :
 		m_context(context),
 		m_depthGenerator(depthGenerator),
-		m_imageGenerator(imageGenerator)
+		m_imageGenerator(imageGenerator),
+		m_pFrames(NULL)
 	{
 		m_bDepth = config.bRecordDepth;
 		m_bImage = config.bRecordImage;
@@ -409,8 +410,6 @@ public:
 
 		// Close recorder
 		m_recorder.Release();
-		mockImage.Release();
-		mockDepth.Release();
 
 		return XN_STATUS_OK;
 	}
@@ -466,8 +465,7 @@ int main(int argc, char** argv)
 		// Turn on log
 		xnLogInitSystem();
 		xnLogSetConsoleOutput(TRUE);
-		xnLogSetMaskState(XN_LOG_MASK_ALL, TRUE);
-		xnLogSetSeverityFilter(XN_LOG_VERBOSE);
+		xnLogSetMaskMinSeverity(XN_LOG_MASK_ALL, XN_LOG_VERBOSE);
 	}
 
 	// Initialize OpenNI

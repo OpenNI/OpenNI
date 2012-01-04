@@ -199,6 +199,7 @@ private:
 * It is highly recommended not to use this macro directly.
 */
 #define _XN_DECLARE_EVENT_CLASS(_class, _interface, _retVal, _raise, _signature, _raise_sign)				\
+	XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_HIDES_PARENT_METHOD_WARNING_ID)								\
 	class _interface : protected XnEvent																	\
 	{																										\
 	public:																									\
@@ -232,7 +233,9 @@ private:
 			return (XN_STATUS_OK);																			\
 		}																									\
 		XnStatus Clear() { return XnEvent::Clear(); }														\
-	};
+	};																										\
+	XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
+
 
 #define _XN_SIGNATURE_0ARG()
 #define _XN_FULL_SIGNATURE_0ARG()	void* pCookie
@@ -259,16 +262,8 @@ private:
 #define _XN_ARGS_5ARG(_name1, _name2, _name3, _name4, _name5) _name1, _name2, _name3, _name4, _name5,
 
 /** Declares an event class */
-#if XN_PLATFORM == XN_PLATFORM_WIN32
-	#define XN_DECLARE_EVENT_0ARG(_class, _interface)											\
-	__pragma(warning(push))\
-	__pragma(warning(disable:4189))\
-		_XN_DECLARE_EVENT_CLASS(_class, _interface, void, _XN_RAISE_NO_RET_CODE(_XN_ARGS_0ARG()), _XN_FULL_SIGNATURE_0ARG(), _XN_SIGNATURE_0ARG())\
-	__pragma(warning(pop))
-#else
-	#define XN_DECLARE_EVENT_0ARG(_class, _interface)											\
-		_XN_DECLARE_EVENT_CLASS(_class, _interface, void, _XN_RAISE_NO_RET_CODE(_XN_ARGS_0ARG()), _XN_FULL_SIGNATURE_0ARG(), _XN_SIGNATURE_0ARG())
-#endif
+#define XN_DECLARE_EVENT_0ARG(_class, _interface)											\
+	_XN_DECLARE_EVENT_CLASS(_class, _interface, void, _XN_RAISE_NO_RET_CODE(_XN_ARGS_0ARG()), _XN_FULL_SIGNATURE_0ARG(), _XN_SIGNATURE_0ARG())
 
 #define XN_DECLARE_EVENT_0ARG_RETVAL(_class, _interface)									\
 	_XN_DECLARE_EVENT_CLASS(_class, _interface, XnStatus, _XN_RAISE_WITH_RET_CODE(_XN_ARGS_0ARG()), _XN_FULL_SIGNATURE_0ARG(), _XN_SIGNATURE_0ARG())

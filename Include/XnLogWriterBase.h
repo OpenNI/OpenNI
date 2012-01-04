@@ -31,7 +31,7 @@
 //---------------------------------------------------------------------------
 // Types
 //---------------------------------------------------------------------------
-class XnLogWriterBase : XnLogWriter
+class XnLogWriterBase
 {
 public:
 	XnLogWriterBase() : m_bRegistered(FALSE)

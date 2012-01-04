@@ -483,7 +483,7 @@ typedef struct XnFieldOfView
 {
 	/** Horizontal Field Of View, in radians. */
 	XnDouble fHFOV;
-	/** Horizontal Field Of View, in radians. */
+	/** Vertical Field Of View, in radians. */
 	XnDouble fVFOV;
 } XnFieldOfView;
 
@@ -646,20 +646,32 @@ typedef enum XnPoseDetectionStatus
 	XN_POSE_DETECTION_STATUS_TOP_FOV	= 2,
 	XN_POSE_DETECTION_STATUS_SIDE_FOV	= 3,
 	XN_POSE_DETECTION_STATUS_ERROR		= 4,
+    XN_POSE_DETECTION_STATUS_NO_TRACKING = 5
 } XnPoseDetectionStatus;
 
+
+/** Possible pose detection states */
+typedef enum XnPoseDetectionState
+{
+    XN_POSE_DETECTION_STATE_IN_POSE     =0,
+    XN_POSE_DETECTION_STATE_OUT_OF_POSE =1,
+    XN_POSE_DETECTION_STATE_UNDEFINED   =2
+} XnPoseDetectionState;
 /** Possible statuses for calibration */
 typedef enum XnCalibrationStatus
 {
-	XN_CALIBRATION_STATUS_OK		= 0,
-	XN_CALIBRATION_STATUS_NO_USER	= 1,
-	XN_CALIBRATION_STATUS_ARM		= 2,
-	XN_CALIBRATION_STATUS_LEG		= 3,
-	XN_CALIBRATION_STATUS_HEAD		= 4,
-	XN_CALIBRATION_STATUS_TORSO		= 5,
-	XN_CALIBRATION_STATUS_TOP_FOV	= 6,
-	XN_CALIBRATION_STATUS_SIDE_FOV	= 7,
-	XN_CALIBRATION_STATUS_POSE		= 8,
+	XN_CALIBRATION_STATUS_OK		    = 0,
+	XN_CALIBRATION_STATUS_NO_USER	    = 1,
+	XN_CALIBRATION_STATUS_ARM		    = 2,
+	XN_CALIBRATION_STATUS_LEG		    = 3,
+	XN_CALIBRATION_STATUS_HEAD		    = 4,
+	XN_CALIBRATION_STATUS_TORSO		    = 5,
+	XN_CALIBRATION_STATUS_TOP_FOV	    = 6,
+	XN_CALIBRATION_STATUS_SIDE_FOV	    = 7,
+	XN_CALIBRATION_STATUS_POSE		    = 8,
+    XN_CALIBRATION_STATUS_MANUAL_ABORT  = 9,
+    XN_CALIBRATION_STATUS_MANUAL_RESET  = 10,
+    XN_CALIBRATION_STATUS_TIMEOUT_FAIL = 11
 } XnCalibrationStatus;
 
 typedef enum XnDirection
@@ -840,7 +852,7 @@ typedef struct XnRecorderOutputStreamInterface
 	 * @param	seekType	 [in]	Specifies how to seek - according to current position, end or beginning.
 	 * @param	nOffset		 [in]	Specifies how many bytes to move
 	 */
-	XnStatus (XN_CALLBACK_TYPE* Seek)(void* pCookie, XnOSSeekType seekType, const XnUInt32 nOffset);
+	XnStatus (XN_CALLBACK_TYPE* Seek)(void* pCookie, XnOSSeekType seekType, const XnInt32 nOffset);
 
 	/**
 	 * Tells the current position in the stream.
@@ -858,6 +870,26 @@ typedef struct XnRecorderOutputStreamInterface
 	 * @param	pCookie		[in]	A token that was received with this interface.
 	 */
 	void (XN_CALLBACK_TYPE* Close)(void* pCookie);
+
+	/**
+	 * Sets the stream's pointer to the specified position. (64bit version, for large files)
+	 *
+	 * @param	pCookie		 [in]	A cookie that was received with this interface.
+	 * @param	seekType	 [in]	Specifies how to seek - according to current position, end or beginning.
+	 * @param	nOffset		 [in]	Specifies how many bytes to move
+	 */
+	XnStatus (XN_CALLBACK_TYPE* Seek64)(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset);
+
+	/**
+	 * Tells the current position in the stream. (64bit version, for large files)
+	 *
+	 * @param	pCookie		[in]	A cookie that was received with this interface.
+	 * @param	pPos		[out]	The position of the stream.
+	 *
+	 * @returns (XnUInt64)-1 on error.
+	 */
+	XnUInt64 (XN_CALLBACK_TYPE* Tell64)(void* pCookie);
+
 } XnRecorderOutputStreamInterface;
 
 /** 
@@ -909,6 +941,26 @@ typedef struct XnPlayerInputStreamInterface
 	 * @param	pCookie		 [in]	A cookie that was received with this interface.
 	 */
 	void (XN_CALLBACK_TYPE* Close)(void* pCookie);
+
+	/**
+	 * Sets the stream's pointer to the specified position. (64bit version, for large files)
+	 *
+	 * @param	pCookie		 [in]	A cookie that was received with this interface.
+	 * @param	seekType	 [in]	Specifies how to seek - according to current position, end or beginning.
+	 * @param	nOffset		 [in]	Specifies how many bytes to move
+	 */
+	XnStatus (XN_CALLBACK_TYPE* Seek64)(void* pCookie, XnOSSeekType seekType, const XnInt64 nOffset);
+
+	/**
+	 * Tells the current position in the stream. (64bit version, for large files)
+	 *
+	 * @param	pCookie		[in]	A cookie that was received with this interface.
+	 * @param	pPos		[out]	The position of the stream.
+	 *
+	 * @returns (XnUInt64)-1 on error.
+	 */
+	XnUInt64 (XN_CALLBACK_TYPE* Tell64)(void* pCookie);
+
 } XnPlayerInputStreamInterface;
 
 /** 

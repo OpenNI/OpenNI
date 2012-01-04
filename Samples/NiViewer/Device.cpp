@@ -249,7 +249,7 @@ XnStatus openDeviceFromXmlWithChoice(const char* csXmlFile, EnumerationErrors& e
 	printf("Choose device to open (1): ");
 
 	int chosen = 1;
-	scanf("%d", &chosen);
+	int nRetval = scanf("%d", &chosen);
 
 	// create it
 	NodeInfoList::Iterator it = list.Begin();
@@ -408,7 +408,7 @@ void toggleStream(Generator& generator, XnProductionNodeType type, bool* bIsOn)
 	}
 	else
 	{
-		generator.StartGenerating();
+		nRetVal = generator.StartGenerating();
 		if (nRetVal != XN_STATUS_OK)
 		{
 			displayMessage("Failed to turn on %s: %s", generator.GetInfo().GetInstanceName(), xnGetStatusString(nRetVal));

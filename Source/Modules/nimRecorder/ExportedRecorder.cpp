@@ -57,7 +57,7 @@ void ExportedRecorder::GetDescription(XnProductionNodeDescription* pDescription)
 	pDescription->Version.nBuild = XN_BUILD_VERSION;
 }
 
-XnStatus ExportedRecorder::EnumerateProductionTrees(xn::Context& context, xn::NodeInfoList& TreesList, xn::EnumerationErrors* pErrors)
+XnStatus ExportedRecorder::EnumerateProductionTrees(xn::Context& /*context*/, xn::NodeInfoList& TreesList, xn::EnumerationErrors* /*pErrors*/)
 {
 	XnProductionNodeDescription description;
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -69,7 +69,7 @@ XnStatus ExportedRecorder::EnumerateProductionTrees(xn::Context& context, xn::No
 	return XN_STATUS_OK;
 }
 
-XnStatus ExportedRecorder::Create(xn::Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, xn::NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, xn::ModuleProductionNode** ppInstance)
+XnStatus ExportedRecorder::Create(xn::Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, xn::NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, xn::ModuleProductionNode** ppInstance)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	XN_VALIDATE_INPUT_PTR(strInstanceName);

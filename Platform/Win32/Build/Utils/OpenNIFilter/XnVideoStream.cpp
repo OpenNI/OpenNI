@@ -123,11 +123,18 @@ HRESULT XnVideoStream::FillBuffer(IMediaSample *pms)
 		XnStatus nRetVal = XN_STATUS_OK;
 
 		// ignore timeouts
-		do
+		while (TRUE)
 		{
 			nRetVal = m_imageGen.WaitAndUpdateData();
+			if (nRetVal != XN_STATUS_WAIT_DATA_TIMEOUT)
+			{
+				break;
+			}
+			else
+			{
+				xnDumpFileWriteString(m_Dump, "\tTimeout during FillBuffer\n");
+			}
 		}
-		while (nRetVal == XN_STATUS_WAIT_DATA_TIMEOUT);
 
 		if (nRetVal != XN_STATUS_OK) XN_METHOD_RETURN(E_UNEXPECTED);
 	}
@@ -176,7 +183,7 @@ HRESULT XnVideoStream::FillBuffer(IMediaSample *pms)
 	else
 	{
 		xnLogError(XN_MASK_FILTER, "Unsupported pixel format!");
-		return E_UNEXPECTED;
+		XN_METHOD_RETURN(E_UNEXPECTED);
 	}
 
 	// The current time is the sample's start
@@ -390,24 +397,24 @@ STDMETHODIMP XnVideoStream::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 	// Standard OLE stuff
 	if(riid == IID_IAMStreamConfig) 
 	{
-		xnDumpWriteString(m_Dump, "Pin query interface to IAMStreamConfig\n");
+		xnDumpFileWriteString(m_Dump, "\tPin query interface to IAMStreamConfig\n");
 		hr = GetInterface(static_cast<IAMStreamConfig*>(this), ppv);
 	}
 	else if(riid == IID_IKsPropertySet)
 	{
-		xnDumpWriteString(m_Dump, "Pin query interface to IKsPropertySet\n");
+		xnDumpFileWriteString(m_Dump, "\tPin query interface to IKsPropertySet\n");
 		hr = GetInterface(static_cast<IKsPropertySet*>(this), ppv);
 	}
 	else if(riid == IID_ISpecifyPropertyPages)
 	{
-		xnDumpWriteString(m_Dump, "Pin query interface to ISpecifyPropertyPages\n");
+		xnDumpFileWriteString(m_Dump, "\tPin query interface to ISpecifyPropertyPages\n");
 		hr = GetInterface(static_cast<ISpecifyPropertyPages*>(this), ppv);
 	}
 	else 
 	{
 		OLECHAR strGuid[40];
 		StringFromGUID2(riid, strGuid, 40);
-		xnDumpWriteString(m_Dump, "Pin query interface to %S\n", strGuid);
+		xnDumpFileWriteString(m_Dump, "\tPin query interface to %S\n", strGuid);
 		hr = CSourceStream::NonDelegatingQueryInterface(riid, ppv);
 	}
 
@@ -437,14 +444,14 @@ HRESULT STDMETHODCALLTYPE XnVideoStream::GetStreamCaps(int iIndex, AM_MEDIA_TYPE
 	XN_METHOD_CHECK_POINTER(pmt);
 	XN_METHOD_CHECK_POINTER(pSCC);
 
-	xnDumpWriteString(m_Dump, "Calling %s for %d\n", __FUNCTION__, iIndex);
+	xnDumpFileWriteString(m_Dump, "\tCalling %s for %d\n", __FUNCTION__, iIndex);
 
 	CMediaType mediaType;
 	VIDEO_STREAM_CONFIG_CAPS* pvscc = (VIDEO_STREAM_CONFIG_CAPS*)pSCC;
 	HRESULT hr = GetStreamCapability(iIndex, mediaType, *pvscc);
 	if (FAILED(hr)) XN_METHOD_RETURN(hr);
 
-	xnDumpWriteString(m_Dump, "Returning %dx%d@%d using %s\n", m_aSupportedModes[iIndex].OutputMode.nXRes, m_aSupportedModes[iIndex].OutputMode.nYRes, m_aSupportedModes[iIndex].OutputMode.nFPS, xnPixelFormatToString(m_aSupportedModes[iIndex].Format));
+	xnDumpFileWriteString(m_Dump, "\tReturning %dx%d@%d using %s\n", m_aSupportedModes[iIndex].OutputMode.nXRes, m_aSupportedModes[iIndex].OutputMode.nYRes, m_aSupportedModes[iIndex].OutputMode.nFPS, xnPixelFormatToString(m_aSupportedModes[iIndex].Format));
 
 	*pmt = CreateMediaType(&mediaType);
 	XN_METHOD_RETURN(S_OK);

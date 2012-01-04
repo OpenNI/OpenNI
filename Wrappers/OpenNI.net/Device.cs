@@ -30,21 +30,50 @@ namespace OpenNI
 		internal Device(Context context, IntPtr nodeHandle, bool addRef) :
 			base(context, nodeHandle, addRef)
 		{
+            if (IsCapabilitySupported(Capabilities.DeviceIdentification))
+                m_deviceIdentification = new DeviceIdentificationCapability(this);
+            else
+                m_deviceIdentification = null;
+		}
+
+        public Device(Context context, Query query, EnumerationErrors errors) :
+			this(context, Create(context, query, errors), false)
+		{
 		}
 
 		public Device(Context context, Query query) :
-			this(context, Create(context, query), false)
+			this(context, query, null)
 		{
 		}
 
-		public Device(Context context) :
-			this(context, null)
+        public Device(Context context) :
+			this(context, null, null)
 		{
 		}
 
-		private static IntPtr Create(Context context, Query query)
+        public DeviceIdentificationCapability DeviceIdentificationCapability
+        {
+            get { return m_deviceIdentification; }
+        }
+
+        public override void Dispose()
+        {
+            if (m_deviceIdentification != null)
+                m_deviceIdentification.InternalDispose();
+            m_deviceIdentification = null;
+            base.Dispose();
+        }
+
+		private static IntPtr Create(Context context, Query query, EnumerationErrors errors)
 		{
-			return context.CreateAnyProductionTreeImpl(NodeType.Device, query);
-		}
+            IntPtr handle;
+            int status = SafeNativeMethods.xnCreateDevice(context.InternalObject, out handle,
+                query == null ? IntPtr.Zero : query.InternalObject,
+                errors == null ? IntPtr.Zero : errors.InternalObject);
+            WrapperUtils.ThrowOnError(status);
+            return handle;
+        }
+
+        private DeviceIdentificationCapability m_deviceIdentification;
 	}
 }

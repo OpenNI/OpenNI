@@ -1,5 +1,5 @@
-OpenNI (Version 1.3.3.6 Stable version - Sep 18th 2011)
--------------------------------------------------------
+OpenNI (Version 1.5.2.23 - Dec 28th 2011)
+-----------------------------------------
 
 Website: http://www.primesense.com
 Forum: http://groups.google.com/group/openni-dev
@@ -7,10 +7,13 @@ Wiki: http://wiki.openni.org
 
 Binaries are available at:
 http://www.openni.org/Downloads/OpenNIModules.aspx
-(The "OpenNI Binaries / Stable" section)
+(The "OpenNI Binaries" section)
 
 Sources are available at:
 https://github.com/OpenNI/OpenNI
+or
+https://github.com/OpenNI/OpenNI/tree/unstable
+for unstable branch
 
 Release Notes:
 --------------
@@ -114,11 +117,11 @@ Linux:
 		   sudo apt-get install mono-complete
 		   
 	Building OpenNI:
-		1) Go into the directory: "Platform/Linux-x86/CreateRedist".
+		1) Go into the directory: "Platform/Linux/CreateRedist".
 		   Run the script: "./RedistMaker".
-		   This will compile everything and create a redist package in the "Platform/Linux-x86/Redist" directory.
-		   It will also create a distribution in the "Platform/Linux-x86/CreateRedist/Final" directory.
-		2) Go into the directory: "Platform/Linux-x86/Redist".
+		   This will compile everything and create a redist package in the "Platform/Linux/Redist" directory.
+		   It will also create a distribution in the "Platform/Linux/CreateRedist/Final" directory.
+		2) Go into the directory: "Platform/Linux/Redist".
 		   Run the script: "sudo ./install.sh" (needs to run as root)
 
   		   The install script copies key files to the following location:
@@ -127,10 +130,31 @@ Linux:
 		       Includes into: /usr/include/ni
 		       Config files into: /var/lib/ni
 			
-		To build the package manually, you can run "make" in the "Platform\Linux-x86\Build" directory.
+		To build the package manually, you can run "make" in the "Platform\Linux\Build" directory.
 		If you wish to build the Mono wrappers, also run "make mono_wrapper" and "make mono_samples".
 		
-		Important: Please note that even though the directory is called Linux-x86, you can also use it to compile it for 64-bit targets and pretty much any other linux based environment.
+	Building OpenNI using a cross-compiler:
+		1) Make sure to define two environment variables:
+		   - <platform>_CXX - the name of the cross g++ for platform <platform>
+		   - <platform>_STAGING - a path to the staging dir (a directory which simulates the target root filesystem).
+		   Note that <platform> should be upper cased.
+		   For example, if wanting to compile for ARM from a x86 machine, ARM_CXX and ARM_STAGING should be defined.
+		2) Go into the directory: "Platform/Linux/CreateRedist".
+		   Run: "./RedistMaker <platform>" (for example: "./RedistMake Arm").
+		   This will compile everything and create a redist package in the "Platform/Linux/Redist" directory.
+		   It will also create a distribution in the "Platform/Linux/CreateRedist/Final" directory.
+		3) To install OpenNI files on the target file system:
+		   Go into the directory: "Platform/Linux/Redist".
+		   Run the script: "./install.sh -c $<platform>_STAGING" (for example: "./install.sh -c $ARM_STAGING").
+
+  		   The install script copies key files to the following location:
+		       Libs into: STAGING/usr/lib
+		       Bins into: STAGING/usr/bin
+		       Includes into: STAGING/usr/include/ni
+		       Config files into: STAGING/var/lib/ni
+			
+		To build the package manually, you can run "make PLATFORM=<platform>" in the "Platform\Linux\Build" directory.
+		If you wish to build the Mono wrappers, also run "make PLATFORM=<platform> mono_wrapper" and "make PLATFORM=<platform> mono_samples".
 	
 MacOSX:
 	Requirements:

@@ -27,6 +27,8 @@
 #include <jerror.h>
 #include <XnLog.h>
 
+#define XN_MASK_STREAM_COMPRESSION "xnStreamCompression"
+
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
@@ -67,7 +69,7 @@ XnStatus XnStreamCompressDepth16Z(const XnUInt16* pInput, const XnUInt32 nInputS
 		nCurrValue = *pInput;
 
 		nDiffValue = (nLastValue - nCurrValue);
-		nAbsDiffValue = abs(nDiffValue);
+		nAbsDiffValue = (XnUInt16)abs(nDiffValue);
 
 		if (nAbsDiffValue <= 6)
 		{
@@ -75,13 +77,13 @@ XnStatus XnStreamCompressDepth16Z(const XnUInt16* pInput, const XnUInt32 nInputS
 
 			if (cOutStage == 0)
 			{
-				cOutChar = nDiffValue << 4;
+				cOutChar = (XnUInt8)(nDiffValue << 4);
 
 				cOutStage = 1;
 			}
 			else
 			{
-				cOutChar += nDiffValue;
+				cOutChar += (XnUInt8)nDiffValue;
 
 				if (cOutChar == 0x66)
 				{
@@ -233,7 +235,7 @@ XnStatus XnStreamCompressDepth16ZWithEmbTable(const XnUInt16* pInput, const XnUI
 		nCurrValue = nEmbTable[*pInput];
 
 		nDiffValue = (nLastValue - nCurrValue);
-		nAbsDiffValue = abs(nDiffValue);
+		nAbsDiffValue = (XnUInt16)abs(nDiffValue);
 
 		if (nAbsDiffValue <= 6)
 		{
@@ -241,13 +243,13 @@ XnStatus XnStreamCompressDepth16ZWithEmbTable(const XnUInt16* pInput, const XnUI
 
 			if (cOutStage == 0)
 			{
-				cOutChar = nDiffValue << 4;
+				cOutChar = (XnUInt8)(nDiffValue << 4);
 
 				cOutStage = 1;
 			}
 			else
 			{
-				cOutChar += nDiffValue;
+				cOutChar += (XnUInt8)nDiffValue;
 
 				if (cOutChar == 0x66)
 				{
@@ -357,6 +359,7 @@ XnStatus XnStreamUncompressDepth16Z(const XnUInt8* pInput, const XnUInt32 nInput
 
 	if (nInputSize < sizeof(XnUInt16))
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size too small");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -500,6 +503,7 @@ XnStatus XnStreamUncompressDepth16ZWithEmbTable(const XnUInt8* pInput, const XnU
 
 	if (nInputSize < sizeof(XnUInt16))
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size too small");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -660,7 +664,7 @@ XnStatus XnStreamCompressImage8Z(const XnUInt8* pInput, const XnUInt32 nInputSiz
 		nCurrValue = *pInput;
 
 		nDiffValue = (nLastValue - nCurrValue);
-		nAbsDiffValue = abs(nDiffValue);
+		nAbsDiffValue = (XnUInt8)abs(nDiffValue);
 
 		if (nAbsDiffValue <= 6)
 		{
@@ -784,6 +788,7 @@ XnStatus XnStreamUncompressImage8Z(const XnUInt8* pInput, const XnUInt32 nInputS
 
 	if (nInputSize < sizeof(XnUInt8))
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size too small");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -931,11 +936,13 @@ XnStatus XnStreamUncompressConf4(const XnUInt8* pInput, const XnUInt32 nInputSiz
 
 	if (nInputSize < sizeof(XnUInt8))
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size too small");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
 	if (nInputSize % 2 != 0)
 	{
+		xnLogError(XN_MASK_STREAM_COMPRESSION, "Input size not word-aligned");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -963,12 +970,12 @@ XnStatus XnStreamUncompressConf4(const XnUInt8* pInput, const XnUInt32 nInputSiz
 	return (XN_STATUS_OK);
 }
 
-void XnStreamJPEGCompDummyFunction(struct jpeg_compress_struct* pjCompStruct)
+void XnStreamJPEGCompDummyFunction(struct jpeg_compress_struct* /*pjCompStruct*/)
 {
 	// Dummy libjpeg function to wrap internal buffers usage...
 }
 
-boolean XnStreamJPEGCompDummyFailFunction(struct jpeg_compress_struct* pjCompStruct)
+boolean XnStreamJPEGCompDummyFailFunction(struct jpeg_compress_struct* /*pjCompStruct*/)
 {
 	// If we ever got to the point we need to allocate more memory, something is wrong!
 	return (FALSE);
@@ -1043,6 +1050,10 @@ XnStatus XnStreamFreeCompressImageJ(XnStreamCompJPEGContext* pStreamCompJPEGCont
 	return (XN_STATUS_OK);
 }
 
+// to allow the use of setjmp
+#pragma warning(push)
+#pragma warning(disable: 4611)
+
 XnStatus XnStreamCompressImage8J(XnStreamCompJPEGContext* pStreamCompJPEGContext, const XnUInt8* pInput, XnUInt8* pOutput, XnUInt32* pnOutputSize, const XnUInt32 nXRes, const XnUInt32 nYRes, const XnUInt32 nQuality)
 {
 	// Local function variables
@@ -1066,6 +1077,7 @@ XnStatus XnStreamCompressImage8J(XnStreamCompJPEGContext* pStreamCompJPEGContext
 
 		*pnOutputSize = 0;
 
+		xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 		return (XN_STATUS_ERROR);
 	} 
 
@@ -1124,6 +1136,7 @@ XnStatus XnStreamCompressImage24J(XnStreamCompJPEGContext* pStreamCompJPEGContex
 
 		*pnOutputSize = 0;
 
+		xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 		return (XN_STATUS_ERROR);
 	} 
 
@@ -1159,12 +1172,12 @@ XnStatus XnStreamCompressImage24J(XnStreamCompJPEGContext* pStreamCompJPEGContex
 	return (XN_STATUS_OK);
 }
 
-void XnStreamJPEGDecompDummyFunction(struct jpeg_decompress_struct* pjDecompStruct)
+void XnStreamJPEGDecompDummyFunction(struct jpeg_decompress_struct* /*pjDecompStruct*/)
 {
 	// Dummy libjpeg function to wrap internal buffers usage...
 }
 
-boolean XnStreamJPEGDecompDummyFailFunction(struct jpeg_decompress_struct* pjDecompStruct)
+boolean XnStreamJPEGDecompDummyFailFunction(struct jpeg_decompress_struct* /*pjDecompStruct*/)
 {
 	// If we ever got to the point we need to allocate more memory, something is wrong!
 	return (FALSE);
@@ -1228,6 +1241,7 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 
 	if (nInputSize == 0)
 	{
+		xnLogError(XN_MASK_JPEG, "Input size is 0");
 		return (XN_STATUS_BAD_PARAM);
 	}
 
@@ -1246,6 +1260,7 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 
 		*pnOutputSize = 0;
 
+		xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 		return (XN_STATUS_ERROR);
 	} 
 
@@ -1263,6 +1278,7 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 
 		*pnOutputSize = 0;
 
+		xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 		return (XN_STATUS_OUTPUT_BUFFER_OVERFLOW);
 	}
 
@@ -1277,6 +1293,7 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 
 			*pnOutputSize = 0;
 
+			xnLogError(XN_MASK_JPEG, "JPEG compressor error :(");
 			return (XN_STATUS_OUTPUT_BUFFER_OVERFLOW);
 		}
 
@@ -1291,3 +1308,5 @@ XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGCo
 	// All is good...
 	return (XN_STATUS_OK);
 }
+
+#pragma warning(pop)

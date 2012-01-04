@@ -1,6 +1,107 @@
 Detailed Change log:
 --------------------
 
+Version 1.5.2.23 (Stable version - Dec 28th 2011)
+-------------------------------------------------
+  * C++: IRMetaData didn't have operator() and operator[], which is inconsistent with depth and scene.
+  * Fixed some memory deallocation mismatches.
+  * Remove redundant USB warning message on Linux (this is normal behavior).
+  * Java wrappers: adding getDataPtr(), createDataByteBuffer() and copyDataToBuffer() to Generator class.
+  * NiViewer: did not check if StartGenerating was successful.
+
+Version 1.5.2.7 (Unstable version - Dec 18th 2011)
+--------------------------------------------------
+  * Java UserTracker sample will now draw the limbs only when both joints have a non-zero confidence.
+  * .NET samples will now show their source files in the visual studio project.
+  * NiUserSelection - Enhanced the documentation.
+  * PoseDetectionCapability::StopPoseDetection will now return proper errors.
+  * .Net Wrappers: Disposing a device node now also destroys the node.
+  * xnNodeInfoGetTreeStringRepresentation was added to all wrappers.
+  * Linux: keep ref count for the libusb events thread, so it will be shutdown automatically when all read threads have stopped.
+  * Added option to show low confidence limbs as dotted lines in the user selection sample.
+  * Recordings playbacks: make sure seek is also performed in a lock, so it wouldn't collide with the reader thread.
+  * Bug Fix: The samples cannot be copied to another folder and be compiled.
+  * Data Dump: Adding frame sync information checks.
+  * NiUseExtension sample: added a clear message about the need to register the extension module.
+  * .Net Wrappers: Added the DataPtr property to Generator class.
+  * .Net wrappers: Fixed a bug where MapGenerator.BytesPerPixel was missing.
+  * .Net Wrappers: FindExistingNode now returns null instead of throwing an exception if no node exists.
+  * Java Wrappers: StartPoseDetection and StopPoseDetection are declared deprecated, and were replaced by startPoseDetection and stopPoseDetection.
+  * Linux: Cross compilation is now based on environment variables.
+  * .Net Wrappers: Projective/RealWorld conversion - added a version which accepts a preallocated array.
+  * USB Driver version was updated to 3.1.3.1.
+  * NiBackRecorder: removed unneeded calls to Release().
+  * NiConvertXToONI: removed unused seekNode.
+  * Android: makefiles are now compatible to ndk v7.
+  * .Net Wrapper: Added the missing DeviceIdentificationCapability class.
+  * New API: xnStopSinglePoseDetection.
+  * Bug Fix: Seeking before the first WaitXUpdateAll() caused undetermined behavior.
+  * Android: Added the NiSimpleSkeleton sample.
+  * Java Wrappers: Added missing enum values.
+  * .NET Wrappers: Added missing enum values.
+  * Android UserTracker sample: Adjusted to work without a calibration pose.
+  * USB Driver: adding support for PrimeSense's 0601 product ID.
+  * Log: initializing from INI file would reset the output directory.  
+  * Bug fix: Seeking to the current frame did no re-read it, while seeking to another frame did read it. This caused a bug where seeking to the same frame twice would cause it to return twice.
+
+Version 1.4.0.2 (Unstable version - Nov 17th 2011)
+--------------------------------------------------
+  * Linux bug fix: The USB read thread was using memcpy with overlapping source and dest addresses which caused newer libc libraries to fail. The solution is to use memmove.
+  * Log: fix BC methods behavior to be backwards-compatible to old one.
+  * Added GetNumberOfAvailableGestures() method to GestureGenerator.
+  * .NET BugFix: GetPoseStatus() did not work.
+  * JNI: fix a typo that prevents creating joint orientations.
+  * NiUserSelection: Update to support N closest users and N waves.
+  * Fixed python scripts to also support python 3.
+  * Java Wrapper: Added a new method copyToBuffer for copying data to a preallocated buffer to improve performance (community request).
+  * Mac: Fixed a bug in the linux set thread priority where the struct wasn't zero'd before usage (caused warning on mac osx).
+  * Linux redist bug: .net wrappers were skipped on 64-bit machines by mistake.
+  * Windows Bug Fix: shared memory was always created under the Global namespace (Failed to work with UAC turned on).
+  * Added APIs xnIsPoseSupported, xnGetPoseStatus, through PoseDetectionCapability.
+  * Java Wrappers: added createByteBuffer() to AudioMetaData to access data.
+  * NiRecordRaw: Removed duplicate call to GetProductionNodeByName.
+  * Added NiHandTracker C++ sample.
+  * Added NO_TRACKING to the list of pose detection statuses.
+  * Added NiSimpleSkeleton sample which shows the head movement of skeleton with no graphics.
+  * Added NiUserSelection sample which shows the exit pose (cross hands) and user selection.
+  * Added a new dump, "OpenNIDataFlow", to track data frames.
+  * WaitNoneUpdateAll now doesn't actually read from file (might cause some sleeping), but only triggers another thread to read in the background. 
+
+Version 1.3.4.6 (Unstable version - Nov 7th 2011)
+-------------------------------------------------
+  * In MockGenerator::SetData, change the node to Generating state so it would be recorded properly.
+  * Added new calibration error messages to the XnCalibrationStatus enum.
+  * XnArray: Allow passing base size in the ctor (to save double allocation).
+  * NiViewer: Removed an unnecessary line from file dialog init
+  * Bug fix: When recording from mock node, the first frame is no longer lost.
+  * XnOS: Added the option to create named objects in a way that will be accessible to other sessions.
+  * Renamed Linux-x86* files to Linux*
+  * Linux Bug Fix: xnOSSeekFile64 did not return OK. This caused problems in playback and recording of ONI files.
+  * Added some error log prints to the codecs and players.
+  * C# wrappers: fixed the marshaling of license struct.
+  * Added the function SetDataBytes to XnBitSet so it now accepts a byte buffer of any size. Note: byte order is different when reading from byte array or dword array in little endian platforms.
+  * C# wrappers: fixed a bug related to ProductionNodeDescription. Might break API, but this API would usually crash, so its OK.
+  * Linux: Switched to newer makefiles. SSE is enabled in debug, always declare sysroot (even for /) so that -I=/usr/include/ni could work properly.
+  * Linux: fix cross compilation and add separate scripts to cross compile on specific machine. Also, binary folders are now named according to platform and configuration.
+  * Documentation: Added a section about creating modules.
+  * Backwards Compatibility Workaround: some old recordings marked nodes as not generating though they contained frames. This resulted in "node is locked" error if trying to start generating them.
+
+Version 1.3.4.3 (Unstable version - Oct 10th 2011)
+--------------------------------------------------
+  * Update to newer version of CommonCppMakefile (without the -malign-double flag).
+  * Changed dump API to use void pointer instead of char pointer
+  * Added xnOSDeleteEmptyDirectory and xnOSDeleteDirectoryTree methods.
+  * Adding ScriptNode.Create() to C++ wrappers.
+  * Dumps: New, cleaner interface.
+  * Dumps: Adding dump writers mechanisms, so one can implement a new writer, other than files.
+  * Recordings: Support files bigger than 2 GB.
+  * Samples: default SamplesConfig is now better documented. Global mirror is turned on, instead of every generator.
+  * Java Wrappers: some methods were private by mistake.
+  * Samples Bug Fix: trying to create the rotating device extension would cause a crash if extension sample is not registered with OpenNI.
+  * Bug Fix: StartGenerating would fail on locked nodes even if node is already generating (this caused a bug where declaring a node in the XML which already existed in the recording would fail).
+  * Logs: New, better performance API.
+  * XnPlatform min/max values were wrong.
+
 Version 1.3.3.6 (Stable version - Sep 18th 2011)
 ------------------------------------------------
   * Fixed memory leak in Queue and ThreadSafeQueue.

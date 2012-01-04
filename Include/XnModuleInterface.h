@@ -1279,6 +1279,8 @@ typedef struct XnModulePoseDetectionCapabilityInterface
 	void (XN_CALLBACK_TYPE* UnregisterFromPoseDetected)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
 	XnStatus (XN_CALLBACK_TYPE* RegisterToOutOfPose)(XnModuleNodeHandle hGenerator, XnModulePoseDetectionCallback handler, void* pCookie, XnCallbackHandle* phCallback);
 	void (XN_CALLBACK_TYPE* UnregisterFromOutOfPose)(XnModuleNodeHandle hGenerator, XnCallbackHandle hCallback);
+
+	XnStatus (XN_CALLBACK_TYPE* StopSinglePoseDetection)(XnModuleNodeHandle hGenerator, XnUserID user, const XnChar* strPose);
 } XnModulePoseDetectionCapabilityInterface;
 
 /** User generator Interface. */

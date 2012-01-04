@@ -353,6 +353,14 @@ JNIEXPORT jobject JNICALL Java_org_OpenNI_NativeMethods_xnNodeInfoGetDescription
 
 /*
  * Class:     org_OpenNI_NativeMethods
+ * Method:    xnNodeInfoGetTreeStringRepresentation
+ * Signature: (JLorg/OpenNI/OutArg;)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnNodeInfoGetTreeStringRepresentation
+  (JNIEnv *, jclass, jlong, jobject);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
  * Method:    xnNodeInfoGetInstanceName
  * Signature: (J)Ljava/lang/String;
  */
@@ -1473,6 +1481,14 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetAllActiveGestures
 
 /*
  * Class:     org_OpenNI_NativeMethods
+ * Method:    xnGetNumberOfAvailableGestures
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetNumberOfAvailableGestures
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
  * Method:    xnEnumerateAllGestures
  * Signature: (JLorg/OpenNI/OutArg;)I
  */
@@ -1985,6 +2001,14 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStopPoseDetection
 
 /*
  * Class:     org_OpenNI_NativeMethods
+ * Method:    xnStopSinglePoseDetection
+ * Signature: (JILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStopSinglePoseDetection
+  (JNIEnv *, jclass, jlong, jint, jstring);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
  * Method:    xnRegisterToPoseDetected
  * Signature: (JLjava/lang/Object;Ljava/lang/String;Lorg/OpenNI/OutArg;)I
  */
@@ -2030,6 +2054,22 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToPoseDetectionIn
  */
 JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromPoseDetectionInProgress
   (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
+ * Method:    xnIsPoseSupported
+ * Signature: (JLjava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsPoseSupported
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
+ * Method:    xnGetPoseStatus
+ * Signature: (JILjava/lang/String;Lorg/OpenNI/OutArg;Lorg/OpenNI/OutArg;Lorg/OpenNI/OutArg;)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetPoseStatus
+  (JNIEnv *, jclass, jlong, jint, jstring, jobject, jobject, jobject);
 
 /*
  * Class:     org_OpenNI_NativeMethods

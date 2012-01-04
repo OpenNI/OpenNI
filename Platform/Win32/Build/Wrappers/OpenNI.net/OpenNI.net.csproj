@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{2FE4F6DE-12C8-41EE-9588-EB91CB6112FE}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -89,6 +89,9 @@
     </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\Device.cs">
       <Link>Nodes\Device.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\DeviceIdentificationCapability.cs">
+      <Link>Capabilities\DeviceIdentificationCapability.cs</Link>
     </Compile>
     <Compile Include="..\..\..\..\..\Wrappers\OpenNI.net\EnumerationErrors.cs">
       <Link>EnumerationErrors.cs</Link>

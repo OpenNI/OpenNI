@@ -314,9 +314,6 @@ XN_C_API XnStatus xnUSBIsDevicePresent(XnUInt16 /*nVendorID*/, XnUInt16 /*nProdu
 
 XN_C_API XnStatus xnUSBEnumerateDevices(XnUInt16 nVendorID, XnUInt16 nProductID, const XnUSBConnectionString** pastrDevicePaths, XnUInt32* pnCount)
 {
-	// Local variables
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	// support up to 30 devices
 	XnUSBConnectionString cpUSBID;
 	XnUSBConnectionString cpUSBPathCmp;
@@ -588,7 +585,7 @@ XnStatus xnUSBOpenDeviceImpl(const XnChar* strDevicePath, XN_USB_DEV_HANDLE* pDe
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*/, void* pExtraParam, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr)
+XN_C_API XnStatus xnUSBOpenDevice(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*/, void* /*pExtraParam*/, void* pExtraParam2, XN_USB_DEV_HANDLE* pDevHandlePtr)
 {
 	return xnUSBOpenDeviceImpl((const XnChar*)pExtraParam2, pDevHandlePtr);
 }
@@ -630,17 +627,17 @@ XN_C_API XnStatus xnUSBGetDeviceSpeed(XN_USB_DEV_HANDLE pDevHandle, XnUSBDeviceS
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnUSBSetConfig(XN_USB_DEV_HANDLE pDevHandle, XnUInt8 nConfig)
+XN_C_API XnStatus xnUSBSetConfig(XN_USB_DEV_HANDLE /*pDevHandle*/, XnUInt8 /*nConfig*/)
 {
 	return (XN_STATUS_OS_UNSUPPORTED_FUNCTION);
 }
 
-XN_C_API XnStatus xnUSBGetConfig(XN_USB_DEV_HANDLE pDevHandle, XnUInt8* pnConfig)
+XN_C_API XnStatus xnUSBGetConfig(XN_USB_DEV_HANDLE /*pDevHandle*/, XnUInt8* /*pnConfig*/)
 {
 	return (XN_STATUS_OS_UNSUPPORTED_FUNCTION);
 }
 
-XN_C_API XnStatus xnUSBSetInterface(XN_USB_DEV_HANDLE pDevHandle, XnUInt8 nInterface, XnUInt8 nAltInterface)
+XN_C_API XnStatus xnUSBSetInterface(XN_USB_DEV_HANDLE pDevHandle, XnUInt8 /*nInterface*/, XnUInt8 nAltInterface)
 {
 	// Local variables
 	XnBool bResult = FALSE;
@@ -709,7 +706,7 @@ XN_C_API XnStatus xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndP
 	PUSB_INTERFACE_DESCRIPTOR pUSBInterfaceDesc = NULL;
 	PUSB_ENDPOINT_DESCRIPTOR pUSBEndPointDesc = NULL;
 	XnUInt32 nIFIdx = 0;
-	XnUInt32 nEPIdx = 0;
+	UCHAR nEPIdx = 0;
 	XnUInt32 nUBBEPType = 0;
 	XN_USB_EP_HANDLE pEPHandle = NULL;	
 	XnChar cpPipeID[3];
@@ -945,7 +942,7 @@ XN_C_API XnStatus xnUSBAbortEndPoint(XN_USB_EP_HANDLE pEPHandle)
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnUSBFlushEndPoint(XN_USB_EP_HANDLE pEPHandle)
+XN_C_API XnStatus xnUSBFlushEndPoint(XN_USB_EP_HANDLE /*pEPHandle*/)
 {
 	return (XN_STATUS_OS_UNSUPPORTED_FUNCTION);
 }
@@ -985,7 +982,7 @@ XN_C_API XnStatus xnUSBSendControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControlTyp
 
 	// Init the control transfer structure
 	ControlTransfer.cDirection = RequestHostToDevice;
-	ControlTransfer.cRequestType = nType;
+	ControlTransfer.cRequestType = (UCHAR)nType; // cast is safe. enum was defined exactly according to standard
 	ControlTransfer.cRequest = nRequest;
 	ControlTransfer.nValue = nValue;
 	ControlTransfer.nIndex = nIndex;
@@ -1041,7 +1038,7 @@ XN_C_API XnStatus xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControl
 
 	// Init the control transfer structure
 	ControlTransfer.cDirection = RequestDeviceToHost;
-	ControlTransfer.cRequestType = nType;
+	ControlTransfer.cRequestType = (UCHAR)nType; // cast is safe. enum was defined exactly according to standard
 	ControlTransfer.cRequest = nRequest;
 	ControlTransfer.nValue = nValue;
 	ControlTransfer.nIndex = nIndex;
@@ -1324,7 +1321,6 @@ XN_THREAD_PROC xnUSBReadThreadMain(XN_THREAD_PARAM pThreadParam)
 	xnUSBReadThreadData* pThreadData = (xnUSBReadThreadData*)pThreadParam;
 	XnUInt32 nBufIdx = 0;
 	XnBool bResult = FALSE;
-	DWORD nLastErr = 0;
 	ULONG nBytesRead = 0;
 	HANDLE hCompletionPort = NULL;
 	HANDLE hEPOvlp = NULL;
@@ -1510,7 +1506,6 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 	XnStatus nRetVal = XN_STATUS_OK;
 	xnUSBReadThreadData* pThreadData = NULL;
 	XnUInt32 nBufIdx = 0;
-	BOOL bResult = FALSE;
 
 	// Validate xnUSB
 	XN_VALIDATE_USB_INIT();

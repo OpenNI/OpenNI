@@ -82,10 +82,10 @@ typedef enum XnErrorGroup
 #define XN_STATUS_MAKE(group, code)		((group << 16) | code)
 
 /** Returns the group of the status. */
-#define XN_STATUS_GROUP(status)			(status >> 16)
+#define XN_STATUS_GROUP(status)			XnUInt16(status >> 16)
 
 /** Returns the code of the status. */
-#define XN_STATUS_CODE(status)			(status & 0x0000FFFF)
+#define XN_STATUS_CODE(status)			XnUInt16(status & 0x0000FFFF)
 
 /** Marks the beginning of a message map of a specific module. */ 
 #define XN_STATUS_MESSAGE_MAP_START_FROM(group, first)		\

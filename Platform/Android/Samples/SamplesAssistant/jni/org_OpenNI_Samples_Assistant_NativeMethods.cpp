@@ -402,8 +402,6 @@ void fillBitmap(int *dstBuf, char useScene, char useDepth, char useHistogram, ch
 	unsigned int nValue = 0;
 	float nHistValue = 0;
 	unsigned int nIndex = 0;
-	unsigned int nX = 0;
-	unsigned int nY = 0;
 	XnUInt32 nColorID;
 
 	unsigned char *pDestImage = (unsigned char *)dstBuf;

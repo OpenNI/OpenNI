@@ -11,7 +11,7 @@ MY_PREFIX := $(LOCAL_PATH)/../../../../Source/OpenNI/
 # list all source files
 MY_SRC_FILES := \
 	$(MY_PREFIX)*.cpp \
-	$(MY_PREFIX)Linux-x86/*.cpp \
+	$(MY_PREFIX)Linux/*.cpp \
 	$(MY_PREFIX)../External/TinyXml/*.cpp
 
 # expand the wildcards

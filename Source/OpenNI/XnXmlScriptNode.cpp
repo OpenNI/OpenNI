@@ -37,18 +37,14 @@ XnStatus xnXmlReadMapOutputMode(const TiXmlElement* pOpcode, XnMapOutputMode* pM
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	XnInt nValue;
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "xRes", &nValue);
+	nRetVal = xnXmlReadUInt32Attribute(pOpcode, "xRes", &pMapOutputMode->nXRes);
 	XN_IS_STATUS_OK(nRetVal);
-	pMapOutputMode->nXRes = nValue;
 
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "yRes", &nValue);
+	nRetVal = xnXmlReadUInt32Attribute(pOpcode, "yRes", &pMapOutputMode->nYRes);
 	XN_IS_STATUS_OK(nRetVal);
-	pMapOutputMode->nYRes = nValue;
 
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "FPS", &nValue);
+	nRetVal = xnXmlReadUInt32Attribute(pOpcode, "FPS", &pMapOutputMode->nFPS);
 	XN_IS_STATUS_OK(nRetVal);
-	pMapOutputMode->nFPS = nValue;
 
 	return (XN_STATUS_OK);
 }
@@ -57,18 +53,14 @@ XnStatus xnXmlReadWaveOutputMode(const TiXmlElement* pOpcode, XnWaveOutputMode* 
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	XnInt nValue;
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "sampleRate", &nValue);
+	nRetVal = xnXmlReadUInt32Attribute(pOpcode, "sampleRate", &pWaveOutputMode->nSampleRate);
 	XN_IS_STATUS_OK(nRetVal);
-	pWaveOutputMode->nSampleRate = nValue;
 
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "bitsPerSample", &nValue);
+	nRetVal = xnXmlReadUInt16Attribute(pOpcode, "bitsPerSample", &pWaveOutputMode->nBitsPerSample);
 	XN_IS_STATUS_OK(nRetVal);
-	pWaveOutputMode->nBitsPerSample = nValue;
 
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "channels", &nValue);
+	nRetVal = xnXmlReadUInt8Attribute(pOpcode, "channels", &pWaveOutputMode->nChannels);
 	XN_IS_STATUS_OK(nRetVal);
-	pWaveOutputMode->nChannels = nValue;
 
 	return (XN_STATUS_OK);
 }
@@ -80,22 +72,17 @@ XnStatus xnXmlReadCropping(const TiXmlElement* pOpcode, XnCropping* pCropping)
 	nRetVal = xnXmlReadBoolAttribute(pOpcode, "enabled", &pCropping->bEnabled);
 	XN_IS_STATUS_OK(nRetVal);
 
-	XnInt nValue;
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "xOffset", &nValue);
+	nRetVal = xnXmlReadUInt16Attribute(pOpcode, "xOffset", &pCropping->nXOffset);
 	XN_IS_STATUS_OK(nRetVal);
-	pCropping->nXOffset = nValue;
 
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "yOffset", &nValue);
+	nRetVal = xnXmlReadUInt16Attribute(pOpcode, "yOffset", &pCropping->nYOffset);
 	XN_IS_STATUS_OK(nRetVal);
-	pCropping->nYOffset = nValue;
 
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "xSize", &nValue);
+	nRetVal = xnXmlReadUInt16Attribute(pOpcode, "xSize", &pCropping->nXSize);
 	XN_IS_STATUS_OK(nRetVal);
-	pCropping->nXSize = nValue;
 
-	nRetVal = xnXmlReadIntAttribute(pOpcode, "ySize", &nValue);
+	nRetVal = xnXmlReadUInt16Attribute(pOpcode, "ySize", &pCropping->nYSize);
 	XN_IS_STATUS_OK(nRetVal);
-	pCropping->nYSize = nValue;
 
 	return (XN_STATUS_OK);
 }
@@ -406,8 +393,6 @@ XnStatus xnConfigureAddNodeToRecording(XnNodeHandle hNode, const TiXmlElement* p
 
 XnStatus xnConfigureSetOpcode(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	const XnChar* strOpcode = pOpcode->Value();
 
 	if (strcmp(strOpcode, "Mirror") == 0)
@@ -458,8 +443,6 @@ XnStatus xnConfigureSetOpcode(XnNodeHandle hNode, const TiXmlElement* pOpcode)
 	{
 		XN_LOG_WARNING_RETURN(XN_STATUS_CORRUPT_FILE, XN_MASK_OPEN_NI, "Invalid configuration option: %s", strOpcode);
 	}
-
-	return (XN_STATUS_OK);
 }
 
 XnStatus xnConfigureNodeFromXml(XnNodeHandle hNode, const TiXmlElement* pNode)
@@ -479,7 +462,7 @@ XnStatus xnConfigureNodeFromXml(XnNodeHandle hNode, const TiXmlElement* pNode)
 		xnXmlReadBoolAttribute(pConfig, "lock", &bLock);
 	}
 
-	XnLockHandle hLock;
+	XnLockHandle hLock = 0;
 
 	if (bLock)
 	{

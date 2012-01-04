@@ -131,8 +131,7 @@ STDAPI DllRegisterServer()
 
 	// release interface
 	//
-	if(fm)
-		fm->Release();
+	fm->Release();
 
 	CoFreeUnusedLibraries();
 	CoUninitialize();

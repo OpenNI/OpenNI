@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+# Your cross-compiler and staging-dir will be taken from 'ARM_CXX' and 'ARM_STAGING' environment variables, respectively.
+make PLATFORM=Arm $*

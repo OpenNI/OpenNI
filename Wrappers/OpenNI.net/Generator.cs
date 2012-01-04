@@ -117,6 +117,14 @@ namespace OpenNI
 			}
 		}
 
+        public IntPtr DataPtr
+        {
+            get
+            {
+                return SafeNativeMethods.xnGetData(this.InternalObject);
+            }
+        }
+
 		public Int32 DataSize
 		{
 			get
