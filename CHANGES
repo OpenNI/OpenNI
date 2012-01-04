@@ -1,6 +1,14 @@
 Detailed Change log:
 --------------------
 
+Version 1.5.2.23 (Stable version - Dec 28th 2011)
+-------------------------------------------------
+  * C++: IRMetaData didn't have operator() and operator[], which is inconsistent with depth and scene.
+  * Fixed some memory deallocation mismatches.
+  * Remove redundant USB warning message on Linux (this is normal behavior).
+  * Java wrappers: adding getDataPtr(), createDataByteBuffer() and copyDataToBuffer() to Generator class.
+  * NiViewer: did not check if StartGenerating was successful.
+
 Version 1.5.2.7 (Unstable version - Dec 18th 2011)
 --------------------------------------------------
   * Java UserTracker sample will now draw the limbs only when both joints have a non-zero confidence.

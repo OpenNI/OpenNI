@@ -835,7 +835,7 @@ XN_C_API XnStatus xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControl
 	}
 	else if (nBytesReceived == 0) // nothing received
 	{
-		xnLogWarning(XN_MASK_USB, "Received empty control message!");
+		// received empty message
 		return (XN_STATUS_USB_NOT_ENOUGH_DATA);
 	}
 	else if (nBytesReceived > nBufferSize) // too much

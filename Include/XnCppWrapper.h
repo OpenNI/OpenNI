@@ -810,6 +810,29 @@ namespace xn
 		/// @copydoc OutputMetaData::WritableData
 		inline XnIRPixel* WritableData() { return (XnIRPixel*)MapMetaData::WritableData(); }
 
+		/**
+		 * Gets the value of the pixel
+		 *
+		 * @param	nIndex		[in]	The index of the pixel in the buffer.
+		 */
+		inline const XnIRPixel& operator[](XnUInt32 nIndex) const 
+		{ 
+			XN_ASSERT(nIndex < (XRes()*YRes()));
+			return Data()[nIndex]; 
+		}
+
+		/**
+		 * Gets the value of the pixel
+		 *
+		 * @param	x		[in]	X-coordinate of the pixel in the map
+		 * @param	y		[in]	Y-coordinate of the pixel in the map
+		 */
+		inline const XnIRPixel& operator()(XnUInt32 x, XnUInt32 y) const 
+		{
+			XN_ASSERT(x < XRes() && y < YRes());
+			return Data()[y*XRes() + x]; 
+		}
+
 		/// Gets a light object wrapping the IR map
 		inline const xn::IRMap& IRMap() const { return m_irMap; }
 		/// Gets a light object wrapping the writable IR map

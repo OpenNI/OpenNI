@@ -408,7 +408,7 @@ void toggleStream(Generator& generator, XnProductionNodeType type, bool* bIsOn)
 	}
 	else
 	{
-		generator.StartGenerating();
+		nRetVal = generator.StartGenerating();
 		if (nRetVal != XN_STATUS_OK)
 		{
 			displayMessage("Failed to turn on %s: %s", generator.GetInfo().GetInstanceName(), xnGetStatusString(nRetVal));

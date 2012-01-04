@@ -4475,10 +4475,10 @@ XnStatus xn::PosePrivateData::Init(XnNodeHandle hUserGenerator)
 
     for (XnUInt32 i = 0; i < numTotal; i++)
     {
-        XN_DELETE(arr[i]);
+        XN_DELETE_ARR(arr[i]);
     }
 
-    XN_DELETE(arr);
+    XN_DELETE_ARR(arr);
     return nRetVal;
 }
 XnStatus xn::PosePrivateData::GetPoseStatus(XnUserID userID, const XnChar* poseName, XnUInt64& poseTime, XnPoseDetectionStatus& eStatus, XnPoseDetectionState& eState)
