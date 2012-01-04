@@ -409,7 +409,6 @@ XN_C_API XnStatus XN_C_DECL xnRegisterExtensionNode(const XnChar* strTypeName, X
  */
 XN_C_API XnModuleNodeHandle XN_C_DECL xnGetModuleNodeHandle(XnNodeHandle hNode);
 
-#if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 /**
  * Registers a module to OpenNI in environments where dynamic library loading is not supported.
  *
@@ -417,9 +416,7 @@ XN_C_API XnModuleNodeHandle XN_C_DECL xnGetModuleNodeHandle(XnNodeHandle hNode);
  * @param	strConfigDir	[in]	The module configuration directory.
  * @param	strName			[in]	Name of this module.
  */
-XN_C_API XnStatus XN_C_DECL xnRegisterModuleWithOpenNI(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
-#endif
-
+xnRegisterModuleWithOpenNI(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
 /// @}
 
 /** @} */
