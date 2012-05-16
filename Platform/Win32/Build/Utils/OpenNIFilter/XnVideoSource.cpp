@@ -252,8 +252,6 @@ HRESULT STDMETHODCALLTYPE XnVideoSource::GetMode( IPin *pPin, __out long *Mode )
 	XN_METHOD_CHECK_POINTER(pPin);
 	XN_METHOD_CHECK_POINTER(Mode);
 
-	HRESULT hr = S_OK;
-
 	// we have only 1 pin, make sure this is it
 	XnVideoStream* pVideoStream = dynamic_cast<XnVideoStream*>(GetPin(0));
 	if (pPin != static_cast<IPin*>(pVideoStream))
@@ -278,8 +276,6 @@ HRESULT STDMETHODCALLTYPE XnVideoSource::GetCurrentActualFrameRate( IPin *pPin, 
 
 	XN_METHOD_CHECK_POINTER(pPin);
 	XN_METHOD_CHECK_POINTER(ActualFrameRate);
-
-	HRESULT hr = S_OK;
 
 	// we have only 1 pin, make sure this is it
 	XnVideoStream* pVideoStream = dynamic_cast<XnVideoStream*>(GetPin(0));

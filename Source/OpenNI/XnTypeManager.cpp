@@ -200,3 +200,86 @@ XnStatus TypeManager::AddNewType(const XnChar* strName, XnProductionNodeType typ
 	newInfo.inheritanceGraph = pBaseInfo->inheritanceGraph;
 	return AddType(newInfo);
 }
+
+XnPredefinedProductionNodeType TypeManager::GetPredefinedBaseType(XnProductionNodeType type)
+{
+	const XnBitSet* pHierarchy;
+	if (GetTypeHierarchy(type, pHierarchy) != XN_STATUS_OK)
+	{
+		return XN_NODE_TYPE_INVALID;
+	}
+
+	// start with concrete types
+	if (pHierarchy->IsSet(XN_NODE_TYPE_DEVICE))
+	{
+		return XN_NODE_TYPE_DEVICE;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_DEPTH))
+	{
+		return XN_NODE_TYPE_DEPTH;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_IMAGE))
+	{
+		return XN_NODE_TYPE_IMAGE;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_AUDIO))
+	{
+		return XN_NODE_TYPE_AUDIO;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_IR))
+	{
+		return XN_NODE_TYPE_IR;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_USER))
+	{
+		return XN_NODE_TYPE_USER;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_RECORDER))
+	{
+		return XN_NODE_TYPE_RECORDER;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_PLAYER))
+	{
+		return XN_NODE_TYPE_PLAYER;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_GESTURE))
+	{
+		return XN_NODE_TYPE_GESTURE;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_SCENE))
+	{
+		return XN_NODE_TYPE_SCENE;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_HANDS))
+	{
+		return XN_NODE_TYPE_HANDS;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_CODEC))
+	{
+		return XN_NODE_TYPE_CODEC;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_SCRIPT))
+	{
+		return XN_NODE_TYPE_SCRIPT;
+	}
+
+	// and now, some abstract types
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_MAP_GENERATOR))
+	{
+		return XN_NODE_TYPE_MAP_GENERATOR;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_GENERATOR))
+	{
+		return XN_NODE_TYPE_GENERATOR;
+	}
+	else if (pHierarchy->IsSet(XN_NODE_TYPE_PRODUCTION_NODE))
+	{
+		return XN_NODE_TYPE_PRODUCTION_NODE;
+	}
+	else
+	{
+		// unknown
+		XN_ASSERT(FALSE);
+		return XN_NODE_TYPE_INVALID;
+	}
+}

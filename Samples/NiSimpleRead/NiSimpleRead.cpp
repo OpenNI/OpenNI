@@ -109,7 +109,6 @@ int main()
 		xnFPSMarkFrame(&xnFPS);
 
 		depth.GetMetaData(depthMD);
-		const XnDepthPixel* pDepthMap = depthMD.Data();
 
 		printf("Frame %d Middle point is: %u. FPS: %f\n", depthMD.FrameID(), depthMD(depthMD.XRes() / 2, depthMD.YRes() / 2), xnFPSCalc(&xnFPS));
 	}

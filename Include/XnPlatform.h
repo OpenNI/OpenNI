@@ -93,6 +93,9 @@ typedef void (*XnFuncPtr)();
 
 #define XN_COMPILER_ASSERT(x) typedef int compileAssert[x ? 1 : -1]
 
+struct XnRegistrationHandleImpl;
+typedef struct XnRegistrationHandleImpl* XnRegistrationHandle;
+
 //---------------------------------------------------------------------------
 // API Export/Import Macros
 //---------------------------------------------------------------------------

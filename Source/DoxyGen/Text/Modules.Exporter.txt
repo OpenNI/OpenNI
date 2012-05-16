@@ -1,0 +1,409 @@
+/**
+@page modules_exporter Creating a Node Exporter
+
+Once you have completed your node implementation class, you must create 
+a node exporter class to export your new node to OpenNI. The node 
+exporter is a factory that allows (i) enumerating existing nodes, (ii) 
+creating new nodes, and (iii) destroying nodes. 
+
+Creating a node exporter is done by defining a new class that inherits 
+from @ref xn::ModuleExportedProductionNode. 
+
+@section modules_exporter_desc Node Description
+
+Each node implementation has a description. The description contains the 
+following information: 
+
+- Node Type (Depth Generator / Device / Hands Generator, etc.)
+- Vendor Name
+- Node Name (to distinguish two products from the same vendor)
+- Version
+
+This description should be unique to each node implementation.
+
+@section modules_exporter_enum Enumeration
+
+The enumeration process is where production graphs are created. When an 
+application asks for a node of a specific type, OpenNI enumerates the 
+node exporters which declared this type. The node exporter is 
+responsible of returning the list of production graphs that can be 
+created in order to have such a node. Of course, each such production 
+graph will have your node implementation as its root. 
+
+The enumeration process is the opportunity to:
+- Check if a specific hardware is attached and ready for operation. For 
+  example, an exporter of a device node will usually 
+  - Query the operating system to find out if a specific USB device is 
+    connected right now. 
+  - Check if this hardware is not already in use by another software 
+    component, and so cannot be used. 
+  - If more than one device is connected, it can return two different 
+    production graph alternatives, one for each such device. 
+- Check that a valid license exists to use the node implementation.
+- Enumerate nodes from another type that are required for this node 
+  implementation to function. 
+
+A production graph alternative is represented by a @ref xn::NodeInfo 
+object. It contains a description of the node (must be the same as the 
+description returned by the @ref 
+xn::ModuleExportedProductionNode::GetDescription() method), an optional 
+creation info and a list of dependent nodes (through which the entire 
+graph can be described). 
+
+Adding production graphs to the list is usually done using the @ref 
+xn::NodeInfoList::Add() method. 
+
+Note that one of the returned production graph alternatives might be 
+used later on to create the production graph, so it's important that 
+this alternative will fully describe the exact instance to be created. 
+If two alternatives only differ in the way the root node (your node 
+implementation) is created, the difference can be described in the 
+<i>creation info</i> member. 
+
+If the node implementation depends on exactly one input node, it can use 
+the @ref xn::Context::AutoEnumerateOverSingleInput() utility method. 
+
+If no production graphs alternatives are currently available, besides 
+returning an empty list, it is also advised to return a return value 
+other than XN_STATUS_OK. This return value will be added to the 
+EnumerationErrors object, so that the application can later on check why 
+a specific node failed to enumerate. 
+
+@note Current OpenNI interface can not pass state while enumerating. 
+This causes a problem if production graph cycles might occur (for 
+example, if a depth generator enumerates for depth generator, or if a 
+hands generator enumerates for user generator which itself enumerates 
+for hands generator). Right now, the best solution is to use a static 
+boolean inside your Enumerate() implementation, to recognize if the 
+method is called recursively, and if so, return nothing. 
+
+@section modules_exporter_create Creating the Node
+
+Once enumeration is complete, the application can choose one of the 
+returned production graphs alternatives and ask OpenNI to create it. 
+OpenNI assures the node exporter that all needed nodes in the production 
+graphs will be created before calling to 
+xn::ModuleExportedProductionNode::Create(), so that the exporter can 
+take those nodes and use them. In addition to the information found in 
+the NodeInfo object (needed nodes, creation info), OpenNI passes to the 
+exporter an instance name (the name that this node will have in OpenNI 
+context), and a configuration dir (taken from the module registration -- 
+see @ref modules_registration). 
+
+The exporter should create the node implementation it exports, and 
+return a pointer to it to OpenNI. 
+
+@section modules_exporter_destroy Destroying the Node
+
+Once OpenNI determines that the node is no longer needed, it will 
+request the exporter to destroy it by calling <code>@ref 
+xn::ModuleExportedProductionNode::Destroy()</code>. OpenNI ensures that 
+a node is destroyed before any of the nodes on which it depends in the 
+production graph are destroyed. 
+
+@section modules_exporter_ex1 Example A: Exporter for a node which requires a physical device
+
+Let's take for example a device node that represents some USB physical 
+device. The enumeration uses the operating system to find out which 
+devices are connected right now, obtains the path to each device node, 
+and creates a production graph for each device node. The exporter places 
+the device path in the creation info. This allows easy access to the 
+device path so the exporter knows which is the correct device to connect 
+to. 
+
+The Create() method takes the creation info and passes it to the device 
+node constructor. 
+
+@code
+class MyDevice : public virtual xn::ModuleDevice
+{
+public:
+	MyDevice(const XnChar* strDevicePath);
+	...
+};
+
+class MyDeviceExporter : public virtual xn::ModuleExportedProductionNode
+{
+public:
+	virtual void GetDescription(XnProductionNodeDescription* pDescription) 
+	{
+		pDescription->Type = XN_NODE_TYPE_DEVICE;
+		strcpy(pDescription->strVendor, "New Devices Inc.");
+		strcpy(pDescription->strName, "MyDevice");
+		pDescription->Version.nMajor = 1;
+		pDescription->Version.nMinor = 0;
+		pDescription->Version.nMaintenance = 0;
+		pDescription->Version.nBuild = 7;
+	}
+
+	virtual XnStatus EnumerateProductionTrees(Context& context, NodeInfoList& TreesList, EnumerationErrors* pErrors) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+
+		XnProductionNodeDescription description;
+		GetDescription(&description);
+		
+		// find which USB device are connected
+		const XnUSBConnectionString* astrDevicePaths;
+		XnUInt32 nCount;
+
+		nRetVal = xnUSBEnumerateDevices(MY_VENDOR_ID, MY_PRODUCT_ID, astrDevicePaths, &nCount);
+		XN_IS_STATUS_OK(nRetVal);
+		
+		if (nCount == 0)
+		{
+			// no device was found. return an error
+			return XN_STATUS_DEVICE_NOT_CONNECTED;
+		}
+
+		// add a production graph alternative for each connected device
+		for (XnUInt32 i = 0; i < nCount; ++i)
+		{
+			nRetVal = TreesList.Add(description, astrDevicePaths[i], NULL);
+			XN_IS_STATUS_OK(nRetVal);
+		}
+
+		xnUSBFreeDevicesList(astrDevicePaths);
+
+		return (XN_STATUS_OK);
+	}
+
+	virtual XnStatus Create(Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, 
+							NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, ModuleProductionNode** ppInstance) 
+	{
+		*ppInstance = new MyDevice(strCreationInfo);
+		if (*ppInstance == NULL)
+		{
+			return XN_STATUS_ALLOC_FAILED;
+		}
+
+		return XN_STATUS_OK;
+	}
+
+	virtual void Destroy(ModuleProductionNode* pInstance) 
+	{
+		delete pInstance;
+	}
+};
+@endcode
+
+@section modules_exporter_ex2 Example B: Exporter for a node which requires one input node
+
+For example, if you want to build a hands generator that works over an 
+RGB image map. The exporter must declare that the node needs an image 
+generator as input. 
+
+@code
+class MyHandsGenerator : public virtual xn::ModuleHandsGenerator
+{
+public:
+	MyHandsGenerator(ImageGenerator imageGen);
+	...
+};
+
+class MyHandsExporter : public virtual xn::ModuleExportedProductionNode
+{
+public:
+	virtual void GetDescription(XnProductionNodeDescription* pDescription) 
+	{
+		pDescription->Type = XN_NODE_TYPE_DEVICE;
+		strcpy(pDescription->strVendor, "New Algorithms Inc.");
+		strcpy(pDescription->strName, "MyHandsGenerator");
+		pDescription->Version.nMajor = 1;
+		pDescription->Version.nMinor = 0;
+		pDescription->Version.nMaintenance = 0;
+		pDescription->Version.nBuild = 7;
+	}
+
+	virtual XnStatus EnumerateProductionTrees(Context& context, NodeInfoList& TreesList, EnumerationErrors* pErrors) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+
+		XnProductionNodeDescription description;
+		GetDescription(&description);
+
+		return context.AutoEnumerateOverSingleInput(
+			TreesList,			// the list to be filled
+			description,		// our description
+			NULL,				// creation info. Not needed in this example.
+			XN_NODE_TYPE_IMAGE, // type of the single input required
+			pErrors,			// the EnumerationErrors object
+			NULL				// query. Not needed in this example.
+			);
+	}
+
+	virtual XnStatus Create(Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, 
+							NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, ModuleProductionNode** ppInstance) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+		
+		// take the first needed node
+		NodeInfoList::Iterator it = pNeededTrees->Begin();
+		if (it == pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		NodeInfo imageInfo = *it;
+
+		// make sure its of the right type and that this is the only one
+		if (imageInfo.GetDescription().Type != XN_NODE_TYPE_IMAGE || ++it != pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		// OpenNI assures us the image node is already created
+		ImageGenerator image;
+		nRetVal = imageInfo.GetInstance(image);
+		XN_IS_STATUS_OK(nRetVal);
+
+		*ppInstance = new MyHandsGenerator(image);
+		if (*ppInstance == NULL)
+		{
+			return XN_STATUS_ALLOC_FAILED;
+		}
+
+		return XN_STATUS_OK;
+	}
+
+	virtual void Destroy(ModuleProductionNode* pInstance) 
+	{
+		delete pInstance;
+	}
+};
+@endcode
+
+@section modules_exporter_ex3 Example C: Exporter for a node which requires two different nodes
+
+Let's take for example a hands generator that needs both RGB information 
+and depth information of the scene. The exporter will create production 
+graph alternatives that require both an ImageGenerator node and a 
+DepthGenerator node. 
+
+@code
+class MyHandsGenerator : public virtual xn::ModuleHandsGenerator
+{
+public:
+	MyHandsGenerator(ImageGenerator& imageGen, DepthGenerator& depthGen);
+	...
+};
+
+class MyHandsExporter : public virtual xn::ModuleExportedProductionNode
+{
+public:
+	virtual void GetDescription(XnProductionNodeDescription* pDescription) 
+	{
+		pDescription->Type = XN_NODE_TYPE_DEVICE;
+		strcpy(pDescription->strVendor, "New Algorithms Inc.");
+		strcpy(pDescription->strName, "MyHandsGenerator");
+		pDescription->Version.nMajor = 1;
+		pDescription->Version.nMinor = 0;
+		pDescription->Version.nMaintenance = 0;
+		pDescription->Version.nBuild = 7;
+	}
+
+	virtual XnStatus EnumerateProductionTrees(Context& context, NodeInfoList& TreesList, EnumerationErrors* pErrors) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+
+		XnProductionNodeDescription description;
+		GetDescription(&description);
+
+		// find production graph alternatives for image
+		NodeInfoList imageList;
+		nRetVal = context.EnumerateProductionTrees(XN_NODE_TYPE_IMAGE, NULL, imageList, pErrors);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// find production graph alternatives for depth
+		NodeInfoList depthList;
+		nRetVal = context.EnumerateProductionTrees(XN_NODE_TYPE_DEPTH, NULL, depthList, pErrors);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// now for each combination, we create one alternative
+		for (NodeInfoList::Iterator imageIt = imageList.Begin(); imageIt != imageList.End(); ++imageIt)
+		{
+			for (NodeInfoList::Iterator depthIt = depthList.Begin(); depthIt != depthList.End(); ++depthIt)
+			{
+				// create needed nodes list
+				NodeInfoList neededNodes;
+
+				nRetVal = neededNodes.AddNodeFromAnotherList(imageIt);
+				XN_IS_STATUS_OK(nRetVal);
+
+				nRetVal = neededNodes.AddNodeFromAnotherList(depthIt);
+				XN_IS_STATUS_OK(nRetVal);
+
+				nRetVal = TreesList.Add(
+					description,	// our description
+					NULL,			// creation info. not needed in this example
+					&neededNodes	// needed nodes list
+					);
+				XN_IS_STATUS_OK(nRetVal);
+			}
+		}
+
+		return XN_STATUS_OK;
+	}
+
+	virtual XnStatus Create(Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, 
+							NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, ModuleProductionNode** ppInstance) 
+	{
+		XnStatus nRetVal = XN_STATUS_OK;
+		
+		// take the first needed node
+		NodeInfoList::Iterator it = pNeededTrees->Begin();
+		if (it == pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		NodeInfo imageInfo = *it;
+
+		// take the second needed node
+		++it;
+		if (it == pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		NodeInfo depthInfo = *it;
+
+		// make sure types are correct and that no more nodes were received
+		if (imageInfo.GetDescription().Type != XN_NODE_TYPE_IMAGE || 
+			depthInfo.GetDescription().Type != XN_NODE_TYPE_DEPTH ||
+			++it != pNeededTrees->End())
+		{
+			xnLogError("MyHandsGenerator", "Got a production graph different from the one returned in Enumerate()!");
+			return XN_STATUS_ERROR;
+		}
+
+		// OpenNI assures us the nodes are already created
+		ImageGenerator image;
+		nRetVal = imageInfo.GetInstance(image);
+		XN_IS_STATUS_OK(nRetVal);
+
+		DepthGenerator depth;
+		nRetVal = depthInfo.GetInstance(depth);
+		XN_IS_STATUS_OK(nRetVal);
+
+		*ppInstance = new MyHandsGenerator(image, depth);
+		if (*ppInstance == NULL)
+		{
+			return XN_STATUS_ALLOC_FAILED;
+		}
+
+		return XN_STATUS_OK;
+	}
+
+	virtual void Destroy(ModuleProductionNode* pInstance) 
+	{
+		delete pInstance;
+	}
+};
+@endcode
+
+*/

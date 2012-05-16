@@ -44,6 +44,8 @@ public:
 
 	void SetLineInfo(XnBool bLineInfo);
 
+	const XnChar* GetFileName() { return m_strCurrFileName; }
+
 protected:
 	virtual void OnRegister();
 	virtual void OnUnregister();
@@ -51,6 +53,7 @@ protected:
 private:
 	XN_FILE_HANDLE m_fLogFile;
 	XnBool m_bWriteLineInfo;
+	XnChar m_strCurrFileName[XN_FILE_MAX_PATH];
 };
 
 #endif // __XN_LOG_FILE_WRITER_H__

@@ -77,7 +77,7 @@ protected:
     virtual XnStatus DetectOutOfPose(XnUserID nUserId);
 
     /// @brief Internal hash for when a user got out of pose.
-    XN_DECLARE_DEFAULT_HASH(XnUserID,XnUInt64,UserOutOfPoseHash);
+    typedef XnHashT<XnUserID, XnUInt64> UserOutOfPoseHash;
 
     UserOutOfPoseHash m_usersOutOfPoseTime; ///< @brief holds for each user, the first time they were out of pose AFTER being tracked. 0 means no data.
     /// @param maxUsersToTrack 

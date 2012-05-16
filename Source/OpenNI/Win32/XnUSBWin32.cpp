@@ -32,16 +32,29 @@
 #include <dbt.h>
 #include "devioctl.h"
 #include "usb.h"
+#include "XnListT.h"
+
+//---------------------------------------------------------------------------
+// Types
+//---------------------------------------------------------------------------
+typedef struct XnUSBEventCallback
+{
+	XnUSBDeviceCallbackFunctionPtr pFunc;
+	void* pCookie;
+	XnChar strVidPid[50];
+} XnUSBEventCallback;
+
+typedef XnListT<XnUSBEventCallback*> XnUSBEventCallbackList;
 
 //---------------------------------------------------------------------------
 // Global Vars
 //---------------------------------------------------------------------------
+
 HANDLE g_xnUsbhModule = NULL;
 HWND g_xnUsbhDevDetectWnd = NULL;
 HANDLE g_xnUsbhPnThread = NULL;
-XnBool g_xnUsbCallbackWasInit = FALSE;
-XnUSBEventCallbackFunctionPtr g_XnUSBEventCallbackFunctionPtr = NULL;
-void* g_pXnUSBEventCallbackData = NULL;
+
+XnUSBEventCallbackList g_connectivityEvent;
 
 //---------------------------------------------------------------------------
 // PNP Functions
@@ -68,25 +81,37 @@ LRESULT CALLBACK DevDetectWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 	{
 		case WM_DEVICECHANGE:
 			{
-				if (g_XnUSBEventCallbackFunctionPtr != NULL)
+				PDEV_BROADCAST_HDR pBroadcastHdr = (PDEV_BROADCAST_HDR)lParam;
+				PDEV_BROADCAST_DEVICEINTERFACE pDevIF = (PDEV_BROADCAST_DEVICEINTERFACE)pBroadcastHdr;
+
+				if(pBroadcastHdr)
 				{
-					PDEV_BROADCAST_HDR pBroadcastHdr = (PDEV_BROADCAST_HDR)lParam;
-					PDEV_BROADCAST_DEVICEINTERFACE pDevIF = (PDEV_BROADCAST_DEVICEINTERFACE)pBroadcastHdr;
-
-					if(pBroadcastHdr)
+					DWORD nEventType = (DWORD)wParam; 
+					if (pBroadcastHdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE) 
 					{
-						DWORD nEventType = (DWORD)wParam; 
-						if (pBroadcastHdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE) 
-						{
-							_strlwr(pDevIF->dbcc_name);
+						_strlwr(pDevIF->dbcc_name);
 
-							if (nEventType == DBT_DEVICEARRIVAL)
+						XnUSBEventArgs args;
+						args.strDevicePath = pDevIF->dbcc_name;
+
+						switch (nEventType)
+						{
+						case DBT_DEVICEARRIVAL:
+							args.eventType = XN_USB_EVENT_DEVICE_CONNECT;
+							break;
+						case DBT_DEVICEREMOVECOMPLETE:
+							args.eventType = XN_USB_EVENT_DEVICE_DISCONNECT;
+							break;
+						default:
+							return 0;
+						}
+
+						for (XnUSBEventCallbackList::Iterator it = g_connectivityEvent.Begin(); it != g_connectivityEvent.End(); ++it)
+						{
+							XnUSBEventCallback* pCallback = *it;
+							if (strstr(args.strDevicePath, pCallback->strVidPid) != NULL)
 							{
-								g_XnUSBEventCallbackFunctionPtr(XN_USB_EVENT_DEVICE_CONNECT, pDevIF->dbcc_name, g_pXnUSBEventCallbackData);
-							}
-							else if (nEventType == DBT_DEVICEREMOVECOMPLETE)
-							{
-								g_XnUSBEventCallbackFunctionPtr(XN_USB_EVENT_DEVICE_DISCONNECT, pDevIF->dbcc_name, g_pXnUSBEventCallbackData);
+								pCallback->pFunc(&args, pCallback->pCookie);
 							}
 						}
 					}
@@ -258,6 +283,38 @@ XnStatus xnUSBGetDeviceSpeedInternal(XN_USB_DEV_HANDLE pDevHandle, XnUSBDeviceSp
 //---------------------------------------------------------------------------
 XnStatus xnUSBPlatformSpecificInit()
 {
+	WNDCLASS wc;
+	wc.style = 0;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = (HINSTANCE)g_xnUsbhModule;
+	wc.hbrBackground = NULL;
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = "xnUsbDeviceDetector";
+	wc.lpfnWndProc = DevDetectWndProc;
+	wc.hIcon = NULL;
+	wc.hCursor = NULL;
+
+	BOOL ret = RegisterClass(&wc);
+	if(ret)
+	{
+		HANDLE hWaitEv = CreateEvent(NULL,FALSE,FALSE,NULL);
+		g_xnUsbhPnThread = (HANDLE)_beginthread(DevDetectThread,0,(PVOID)hWaitEv);
+		WaitForSingleObject(hWaitEv,INFINITE);
+		CloseHandle(hWaitEv);
+	}
+	else
+	{
+		return (XN_STATUS_USB_FAILED_TO_REGISTER_CALLBACK);
+	}
+
+	DEV_BROADCAST_DEVICEINTERFACE NotificationFilter;
+	ZeroMemory( &NotificationFilter, sizeof(NotificationFilter) );
+	NotificationFilter.dbcc_size =  sizeof(DEV_BROADCAST_DEVICEINTERFACE);
+	NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+	NotificationFilter.dbcc_classguid = GUID_CLASS_PSDRV_USB;
+	RegisterDeviceNotification(g_xnUsbhDevDetectWnd, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
+
 	return (XN_STATUS_OK);
 }
 
@@ -605,7 +662,7 @@ XN_C_API XnStatus xnUSBCloseDevice(XN_USB_DEV_HANDLE pDevHandle)
 	CloseHandle(pDevHandle->hUSBDevHandle);
 
 	// Free the device handle
-	XN_ALIGNED_FREE_AND_NULL(pDevHandle);
+	xnOSFreeAligned(pDevHandle);
 
 	// All is good...
 	return (XN_STATUS_OK);	
@@ -705,12 +762,8 @@ XN_C_API XnStatus xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndP
 	PUSB_CONFIGURATION_DESCRIPTOR pUSBConfigDesc = NULL;
 	PUSB_INTERFACE_DESCRIPTOR pUSBInterfaceDesc = NULL;
 	PUSB_ENDPOINT_DESCRIPTOR pUSBEndPointDesc = NULL;
-	XnUInt32 nIFIdx = 0;
-	UCHAR nEPIdx = 0;
-	XnUInt32 nUBBEPType = 0;
 	XN_USB_EP_HANDLE pEPHandle = NULL;	
 	XnChar cpPipeID[3];
-	XnUInt32 nCurrIF = 0;
 
 	// Validate xnUSB
 	XN_VALIDATE_USB_INIT();
@@ -727,6 +780,11 @@ XN_C_API XnStatus xnUSBOpenEndPoint(XN_USB_DEV_HANDLE pDevHandle, XnUInt16 nEndP
 	bResult = DeviceIoControl(pDevHandle->hUSBDevHandle, IOCTL_PSDRV_GET_CONFIG_DESCRIPTOR, pConfigDescBuf, sizeof(pConfigDescBuf), pConfigDescBuf, sizeof(pConfigDescBuf), (PULONG)&nRetBytes, NULL);
 	if (bResult)
 	{
+		XnUInt32 nIFIdx = 0;
+		UCHAR nEPIdx = 0;
+		XnUInt32 nUBBEPType = 0;
+		XnUInt32 nCurrIF = 0;
+
 		pBuf = pConfigDescBuf;
 
 		pUSBConfigDesc = (PUSB_CONFIGURATION_DESCRIPTOR)pBuf;
@@ -974,7 +1032,6 @@ XN_C_API XnStatus xnUSBSendControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControlTyp
 	XnBool bResult = FALSE;
 	ULONG nRetBytes = 0;
 	PSUSBDRV_CONTROL_TRANSFER ControlTransfer;
-	DWORD nLastErr = 0;
 
 	// Validate xnUSB
 	XN_VALIDATE_USB_INIT();
@@ -993,7 +1050,7 @@ XN_C_API XnStatus xnUSBSendControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControlTyp
 	if (bResult != TRUE)
 	{
 		// Something failed... let's get the last error
-		nLastErr = GetLastError();
+		DWORD nLastErr = GetLastError();
 
 		// Was it a timeout?
 		if (nLastErr == ERROR_SEM_TIMEOUT)
@@ -1020,7 +1077,6 @@ XN_C_API XnStatus xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControl
 	// Local variables
 	XnBool bResult = FALSE;
 	PSUSBDRV_CONTROL_TRANSFER ControlTransfer;
-	DWORD nLastErr = 0;
 
 	// Validate xnUSB
 	XN_VALIDATE_USB_INIT();
@@ -1049,7 +1105,7 @@ XN_C_API XnStatus xnUSBReceiveControl(XN_USB_DEV_HANDLE pDevHandle, XnUSBControl
 	if (bResult != TRUE)
 	{
 		// Something failed... let's get the last error
-		nLastErr = GetLastError();
+		DWORD nLastErr = GetLastError();
 
 		// Was it a timeout?
 		if (nLastErr == ERROR_SEM_TIMEOUT)
@@ -1081,7 +1137,6 @@ XN_C_API XnStatus xnUSBReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer
 	// Local variables
 	BOOL bResult = FALSE;
 	XnStatus nRetVal = XN_STATUS_OK;
-	DWORD nLastErr = 0;
 
 	// Validate xnUSB
 	XN_VALIDATE_USB_INIT();
@@ -1127,7 +1182,7 @@ XN_C_API XnStatus xnUSBReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffer
 	if (bResult == FALSE)
 	{
 		// Something failed... let's get the last error
-		nLastErr = GetLastError();
+		DWORD nLastErr = GetLastError();
 
 		// Was it a timeout?
 		if (nLastErr == ERROR_SEM_TIMEOUT)
@@ -1155,7 +1210,6 @@ XN_C_API XnStatus xnUSBWriteEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffe
 	BOOL bResult = FALSE;
 	XnStatus nRetVal = XN_STATUS_OK;
 	ULONG nBytesSent = 0;
-	DWORD nLastErr = 0;
 
 	// Validate xnUSB
 	XN_VALIDATE_USB_INIT();
@@ -1197,7 +1251,7 @@ XN_C_API XnStatus xnUSBWriteEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pBuffe
 	if (bResult == FALSE)
 	{
 		// Something failed... let's get the last error
-		nLastErr = GetLastError();
+		DWORD nLastErr = GetLastError();
 
 		// Was it a timeout? 
 		if (nLastErr == ERROR_SEM_TIMEOUT)
@@ -1225,7 +1279,6 @@ XN_C_API XnStatus xnUSBQueueReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pB
 	BOOL bResult = FALSE;
 	XnStatus nRetVal = XN_STATUS_OK;
 	ULONG nBytesRcvd = 0;
-	DWORD nLastErr = 0;
 
 	// Validate xnUSB
 	XN_VALIDATE_USB_INIT();
@@ -1267,7 +1320,7 @@ XN_C_API XnStatus xnUSBQueueReadEndPoint(XN_USB_EP_HANDLE pEPHandle, XnUChar* pB
 	if (bResult == FALSE)
 	{
 		// If everything is OK, we're expecting to get an ERROR_IO_PENDING error
-		nLastErr = GetLastError();
+		DWORD nLastErr = GetLastError();
 		if (nLastErr != ERROR_IO_PENDING)
 		{
 			// That's not what we expected, so return a generic error
@@ -1378,7 +1431,7 @@ XN_THREAD_PROC xnUSBReadThreadMain(XN_THREAD_PARAM pThreadParam)
 	}
 
 	// Loop forever... (unless signaled to die)
-	while (1)
+	for (;;)
 	{
 		// Time to die?
 		if(pThreadData->bKillReadThread)
@@ -1505,7 +1558,6 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 	// Local variables
 	XnStatus nRetVal = XN_STATUS_OK;
 	xnUSBReadThreadData* pThreadData = NULL;
-	XnUInt32 nBufIdx = 0;
 
 	// Validate xnUSB
 	XN_VALIDATE_USB_INIT();
@@ -1535,7 +1587,7 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 	// Free any buffers and events if necessary...
 	if (pThreadData->pBuffersInfo != NULL)
 	{
-		for (nBufIdx=0; nBufIdx<pThreadData->nNumBuffers; nBufIdx++)
+		for (XnUInt32 nBufIdx = 0; nBufIdx < pThreadData->nNumBuffers; nBufIdx++)
 		{
 			if (pThreadData->pOvlpIO[nBufIdx].hEvent != NULL)
 			{
@@ -1566,54 +1618,75 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnUSBSetCallbackHandler(XnUInt16 /*nVendorID*/, XnUInt16 /*nProductID*/, void* /*pExtraParam*/, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData)
+XN_C_API XnStatus XN_C_DECL xnUSBRegisterToConnectivityEvents(XnUInt16 nVendorID, XnUInt16 nProductID, XnUSBDeviceCallbackFunctionPtr pFunc, void* pCookie, XnRegistrationHandle* phRegistration)
 {
-	if (g_xnUsbCallbackWasInit == TRUE)
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XN_VALIDATE_INPUT_PTR(pFunc);
+	XN_VALIDATE_OUTPUT_PTR(phRegistration);
+
+	XnUInt32 nDummy;
+
+	XnUSBEventCallback* pCallback;
+	XN_VALIDATE_NEW(pCallback, XnUSBEventCallback);
+	pCallback->pFunc = pFunc;
+	pCallback->pCookie = pCookie;
+	xnOSStrFormat(pCallback->strVidPid, sizeof(pCallback->strVidPid), &nDummy, "vid_%04x&pid_%04x", nVendorID, nProductID);
+
+	nRetVal = g_connectivityEvent.AddLast(pCallback);
+	if (nRetVal != XN_STATUS_OK)
 	{
-		g_XnUSBEventCallbackFunctionPtr = NULL;
-
-		g_pXnUSBEventCallbackData = pCallbackData;		
-		g_XnUSBEventCallbackFunctionPtr = pCallbackFunction;
-
-		return (XN_STATUS_OK);
+		XN_DELETE(pCallback);
+		return (nRetVal);
 	}
 
-	WNDCLASS wc;
-	wc.style = 0;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = (HINSTANCE)g_xnUsbhModule;
-	wc.hbrBackground = NULL;
-	wc.lpszMenuName = NULL;
-	wc.lpszClassName = "xnUsbDeviceDetector";
-	wc.lpfnWndProc = DevDetectWndProc;
-	wc.hIcon = NULL;
-	wc.hCursor = NULL;
+	*phRegistration = (XnRegistrationHandle)pCallback;
 
-	BOOL ret = RegisterClass(&wc);
-	if(ret)
-	{
-		HANDLE hWaitEv = CreateEvent(NULL,FALSE,FALSE,NULL);
-		g_xnUsbhPnThread = (HANDLE)_beginthread(DevDetectThread,0,(PVOID)hWaitEv);
-		WaitForSingleObject(hWaitEv,INFINITE);
-		CloseHandle(hWaitEv);
-	}
-	else
-	{
-		return (XN_STATUS_USB_FAILED_TO_REGISTER_CALLBACK);
-	}
-
-	g_XnUSBEventCallbackFunctionPtr = pCallbackFunction;
-	g_pXnUSBEventCallbackData = pCallbackData;
-
-	DEV_BROADCAST_DEVICEINTERFACE NotificationFilter;
-	ZeroMemory( &NotificationFilter, sizeof(NotificationFilter) );
-	NotificationFilter.dbcc_size =  sizeof(DEV_BROADCAST_DEVICEINTERFACE);
-	NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-	NotificationFilter.dbcc_classguid = GUID_CLASS_PSDRV_USB;
-	RegisterDeviceNotification(g_xnUsbhDevDetectWnd, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
-
-	g_xnUsbCallbackWasInit = TRUE;
-
-	return (XN_STATUS_OK);
+	return XN_STATUS_OK;
 }
+
+XN_C_API void XN_C_DECL xnUSBUnregisterFromConnectivityEvents(XnRegistrationHandle hRegistration)
+{
+	XnUSBEventCallback* pCallback = reinterpret_cast<XnUSBEventCallback*>(hRegistration);
+	XnUSBEventCallbackList::Iterator it = g_connectivityEvent.Find(pCallback);
+	if (it != g_connectivityEvent.End())
+	{
+		g_connectivityEvent.Remove(it);
+		XN_DELETE(pCallback);
+	}
+}
+
+//---------------------------------------------------------------------------
+// Deprecated stuff
+//---------------------------------------------------------------------------
+static XnRegistrationHandle g_hDeprecatedCallback = NULL;
+static XnUSBEventCallbackFunctionPtr g_pDeprecatedCallbackFunc = NULL;
+static void* g_pDeprecatedCallbackCookie = NULL;
+
+static void XN_CALLBACK_TYPE XnUSBDeviceCallbackBC(XnUSBEventArgs* pArgs, void* /*pCookie*/)
+{
+	if (g_pDeprecatedCallbackFunc != NULL)
+	{
+		g_pDeprecatedCallbackFunc(pArgs->eventType, const_cast<XnChar*>(pArgs->strDevicePath), g_pDeprecatedCallbackCookie);
+	}
+}
+
+XN_C_API XnStatus xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 nProductID, void* /*pExtraParam*/, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData)
+{
+	if (g_hDeprecatedCallback == NULL)
+	{
+		XnStatus nRetVal = xnUSBRegisterToConnectivityEvents(nVendorID, nProductID, XnUSBDeviceCallbackBC, NULL, &g_hDeprecatedCallback);
+		XN_IS_STATUS_OK(nRetVal);
+
+		// Ugly hack: previous behavior was to ignore vendor and product, and call callback for every event
+		// we place a string that is always there.
+		XnUSBEventCallback* pCallback = (XnUSBEventCallback*)g_hDeprecatedCallback;
+		xnOSStrCopy(pCallback->strVidPid, "vid", sizeof(pCallback->strVidPid));
+	}
+
+	g_pDeprecatedCallbackFunc = pCallbackFunction;
+	g_pDeprecatedCallbackCookie = pCallbackData;
+
+	return XN_STATUS_OK;
+}
+

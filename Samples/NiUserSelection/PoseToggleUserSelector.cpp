@@ -171,7 +171,7 @@ XnStatus PoseToggleUserSelector::DetectOutOfPose(XnUserID nUserId)
     return XN_STATUS_OK;
 }
 
-void XN_CALLBACK_TYPE PoseToggleUserSelector::OutOfPoseCallback(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nUserId,void* pCookie)
+void XN_CALLBACK_TYPE PoseToggleUserSelector::OutOfPoseCallback(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nUserId,void* pCookie)
 {
     PoseToggleUserSelector *pPoseUserSelector=(PoseToggleUserSelector *)pCookie;
     if(xnOSStrCmp(strPose,pPoseUserSelector->m_strPoseToTrack)!=0)

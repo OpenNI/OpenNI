@@ -24,9 +24,9 @@
 // --------------------------------
 typedef struct
 {
-	unsigned int X;
-	unsigned int Y;
-} UIntPair;
+	int X;
+	int Y;
+} IntPair;
 
 typedef struct
 {
@@ -44,11 +44,11 @@ typedef struct
 
 typedef struct  
 {
-	unsigned int uBottom;
-	unsigned int uLeft;
-	unsigned int uTop;
-	unsigned int uRight;
-} UIntRect;
+	int uBottom;
+	int uLeft;
+	int uTop;
+	int uRight;
+} IntRect;
 
 typedef enum SelectionState
 {
@@ -57,8 +57,8 @@ typedef enum SelectionState
 	SELECTION_DONE
 } SelectionState;
 
-typedef void (*SelectionRectangleChangedPtr)(SelectionState state, UIntRect selection);
-typedef void (*CursorMovedPtr)(UIntPair location);
+typedef void (*SelectionRectangleChangedPtr)(SelectionState state, IntRect selection);
+typedef void (*CursorMovedPtr)(IntPair location);
 
 // --------------------------------
 // Functions

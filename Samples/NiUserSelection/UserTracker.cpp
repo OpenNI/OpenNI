@@ -25,9 +25,6 @@
 
 #include "UserTracker.h"
 
-// the maximum allowed depth number (for creating a histogram)
-#define MAX_DEPTH 10000
-
 // the filename for saving/loading calibration.
 #define XN_CALIBRATION_FILE_NAME "UserCalibration.bin"
 
@@ -171,14 +168,15 @@ XnStatus UserTracker::InitUserSelection(UserSelector *pUserSelector,TrackingInit
 
 void UserTracker::CalcHistogram(const XnDepthPixel* pDepth, XnUInt16 xRes,XnUInt16 yRes)
 {
+	XnDepthPixel zRes = m_DepthGenerator.GetDeviceMaxDepth() + 1;
     if(s_pDepthHist==NULL)
-        s_pDepthHist=XN_NEW_ARR(float,MAX_DEPTH); // initialize the histogram's buffer
+        s_pDepthHist=XN_NEW_ARR(float,zRes); // initialize the histogram's buffer
 
 
     XnUInt32 nNumberOfPoints = 0; // will hold the number of points in the histogram
     XnDepthPixel nValue; // will hold temporary pixel values. 
 
-    xnOSMemSet(s_pDepthHist, 0, MAX_DEPTH*sizeof(float)); // clear everything, we start from scratch
+    xnOSMemSet(s_pDepthHist, 0, zRes*sizeof(float)); // clear everything, we start from scratch
 
     // calculate the basic histogram (i.e. the buffer in position X will hold the number of pixels
     // in the depth map which have a value of X.
@@ -202,20 +200,20 @@ void UserTracker::CalcHistogram(const XnDepthPixel* pDepth, XnUInt16 xRes,XnUInt
     if(nNumberOfPoints==0)
         return; // nothing to do, there are no values.
     // turn the histogram to a cumulative histogram
-    for (XnUInt16 nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+    for (XnUInt16 nIndex=1; nIndex<zRes; nIndex++)
     {
         s_pDepthHist[nIndex] += s_pDepthHist[nIndex-1];
     }
     // normalize the values to a value between 0 and 256. This is the color we want to see elements
     // of this value as (multiplier).
 
-    for (XnUInt16 nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+    for (XnUInt16 nIndex=1; nIndex<zRes; nIndex++)
     {
         s_pDepthHist[nIndex] = (256 * (1.0f - (s_pDepthHist[nIndex] / nNumberOfPoints)));
     }
 }
 
-void UserTracker::FillTexture(unsigned char* pTexBuf, XnUInt16 nTexWidth, XnUInt16 nTexHeight, XnBool bDrawBackground)
+void UserTracker::FillTexture(unsigned char* pTexBuf, XnUInt16 nTexWidth, XnUInt16 /*nTexHeight*/, XnBool bDrawBackground)
 {
     // get the size of the depth map and its pixels.
     XnUInt16 xRes,yRes;
@@ -414,8 +412,8 @@ void UserTracker::GetImageRes(XnUInt16 &xRes, XnUInt16 &yRes)
 {
     xn::DepthMetaData depthMD;
     m_DepthGenerator.GetMetaData(depthMD);
-    xRes=depthMD.XRes();
-    yRes=depthMD.YRes();
+    xRes = (XnUInt16)depthMD.XRes();
+    yRes = (XnUInt16)depthMD.YRes();
 }
 
 const XnDepthPixel* UserTracker::GetDepthData()

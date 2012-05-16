@@ -24,7 +24,6 @@
 //---------------------------------------------------------------------------
 #include "XnXmlScriptNode.h"
 #include <XnLog.h>
-#include <XnStringsHash.h>
 #include "XnLicensingInternal.h"
 #include <XnOSCpp.h>
 #include "XnInternalTypes.h"
@@ -350,7 +349,7 @@ XnStatus xnConfigureRecorderDestination(XnNodeHandle hNode, const TiXmlElement* 
 	nRetVal = xnXmlReadStringAttribute(pOpcode, "name", &strName);
 	XN_IS_STATUS_OK(nRetVal);
 
-	nRetVal = xnSetRecorderDestination(hNode, XN_RECORD_MEDIUM_FILE, strName);
+	nRetVal = xnSetRecorderDestination(hNode, medium, strName);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);

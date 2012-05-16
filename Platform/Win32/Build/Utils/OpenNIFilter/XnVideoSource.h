@@ -37,11 +37,10 @@
 #define XN_METHOD_START				xnDumpFileWriteString(m_Dump, "%s was called\n", __FUNCTION__)
 
 #define XN_METHOD_RETURN(hr)		\
-	do								\
 	{								\
 		xnDumpFileWriteString(m_Dump, "\t%s returned %s (%d)\n", __FUNCTION__, XN_STRINGIFY(hr), hr);	\
 		return hr;					\
-	} while (0)
+	}
 
 #define XN_METHOD_CHECK_POINTER(p)								\
 	if (p == NULL)												\

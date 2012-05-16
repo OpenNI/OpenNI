@@ -431,6 +431,9 @@ protected:
 	xn::DepthGenerator& m_depthGenerator;
 	xn::ImageGenerator& m_imageGenerator;
 	xn::Recorder m_recorder;
+
+private:
+	XN_DISABLE_COPY_AND_ASSIGN(CyclicBuffer);
 };
 
 // The recorder
@@ -483,7 +486,7 @@ int main(int argc, char** argv)
 	cyclicBuffer.Initialize(config.strDirName, config.nDumpTime);
 
 	// Mainloop
-	while (1)
+	for (;;)
 	{
 		if (xnOSWasKeyboardHit())
 		{

@@ -1,0 +1,361 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8566604D-505A-45CE-A9FF-D94F2F6C4965}</ProjectGuid>
+    <RootNamespace>OpenNI</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\Bin\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Platform)$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\Bin\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Platform)$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\Bin64\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\Bin64\$(Configuration)\</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)64</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectName)64</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>../../../../Include;../../../../Externals/TinyXml;..\..\..\..\Platform\Win32\Driver\Build\sys;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;XN_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../../Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../Lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>../../Lib/$(Configuration)/openNI.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>../../../../Include;../../../../Externals/TinyXml;..\..\..\..\Platform\Win32\Driver\Build\sys;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;XN_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../../Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../Lib64/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>../../Lib64/$(Configuration)/openNI64.lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>../../../../Include;../../../../Externals/TinyXml;..\..\..\..\Platform\Win32\Driver\Build\sys;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;XN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../../Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../Lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>../../Lib/$(Configuration)/openNI.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>../../../../Include;../../../../Externals/TinyXml;..\..\..\..\Platform\Win32\Driver\Build\sys;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;XN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../../Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../Lib64/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>../../Lib64/$(Configuration)/openNI64.lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\Source\OpenNI\Documentation.txt" />
+    <None Include="..\Res\mainicon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\Source\OpenNI\openNI.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnModuleLoader.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnTypeManager.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnEnumerationErrors.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnOpenNI.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnQueries.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnUtils.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32CriticalSections.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Debug.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Events.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Files.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32INI.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Keyboard.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Memory.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Mutex.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Network.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Processes.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Semaphore.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32SharedLibs.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32SharedMemory.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Strings.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Threads.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\Win32Time.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnOS.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnOSMemoryProfiling.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\XnOSWin32.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnUSB.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\Win32\XnUSBWin32.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnFPSCalculator.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnMockNotifier.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnNodeWatcher.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnProfiling.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnScheduler.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnStatusRegister.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnXml.cpp" />
+    <ClCompile Include="..\..\..\..\Externals\TinyXml\tinystr.cpp" />
+    <ClCompile Include="..\..\..\..\Externals\TinyXml\tinyxml.cpp" />
+    <ClCompile Include="..\..\..\..\Externals\TinyXml\tinyxmlerror.cpp" />
+    <ClCompile Include="..\..\..\..\Externals\TinyXml\tinyxmlparser.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnPlayerImpl.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnRecorderImpl.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnLicensing.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnDump.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnDumpFileWriter.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnLog.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnLogConsoleWriter.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnLogFileWriter.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnExportedNodes.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnXmlScriptNode.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnXmlScriptNodeExporter.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnBaseNode.cpp" />
+    <ClCompile Include="..\..\..\..\Source\OpenNI\XnNodeManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnModuleInterfaceContainers.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnModuleLoader.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnTypeManager.h" />
+    <ClInclude Include="..\..\..\..\Include\XnModuleCFunctions.h" />
+    <ClInclude Include="..\..\..\..\Include\XnModuleCppInterface.h" />
+    <ClInclude Include="..\..\..\..\Include\XnModuleCppRegistratration.h" />
+    <ClInclude Include="..\..\..\..\Include\XnModuleInterface.h" />
+    <ClInclude Include="..\..\..\..\Include\XnCodecIDs.h" />
+    <ClInclude Include="..\..\..\..\Include\XnContext.h" />
+    <ClInclude Include="..\..\..\..\Include\XnCppWrapper.h" />
+    <ClInclude Include="..\..\..\..\Include\XnEnumerationErrors.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnInternalFuncs.h" />
+    <ClInclude Include="..\..\..\..\Include\XnOpenNI.h" />
+    <ClInclude Include="..\..\..\..\Include\XnPrdNode.h" />
+    <ClInclude Include="..\..\..\..\Include\XnPrdNodeInfo.h" />
+    <ClInclude Include="..\..\..\..\Include\XnPrdNodeInfoList.h" />
+    <ClInclude Include="..\..\..\..\Include\XnPropNames.h" />
+    <ClInclude Include="..\..\..\..\Include\XnQueries.h" />
+    <ClInclude Include="..\..\..\..\Include\XnUtils.h" />
+    <ClInclude Include="..\..\..\..\Include\XnPlatform.h" />
+    <ClInclude Include="..\..\..\..\Include\Win32\XnPlatformWin32.h" />
+    <ClInclude Include="..\..\..\..\Include\XnOS.h" />
+    <ClInclude Include="..\..\..\..\Include\XnOSCpp.h" />
+    <ClInclude Include="..\..\..\..\Include\XnOSMemory.h" />
+    <ClInclude Include="..\..\..\..\Include\XnOSStrings.h" />
+    <ClInclude Include="..\..\..\..\Include\Win32\XnOSWin32.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\Win32\XnOSWin32Internal.h" />
+    <ClInclude Include="..\..\..\..\Include\XnUSB.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnUSBInternal.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\Win32\XnUSBWin32.h" />
+    <ClInclude Include="..\..\..\..\Include\XnAlgorithms.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnEnum.h" />
+    <ClInclude Include="..\..\..\..\Include\XnFPSCalculator.h" />
+    <ClInclude Include="..\..\..\..\Include\XnMacros.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnMockNotifier.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnNodeWatcher.h" />
+    <ClInclude Include="..\..\..\..\Include\XnProfiling.h" />
+    <ClInclude Include="..\..\..\..\Include\XnScheduler.h" />
+    <ClInclude Include="..\..\..\..\Include\XnStatus.h" />
+    <ClInclude Include="..\..\..\..\Include\XnStatusCodes.h" />
+    <ClInclude Include="..\..\..\..\Include\XnStatusRegister.h" />
+    <ClInclude Include="..\..\..\..\Include\XnVersion.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnXml.h" />
+    <ClInclude Include="..\..\..\..\Include\XnGeneralBuffer.h" />
+    <ClInclude Include="..\..\..\..\Include\XnInternalDefs.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnInternalTypes.h" />
+    <ClInclude Include="..\..\..\..\Include\XnTypes.h" />
+    <ClInclude Include="..\..\..\..\Externals\TinyXml\tinystr.h" />
+    <ClInclude Include="..\..\..\..\Externals\TinyXml\tinyxml.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnPlayerImpl.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnRecorderImpl.h" />
+    <ClInclude Include="..\..\..\..\Include\XnLicensing.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnLicensingInternal.h" />
+    <ClInclude Include="..\..\..\..\Include\XnDump.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnDumpFileWriter.h" />
+    <ClInclude Include="..\..\..\..\Include\XnDumpWriters.h" />
+    <ClInclude Include="..\..\..\..\Include\XnLog.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnLogConsoleWriter.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnLogFileWriter.h" />
+    <ClInclude Include="..\..\..\..\Include\XnLogTypes.h" />
+    <ClInclude Include="..\..\..\..\Include\XnLogWriterBase.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnXmlScriptNode.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnXmlScriptNodeExporter.h" />
+    <ClInclude Include="..\..\..\..\Include\XnArray.h" />
+    <ClInclude Include="..\..\..\..\Include\XnBitSet.h" />
+    <ClInclude Include="..\..\..\..\Include\XnCyclicQueueT.h" />
+    <ClInclude Include="..\..\..\..\Include\XnCyclicStackT.h" />
+    <ClInclude Include="..\..\..\..\Include\XnEventT.h" />
+    <ClInclude Include="..\..\..\..\Include\XnHashT.h" />
+    <ClInclude Include="..\..\..\..\Include\XnListT.h" />
+    <ClInclude Include="..\..\..\..\Include\XnQueueT.h" />
+    <ClInclude Include="..\..\..\..\Include\XnStackT.h" />
+    <ClInclude Include="..\..\..\..\Include\XnStringsHashT.h" />
+    <ClInclude Include="..\..\..\..\Include\IXnNodeAllocator.h" />
+    <ClInclude Include="..\..\..\..\Include\XnBaseNode.h" />
+    <ClInclude Include="..\..\..\..\Include\XnCallback.h" />
+    <ClInclude Include="..\..\..\..\Include\XnDataTypes.h" />
+    <ClInclude Include="..\..\..\..\Include\XnEvent.h" />
+    <ClInclude Include="..\..\..\..\Include\XnHash.h" />
+    <ClInclude Include="..\..\..\..\Include\XnList.h" />
+    <ClInclude Include="..\..\..\..\include\XnNode.h" />
+    <ClInclude Include="..\..\..\..\Include\XnNodeAllocator.h" />
+    <ClInclude Include="..\..\..\..\Source\OpenNI\XnNodeManager.h" />
+    <ClInclude Include="..\..\..\..\Include\XnQueue.h" />
+    <ClInclude Include="..\..\..\..\Include\XnStack.h" />
+    <ClInclude Include="..\..\..\..\Include\XnStringsHash.h" />
+    <ClInclude Include="..\..\..\..\Include\XnThreadSafeQueue.h" />
+    <ClInclude Include="..\Res\Resource-OpenNI.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\Res\OpenNI.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

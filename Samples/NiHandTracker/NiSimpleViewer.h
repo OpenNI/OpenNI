@@ -25,9 +25,6 @@
 #include <XnCppWrapper.h>
 
 
-#define MAX_DEPTH 10000
-
-
 enum DisplayModes_e
 {
 	DISPLAY_MODE_OVERLAY,
@@ -73,7 +70,7 @@ private:
 	static void glutDisplay();
 	static void glutKeyboard(unsigned char key, int x, int y);
 
-	float				m_pDepthHist[MAX_DEPTH];
+	float*				m_pDepthHist;
 	XnRGB24Pixel*		m_pTexMap;
 	unsigned int		m_nTexMapX;
 	unsigned int		m_nTexMapY;

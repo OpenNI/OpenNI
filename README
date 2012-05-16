@@ -1,5 +1,5 @@
-OpenNI (Version 1.5.2.23 - Dec 28th 2011)
------------------------------------------
+OpenNI (Version 1.5.4.0 - May 7th 2012)
+---------------------------------------
 
 Website: http://www.primesense.com
 Forum: http://groups.google.com/group/openni-dev
@@ -27,7 +27,7 @@ Build Notes:
 ------------
 Windows:
 	Requirements:
-		1) Microsoft Visual Studio 2008/2010
+		1) Microsoft Visual Studio 2010
 		   From: http://msdn.microsoft.com/en-us/vstudio/bb984878.aspx
 		2) Python 2.6+/3.x
 		   From: http://www.python.org/download/
@@ -37,13 +37,13 @@ Windows:
 		4) WIX 3.5
 		   From: http://wix.codeplex.com/releases/view/60102
 		5) JDK 6.0
-           From: http://www.oracle.com/technetwork/java/javase/downloads/jdk-6u26-download-400750.html
+           From: http://www.oracle.com/technetwork/java/javase/downloads/jdk-6u32-downloads-1594644.html
 		   You must also define an environment variable called "JAVA_HOME" that points to the JDK installation directory.
-		   For example: set JAVA_HOME=c:\Program Files\Java\jdk1.6.0_26
+		   For example: set JAVA_HOME=c:\Program Files (x86)\Java\jdk1.6.0_32
 
 	Optional requirements (To build the USB device driver):
 		1) Microsoft WDK
-		   From: http://www.microsoft.com/whdc/devtools/wdk/wdkpkg.mspx	   
+		   From: http://www.microsoft.com/en-us/download/details.aspx?displaylang=en&id=11800
 		   
 		The package already includes a precompiled and digitally signed 32/64 bit driver.
 	
@@ -85,8 +85,8 @@ Linux:
 		   From: http://www.python.org/download/
 		   Or via apt:
 		   sudo apt-get install python
-		3) LibUSB 1.0.8 
-		   From: http://sourceforge.net/projects/libusb/
+		3) LibUSB 1.0.x
+		   From: http://sourceforge.net/projects/libusb/files/libusb-1.0/
 		   Or via apt:
 		   sudo apt-get install libusb-1.0-0-dev
 		4) FreeGLUT3
@@ -94,11 +94,15 @@ Linux:
 		   Or via apt:
 		   sudo apt-get install freeglut3-dev
 		5) JDK 6.0
-		   From: http://www.oracle.com/technetwork/java/javase/downloads/jdk-6u26-download-400750.html
+		   From: http://www.oracle.com/technetwork/java/javase/downloads/jdk-6u32-downloads-1594644.html
 		   Or via apt:
-		   sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"
-		   sudo apt-get update
-		   sudo apt-get install sun-java6-jdk
+		     Ubuntu 10.x:				
+		       sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"
+		       sudo apt-get update
+		       sudo apt-get install sun-java6-jdk
+		     Ubuntu 12.x:				
+		       sudo apt-get install openjdk-6-jdk
+
 		   
 	Optional Requirements (To build the documentation):
 		1) Doxygen
@@ -158,15 +162,30 @@ Linux:
 	
 MacOSX:
 	Requirements:
-		1) Xcode 3.2.6
-		   From: http://developer.apple.com/devcenter/mac/index.action
-		   http://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg
+		1) For Mac OSX 10.7, Xcode 4.3.2
+		      From: http://developer.apple.com/devcenter/mac/index.action
+		      http://adcdownload.apple.com/Developer_Tools/xcode_4.3.2/xcode_432_lion.dmg    
+   
+		      You will also need to download and install the "Commandline Tools for XCode - Late March 2012" package:
+		      http://adcdownload.apple.com/Developer_Tools/command_line_tools_for_xcode_4.4__late_march_2012/cltools_lion_latemarch12.dmg
+		   
+		      Note: Since Xcode is now a normal application, it no longer automatically install itself. You have to copy&paste Xcode yourself into your Applications folder. 
+			        (or run the application "Install Xcode" from your Applications folder / LaunchPad). 		   
+			        It's also recommended to run the following command after you do the above:
+				      sudo xcode-select -switch /Applications/Xcode.app/
+		   
+		   For Mac OSX 10.6, Xcode 3.2.6:
+		      From: http://developer.apple.com/devcenter/mac/index.action
+		      http://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg
+			   
 		   Please note that you need to register as a mac developer (It's free!).
-		2) LibUSB 1.0.8 (The patched development tree)
+		   		   
+		2) LibUSB 1.0.x (The patched development tree)
 		   This can be installed by two ways:		   
 		   A) MacPorts:      
 		      From: http://www.macports.org/install.php
-		      http://distfiles.macports.org/MacPorts/MacPorts-1.9.2-10.6-SnowLeopard.dmg			  
+			  For Mac OSX 10.7: https://distfiles.macports.org/MacPorts/MacPorts-2.0.4-10.7-Lion.dmg
+			  For Mac OSX 10.6: https://distfiles.macports.org/MacPorts/MacPorts-1.9.2-10.6-SnowLeopard.dmg
 			  * You will also need to install LibTool:
 			      sudo port install libtool			  
 			  * And finally, LibUSB itself:
@@ -186,17 +205,17 @@ MacOSX:
 				 
 	Optional Requirements (To build the documentation):
 		1) Doxygen
-		   Installed vis MacPorts:
+		   Install via MacPorts:
 		   sudo port install doxygen
 		2) GraphViz
-		   Installed vis MacPorts:
+		   Install via MacPorts:
 		   sudo port install graphviz
 
 	Optional Requirements (To build the Mono wrapper):
 		1) Mono
 		   From: http://www.go-mono.com/mono-downloads/download.html
-		   http://ftp.novell.com/pub/mono/archive/2.8.1/macos-10-x86/4/MonoFramework-2.8.1_4.macos10.novell.x86.dmg
-		   Installed vis MacPorts:
+		   http://download.mono-project.com/archive/2.10.9/macos-10-x86/10/MonoFramework-MDK-2.10.9_10.macos10.xamarin.x86.dmg
+		   Install via MacPorts:
 		   sudo port install mono
 		   
 	Building OpenNI:

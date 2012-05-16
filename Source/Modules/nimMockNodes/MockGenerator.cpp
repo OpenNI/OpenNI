@@ -25,21 +25,38 @@
 
 #define XN_MOCK_LOG_MASK	"Mock"
 
-MockGenerator::MockGenerator(const XnChar* strName, XnBool bAggregateData /* = FALSE */) :
-	MockProductionNode(strName),
+MockGenerator::MockGenerator(xn::Context& context, const XnChar* strName, XnBool bAggregateData /* = FALSE */) :
+	MockProductionNode(context, strName),
 	m_bAggregateData(bAggregateData),
 	m_bGenerating(FALSE),
 	m_bMirror(FALSE),
 	m_nCurrentDataIdx(0),
 	m_nNextDataIdx(1),
 	m_bNewDataAvailable(FALSE),
-	m_bMirrorCap(FALSE)
+	m_bMirrorCap(FALSE),
+	m_bFrameSyncCap(FALSE),
+	m_bFrameSyncWithExists(FALSE),
+	m_hNodeCreationCallback(NULL),
+	m_hNodeDestructionCallback(NULL)
 {
 	memset(&m_data, 0, sizeof(m_data));
+	m_strFrameSyncWith[0] = '\0';
 }
 
 MockGenerator::~MockGenerator()
 {
+	if (m_hNodeCreationCallback != NULL)
+	{
+		m_context.UnregisterFromNodeCreation(m_hNodeCreationCallback);
+		m_hNodeCreationCallback = NULL;
+	}
+
+	if (m_hNodeDestructionCallback != NULL)
+	{
+		m_context.UnregisterFromNodeDestruction(m_hNodeDestructionCallback);
+		m_hNodeDestructionCallback = NULL;
+	}
+
 	for (XnUInt32 i = 0; i < NUM_BUFFERS; i++)
 	{
 		xnOSFreeAligned(m_data[i].pData);
@@ -50,9 +67,13 @@ XnBool MockGenerator::IsCapabilitySupported(const XnChar* strCapabilityName)
 {
 	if (strcmp(strCapabilityName, XN_CAPABILITY_MIRROR) == 0)
 	{
-		return m_bMirrorCap;
+		return (!m_bStateReady || m_bMirrorCap);
 	}
-	//TODO: Support alt view cap, seeking cap, framesync cap
+	else if (strcmp(strCapabilityName, XN_CAPABILITY_FRAME_SYNC) == 0)
+	{
+		return (!m_bStateReady || m_bFrameSyncCap);
+	}
+	//TODO: Support alt view cap
 	else
 	{
 		return MockProductionNode::IsCapabilitySupported(strCapabilityName);
@@ -79,6 +100,10 @@ XnStatus MockGenerator::SetIntProperty(const XnChar* strName, XnUInt64 nValue)
 	{
 		m_bMirrorCap = (XnBool)nValue;
 	}
+	else if (strcmp(strName, XN_CAPABILITY_FRAME_SYNC) == 0)
+	{
+		m_bFrameSyncCap = (XnBool)nValue;
+	}
 	else if (strcmp(strName, XN_PROP_MIRROR) == 0)
 	{
 		nRetVal = SetMirror((XnBool)nValue);
@@ -91,6 +116,24 @@ XnStatus MockGenerator::SetIntProperty(const XnChar* strName, XnUInt64 nValue)
 	}
 
 	return XN_STATUS_OK;
+}
+
+XnStatus MockGenerator::SetStringProperty(const XnChar* strName, const XnChar* strValue)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	if (strcmp(strName, XN_PROP_FRAME_SYNCED_WITH) == 0)
+	{
+		nRetVal = SetFrameSyncNode(strValue);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+	else
+	{
+		nRetVal = MockProductionNode::SetStringProperty(strName, strValue);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+	
+	return (XN_STATUS_OK);
 }
 
 XnStatus MockGenerator::SetGeneralProperty(const XnChar* strName, XnUInt32 nBufferSize, const void* pBuffer)
@@ -159,7 +202,7 @@ void MockGenerator::StopGenerating()
 
 XnStatus MockGenerator::RegisterToGenerationRunningChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_generatingChangedEvent.Register(handler, pCookie, &hCallback);
+	return m_generatingChangedEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockGenerator::UnregisterFromGenerationRunningChange(XnCallbackHandle hCallback)
@@ -169,7 +212,7 @@ void MockGenerator::UnregisterFromGenerationRunningChange(XnCallbackHandle hCall
 
 XnStatus MockGenerator::RegisterToNewDataAvailable(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_newDataAvailableEvent.Register(handler, pCookie, &hCallback);
+	return m_newDataAvailableEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockGenerator::UnregisterFromNewDataAvailable(XnCallbackHandle hCallback)
@@ -181,7 +224,18 @@ XnBool MockGenerator::IsNewDataAvailable(XnUInt64& nTimestamp)
 {
 	if (m_bNewDataAvailable)
 	{
-		nTimestamp = m_data[m_nNextDataIdx].nTimeStamp;
+		// the timestamp is used for frame sync algorithm. If frameID is zero, this means
+		// there is no actual frame, so we don't want the timestamp to be checked for sync.
+		// instead, return an "invalid" timestamp. This is allowed, as FrameID 0 is a non-valid
+		// frame.
+		if (m_data[m_nNextDataIdx].nFrameID == 0)
+		{
+			nTimestamp = XN_MAX_UINT64;
+		}
+		else
+		{
+			nTimestamp = m_data[m_nNextDataIdx].nTimeStamp;
+		}
 	}
 
 	return m_bNewDataAvailable;
@@ -222,7 +276,8 @@ XnUInt32 MockGenerator::GetFrameID()
 
 xn::ModuleMirrorInterface* MockGenerator::GetMirrorInterface()
 {
-	return m_bMirrorCap ? this : NULL;
+	// the interface always exists, even if capability is not supported (support may change later on)
+	return this;
 }
 
 xn::ModuleAlternativeViewPointInterface* MockGenerator::GetAlternativeViewPointInterface()
@@ -233,8 +288,8 @@ xn::ModuleAlternativeViewPointInterface* MockGenerator::GetAlternativeViewPointI
 
 xn::ModuleFrameSyncInterface* MockGenerator::GetFrameSyncInterface()
 {
-	//TODO: Support FrameSyncInterface
-	return NULL;
+	// the interface always exists, even if capability is not supported (support may change later on)
+	return this;
 }
 
 XnStatus MockGenerator::SetMirror(XnBool bMirror)
@@ -266,7 +321,7 @@ XnStatus MockGenerator::RegisterToMirrorChange(XnModuleStateChangedHandler handl
 		return XN_STATUS_NOT_IMPLEMENTED;
 	}
 
-	return m_mirrorChangeEvent.Register(handler, pCookie, &hCallback);
+	return m_mirrorChangeEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockGenerator::UnregisterFromMirrorChange(XnCallbackHandle hCallback)
@@ -304,7 +359,6 @@ XnStatus MockGenerator::OnStateReady()
 	return (XN_STATUS_OK);
 }
 
-
 XnUInt32 MockGenerator::GetRequiredBufferSize()
 {
 	return 0;
@@ -322,5 +376,143 @@ XnStatus MockGenerator::ResizeBuffer(XnUInt32 nIndex, XnUInt32 nNeededSize)
 	}
 	
 	return (XN_STATUS_OK);
+}
+
+XnBool MockGenerator::CanFrameSyncWith(xn::ProductionNode& other)
+{
+	if (!m_bFrameSyncCap)
+	{
+		return FALSE;
+	}
+
+	if (!other.IsValid())
+	{
+		return XN_STATUS_BAD_PARAM;
+	}
+
+	return (strcmp(other.GetName(), m_strFrameSyncWith) == 0);
+}
+
+XnStatus MockGenerator::FrameSyncWith(xn::ProductionNode& other)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	if (!other.IsValid())
+	{
+		return XN_STATUS_BAD_PARAM;
+	}
+
+	nRetVal = SetFrameSyncNode(other.GetName());
+	XN_IS_STATUS_OK(nRetVal);
+	
+	return (XN_STATUS_OK);
+}
+
+XnStatus MockGenerator::StopFrameSyncWith(xn::ProductionNode& other)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	if (!other.IsValid())
+	{
+		return XN_STATUS_BAD_PARAM;
+	}
+
+	if (strcmp(other.GetName(), m_strFrameSyncWith) != 0)
+	{
+		// not synced right now with this node
+		return XN_STATUS_BAD_PARAM;
+	}
+
+	nRetVal = SetFrameSyncNode("");
+	XN_IS_STATUS_OK(nRetVal);
+
+	return (XN_STATUS_OK);	
+}
+
+XnBool MockGenerator::IsFrameSyncedWith(xn::ProductionNode& other)
+{
+	return other.IsValid() && (strcmp(other.GetName(), m_strFrameSyncWith) == 0);
+}
+
+XnStatus MockGenerator::RegisterToFrameSyncChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
+{
+	return m_frameSyncChangeEvent.Register(handler, pCookie, hCallback);
+}
+
+void MockGenerator::UnregisterFromFrameSyncChange(XnCallbackHandle hCallback)
+{
+	m_frameSyncChangeEvent.Unregister(hCallback);
+}
+
+XnStatus MockGenerator::SetFrameSyncNode(const XnChar* strOther)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	if (!m_bFrameSyncCap)
+	{
+		return XN_STATUS_INVALID_OPERATION;
+	}
+
+	// if we haven't registered yet to the events, do it now (we need to know the lifetime of this other node)
+	if (m_hNodeCreationCallback == NULL)
+	{
+		nRetVal = m_context.RegisterToNodeCreation(OnNodeCreationCallback, this, m_hNodeCreationCallback);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	if (m_hNodeDestructionCallback == NULL)
+	{
+		nRetVal = m_context.RegisterToNodeDestruction(OnNodeDestructionCallback, this, m_hNodeDestructionCallback);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	if (strcmp(strOther, m_strFrameSyncWith) != 0)
+	{
+		nRetVal = xnOSStrCopy(m_strFrameSyncWith, strOther, sizeof(m_strFrameSyncWith));
+		XN_IS_STATUS_OK(nRetVal);
+
+		if (strOther[0] != '\0')
+		{
+			// check if node already exists
+			xn::ProductionNode other;
+			nRetVal = m_context.GetProductionNodeByName(strOther, other);
+			m_bFrameSyncWithExists = (nRetVal == XN_STATUS_OK);
+		}
+
+		nRetVal = m_frameSyncChangeEvent.Raise();
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
+	return (XN_STATUS_OK);
+}
+
+void MockGenerator::OnNodeCreation(xn::ProductionNode& createdNode)
+{
+	if (strcmp(createdNode.GetName(), m_strFrameSyncWith) == 0)
+	{
+		m_bFrameSyncWithExists = TRUE;
+		m_frameSyncChangeEvent.Raise();
+	}
+}
+
+void MockGenerator::OnNodeDestruction(const XnChar* strDestroyedNodeName)
+{
+	if (strcmp(strDestroyedNodeName, m_strFrameSyncWith) == 0)
+	{
+		m_bFrameSyncWithExists = FALSE;
+		m_frameSyncChangeEvent.Raise();
+	}
+}
+
+void XN_CALLBACK_TYPE MockGenerator::OnNodeCreationCallback(xn::Context& /*context*/, xn::ProductionNode& createdNode, void* pCookie)
+{
+	MockGenerator* pThis = (MockGenerator*)pCookie;
+	pThis->OnNodeCreation(createdNode);
+}
+
+void XN_CALLBACK_TYPE MockGenerator::OnNodeDestructionCallback(xn::Context& /*context*/, const XnChar* strDestroyedNodeName, void* pCookie)
+{
+	MockGenerator* pThis = (MockGenerator*)pCookie;
+	pThis->OnNodeDestruction(strDestroyedNodeName);
 }
 

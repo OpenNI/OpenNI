@@ -25,7 +25,7 @@
 #include "XnStatus.h"
 #include "XnInternalTypes.h"
 #include <XnTypes.h>
-#include <XnHash.h>
+#include <XnStringsHashT.h>
 
 typedef struct XnModuleRecorderInterface XnModuleRecorderInterface;
 
@@ -68,6 +68,14 @@ namespace xn
 		XnStatus RemoveNodeImpl(ProductionNode &node);
 
 	private:
+		typedef XnHashT<XnNodeHandle, NodeWatcher*> NodeWatchersMap;
+
+		struct RawNodeInfo
+		{
+		};
+
+		typedef XnStringsHashT<RawNodeInfo> RawNodesMap;
+
 		static XnStatus XN_CALLBACK_TYPE OpenFile(void* pCookie);
 		static XnStatus XN_CALLBACK_TYPE WriteFile(void* pCookie, const XnChar* strNodeName, 
 			const void* pData, XnUInt32 nSize);
@@ -97,14 +105,7 @@ namespace xn
 		XnBool m_bIsFileOpen;
 		XN_FILE_HANDLE m_hOutFile;
 		XnNodeHandle m_hRecorder;
-		XN_DECLARE_DEFAULT_HASH(XnNodeHandle, NodeWatcher*, NodeWatchersMap);
 		NodeWatchersMap m_nodeWatchersMap;
-
-		struct RawNodeInfo
-		{
-		};
-
-		XN_DECLARE_STRINGS_HASH(RawNodeInfo, RawNodesMap);
 		RawNodesMap m_rawNodesMap;
 	};
 }

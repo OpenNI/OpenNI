@@ -20,7 +20,7 @@
 *                                                                           *
 ****************************************************************************/
 #include <XnModuleCppInterface.h>
-#include <XnEvent.h>
+#include <XnEventT.h>
 
 class SampleRotatingDevice : public xn::ModuleDevice
 {
@@ -35,8 +35,6 @@ public:
 	virtual void UnregisterFromViewAngleChange(XnCallbackHandle hCallback);
 
 private:
-	XN_DECLARE_EVENT_0ARG(ChangeEvent, ChangeEventInterface);
-
 	XnDouble m_dAngle;
-	ChangeEvent m_angleEvent;
+	XnEventNoArgs m_angleEvent;
 };

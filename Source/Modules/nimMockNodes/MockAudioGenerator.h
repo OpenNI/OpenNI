@@ -26,12 +26,14 @@
 #include <XnTypes.h>
 #include "MockGenerator.h"
 
+XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_INHERITS_VIA_DOMINANCE_WARNING_ID)
+
 class MockAudioGenerator : 
 	public MockGenerator,
 	virtual public xn::ModuleAudioGenerator
 {
 public:
-	MockAudioGenerator(const XnChar* strName);
+	MockAudioGenerator(xn::Context& context, const XnChar* strName);
 	virtual ~MockAudioGenerator();
 
 	/*Generator*/
@@ -58,5 +60,7 @@ protected:
 	XnWaveOutputMode m_waveOutputMode;
 	XnWaveOutputMode* m_pSupportedOutputModes;
 };
+
+XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
 
 #endif // __MOCKAUDIOGENERATOR_H__

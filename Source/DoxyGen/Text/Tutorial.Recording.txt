@@ -1,0 +1,51 @@
+/**
+@page tut_recording Recording data
+
+When an application wants to record data, it needs to create a recorder node, add the nodes that it wishes to
+record to it, and then continuously read data and record it.
+
+The following code creates a depth node and an audio node, and then records their data to a file:
+@code
+// Initialize context
+xn::Context context;
+nRetVal = context.Init();
+// TODO: check error code
+
+// Create depth generator
+xn::DepthGenerator depth;
+nRetVal = depth.Create(context);
+// TODO: check error code
+
+// Create audio generator
+xn::AudioGenerator audio;
+nRetVal = audio.Create(context);
+// TODO: check error code
+
+// Create recorder
+xn::Recorder recorder;
+nRetVal = recorder.Create(context);
+// TODO: check error code
+
+// Add depth node to recording
+nRetVal = recorder.AddNodeToRecording(depth);
+// TODO: check error code
+
+// Add audio node to recording
+nRetVal = recorder.AddNodeToRecording(audio);
+// TODO: check error code
+
+// Start generating
+nRetVal = context.StartGeneratingAll();
+// TODO: check error code
+
+// Now read data and record it
+while (TRUE)
+{
+	nRetVal = context.WaitAnyUpdateAll();
+	// TODO: check error code
+	
+	nRetVal = recorder.Record();
+	// TODO: check error code
+}
+@endcode
+*/

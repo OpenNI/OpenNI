@@ -1,0 +1,44 @@
+/**
+@page tut_config Configuring nodes
+
+An application would usually want to fully configure a node before it starts streaming data. For that reason,
+OpenNI defines a flow in which configuration can take place, and once all configuration is set, the node
+@ref xn::Generator::StartGenerating() method can be called to make it start streaming the data.
+
+The following code creates a depth generator, configures it to VGA resolution, 30 FPS, and then starts it:
+@code
+// Create a DepthGenerator node
+xn::DepthGenerator depth;
+nRetVal = depth.Create(context);
+// TODO: check error code
+
+XnMapOutputMode outputMode;
+outputMode.nXRes = 640;
+outputMode.nYRes = 480;
+outputMode.nFPS = 30;
+nRetVal = depth.SetMapOutputMode(outputMode);
+// TODO: check error code
+
+// We're done configuring it. Make it start generating data
+nRetVal = context.StartGeneratingAll();
+// TODO: check error code
+
+// Main loop
+while (bShouldRun)
+{
+	// Wait for new data to be available
+	nRetVal = context.WaitOneUpdateAll(depth);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		printf("Failed updating data: %s\n", xnGetStatusString(nRetVal));
+		continue;
+	}
+
+	// Take current depth map
+	const XnDepthPixel* pDepthMap = depth.GetDepthMap();
+
+	// TODO: process depth map
+}
+@endcode
+
+*/

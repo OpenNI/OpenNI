@@ -26,12 +26,14 @@
 #include <XnTypes.h>
 #include "MockMapGenerator.h"
 
+XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_INHERITS_VIA_DOMINANCE_WARNING_ID)
+
 class MockImageGenerator :
 	public MockMapGenerator,
 	virtual public xn::ModuleImageGenerator
 {
 public:
-	MockImageGenerator(const XnChar* strName);
+	MockImageGenerator(xn::Context& context, const XnChar* strName);
 	virtual ~MockImageGenerator();
 	/*Production Node*/
 	virtual XnStatus SetIntProperty(const XnChar* strName, XnUInt64 nValue);
@@ -56,5 +58,7 @@ private:
 	XnPixelFormat m_pixelFormat;
 	XnSupportedPixelFormats m_supportedPixelFormats;
 };
+
+XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
 
 #endif // __MOCKIMAGEGENERATOR_H__

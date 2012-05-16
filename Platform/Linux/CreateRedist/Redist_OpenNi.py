@@ -110,7 +110,7 @@ def fix_file(arg,dirname,fname):
         if os.path.isdir(filePath):
             continue
 
-        ext = ['cpp','h','ini','cs','java']
+        ext = ['c','cpp','h','ini','cs','java']
         if filename == "Makefile" or filename.partition(".")[2] in ext:
             #print "Fixing: " + filePath
             tempName=filePath+'~~~'
@@ -123,6 +123,7 @@ def fix_file(arg,dirname,fname):
                 s = re.sub(r"../../../../../Samples/[\w.]+/?",r"./",s)
                 s = re.sub(r"../../../../Data/SamplesConfig.xml",r"../../Config/SamplesConfig.xml",s)
                 s = re.sub(r"../../Res/",r"../Res/",s)
+                s = re.sub(r"include ../../Common/CommonDefs.mak",r"include ../Build/Common/CommonDefs.mak",s)
                 s = re.sub(r"include ../../Common/CommonCppMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonCppMakefile",s)
                 s = re.sub(r"include ../../Common/CommonCSMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonCSMakefile",s)
                 s = re.sub(r"include ../../Common/CommonJavaMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonJavaMakefile",s)
@@ -183,7 +184,7 @@ else:
         PLATFORM = "x64"
     elif machinetype == "x86" or machinetype == "i386" or machinetype == "i686":
         PLATFORM = "x86"
-    elif machinetype == "arm":
+    elif machinetype[:3] == "arm":
         PLATFORM = "Arm"
     else:
         print "Unknown platform:", machinetype

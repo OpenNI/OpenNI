@@ -262,13 +262,21 @@ XN_C_API XnStatus xnSchedulerAddTask(XnScheduler* pScheduler, XnUInt64 nInterval
 
 	// enter critical section
 	nRetVal = xnOSEnterCriticalSection(&pScheduler->hCriticalSection);
-	XN_IS_STATUS_OK(nRetVal);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pTask);
+		return (nRetVal);
+	}
 
 	xnSchedulerAddTaskInternal(pScheduler, pTask);
 
 	// leave critical section
 	nRetVal = xnOSLeaveCriticalSection(&pScheduler->hCriticalSection);
-	XN_IS_STATUS_OK(nRetVal);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(pTask);
+		return (nRetVal);
+	}
 
 	// notify that the list has changed
 	nRetVal = xnOSSetEvent(pScheduler->hWakeThreadEvent);

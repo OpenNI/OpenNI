@@ -33,7 +33,7 @@ void ExportedSampleDepth::GetDescription( XnProductionNodeDescription* pDescript
 	pDescription->Version.nBuild = XN_BUILD_VERSION;
 }
 
-XnStatus ExportedSampleDepth::EnumerateProductionTrees( xn::Context& context, xn::NodeInfoList& TreesList, xn::EnumerationErrors* pErrors )
+XnStatus ExportedSampleDepth::EnumerateProductionTrees( xn::Context& /*context*/, xn::NodeInfoList& TreesList, xn::EnumerationErrors* /*pErrors*/ )
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -47,7 +47,7 @@ XnStatus ExportedSampleDepth::EnumerateProductionTrees( xn::Context& context, xn
 	return (XN_STATUS_OK);
 }
 
-XnStatus ExportedSampleDepth::Create( xn::Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, xn::NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, xn::ModuleProductionNode** ppInstance )
+XnStatus ExportedSampleDepth::Create( xn::Context& /*context*/, const XnChar* /*strInstanceName*/, const XnChar* /*strCreationInfo*/, xn::NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, xn::ModuleProductionNode** ppInstance )
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	

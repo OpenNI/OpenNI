@@ -1,0 +1,154 @@
+/**
+@page modules_gen Implementing a Generator
+
+If your node implementation is a generator type (i.e., it produces 
+data), you can usually implement it in one of two ways: 
+
+- Active generator - You implement such a node to generate data 
+  independently and it generates data in the background. A typical example 
+  of a node that you might implement as an active generator is a depth 
+  generator node. Since the depth generator node is typically close to the 
+  hardware, you might implement it so that it continually reads data from 
+  a hardware sensor, at some defined rate, and generates raw depth data at 
+  that same rate. In such an implementation, your depth generator node 
+  is generating depth data independently, i.e., without being called by 
+  code in the application main program. 
+
+- Passive generator - processes the data of other nodes that are earlier 
+  in the production graph in order to create new data. 
+
+Although these two models require different implementations, they both 
+fit in OpenNI interfaces. 
+
+@note Currently, OpenNI interfaces do not enable writing active 
+generators, which require data from another generator. 
+
+When a generator has generated new data, it informs OpenNI by raising 
+its 'New Data Available' event. This will cause OpenNI to call its @ref 
+xn::ModuleGenerator::UpdateData() method in the application main-loop 
+(assuming the application is using one of the 
+<code>WaitXUpdateAll</code> methods). The UpdateData() method is the 
+only place where the node implementation is allowed to update its 
+<i>Last Updated Data</i>. This flow is explained in detail in the 
+following sections. 
+
+@section modules_gen_state The Generating State
+
+A generator can be in one of two states: Generating state or 
+Non-generating state. When the node is created, it is in Non-generating 
+state. Non-generating state is useful for defining configuration before 
+actually starting to generate new data. 
+
+A generator's state can be changed to Generating state by calling its 
+@ref xn::ModuleGenerator::StartGenerating() method, and can be changed 
+to non-generating by calling its @ref 
+xn::ModuleGenerator::StopGenerating() method. The generator is 
+responsible for raising the 'Generation Running Changed' event whenever 
+its generating state has changed. 
+
+In essence, when in Generating state, the generator constantly generates 
+new data (as defined and limited by the specifications of the physical 
+hardware devices). 
+
+@section modules_gen_new New Data
+
+When a generator is in Generating state it generates "new" data, meaning 
+new data that the application hasn't received yet. The generator does 
+<i>not</i> simply make newly generated data available as 'new data' as 
+soon as it has generated it. Each generator preserves the content of its 
+application buffer and is not allowed to modify it until the app request 
+new data. When new data is available: 
+
+- The generator must raise its <code>'New Data Available'</code> event, and 
+- When the generator's @ref xn::ModuleGenerator::IsNewDataAvailable() 
+  method is called it must return TRUE.
+
+When the application calls one of the '<code>Wait X Update All</code> 
+methods and is pending, OpenNI waits until any new data arrives, by 
+waiting for the <code>'New Data Available'</code> event to be raised by 
+any generator. Once this event was raised, OpenNI checks if the 
+requested 'wait' condition has now been achieved (either 'All', 'Any', 
+'One' or 'None' of the nodes has new data) by calling the @ref 
+xn::ModuleGenerator::IsNewDataAvailable() to check if a specific 
+generator has new data. 
+
+Once condition is met, OpenNI updates all the generators by calling 
+their @ref xn::ModuleGenerator::UpdateData() method. The 
+<code>UpdateData()</code> method is the only place where the node 
+implementation is allowed to modify its last updated data. 
+
+@note The generator never calls its <code>UpdateData()</code> method. 
+Only OpenNI calls this method, when the application calls one of the 
+<code>'Wait X Update All'</code> methods. 
+
+@section modules_gen_active Example A: An Active Generator
+
+An active generator is a generator that does its generation in a thread 
+other than the application thread. 
+
+Usually, its implementation will be as follows:
+
+- The @ref xn::ModuleGenerator::StartGenerating "StartGenerating()" 
+  method starts a worker thread or performs an asynchronous call that is 
+  responsible for getting new data. 
+
+- The @ref xn::ModuleGenerator::StopGenerating "StopGenerating()" method 
+  stops the worker thread or cancels the asynchronous call. 
+
+- The node holds a buffer containing the latest updated data, i.e., the 
+  Application Buffer. This is the buffer holding the data the application 
+  received after OpenNI most recently called the UpdateData() method (on 
+  the application calling WaitXUpdateAll). 
+
+- When the worker thread has completed generating the new data (or the 
+  asynchronous call has returned), the data is stored in another buffer 
+  (the 'next' buffer), and the <i>New Data Available</i> event is raised. 
+
+- The @ref xn::ModuleGenerator::IsNewDataAvailable 
+  "IsNewDataAvailable()" method checks if the 'next' buffer exists. 
+
+- The @ref xn::ModuleGenerator::UpdateData "UpdateData()" method changes 
+  the 'next' buffer to be the 'user' buffer, and then deletes the previous 
+  'user' buffer. 
+
+Of course, the explanation above is simplified. Usually, instead of 
+allocating and deleting data buffers, a buffer pool is used, and the 
+implementation should minimize copying data from one buffer to another, 
+in order to reduce consumption of hardware resources. 
+
+@section modules_gen_passive Example B: A Passive Generator
+
+A passive generator usually depends on the data of another generator. It 
+does some processing in the application thread to produce new data from 
+its input node's data. 
+
+Usually, its implementation will be as follows:
+- The @ref xn::ModuleGenerator::StartGenerating "StartGenerating()" 
+  method registers to the <i>New Data Available</i> event of this node's 
+  input nodes, i.e., the previous nodes (feeders) in the production graph. 
+
+- The @ref xn::ModuleGenerator::StopGenerating "StopGenerating()" method 
+  unregisters from this event. 
+
+- The node holds a buffer containing the latest updated data, i.e., the 
+  Application Buffer. This is the buffer holding the data the application 
+  received after OpenNI most recently called the UpdateData() method (on 
+  the application calling WaitXUpdateAll). 
+
+- When the input nodes' <i>New Data Available</i> event is raised, it 
+  raises its own event, also marking that new input data is available for 
+  processing (using a member flag). 
+
+- The @ref xn::ModuleGenerator::IsNewDataAvailable 
+  "IsNewDataAvailable()" method checks if this flag is turned on. @note It 
+  is not sufficient to check if the input node has new data available, 
+  because this method might be called <b>after</b> the input nodes' 
+  UpdateData() method was called, but before your node's UpdateData() 
+  method was called. In such a case, the input node will say it has no new 
+  data, but its last data wasn't processed yet by your node. 
+
+- The @ref xn::ModuleGenerator::UpdateData "UpdateData()" method takes 
+  the input data from the input node, does some processing, updates the 
+  "user" buffer, and resets the 'New Data Available' flag. 
+
+*/

@@ -1,3 +1,5 @@
+include ../../Common/CommonDefs.mak
+
 BIN_DIR = ../../../Bin
 
 INC_DIRS = ../../../../../Include

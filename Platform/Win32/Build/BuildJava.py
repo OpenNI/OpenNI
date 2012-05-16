@@ -40,8 +40,8 @@ else:
     print ('First argument must be "32", "64" or empty (32)')
     exit(1)
     
-proj_dir = sys.argv[2]
-source_dir = os.path.join(proj_dir, sys.argv[3])
+proj_dir = os.path.abspath(sys.argv[2])
+source_dir = os.path.abspath(os.path.join(proj_dir, sys.argv[3]))
 proj_name = sys.argv[4]
 needed_jar_files = ""
 main_class = ""
@@ -50,8 +50,8 @@ if len(sys.argv) > 5:
 if len(sys.argv) > 6:
     main_class = sys.argv[6]
 
-RELEASE_DIR = os.path.join(SCRIPT_DIR, "..", bin_dir, "Release")
-DEBUG_DIR = os.path.join(SCRIPT_DIR, "..", bin_dir, "Debug")
+RELEASE_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", bin_dir, "Release"))
+DEBUG_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", bin_dir, "Debug"))
 
 JAR_FILE = os.path.join(RELEASE_DIR, proj_name + '.jar')
 BATCH_FILE = os.path.join(RELEASE_DIR, proj_name + '.bat')

@@ -1,0 +1,254 @@
+/**
+@page modules_node_capabilities Support Capabilities
+
+If you want your new node implementation to support any capabilities, it 
+should both declare that and implement their interfaces. 
+
+Declaring the node implementation supported capabilities is done by 
+implementing the @ref xn::ModuleProductionNode::IsCapabilitySupported 
+"IsCapabilitySupported()" method. This method only declares if a certain 
+capability is supported or not. 
+
+The actual implementation of the capability is done by implementing this 
+capability interface. This implementation can be done in a different 
+class, or in your node implementation class. In any case, your node 
+implementation must implement the proper 'get' mechanism for this 
+interface. 
+
+The following table summarizes all capabilities:
+
+<table>
+	<tr>
+		<th>Capability</th>
+		<th>Capability Name</th>
+		<th>Capability Interface</th>
+		<th>Get Interface Method</th>
+	</tr>
+	<tr>
+		<td>Extended Serialization</td>
+		<td>XN_CAPABILITY_EXTENDED_SERIALIZATION</td>
+		<td>xn::ModuleExtendedSerializationInterface</td>
+		<td>xn::ModuleProductionNode::GetExtendedSerializationInterface</td>
+	</tr>
+	<tr>
+		<td>Lock Aware</td>
+		<td>XN_CAPABILITY_LOCK_AWARE</td>
+		<td>xn::ModuleLockAwareInterface</td>
+		<td>xn::ModuleProductionNode::GetLockAwareInterface</td>
+	</tr>
+	<tr>
+		<td>Error State</td>
+		<td>XN_CAPABILITY_ERROR_STATE</td>
+		<td>xn::ModuleErrorStateInterface</td>
+		<td>xn::ModuleProductionNode::GetErrorStateInterface</td>
+	</tr>
+	<tr>
+		<td>Brightness</td>
+		<td>XN_CAPABILITY_BRIGHTNESS</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Contrast</td>
+		<td>XN_CAPABILITY_CONTRAST</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Hue</td>
+		<td>XN_CAPABILITY_HUE</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Saturation</td>
+		<td>XN_CAPABILITY_SATURATION</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Sharpness</td>
+		<td>XN_CAPABILITY_SHARPNESS</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Gamma</td>
+		<td>XN_CAPABILITY_GAMMA</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Color Temperature</td>
+		<td>XN_CAPABILITY_COLOR_TEMPERATURE</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Backlight Compensation</td>
+		<td>XN_CAPABILITY_BACKLIGHT_COMPENSATION</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Gain</td>
+		<td>XN_CAPABILITY_GAIN</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Pan</td>
+		<td>XN_CAPABILITY_PAN</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Tilt</td>
+		<td>XN_CAPABILITY_TILT</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Roll</td>
+		<td>XN_CAPABILITY_ROLL</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Zoom</td>
+		<td>XN_CAPABILITY_ZOOM</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Exposure</td>
+		<td>XN_CAPABILITY_EXPOSURE</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Iris</td>
+		<td>XN_CAPABILITY_IRIS</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Focus</td>
+		<td>XN_CAPABILITY_FOCUS</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Lowlight Compensation</td>
+		<td>XN_CAPABILITY_LOW_LIGHT_COMPENSATION</td>
+		<td>xn::ModuleGeneralIntInterface</td>
+		<td>xn::ModuleProductionNode::GetGeneralIntInterface</td>
+	</tr>
+	<tr>
+		<td>Device Identification</td>
+		<td>XN_CAPABILITY_DEVICE_IDENTIFICATION</td>
+		<td>xn::ModuleDeviceIdentificationInterface</td>
+		<td>xn::ModuleDevice::GetIdentificationInterface</td>
+	</tr>
+	<tr>
+		<td>Alternative Viewpoint</td>
+		<td>XN_CAPABILITY_ALTERNATIVE_VIEW_POINT</td>
+		<td>xn::ModuleAlternativeViewPointInterface</td>
+		<td>xn::ModuleGenerator::GetAlternativeViewPointInterface</td>
+	</tr>
+	<tr>
+		<td>Frame Sync</td>
+		<td>XN_CAPABILITY_FRAME_SYNC</td>
+		<td>xn::ModuleFrameSyncInterface</td>
+		<td>xn::ModuleGenerator::GetFrameSyncInterface</td>
+	</tr>
+	<tr>
+		<td>Mirror</td>
+		<td>XN_CAPABILITY_MIRROR</td>
+		<td>xn::ModuleMirrorInterface</td>
+		<td>xn::ModuleGenerator::GetMirrorInterface</td>
+	</tr>
+	<tr>
+		<td>Cropping</td>
+		<td>XN_CAPABILITY_CROPPING</td>
+		<td>xn::ModuleCroppingInterface</td>
+		<td>xn::ModuleMapGenerator::GetCroppingInterface</td>
+	</tr>
+	<tr>
+		<td>Anti Flicker</td>
+		<td>XN_CAPABILITY_ANTI_FLICKER</td>
+		<td>xn::ModuleAntiFlickerInterface</td>
+		<td>xn::ModuleMapGenerator::GetAntiFlickerInterface</td>
+	</tr>
+	<tr>
+		<td>User Position</td>
+		<td>XN_CAPABILITY_USER_POSITION</td>
+		<td>xn::ModuleUserPositionInterface</td>
+		<td>xn::ModuleDepthGenerator::GetUserPositionInterface</td>
+	</tr>
+	<tr>
+		<td>Hand Touching Field-of-View</td>
+		<td>XN_CAPABILITY_HAND_TOUCHING_FOV_EDGE</td>
+		<td>xn::ModuleHandTouchingFOVEdgeInterface</td>
+		<td>xn::ModuleHandsGenerator::GetHandTouchingFOVEdgeInterface</td>
+	</tr>
+	<tr>
+		<td>Skeleton</td>
+		<td>XN_CAPABILITY_SKELETON</td>
+		<td>xn::ModuleSkeletonInterface</td>
+		<td>xn::ModuleUserGenerator::GetSkeletonInterface</td>
+	</tr>
+	<tr>
+		<td>Pose Detection</td>
+		<td>XN_CAPABILITY_POSE_DETECTION</td>
+		<td>xn::ModulePoseDetectionInteface</td>
+		<td>xn::ModuleUserGenerator::GetPoseDetectionInteface</td>
+	</tr>
+</table>
+
+For example, let's say your hands generator supports the mirror 
+capability as well as the error state capability. The HandsGenerator can 
+implement the error state capability in the same class and the mirror 
+capability in a different class. 
+
+Thus, in the class implementation below, the 
+<code>GetErrorStateInterface()</code> method returns <code>this</code>, 
+since the 'Error State Interface' is also implemented by this class. On 
+the other hand, the <code>GetMirrorInterface()</code> method has to 
+return a reference to <code>m_mirrorCap</code>, which is an instance of 
+the helper class, <code>MyHandsGeneratorMirror</code>. 
+
+@code
+class MyHandsGeneratorMirror : public virtual xn::ModuleMirrorInterface
+{
+...
+};
+
+class MyHandGenerator: 
+	public virtual xn::ModuleHandsGenerator, 
+	public virtual xn::ModuleErrorStateInterface
+{
+public:
+	...
+	
+	virtual XnBool IsCapabilitySupported(const XnChar* strCapabilityName)
+	{
+		return (
+			strcmp(strCapabilityName, XN_CAPABILITY_MIRROR) == 0 ||
+			strcmp(strCapabilityName, XN_CAPABILITY_ERROR_STATE) == 0
+			);
+	}
+	
+	...
+	
+	virtual ModuleErrorStateInterface* GetErrorStateInterface() { return this; }
+	
+	...
+	
+	virtual ModuleMirrorInterface* GetMirrorInterface() { return &m_mirrorCap; }
+
+private:
+	MyHandsGeneratorMirror m_mirrorCap;
+};
+@endcode
+*/

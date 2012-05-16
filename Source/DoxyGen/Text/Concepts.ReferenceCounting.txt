@@ -1,0 +1,48 @@
+/**
+@page conc_refcount Reference Counting
+
+OpenNI uses reference counting for objects that might be shared between 
+several components of the application. Those objects include the context 
+itself, all types of production nodes, and Node Info objects. When a 
+node is created, it has a reference count of 1, and the node handle is 
+returned to the creator. The creator can increase the ref count by 
+calling @ref xnProductionNodeAddRef() or @ref 
+xn::ProductionNode::AddRef(). Once someone holding a node does not need 
+it anymore, it may call @ref xnProductionNodeRelease() or @ref 
+xn::ProductionNode::Release(). If a node's reference count reaches 0, 
+the node will be removed from context and destroyed. 
+
+@note An application may not assume anything about the existence of a 
+node once the node is unreferenced. The node might be destroyed, but it 
+also might still exist, if some other node is using it. <b>In any case 
+it is forbidden for an application to use the node handle once it was 
+unreferenced.</b> 
+
+Initializing context from a script file (XML), using the @ref 
+xnInitFromXmlFileEx() function, usually creates some nodes (depending on 
+the script). The function returns a node which is the owner of all 
+created nodes. Once this node is destroyed, all nodes created from the 
+script will be release as well (unless the application holds another 
+reference to them). 
+
+@note There is also a deprecated function named @ref 
+xnInitFromXmlFile(). This function lets the context own all created 
+nodes. The problem is there is no way of releasing those nodes except 
+for calling @ref xnShutdown(), which destroys everything in the context. 
+This method is obsolete and should not be used. It only exists for 
+backwards compatibility (this was the only API up to version 1.1). 
+
+Please note that referencing a <b>Node Info</b> object of an existing 
+node also counts as a reference to this node. For example, if the 
+application called @ref xnEnumerateExistingNodes() (@ref 
+xn::Context::EnumerateExistingNodes()), and received a <i>Node Info 
+List</i> that contains this node, then the node reference count was 
+increased by 1. The application must free the list in order to unref 
+each node in that list. This can be done by calling @ref 
+xnNodeInfoListFree() (in C++, the destructor of @ref xn::NodeInfoList 
+does this for you). 
+
+Object oriented wrappers, like C++ and .NET, perform all reference 
+operations for the client (they add ref in c`tor, copy c`tor, or 
+assignment operator, and release ref in d`tor). 
+*/

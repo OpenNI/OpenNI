@@ -167,7 +167,7 @@ XnStatus XnStreamCompressDepth16Z(const XnUInt16* pInput, const XnUInt32 nInputS
 		pOutput++;
 	}
 
-	*pnOutputSize = pOutput - pOrigOutput;
+	*pnOutputSize = (XnUInt32)(pOutput - pOrigOutput);
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -333,7 +333,7 @@ XnStatus XnStreamCompressDepth16ZWithEmbTable(const XnUInt16* pInput, const XnUI
 		pOutput++;
 	}
 
-	*pnOutputSize = pOutput - pOrigOutput;
+	*pnOutputSize = (XnUInt32)(pOutput - pOrigOutput);
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -475,7 +475,7 @@ XnStatus XnStreamUncompressDepth16Z(const XnUInt8* pInput, const XnUInt32 nInput
 		}			
 	}
 
-	*pnOutputSize = (pOutput - pOrigOutput) * sizeof(XnUInt16);
+	*pnOutputSize = (XnUInt32)((pOutput - pOrigOutput) * sizeof(XnUInt16));
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -626,7 +626,7 @@ XnStatus XnStreamUncompressDepth16ZWithEmbTable(const XnUInt8* pInput, const XnU
 		}			
 	}
 
-	*pnOutputSize = (pOutput - pOrigOutput) * sizeof(XnUInt16);
+	*pnOutputSize = (XnUInt32)((pOutput - pOrigOutput) * sizeof(XnUInt16));
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -763,7 +763,7 @@ XnStatus XnStreamCompressImage8Z(const XnUInt8* pInput, const XnUInt32 nInputSiz
 		pOutput++;
 	}
 
-	*pnOutputSize = pOutput - pOrigOutput;
+	*pnOutputSize = (XnUInt32)(pOutput - pOrigOutput);
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -883,7 +883,7 @@ XnStatus XnStreamUncompressImage8Z(const XnUInt8* pInput, const XnUInt32 nInputS
 		}			
 	}
 
-	*pnOutputSize = (pOutput - pOrigOutput);
+	*pnOutputSize = (XnUInt32)(pOutput - pOrigOutput);
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -914,7 +914,7 @@ XnStatus XnStreamCompressConf4(const XnUInt8* pInput, const XnUInt32 nInputSize,
 		pOutput++;
 	}
 
-	*pnOutputSize = pOutput - pOrigOutput;
+	*pnOutputSize = (XnUInt32)(pOutput - pOrigOutput);
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -964,7 +964,7 @@ XnStatus XnStreamUncompressConf4(const XnUInt8* pInput, const XnUInt32 nInputSiz
 		pInput+=2;
 	}
 
-	*pnOutputSize = (pOutput - pOrigOutput);
+	*pnOutputSize = (XnUInt32)(pOutput - pOrigOutput);
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -1106,7 +1106,7 @@ XnStatus XnStreamCompressImage8J(XnStreamCompJPEGContext* pStreamCompJPEGContext
 
 	jpeg_finish_compress(pjCompStruct);
 
-	*pnOutputSize -= pjCompStruct->dest->free_in_buffer;
+	*pnOutputSize -= (XnUInt32)pjCompStruct->dest->free_in_buffer;
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -1166,7 +1166,7 @@ XnStatus XnStreamCompressImage24J(XnStreamCompJPEGContext* pStreamCompJPEGContex
 
 	jpeg_finish_compress(pjCompStruct);
 
-	*pnOutputSize -= pjCompStruct->dest->free_in_buffer;
+	*pnOutputSize -= (XnUInt32)pjCompStruct->dest->free_in_buffer;
 
 	// All is good...
 	return (XN_STATUS_OK);

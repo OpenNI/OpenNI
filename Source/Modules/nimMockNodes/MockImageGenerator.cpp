@@ -23,8 +23,8 @@
 #include <XnPropNames.h>
 #include <XnLog.h>
 
-MockImageGenerator::MockImageGenerator(const XnChar* strName) : 
-	MockMapGenerator(strName),
+MockImageGenerator::MockImageGenerator(xn::Context& context, const XnChar* strName) : 
+	MockMapGenerator(context, strName),
 	m_pixelFormat(XN_PIXEL_FORMAT_RGB24)
 {
 	xnOSMemSet(&m_supportedPixelFormats, 0, sizeof(m_supportedPixelFormats));
@@ -114,7 +114,7 @@ XnPixelFormat MockImageGenerator::GetPixelFormat()
 
 XnStatus MockImageGenerator::RegisterToPixelFormatChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_pixelFormatChangeEvent.Register(handler, pCookie, &hCallback);
+	return m_pixelFormatChangeEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockImageGenerator::UnregisterFromPixelFormatChange(XnCallbackHandle hCallback)

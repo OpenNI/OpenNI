@@ -23,8 +23,7 @@
 // Includes
 //---------------------------------------------------------------------------
 #include <XnLog.h>
-#include <XnHash.h>
-
+#include <XnHashT.h>
 #include <XnStatusRegister.h>
 
 #define XN_MASK_STATUS "XnStatus"
@@ -33,8 +32,8 @@
 //---------------------------------------------------------------------------
 // Data Types
 //---------------------------------------------------------------------------
-XN_DECLARE_DEFAULT_HASH(XnUInt16, XnErrorCodeData, XnStatusHash);
-XN_DECLARE_DEFAULT_HASH(XnUInt16, XnStatusHash*, XnGroupsHash);
+typedef XnHashT<XnUInt16, XnErrorCodeData> XnStatusHash;
+typedef XnHashT<XnUInt16, XnStatusHash*> XnGroupsHash;
 
 //---------------------------------------------------------------------------
 // Global Variables

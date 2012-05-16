@@ -123,7 +123,7 @@ HRESULT XnVideoStream::FillBuffer(IMediaSample *pms)
 		XnStatus nRetVal = XN_STATUS_OK;
 
 		// ignore timeouts
-		while (TRUE)
+		for(;;)
 		{
 			nRetVal = m_imageGen.WaitAndUpdateData();
 			if (nRetVal != XN_STATUS_WAIT_DATA_TIMEOUT)
@@ -244,8 +244,6 @@ HRESULT XnVideoStream::GetMediaType(int iPosition, __inout CMediaType *pMediaTyp
 		hr = GetStreamCapability(iPosition, *pMediaType, vscc);
 		XN_METHOD_RETURN(hr);
 	}
-
-	XN_METHOD_RETURN(S_OK);
 }
 
 HRESULT XnVideoStream::SetMediaType(const CMediaType* pMediaType)

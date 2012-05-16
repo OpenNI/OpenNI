@@ -118,6 +118,7 @@ int main(int argc, char** argv)
 
     if(pSampleManager->StartSample(argc,argv)!=XN_STATUS_OK) 
     {
+		XN_DELETE(pSampleManager);
         UsageAndExit(argv[0]); // The manager will only return if it fails to initialize...
     }
 }

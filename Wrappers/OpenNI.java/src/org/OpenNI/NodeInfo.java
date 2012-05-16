@@ -40,7 +40,7 @@ public class NodeInfo extends ObjectWrapper
 	
 	public NodeInfoList getNeededNodes() throws GeneralException
 	{
-		return new NodeInfoList(NativeMethods.xnNodeInfoGetNeededNodes(toNative()));
+		return new NodeInfoList(NativeMethods.xnNodeInfoGetNeededNodes(toNative()), false);
 	}
 	
 	public ProductionNode getInstance() throws GeneralException

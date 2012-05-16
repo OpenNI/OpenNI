@@ -26,8 +26,8 @@
 // Includes
 //---------------------------------------------------------------------------
 #include "XnModuleInterfaceContainers.h"
-#include <XnHash.h>
-#include <XnStringsHash.h>
+#include <XnHashT.h>
+#include <XnStringsHashT.h>
 
 //---------------------------------------------------------------------------
 // Types
@@ -49,7 +49,7 @@ typedef struct XnModuleInstance
 class XnModuleLoader
 {
 public:
-	XnModuleLoader(XnContext* pContext);
+	XnModuleLoader();
 	~XnModuleLoader();
 
 	typedef enum
@@ -64,8 +64,8 @@ public:
 	XnStatus Init();
 	XnStatus AddModule(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
 	XnStatus AddExportedNode(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pInterface, const XnChar* strConfigDir);
-	XnStatus Enumerate(XnProductionNodeType Type, XnNodeInfoList* pList, XnEnumerationErrors* pErrors);
-	XnStatus CreateRootNode(XnNodeInfo* pTree, XnModuleInstance** ppInstance);
+	XnStatus Enumerate(XnContext* pContext, XnProductionNodeType Type, XnNodeInfoList* pList, XnEnumerationErrors* pErrors);
+	XnStatus CreateRootNode(XnContext* pContext, XnNodeInfo* pTree, XnModuleInstance** ppInstance);
 	void DestroyModuleInstance(XnModuleInstance* pInstance);
 
 #if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
@@ -119,14 +119,12 @@ private:
 	class XnDescriptionKeyManager
 	{
 	public:
-		static XnHashValue Hash(XnProductionNodeDescription const& key);
+		static XnHashCode Hash(XnProductionNodeDescription const& key);
 		static XnInt32 Compare(XnProductionNodeDescription const& key1, XnProductionNodeDescription const& key2);
 	};
 
-	XN_DECLARE_DEFAULT_VALUE_TRANSLATOR(XnProductionNodeDescription, XnGeneratorDescriptionTranslator);
-	XN_DECLARE_DEFAULT_VALUE_TRANSLATOR(XnLoadedGenerator, XnLoadedGeneratorTranslator);
-	XN_DECLARE_HASH(XnProductionNodeDescription, XnLoadedGenerator, XnLoadedGeneratorsHash, XnGeneratorDescriptionTranslator, XnLoadedGeneratorTranslator, XnDescriptionKeyManager);
-	XN_DECLARE_STRINGS_HASH(XnProductionNodeType, ExtendedNodeTypesHash);
+	typedef XnHashT<XnProductionNodeDescription, XnLoadedGenerator, XnDescriptionKeyManager> XnLoadedGeneratorsHash;
+	typedef XnStringsHashT<XnProductionNodeType> ExtendedNodeTypesHash;
 
 #if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 	typedef struct RegisteredModule
@@ -135,13 +133,12 @@ private:
 		const XnChar* strConfigDir;
 		const XnChar* strName;
 	} RegisteredModule;
-	XN_DECLARE_LIST(RegisteredModule, RegisteredModulesList);
+	typedef XnListT<RegisteredModule> RegisteredModulesList;
 	static RegisteredModulesList sm_modulesList;
 #endif
 
 	XnLoadedGeneratorsHash m_AllGenerators;
 	ExtendedNodeTypesHash m_ExtendedNodeTypesHash;
-	XnContext* m_pContext;
 	LoadingMode m_loadingMode;
 };
 

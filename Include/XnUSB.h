@@ -69,6 +69,14 @@ typedef XnUSBEndPointHandle* XN_USB_EP_HANDLE;
 typedef XnBool (XN_CALLBACK_TYPE* XnUSBReadCallbackFunctionPtr)(XnUChar* pBuffer, XnUInt32 nBufferSize, void* pCallbackData);
 typedef XnBool (XN_CALLBACK_TYPE* XnUSBEventCallbackFunctionPtr)(XnUSBEventType USBEventType, XnChar* cpDevPath, void* pCallbackData);
 
+typedef struct XnUSBEventArgs
+{
+	const XnChar* strDevicePath;
+	XnUSBEventType eventType;
+} XnUSBEventArgs;
+
+typedef void (XN_CALLBACK_TYPE* XnUSBDeviceCallbackFunctionPtr)(XnUSBEventArgs* pArgs, void* pCookie);
+
 //---------------------------------------------------------------------------
 // Exported Function Declaration
 //---------------------------------------------------------------------------
@@ -112,6 +120,9 @@ XN_C_API XnStatus XN_C_DECL xnUSBFinishReadEndPoint(XN_USB_EP_HANDLE pEPHandle, 
 XN_C_API XnStatus XN_C_DECL xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBufferSize, XnUInt32 nNumBuffers, XnUInt32 nTimeOut, XnUSBReadCallbackFunctionPtr pCallbackFunction, void* pCallbackData);
 XN_C_API XnStatus XN_C_DECL xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle);
 
-XN_C_API XnStatus XN_C_DECL xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData);
+XN_C_API XnStatus XN_API_DEPRECATED("Use xnUSBRegisterToConnectivityEvents() instead") XN_C_DECL xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 nProductID, void* pExtraParam, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData);
+
+XN_C_API XnStatus XN_C_DECL xnUSBRegisterToConnectivityEvents(XnUInt16 nVendorID, XnUInt16 nProductID, XnUSBDeviceCallbackFunctionPtr pFunc, void* pCookie, XnRegistrationHandle* phRegistration);
+XN_C_API void XN_C_DECL xnUSBUnregisterFromConnectivityEvents(XnRegistrationHandle hRegistration);
 
 #endif //_XN_USB_H_

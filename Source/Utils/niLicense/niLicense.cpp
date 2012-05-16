@@ -116,17 +116,17 @@ int main(int argc, char* argv[])
 	XnLicense license = {0};
 	if (!bList)
 	{
-		nRetVal = xnOSStrNCopy(license.strVendor, strVendor, strlen(strVendor) + 1, sizeof(license.strVendor));
+		nRetVal = xnOSStrNCopy(license.strVendor, strVendor, (XnUInt32)strlen(strVendor) + 1, (XnUInt32)sizeof(license.strVendor));
 		if (nRetVal != XN_STATUS_OK)
 		{
-			printf("Error: Vendor name is too long (should be up to %u characters).", sizeof(license.strVendor) - 1);
+			printf("Error: Vendor name is too long (should be up to %u characters).", (XnUInt32)sizeof(license.strVendor) - 1);
 			return -1;
 		}
 
-		nRetVal = xnOSStrNCopy(license.strKey, strKey, strlen(strKey) + 1, sizeof(license.strKey));
+		nRetVal = xnOSStrNCopy(license.strKey, strKey, (XnUInt32)strlen(strKey) + 1, (XnUInt32)sizeof(license.strKey));
 		if (nRetVal != XN_STATUS_OK)
 		{
-			printf("Error: Key is too long (should be up to %u characters).", sizeof(license.strKey) - 1);
+			printf("Error: Key is too long (should be up to %u characters).", (XnUInt32)sizeof(license.strKey) - 1);
 			return -1;
 		}
 	}

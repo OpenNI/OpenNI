@@ -1,6 +1,76 @@
 Detailed Change log:
 --------------------
 
+Version 1.5.4.0 (Unstable version - May 7th 2012)
+-------------------------------------------------
+  * Gadget: now also notifies about SUSPEND state.
+  * Implemented xnUSBRegisterToConnectivityEvents() in Linux (partial - only detects disconnection).
+  * Bug Fix: NiCRead sample didn't work (redist problem).
+  * Bug Fix: when recording, the first two frames might have timestamp 0 (though image is different).
+  * Gadget: writing is now performed using a queue. WriteEndpoint() is no longer blocked. Performance is much better!
+  * .Net wrapper bug fix: can't create production nodes of new types.
+  * XnBitSet: adding GetDataSize() method.
+  * Fixed the Android makefiles.
+  * Removed the 10K max depth limit in all graphic samples.
+  * Java Bug Fix: calling the getNeededNodes() method of a NodeInfo object caused a memory corruption.
+  * Gadget: added a dump for the internal state.
+  * Gadget: added a callback for connected/disconnected events.
+  * NiViewer: Rainbow view now uses a histogram.
+  * Android: Fixed the NiSkeletonBenchmark makefile.
+  * Gadget: added support for zero size replies (not ready).
+  * Bug Fix: when recording, first frames (with timestamp zero) might be recorded several times.
+  * NiUserSelection sample bug fix: User might sometime disappear.
+  * Added new template containers (XnListT, XnQueueT, XnStackT, XnHashT, XnStringsHashT, XnEventT, XnCyclicQueueT, XnCyclicStackT, XnStringsSet)
+  * BC Bug Fix: creating a user generator which was compiled with OpenNI older than 1.3.2 fails.
+  * Compilation: all projects now compile with warning level 4.
+  * Android Samples: added HandTracker Sample, and improved SamplesAssistant.
+  * Upgraded VS solution to VS 2010.
+  * Added xnLogGetFileName() method for getting current file name.
+  * Fixed some potential (never-gonna-happen) memory leaks.
+  * All samples makefiles now first include CommonDefs (so they can use definitions from there).
+  * All GLUT samples also link with GL (implicit on Ubuntu, but it seems Fedora requires it).
+  * Bug Fix: After a call to xnLogClose(), every module trying to write to log crashes (because xnLogClose destroys all logger objects...)
+  * .Net BC Bug Fix: Using context.Shutdown() leaves a bad state. Having a loop of new context and context.Shutdown() will result in an exception: "C# wrapper: creating a Context object wrapping an already wrapped object!"
+  * Minor performance improvement: The UpdateAll() method used dynamic allocation of a map of nodes to track which nodes in the graph were updated, and which weren't. Now, instead, a bWasVisited member was added to each node so the same can be achieved without dynamic memory allocation.
+  * Minor performance improvement: context stores the player node if created, so no searching should be done during UpdateAll().
+  * Bug Fix: Dump system had a static object which was destroyed sometime during shutdown. This cause problems with destructor order. It's now a singleton that never gets freed.
+  * Disable copy ctor and assignment operator in old data containers - they were buggy, and nobody was using them anyway...
+  * Bug Fix: on Linux, the server would sometime hang when device is closed.
+  * C++ Wrappers: Map classes are now defined by templates, instead of ugly macro.
+  * Log: adding some verbosity when seeking frames, if default mechanism (seek tables) wasn't used for some reason.
+  * .Net Wrappers Bug Fix: calling NodeInfo.NeededNodes causes memory corruption.
+  * .Net Wrappers Bug Fix: Query.AddNeededNode() and Query.AddSupportedCapability() does not work (query kept a pointer to marshaled string, which was already destroyed) (#1935)
+  * .Net Wrappers: adding a version of Context.EnumerateProductionTrees which does not accept a query.
+  * New documentation!
+  * Marking global method xn::GetVersion() as deprecated - replaced by Version::Current().
+  * Adding getters and setters to Version class.
+  * Adding overloads to Query which accepts Version instead of XnVersion.
+  * Adding UnitTester (based on gtest and gmock).
+  * XnUSB: replacing the connect/disconnect callback with an actual event, that many can use.
+  * NiConvertXToONI improvements:
+    * Can now copy more than one node.
+    * Can choose start/end position in any combination.
+    * Progress is shown in percentage (frame count was misleading).
+  * Java Wrappers: Fixed a memory leak when using ConvertRealWorldToProjective or ConvertProjectiveToRealWorld.
+  * Mock Map Generator: allow data bigger than expected (needed for our recordings, as we record shifts + depth).
+  * NiUserTracker sample improvements:
+    * Added frameID (Default off, 'f' to toggle)
+    * Added circles at all joints (Default off, 'j' to toggle)
+    * Added more joints
+    * Register to pose callbacks only when pose is actually needed (and available)
+  * BuildJava.bat - Use absolute paths (on some machines, the relative ones get too long...)
+  * C++ Wrappers: Adding a version of GetContext() which returns the new context object (instead of updating an existing one)
+  * ModuleLoader no longer holds the context.
+  * Context object now holds C++ objects (improves memory fragmentation and pointer dereference).
+  * Adding the 'Node Creation' and the 'Node Destruction' events to the context.
+  * C++ Wrappers: Adding equality and inequality operators to the C++ Context class.
+  * Support for FrameSync in ONI files.
+  * Fixing memory leak - missing delete when closing dump file.
+  * Log Bug Fix: starting a new log file would just reset the old one.
+  * Log Bug Fix: registering or unregistering a log writer while a log entry is being written might cause a crash.
+  * NiUserSelection sample: Only require pose capability if it is required by the generator...
+  * Bug Fix: performing a query for creation info longer than 80 bytes failed.
+
 Version 1.5.2.23 (Stable version - Dec 28th 2011)
 -------------------------------------------------
   * C++: IRMetaData didn't have operator() and operator[], which is inconsistent with depth and scene.

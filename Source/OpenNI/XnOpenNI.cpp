@@ -28,9 +28,6 @@
 #include <XnOpenNI.h>
 #include <XnOS.h>
 #include <XnLog.h>
-#include <XnList.h>
-#include <XnHash.h>
-#include <XnStringsHash.h>
 #include <XnVersion.h>
 #include "XnXml.h"
 #include "XnEnum.h"
@@ -147,31 +144,22 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 
 	// allocate context
 	XnContext* pContext;
-	XN_VALIDATE_CALLOC(pContext, XnContext, 1);
+	XN_VALIDATE_NEW(pContext, XnContext);
 
-	// create members
-	pContext->pLicenses = XN_NEW(XnLicenseList);
-	pContext->pModuleLoader = XN_NEW(XnModuleLoader, pContext);
-	pContext->pNodesMap = XN_NEW(XnNodesMap);
-	pContext->pGlobalErrorChangeEvent = XN_NEW(XnErrorStateChangedEvent);
-	pContext->pShutdownEvent = XN_NEW(XnContextShuttingDownEvent);
+	// initialize members
+	pContext->bGlobalMirrorSet = FALSE;
+	pContext->bGlobalMirror = FALSE;
+	pContext->globalErrorState = XN_STATUS_OK;
+	pContext->hNewDataEvent = NULL;
+	pContext->nLastLockID = 0;
 	pContext->nRefCount = 1;
+	pContext->hLock = 0;
 	pContext->pDumpRefCount = xnDumpFileOpen(XN_DUMP_MASK_REF_COUNT, "RefCount.csv");
 	pContext->pDumpDataFlow = xnDumpFileOpen(XN_DUMP_MASK_DATA_FLOW, "DataFlow.csv");
+	pContext->hPlayerNode = NULL;
 
 	xnDumpFileWriteString(pContext->pDumpRefCount, "Timestamp,Object,RefCount,Comment\n");
 	xnDumpFileWriteString(pContext->pDumpDataFlow, "Timestamp,Action,Object,DataTimestamp\n");
-
-	// validate memory allocations
-	if (pContext->pLicenses == NULL ||
-		pContext->pModuleLoader == NULL ||
-		pContext->pNodesMap == NULL ||
-		pContext->pGlobalErrorChangeEvent == NULL ||
-		pContext->pShutdownEvent == NULL)
-	{
-		xnContextDestroy(pContext);
-		return (XN_STATUS_ALLOC_FAILED);
-	}
 
 	nRetVal = xnFPSInit(&pContext->readFPS, XN_NODE_FPS_CALC_SAMPLES);
 	if (nRetVal != XN_STATUS_OK)
@@ -180,7 +168,6 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 		return (nRetVal);
 	}
 
-	// create event
 	nRetVal = xnOSCreateEvent(&pContext->hNewDataEvent, FALSE);
 	if (nRetVal != XN_STATUS_OK)
 	{
@@ -188,7 +175,6 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 		return (nRetVal);
 	}
 
-	// create lock
 	nRetVal = xnOSCreateCriticalSection(&pContext->hLock);
 	if (nRetVal != XN_STATUS_OK)
 	{
@@ -196,8 +182,6 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 		return (nRetVal);
 	}
 
-	// create owned nodes list (nodes that are owned by the context and not by users, for example,
-	// nodes that were created from XML script).
 	nRetVal = xnNodeInfoListAllocate(&pContext->pOwnedNodes);
 	if (nRetVal != XN_STATUS_OK)
 	{
@@ -206,7 +190,7 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	}
 
 	// Initialize module loader
-	nRetVal = pContext->pModuleLoader->Init();
+	nRetVal = pContext->moduleLoader.Init();
 	if (nRetVal != XN_STATUS_OK)
 	{
 		xnContextDestroy(pContext);
@@ -229,18 +213,18 @@ XN_C_API XnStatus xnInit(XnContext** ppContext)
 	return (XN_STATUS_OK);
 }
 
-void xnFindValidName(XnContext* pContext, const XnChar* strBaseName, XnChar* strName)
+static void xnFindValidName(XnContext* pContext, const XnChar* strBaseName, XnChar* strName)
 {
 	XnUInt i = 1;
 
 	XnInternalNodeData* pNode;
 
-	while (TRUE)
+	for (;;)
 	{
 		sprintf(strName, "%s%u", strBaseName, i);
 
 		// check if name already exists
-		if (pContext->pNodesMap->Get(strName, pNode) != XN_STATUS_OK)
+		if (pContext->nodesMap.Get(strName, pNode) != XN_STATUS_OK)
 		{
 			// found it
 			break;
@@ -250,18 +234,26 @@ void xnFindValidName(XnContext* pContext, const XnChar* strBaseName, XnChar* str
 	}
 }
 
-void xnFindValidNameForType(XnContext* pContext, XnProductionNodeType Type, XnChar* strName)
+static void xnFindValidNameForType(XnContext* pContext, XnProductionNodeType Type, XnChar* strName)
 {
 	// get type string
 	const XnChar* strTypeName = xnProductionNodeTypeToString(Type);
 	xnFindValidName(pContext, strTypeName, strName);
 }
 
-void xnMarkOwnedNode(XnContext* pContext, XnNodeHandle hNode)
+static void xnMarkOwnedNode(XnContext* pContext, XnNodeHandle hNode)
 {
 	hNode->bIsOwnedByContext = TRUE;
 	xnNodeInfoListAddNode(pContext->pOwnedNodes, hNode->pNodeInfo);
 	xnProductionNodeAddRef(hNode);
+}
+
+static void xnResetVisitState(XnContext* pContext)
+{
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
+	{
+		it->Value()->bWasVisited = FALSE;
+	}
 }
 
 XN_C_API XnStatus xnContextRunXmlScriptFromFile(XnContext* pContext, const XnChar* strFileName, XnEnumerationErrors* pErrors)
@@ -433,10 +425,10 @@ XN_C_API void xnContextRelease(XnContext* pContext)
 /** Checks if a node is needed by another. */
 static XnBool xnIsNeeded(XnContext* pContext, XnNodeHandle hNode)
 {
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
 		// search all needed ones to see if one of them is what we're looking for
-		XnInternalNodeData* pData = it.Value();
+		XnInternalNodeData* pData = it->Value();
 		for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pData->pNodeInfo->pNeededTrees);
 			xnNodeInfoListIteratorIsValid(it);
 			it = xnNodeInfoListGetNext(it))
@@ -460,13 +452,13 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 
 		// we have to destroy nodes from top to bottom. So we'll go over the list, each time removing
 		// nodes that nobody needs, until the list is empty
-		while (!pContext->pNodesMap->IsEmpty())
+		while (!pContext->nodesMap.IsEmpty())
 		{
-			for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+			for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 			{
-				if (!xnIsNeeded(pContext, it.Value()))
+				if (!xnIsNeeded(pContext, it->Value()))
 				{
-					xnDestroyProductionNodeImpl(it.Value());
+					xnDestroyProductionNodeImpl(it->Value());
 					break;
 				}
 			}
@@ -476,7 +468,7 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 		{
 			// raise the shutdown event *after* all nodes have been destroyed (some nodes might call the
 			// context or other nodes when destroying)
-			pContext->pShutdownEvent->Raise(pContext);
+			pContext->shutdownEvent.Raise(pContext);
 		}
 
 		xnLoggerInfo(g_logger, "Destroying context");
@@ -484,11 +476,6 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 		xnNodeInfoListFree(pContext->pOwnedNodes);
 		xnOSCloseCriticalSection(&pContext->hLock);
 		xnOSCloseEvent(&pContext->hNewDataEvent);
-		XN_DELETE(pContext->pNodesMap);
-		XN_DELETE(pContext->pModuleLoader);
-		XN_DELETE(pContext->pLicenses);
-		XN_DELETE(pContext->pGlobalErrorChangeEvent);
-		XN_DELETE(pContext->pShutdownEvent);
 		xnFPSFree(&pContext->readFPS);
 		xnOSFree(pContext);
 
@@ -496,7 +483,7 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 	#ifdef _WIN32
 		xnOSWriteMemoryReport("C:\\xnMemProf.txt");
 	#else
-		//TODO: Something for linux
+		//TODO: Something for Linux
 	#endif
 #endif
 	}
@@ -517,7 +504,7 @@ XN_C_API XnStatus xnContextRegisterForShutdown(XnContext* pContext, XnContextShu
 	XN_VALIDATE_INPUT_PTR(pContext);
 	XN_VALIDATE_INPUT_PTR(pHandler);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
-	return pContext->pShutdownEvent->Register(pHandler, pCookie, phCallback);
+	return pContext->shutdownEvent.Register(pHandler, pCookie, *phCallback);
 }
 
 XN_C_API void xnContextUnregisterFromShutdown(XnContext* pContext, XnCallbackHandle hCallback)
@@ -530,7 +517,7 @@ XN_C_API void xnContextUnregisterFromShutdown(XnContext* pContext, XnCallbackHan
 		return;
 	}
 
-	XnStatus nRetVal = pContext->pShutdownEvent->Unregister(hCallback);
+	XnStatus nRetVal = pContext->shutdownEvent.Unregister(hCallback);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		XN_ASSERT(FALSE);
@@ -876,9 +863,9 @@ void xnMarkFPSFrame(XnContext* pContext, XnFPSData* pFPS)
 		XnUInt32 nSize = 0;
 		nSize = sprintf(strFPS, "[FPS] ");
 
-		for (XnNodesMap::ConstIterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+		for (XnNodesMap::ConstIterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 		{
-			XnInternalNodeData* pNode = it.Value();
+			XnInternalNodeData* pNode = it->Value();
 			if (pNode->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR))
 			{
 				nSize += sprintf(strFPS + nSize, "%s (I: %5.2f, O: %5.2f) ", pNode->pNodeInfo->strInstanceName, xnFPSCalc(&pNode->genFPS), xnFPSCalc(&pNode->readFPS));
@@ -1370,9 +1357,9 @@ XN_C_API XnStatus xnEnumerateProductionTrees(XnContext* pContext, XnProductionNo
 	XN_IS_STATUS_OK(nRetVal);
 
 	// first take existing ones
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
-		XnInternalNodeData* pNodeData = it.Value();
+		XnInternalNodeData* pNodeData = it->Value();
 		if (pNodeData->pNodeInfo->Description.Type == Type)
 		{
 			nRetVal = xnNodeInfoListAddNode(pResult, pNodeData->pNodeInfo);
@@ -1385,7 +1372,7 @@ XN_C_API XnStatus xnEnumerateProductionTrees(XnContext* pContext, XnProductionNo
 	}
 
 	// find exported generators
-	nRetVal = pContext->pModuleLoader->Enumerate(Type, pResult, pErrors);
+	nRetVal = pContext->moduleLoader.Enumerate(pContext, Type, pResult, pErrors);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		xnNodeInfoListFree(pResult);
@@ -1538,7 +1525,7 @@ void xnSetGlobalErrorState(XnContext* pContext, XnStatus errorState)
 		}
 
 		pContext->globalErrorState = errorState;
-		pContext->pGlobalErrorChangeEvent->Raise(errorState);
+		pContext->globalErrorChangeEvent.Raise(errorState);
 	}
 }
 
@@ -1549,10 +1536,10 @@ void XN_CALLBACK_TYPE xnNodeErrorStateChanged(XnNodeHandle hNode, void* /*pCooki
 	// check for all nodes errors
 	XnStatus errorState = XN_STATUS_OK;
 
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
 		// check this node error state
-		XnStatus nodeError = xnGetNodeErrorState(it.Value());
+		XnStatus nodeError = xnGetNodeErrorState(it->Value());
 
 		if (nodeError != XN_STATUS_OK)
 		{
@@ -1579,17 +1566,29 @@ void XN_CALLBACK_TYPE xnNodeFrameSyncChanged(XnNodeHandle hNode, void* /*pCookie
 	// check if node is frame synced with any other node
 	XnNodeHandle hFrameSyncedWith = NULL;
 
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
-		if (xnIsFrameSyncedWithImpl(hNode, it.Value()))
+		XnNodeHandle hOther = it->Value();
+		if (hNode != hOther && xnIsFrameSyncedWithImpl(hNode, hOther))
 		{
-			hFrameSyncedWith = it.Value();
+			hFrameSyncedWith = hOther;
 			// For now, we support only one frame synced object
 			break;
 		}
 	}
 	
+	// if we were previously synced with other node, remove this sync
+	if (hNode->hFrameSyncedWith != NULL)
+	{
+		hNode->hFrameSyncedWith->hFrameSyncedWith = NULL;
+	}
+
 	hNode->hFrameSyncedWith = hFrameSyncedWith;
+
+	if (hFrameSyncedWith != NULL)
+	{
+		hFrameSyncedWith->hFrameSyncedWith = hNode;
+	}
 }
 
 static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTree, XnNodeHandle* phNode)
@@ -1609,7 +1608,7 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 	xnLoggerInfo(g_logger, "Creating node '%s' of type %s...", pTree->strInstanceName, strDescription);
 
 	XnModuleInstance* pModuleInstance;
-	nRetVal = pContext->pModuleLoader->CreateRootNode(pTree, &pModuleInstance);
+	nRetVal = pContext->moduleLoader.CreateRootNode(pContext, pTree, &pModuleInstance);
 	XN_IS_STATUS_OK(nRetVal);
 
 	// create handle
@@ -1735,10 +1734,16 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 	}
 
 	// add it to the context
-	nRetVal = pContext->pNodesMap->Set(pTree->strInstanceName, pNodeData);
+	nRetVal = pContext->nodesMap.Set(pTree->strInstanceName, pNodeData);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		return xnFreeProductionNodeImpl(pNodeData, nRetVal);
+	}
+
+	// if this is a player node, store it in the context (so we'll know to play it...)
+	if (pNodeData->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_PLAYER))
+	{
+		pContext->hPlayerNode = pNodeData;
 	}
 
 	// increase info ref count (context now holds it)
@@ -1748,6 +1753,14 @@ static XnStatus xnCreateProductionNodeImpl(XnContext* pContext, XnNodeInfo* pTre
 
 	// update handle in node info
 	pTree->hNode = pNodeData;
+
+	// raise event
+	nRetVal = pContext->nodeCreationEvent.Raise(pContext, pNodeData);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnLoggerWarning(g_logger, "Failed raising the 'Node Creation' event: %s", xnGetStatusString(nRetVal));
+		XN_ASSERT(FALSE);
+	}
 
 	// return value
 	*phNode = pNodeData;
@@ -1843,11 +1856,18 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 		{
 			xnFreeSceneMetaData(hNode->pMetaData.Scene);
 		}
+		else if (hNode->pTypeHierarchy->IsSet(XN_NODE_TYPE_PLAYER))
+		{
+			// remove it from the context
+			hNode->pContext->hPlayerNode = NULL;
+
+			// TODO: We might want to check if another player exists instead (so playback can continue with that player...)
+		}
 
 		// free all registration cookies that were not unregistered
-		for (XnModuleStateCookieHash::ConstIterator it = hNode->pRegistrationCookiesHash->begin(); it != hNode->pRegistrationCookiesHash->end(); ++it)
+		for (XnModuleStateCookieHash::ConstIterator it = hNode->pRegistrationCookiesHash->Begin(); it != hNode->pRegistrationCookiesHash->End(); ++it)
 		{
-			xnOSFree(it.Key());
+			xnOSFree(it->Key());
 		}
 		XN_DELETE(hNode->pRegistrationCookiesHash);
 		XN_DELETE(hNode->pNeededNodesDataHash);
@@ -1877,6 +1897,11 @@ static XnStatus xnFreeProductionNodeImpl(XnNodeHandle hNode, XnStatus nRetVal /*
 
 void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 {
+	// keep the context
+	XnContext* pContext = hNode->pContext;
+	// keep its name
+	const XnChar* strNodeName = xnOSStrDup(hNode->pNodeInfo->strInstanceName);
+
 	xnLoggerInfo(g_logger, "Destroying node '%s'", hNode->pNodeInfo->strInstanceName);
 
 	if (hNode->pPrivateData != NULL)
@@ -1907,9 +1932,9 @@ void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 	}
 
 	// remove it from map
-	hNode->pContext->pNodesMap->Remove(hNode->pNodeInfo->strInstanceName);
+	hNode->pContext->nodesMap.Remove(hNode->pNodeInfo->strInstanceName);
 	// destroy module node
-	hNode->pContext->pModuleLoader->DestroyModuleInstance(hNode->pModuleInstance);
+	hNode->pContext->moduleLoader.DestroyModuleInstance(hNode->pModuleInstance);
 
 	// dec ref from all needed nodes
 	for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(hNode->pNodeInfo->pNeededTrees);
@@ -1923,13 +1948,19 @@ void xnDestroyProductionNodeImpl(XnNodeHandle hNode)
 	// NULL handle in info object
 	hNode->pNodeInfo->hNode = NULL;
 
-	xnDumpRefCount(hNode->pContext, hNode, 0, "Destroy");
+	xnDumpRefCount(pContext, hNode, 0, "Destroy");
+
 
 	// dec ref of info object (it was removed from context)
 	xnNodeInfoFree(hNode->pNodeInfo);
 
+	// raise event (do this before freeing the production node. It might cause context to be destroyed as well...)
+	pContext->nodeDestructionEvent.Raise(pContext, strNodeName);
+
 	// free memory
 	xnFreeProductionNodeImpl(hNode);
+
+	xnOSFree(strNodeName);
 }
 
 XN_C_API XnStatus xnProductionNodeAddRef(XnNodeHandle hNode)
@@ -1954,15 +1985,21 @@ XN_C_API XnStatus xnRefProductionNode(XnNodeHandle hNode)
 
 XN_C_API void xnProductionNodeRelease(XnNodeHandle hNode)
 {
-	XN_ASSERT(hNode != NULL);
+	if (hNode == NULL)
+	{
+		XN_ASSERT(FALSE);
+		return;
+	}
 
 	// preform this in a lock
 	XnAutoCSLocker lock(hNode->hLock);
 
 	// perform some checks
-	XN_ASSERT(hNode->nRefCount > 0);
-	if (hNode == NULL || hNode->nRefCount == 0)
+	if (hNode->nRefCount == 0)
+	{
+		XN_ASSERT(FALSE);
 		return;
+	}
 
 	// and dec ref
 	--hNode->nRefCount;
@@ -2149,8 +2186,8 @@ XN_C_API XnNodeInfo* xnGetNodeInfo(XnNodeHandle hNode)
 XN_C_API const XnChar* xnGetNodeName(XnNodeHandle hNode)
 {
 	XN_ASSERT(hNode != NULL);
-	XN_ASSERT(hNode->pNodeInfo != NULL);
 	XN_VALIDATE_PTR(hNode, NULL);
+	XN_ASSERT(hNode->pNodeInfo != NULL);
 	XN_VALIDATE_PTR(hNode->pNodeInfo, NULL);
 	return hNode->pNodeInfo->strInstanceName;
 }
@@ -2198,9 +2235,9 @@ inline void xnResetNewDataFlag(XnContext* pContext)
 {
 	XN_ASSERT(pContext != NULL);
 
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
-		XnNodeHandle hNode = it.Value();
+		XnNodeHandle hNode = it->Value();
 		// update node
 		hNode->bIsNewData = FALSE;
 		// update meta data object
@@ -2326,13 +2363,12 @@ void xnUpdateMetaDataBeforeFirstRead(XnNodeHandle hNode)
 	}
 }
 
-static XnStatus xnUpdateTreeImpl(XnProductionNodesSet* pUpdatedSet, const XnNodeInfo* pNode)
+static XnStatus xnUpdateTreeImpl(const XnNodeInfo* pNode)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
 	// check if it was already updated
-	XnValue val;
-	if (pUpdatedSet->Get(pNode, val) != XN_STATUS_OK)
+	if (!pNode->hNode->bWasVisited)
 	{
 		// not updated. start with input nodes
 		for (XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pNode->pNeededTrees);
@@ -2340,7 +2376,7 @@ static XnStatus xnUpdateTreeImpl(XnProductionNodesSet* pUpdatedSet, const XnNode
 			it = xnNodeInfoListGetNext(it))
 		{
 			XnNodeInfo* pChildInfo = xnNodeInfoListGetCurrent(it);
-			nRetVal = xnUpdateTreeImpl(pUpdatedSet, pChildInfo);
+			nRetVal = xnUpdateTreeImpl(pChildInfo);
 			XN_IS_STATUS_OK(nRetVal);
 		}
 
@@ -2361,27 +2397,37 @@ static XnStatus xnUpdateTreeImpl(XnProductionNodesSet* pUpdatedSet, const XnNode
 			XN_IS_STATUS_OK(nRetVal);
 		}
 
-		nRetVal = pUpdatedSet->Set(pNode, 0);
-		XN_IS_STATUS_OK(nRetVal);
+		pNode->hNode->bWasVisited = TRUE;
 	}
 
 	return (XN_STATUS_OK);
 }
 
-static XnStatus xnUpdateAll(XnContext* pContext)
+// Updates the entire graph (if pSubGraph is NULL), or just the sub graph starting from the pSubGraph node
+static XnStatus xnUpdateGraph(XnContext* pContext, const XnNodeInfo* pSubGraph)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
+	// mark all current nodes' data as "old"
 	xnResetNewDataFlag(pContext);
 
-	XnProductionNodesSet UpdatedSet;
+	// mark all nodes as not-visited
+	xnResetVisitState(pContext);
 
-	// update all the nodes (without waiting)
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	// now start the update (each updated node will be marked as visited)
+	if (pSubGraph != NULL)
 	{
-		XnNodeInfo* pNodeInfo = it.Value()->pNodeInfo;
-		nRetVal = xnUpdateTreeImpl(&UpdatedSet, pNodeInfo);
+		nRetVal = xnUpdateTreeImpl(pSubGraph);
 		XN_IS_STATUS_OK(nRetVal);
+	}
+	else
+	{
+		for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
+		{
+			XnNodeInfo* pNodeInfo = it->Value()->pNodeInfo;
+			nRetVal = xnUpdateTreeImpl(pNodeInfo);
+			XN_IS_STATUS_OK(nRetVal);
+		}
 	}
 
 	return (XN_STATUS_OK);
@@ -2423,9 +2469,9 @@ XnBool XN_CALLBACK_TYPE xnDidAllNodesAdvanced(void* pConditionData)
 {
 	XnContext* pContext = (XnContext*)pConditionData;
 
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
-		XnInternalNodeData* pData = it.Value();
+		XnInternalNodeData* pData = it->Value();
 		if (pData->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR) &&
 			!xnDidNodeAdvanced(pData))
 		{
@@ -2483,33 +2529,18 @@ XnStatus xnWaitForCondition(XnContext* pContext, XnConditionFunc pConditionFunc,
 
 	// check if we have players in this context
 	// TODO: handle the case in which we have more than one player
-	XnNodeHandle hPlayer = NULL;
-
-	XnNodeInfoList* pPlayersList;
-	nRetVal = xnEnumerateExistingNodesByType(pContext, XN_NODE_TYPE_PLAYER, &pPlayersList);
-	XN_IS_STATUS_OK(nRetVal);
-
-	XnNodeInfoListIterator it = xnNodeInfoListGetFirst(pPlayersList);
-	if (xnNodeInfoListIteratorIsValid(it))
-	{
-		XnNodeInfo* pPlayerInfo = xnNodeInfoListGetCurrent(it);
-		hPlayer = pPlayerInfo->hNode;
-	}
-
-	xnNodeInfoListFree(pPlayersList);
-
-	if (hPlayer != NULL)
+	if (pContext->hPlayerNode != NULL)
 	{
 		// play until condition is met
 		while (!pConditionFunc(pConditionData))
 		{
-			if (xnIsPlayerAtEOF(hPlayer))
+			if (xnIsPlayerAtEOF(pContext->hPlayerNode))
 			{
 				return XN_STATUS_EOF;
 			}
 			else
 			{
-				nRetVal = xnPlayerReadNext(hPlayer);
+				nRetVal = xnPlayerReadNext(pContext->hPlayerNode);
 				XN_IS_STATUS_OK(nRetVal);
 			}
 		}
@@ -2543,7 +2574,7 @@ XN_C_API XnStatus xnWaitAndUpdateAll(XnContext* pContext)
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now update entire tree
-	nRetVal = xnUpdateAll(pContext);
+	nRetVal = xnUpdateGraph(pContext, NULL);
 	XN_IS_STATUS_OK(nRetVal);
 	
 	return (XN_STATUS_OK);
@@ -2570,7 +2601,7 @@ XN_C_API XnStatus xnWaitOneUpdateAll(XnContext* pContext, XnNodeHandle hNode)
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now update entire tree
-	nRetVal = xnUpdateAll(pContext);
+	nRetVal = xnUpdateGraph(pContext, NULL);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -2589,7 +2620,7 @@ XN_C_API XnStatus xnWaitNoneUpdateAll(XnContext* pContext)
 	nRetVal = xnPlayRecording(pContext, TRUE);
 	XN_IS_STATUS_OK(nRetVal);
 
-	nRetVal = xnUpdateAll(pContext);
+	nRetVal = xnUpdateGraph(pContext, NULL);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -2599,9 +2630,9 @@ XnBool XN_CALLBACK_TYPE xnDidAnyNodeAdvanced(void* pConditionData)
 {
 	XnContext* pContext = (XnContext*)pConditionData;
 
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
-		XnInternalNodeData* pNode = it.Value();
+		XnInternalNodeData* pNode = it->Value();
 		if (xnDidNodeAdvanced(pNode))
 		{
 			return TRUE;
@@ -2626,7 +2657,7 @@ XN_C_API XnStatus xnWaitAnyUpdateAll(XnContext* pContext)
 	XN_IS_STATUS_OK(nRetVal);
 
 	// we have new data, now just update all
-	nRetVal = xnUpdateAll(pContext);
+	nRetVal = xnUpdateGraph(pContext, NULL);
 	XN_IS_STATUS_OK(nRetVal);
 	
 	return (XN_STATUS_OK);
@@ -2646,10 +2677,7 @@ XN_C_API XnStatus xnWaitAndUpdateData(XnNodeHandle hInstance)
 	nRetVal = xnWaitForCondition(hInstance->pContext, xnDidNodeAdvanced, hInstance);
 	XN_IS_STATUS_OK(nRetVal);
 
-	xnResetNewDataFlag(hInstance->pContext);
-
-	XnProductionNodesSet UpdatedNodes;
-	nRetVal = xnUpdateTreeImpl(&UpdatedNodes, hInstance->pNodeInfo);
+	nRetVal = xnUpdateGraph(hInstance->pContext, hInstance->pNodeInfo);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -2686,9 +2714,9 @@ XN_C_API XnStatus xnStartGeneratingAll(XnContext* pContext)
 	
 	XN_VALIDATE_INPUT_PTR(pContext);
 		
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
-		XnInternalNodeData* pData = it.Value();
+		XnInternalNodeData* pData = it->Value();
 		nRetVal = xnStartGeneratingTreeImpl(pData->pNodeInfo);
 		XN_IS_STATUS_OK(nRetVal);
 	}
@@ -2702,12 +2730,12 @@ XN_C_API XnStatus xnStopGeneratingAll(XnContext* pContext)
 	
 	XN_VALIDATE_INPUT_PTR(pContext);
 
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
 		// if this is a generator, stop it
-		if (it.Value()->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR))
+		if (it->Value()->pModuleInstance->pLoaded->pInterface->HierarchyType.IsSet(XN_NODE_TYPE_GENERATOR))
 		{
-			XnInternalNodeData* pData = it.Value();
+			XnInternalNodeData* pData = it->Value();
 			nRetVal = xnStopGenerating(pData);
 			XN_IS_STATUS_OK(nRetVal);
 		}
@@ -2722,10 +2750,10 @@ XN_C_API XnStatus xnSetGlobalMirror(XnContext* pContext, XnBool bMirror)
 	
 	XN_VALIDATE_INPUT_PTR(pContext);
 
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
 		// if it supports mirror capability, set it
-		XnInternalNodeData* pData = it.Value();
+		XnInternalNodeData* pData = it->Value();
 		if (xnIsCapabilitySupported(pData, XN_CAPABILITY_MIRROR))
 		{
 			nRetVal = xnSetMirror(pData, bMirror);
@@ -2757,7 +2785,7 @@ XN_C_API XnStatus xnRegisterToGlobalErrorStateChange(XnContext* pContext, XnErro
 	XN_VALIDATE_INPUT_PTR(handler);
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 
-	nRetVal = pContext->pGlobalErrorChangeEvent->Register(handler, pCookie, phCallback);
+	nRetVal = pContext->globalErrorChangeEvent.Register(handler, pCookie, *phCallback);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -2768,7 +2796,51 @@ XN_C_API void xnUnregisterFromGlobalErrorStateChange(XnContext* pContext, XnCall
 	XN_ASSERT(pContext != NULL);
 	XN_ASSERT(hCallback != NULL);
 
-	pContext->pGlobalErrorChangeEvent->Unregister(hCallback);
+	pContext->globalErrorChangeEvent.Unregister(hCallback);
+}
+
+XN_C_API XnStatus XN_C_DECL xnRegisterToNodeCreation(XnContext* pContext, XnNodeCreationHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XN_VALIDATE_INPUT_PTR(pContext);
+	XN_VALIDATE_INPUT_PTR(handler);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+
+	nRetVal = pContext->nodeCreationEvent.Register(handler, pCookie, *phCallback);
+	XN_IS_STATUS_OK(nRetVal);
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API void XN_C_DECL xnUnregisterFromNodeCreation(XnContext* pContext, XnCallbackHandle hCallback)
+{
+	XN_ASSERT(pContext != NULL);
+	XN_ASSERT(hCallback != NULL);
+
+	pContext->nodeCreationEvent.Unregister(hCallback);
+}
+
+XN_C_API XnStatus XN_C_DECL xnRegisterToNodeDestruction(XnContext* pContext, XnNodeDestructionHandler handler, void* pCookie, XnCallbackHandle* phCallback)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XN_VALIDATE_INPUT_PTR(pContext);
+	XN_VALIDATE_INPUT_PTR(handler);
+	XN_VALIDATE_OUTPUT_PTR(phCallback);
+
+	nRetVal = pContext->nodeDestructionEvent.Register(handler, pCookie, *phCallback);
+	XN_IS_STATUS_OK(nRetVal);
+
+	return (XN_STATUS_OK);
+}
+
+XN_C_API void XN_C_DECL xnUnregisterFromNodeDestruction(XnContext* pContext, XnCallbackHandle hCallback)
+{
+	XN_ASSERT(pContext != NULL);
+	XN_ASSERT(hCallback != NULL);
+
+	pContext->nodeDestructionEvent.Unregister(hCallback);
 }
 
 XN_C_API XnStatus xnGetNodeHandleByName(XnContext* pContext, const XnChar* strInstanceName, XnNodeHandle* phNode)
@@ -2795,7 +2867,7 @@ XN_C_API XnStatus xnGetRefNodeHandleByName(XnContext* pContext, const XnChar* st
 	*phNode = NULL;
 
 	XnNodeHandle hNode;
-	nRetVal = pContext->pNodesMap->Get(strInstanceName, hNode);
+	nRetVal = pContext->nodesMap.Get(strInstanceName, hNode);
 	if (nRetVal == XN_STATUS_NO_MATCH)
 	{
 		return XN_STATUS_BAD_NODE_NAME;
@@ -2820,9 +2892,9 @@ static XnStatus xnEnumerateExistingNodesImpl(XnContext* pContext, XnNodeInfoList
 	nRetVal = xnNodeInfoListAllocate(&pResult);
 	XN_IS_STATUS_OK(nRetVal);
 
-	for (XnNodesMap::Iterator it = pContext->pNodesMap->begin(); it != pContext->pNodesMap->end(); ++it)
+	for (XnNodesMap::Iterator it = pContext->nodesMap.Begin(); it != pContext->nodesMap.End(); ++it)
 	{
-		XnNodeInfo* pCurrInfo = it.Value()->pNodeInfo;
+		XnNodeInfo* pCurrInfo = it->Value()->pNodeInfo;
 		if (pType == NULL ||
 			*pType == pCurrInfo->Description.Type)
 		{
@@ -6469,7 +6541,6 @@ XN_C_API XnStatus xnRegisterToOutOfPose(XnNodeHandle hInstance, XnPoseDetectionC
 	XN_VALIDATE_OUTPUT_PTR(phCallback);
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR(pInterface->PoseDetection.RegisterToOutOfPose);
 
 	PoseDetectionCookie* pPoseCookie;
 	XN_VALIDATE_ALLOC(pPoseCookie, PoseDetectionCookie);
@@ -6504,7 +6575,6 @@ XN_C_API void xnUnregisterFromOutOfPose(XnNodeHandle hInstance, XnCallbackHandle
 	XN_VALIDATE_INTERFACE_TYPE_RET(hInstance, XN_NODE_TYPE_USER, );
 	XnUserGeneratorInterfaceContainer* pInterface = (XnUserGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
 	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
-	XN_VALIDATE_FUNC_PTR_RET(pInterface->PoseDetection.UnregisterFromOutOfPose, );
 
 	PoseDetectionCookie* pPoseCookie = (PoseDetectionCookie*)hCallback;
 	if (pInterface->PoseDetection.UnregisterFromOutOfPose != NULL)

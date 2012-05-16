@@ -54,13 +54,10 @@ typedef struct xnOSSocket
 //---------------------------------------------------------------------------
 XN_C_API XnStatus xnOSInitNetwork()
 {
-	// Local function variables
-	XnInt32 nRetVal = 0;
-		
 	// Initialize the WinSock 2.2 subsystem (if needed) and make sure it succeeded (return value is 0)
 	if (g_xnOSNetworkWasInit == FALSE)
 	{
-		nRetVal = WSAStartup(MAKEWORD(2,2), &g_xnOSNetworkWSAData);
+		XnInt32 nRetVal = WSAStartup(MAKEWORD(2,2), &g_xnOSNetworkWSAData);
 		if (nRetVal != NO_ERROR)
 		{
 			return(XN_STATUS_OS_NETWORK_INIT_FAILED);
@@ -76,14 +73,11 @@ XN_C_API XnStatus xnOSInitNetwork()
 
 XN_C_API XnStatus xnOSShutdownNetwork()
 {
-	// Local function variables
-	XnInt32 nRetVal = 0;
-
 	// Was the network subsystem initialized?
 	if (g_xnOSNetworkWasInit == TRUE)
 	{
 		// Cleanup the WinSock 2.2 subsystem and make sure it succeeded (return value is 0)
-		nRetVal = WSACleanup();
+		XnInt32 nRetVal = WSACleanup();
 		if (nRetVal == SOCKET_ERROR)
 		{
 			return(XN_STATUS_OS_NETWORK_SHUTDOWN_FAILED);
@@ -262,8 +256,11 @@ XN_C_API XnStatus xnOSAcceptSocket(XN_SOCKET_HANDLE ListenSocket, XN_SOCKET_HAND
 	XN_RET_IF_NULL(ListenSocket->Socket, XN_STATUS_OS_INVALID_SOCKET);
 
 	// Wait for connection request
+	XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_CONDITION_IS_CONST_WARNING_ID);
 	FD_ZERO(&fdReadHandles);
 	FD_SET(ListenSocket->Socket, &fdReadHandles);
+	XN_PRAGMA_STOP_DISABLED_WARNING_SECTION;
+
 	nRetVal = select(1 /* ignored */, &fdReadHandles, NULL, NULL, pTimeout);
 	if (nRetVal == 0)
 	{
@@ -310,11 +307,6 @@ XN_C_API XnStatus xnOSConnectSocket(XN_SOCKET_HANDLE Socket, XnUInt32 nMillisecs
 	XN_RET_IF_NULL(Socket->Socket, XN_STATUS_OS_INVALID_SOCKET);
 
 	// Connect to the socket and make sure it succeeded
-	if (sizeof(SocketAddress) != sizeof(Socket->SocketAddress))
-	{
-		return(XN_STATUS_OS_NETWORK_SOCKET_CONNECT_FAILED);
-	}
-
 	xnOSMemCopy(&SocketAddress, &Socket->SocketAddress, sizeof(SocketAddress));
 
 	// if timeout is XN_SOCKET_DEFAULT_TIMEOUT, leave the socket as a blocking one
@@ -337,10 +329,13 @@ XN_C_API XnStatus xnOSConnectSocket(XN_SOCKET_HANDLE Socket, XnUInt32 nMillisecs
 
 	if (nMillisecsTimeout != XN_SOCKET_DEFAULT_TIMEOUT)
 	{
+		XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_CONDITION_IS_CONST_WARNING_ID);
 		FD_ZERO(&fdWriteHandles);
 		FD_SET(Socket->Socket, &fdWriteHandles);
 		FD_ZERO(&fdExceptHandles);
 		FD_SET(Socket->Socket, &fdExceptHandles);
+		XN_PRAGMA_STOP_DISABLED_WARNING_SECTION;
+
 		nRetVal = select(1 /* ignored */, NULL, &fdWriteHandles, &fdExceptHandles, pTimeout);
 
 		// in any case, make the socket blocking again before we check select()'s success
@@ -467,8 +462,11 @@ XN_C_API XnStatus xnOSReceiveNetworkBuffer(XN_SOCKET_HANDLE Socket, XnChar* cpBu
 	// Make sure the actual socket handle isn't NULL
 	XN_RET_IF_NULL(Socket->Socket, XN_STATUS_OS_INVALID_SOCKET);
 
+	XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_CONDITION_IS_CONST_WARNING_ID);
 	FD_ZERO(&fdReadHandles);
 	FD_SET(Socket->Socket, &fdReadHandles);
+	XN_PRAGMA_STOP_DISABLED_WARNING_SECTION;
+
 	nRetVal = select(1 /* ignored */, &fdReadHandles, NULL, NULL, pTimeout);
 	if (nRetVal == 0)
 	{

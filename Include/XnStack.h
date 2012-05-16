@@ -112,6 +112,8 @@ public:
 	}
 
 private:
+	XN_DISABLE_COPY_AND_ASSIGN(XnStack);
+
 	/** The internal XnList with which the stack is implemented. */
 	XnList m_List;
 };

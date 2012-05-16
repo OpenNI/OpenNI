@@ -54,7 +54,7 @@ XnBool fileExists(const char *fn)
 }
 
 // Callback: New user was detected
-void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& /*generator*/, XnUserID nId, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
@@ -70,14 +70,14 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
     }
 }
 // Callback: An existing user was lost
-void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& /*generator*/, XnUserID nId, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
     printf("%d Lost user %d\n", epochTime, nId);	
 }
 // Callback: Detected a pose
-void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nId, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
@@ -86,14 +86,14 @@ void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& capabil
     g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, TRUE);
 }
 // Callback: Started calibration
-void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& /*capability*/, XnUserID nId, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
     printf("%d Calibration started for user %d\n", epochTime, nId);
 }
 
-void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& capability, XnUserID nId, XnCalibrationStatus eStatus, void* pCookie)
+void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& /*capability*/, XnUserID nId, XnCalibrationStatus eStatus, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
@@ -131,7 +131,7 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability
     return nRetVal;						    \
 }
 
-int main(int argc, char **argv)
+int main()
 {
     XnStatus nRetVal = XN_STATUS_OK;
     xn::EnumerationErrors errors;
@@ -209,15 +209,13 @@ int main(int argc, char **argv)
     {
         printf("Assume calibration pose\n");
     }
-    XnUInt32 epochTime = 0;
-    while (!xnOSWasKeyboardHit())
+
+	while (!xnOSWasKeyboardHit())
     {
         g_Context.WaitOneUpdateAll(g_UserGenerator);
         // print the torso information for the first user already tracking
         nUsers=MAX_NUM_USERS;
         g_UserGenerator.GetUsers(aUsers, nUsers);
-        int numTracked=0;
-        int userToPrint=-1;
         for(XnUInt16 i=0; i<nUsers; i++)
         {
             if(g_UserGenerator.GetSkeletonCap().IsTracking(aUsers[i])==FALSE)

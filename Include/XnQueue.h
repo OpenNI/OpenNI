@@ -124,6 +124,8 @@ public:
 	}
 
 private:
+	XN_DISABLE_COPY_AND_ASSIGN(XnQueue);
+
 	/** The internal XnList with which the queue is implemented. */
 	XnList m_List;
 };
@@ -137,6 +139,7 @@ private:
 	class decl ClassName : public base													\
 	{																					\
 	public:																				\
+		ClassName() {}																	\
 		~ClassName()																	\
 		{																				\
 			/* We do this using Pop() to make sure memory is freed. */					\
@@ -166,6 +169,8 @@ private:
 		}																				\
 		inline Type const& Top() const { return Translator::GetFromValue(base::Top()); }\
 		inline Type& Top() { return Translator::GetFromValue(base::Top()); }			\
+	private:																			\
+		XN_DISABLE_COPY_AND_ASSIGN(ClassName);											\
 	};
 
 /**

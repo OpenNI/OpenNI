@@ -57,7 +57,7 @@
 
 using namespace xn;
 
-int main(int argc, char* argv[])
+int main()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	nRetVal = xnLogInitFromXmlFile(SAMPLE_XML_PATH);
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 	{
 		for (XnUInt32 j = 0; j < 20; j++)
 		{
-			buff[j] = i;
+			buff[j] = (XnChar)i;
 		}
 
 		printf("Recording frame %d/10...\r", i);

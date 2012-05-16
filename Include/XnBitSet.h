@@ -102,6 +102,12 @@ public:
 		return m_array.GetData();
 	}
 
+	/** @returns size in bytes of this bitset. **/
+	XnUInt32 GetDataSize() const
+	{
+		return m_array.GetSize();
+	}
+
 	/** @returns size in bits of this bitset. **/
 	XnUInt32 GetSize() const
 	{

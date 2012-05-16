@@ -34,7 +34,7 @@ void ExportedRotatingDevice::GetDescription( XnProductionNodeDescription* pDescr
 	pDescription->Version.nBuild = XN_BUILD_VERSION;
 }
 
-XnStatus ExportedRotatingDevice::EnumerateProductionTrees( xn::Context& context, xn::NodeInfoList& TreesList, xn::EnumerationErrors* pErrors )
+XnStatus ExportedRotatingDevice::EnumerateProductionTrees( xn::Context& /*context*/, xn::NodeInfoList& TreesList, xn::EnumerationErrors* /*pErrors*/ )
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -48,10 +48,8 @@ XnStatus ExportedRotatingDevice::EnumerateProductionTrees( xn::Context& context,
 	return (XN_STATUS_OK);
 }
 
-XnStatus ExportedRotatingDevice::Create( xn::Context& context, const XnChar* strInstanceName, const XnChar* strCreationInfo, xn::NodeInfoList* pNeededTrees, const XnChar* strConfigurationDir, xn::ModuleProductionNode** ppInstance )
+XnStatus ExportedRotatingDevice::Create( xn::Context& /*context*/, const XnChar* /*strInstanceName*/, const XnChar* /*strCreationInfo*/, xn::NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, xn::ModuleProductionNode** ppInstance )
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	SampleRotatingDevice* pDepth = new SampleRotatingDevice();
 
 	*ppInstance = pDepth;

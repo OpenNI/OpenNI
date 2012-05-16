@@ -32,7 +32,7 @@
 // Includes
 //---------------------------------------------------------------------------
 #include "XnModuleInterface.h"
-#include "XnList.h"
+#include "XnListT.h"
 #include "XnCppWrapper.h"
 
 //---------------------------------------------------------------------------
@@ -40,7 +40,7 @@
 //---------------------------------------------------------------------------
 namespace xn
 {
-	XN_DECLARE_LIST(XnModuleGetExportedInterfacePtr, ExportedNodesList);
+	typedef XnListT<XnModuleGetExportedInterfacePtr> ExportedNodesList;
 
 	class ModuleProductionNode;
 
@@ -65,8 +65,8 @@ namespace xn
 			}																
 
 			XnUInt32 i = 0;												
-			for (ExportedNodesList::ConstIterator it = m_ExportedNodes.begin();			
-				it != m_ExportedNodes.end();											
+			for (ExportedNodesList::ConstIterator it = m_ExportedNodes.Begin();			
+				it != m_ExportedNodes.End();											
 				++it, ++i)													
 			{																
 				aEntryPoints[i] = *it;										

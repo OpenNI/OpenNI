@@ -33,6 +33,8 @@
 #include <errno.h>
 #include <XnLog.h>
 #include <XnOSCpp.h>
+#include <XnDump.h>
+#include <aio.h>
 
 //---------------------------------------------------------------------------
 // Defines
@@ -44,6 +46,8 @@
 #define XN_USB_DEVICE_ENDPOINT_MAX_COUNT 16
 #define XN_USB_CONTROL_TIMEOUT 5000
 #define XN_USB_WRITE_DATA_TIMEOUT 2000
+#define XN_USB_MAX_WRITE_BUFFER_MULTIPLIER 100
+#define XN_USB_MAX_WRITE_TX 20
 
 //---------------------------------------------------------------------------
 // Macros
@@ -80,6 +84,21 @@ typedef enum
 	HOST_CONTROL_WAITING_FOR_REPLY,
 } HostControlState;
 
+typedef struct XnUSBDeviceEndpointWriteTx
+{
+	struct aiocb cb;
+	XnUChar* pBuffer;
+} XnUSBDeviceEndpointWriteTx;
+
+typedef struct XnUSBDeviceEndpoint
+{
+	int fd;
+	XnUSBDeviceEndpointWriteTx txs[XN_USB_MAX_WRITE_TX];
+	XnUInt32 nFirst;
+	XnUInt32 nQueued;
+	XnUInt32 nBufferSize;
+} XnUSBDeviceEndpoint;
+
 struct XnUSBDevice
 {
 	const XnUSBDeviceDescriptorHolder* pDescriptors;
@@ -88,13 +107,13 @@ struct XnUSBDevice
 	XN_THREAD_HANDLE hThread;
 	XN_CRITICAL_SECTION_HANDLE hLock;
 	XN_EVENT_HANDLE hReplyEvent;
-	XnBool bConnected;
+	XnUSBDeviceConnectionState connectionState;
 	enum usb_device_speed speed;
 	XnUInt32 nControlMessageMaxSize;
 	XnUInt8 nConfigID;
 	XnUInt8 nInterfaceID;
 	XnUInt8 nAltInterfaceID;
-	int endpointsFDs[XN_USB_DEVICE_ENDPOINT_MAX_COUNT];
+	XnUSBDeviceEndpoint endpoints[XN_USB_DEVICE_ENDPOINT_MAX_COUNT];
 
 	// all control members should be accessed with a lock. They can be modified either from the user thread
 	// or the ep0 thread.
@@ -104,7 +123,35 @@ struct XnUSBDevice
 	XnUInt32 nControlSize;
 	XnUSBDeviceNewControlRequestCallback pNewControlRequestCallback;
 	void* pNewControlRequestCallbackCookie;
+	XnUSBDeviceConnectivityChangedCallback pConnectivityChangedCallback;
+	void* pConnectivityChangedCallbackCookie;
+	XnDumpFile* pDump;
 };
+
+//---------------------------------------------------------------------------
+// Utilities
+//---------------------------------------------------------------------------
+const XnChar* GetDeviceStateName(DeviceControlState state)
+{
+	static const XnChar* aNames[] = { "Clear", "RequestReceived", "RequestRead", "ReplyReady" };
+	return aNames[state];
+}
+
+const XnChar* GetHostStateName(HostControlState state)
+{
+	static const XnChar* aNames[] = { "Clear", "RequestReceived", "WaitingForReply" };
+	return aNames[state];
+}
+
+void SetConnectivityState(XnUSBDevice* pDevice, XnUSBDeviceConnectionState state)
+{
+	XnAutoCSLocker locker(pDevice->hLock);
+	pDevice->connectionState = state;
+	if (pDevice->pConnectivityChangedCallback != NULL)
+	{
+		pDevice->pConnectivityChangedCallback(pDevice, state, pDevice->pConnectivityChangedCallbackCookie);
+	}
+}
 
 //---------------------------------------------------------------------------
 // Configuring GadgetFS Device
@@ -173,6 +220,8 @@ static XnStatus buildGadgetFSDescriptors(const XnUSBDeviceDescriptorHolder* pDes
 	
 	// write device
 	WRITE_OBJ_TO_BUF(buf, pDescriptors->descriptor);
+    
+    return nRetVal;
 }
 
 //---------------------------------------------------------------------------
@@ -197,6 +246,7 @@ static int openEndpointFile(struct usb_endpoint_descriptor* pDesc)
 	
 	// now we should write the full-speed descriptor. Take high-speed one and reduce speed
 	struct usb_endpoint_descriptor* pFSDesc = (struct usb_endpoint_descriptor*)buf;
+
 	WRITE_TO_BUF(buf, pDesc, USB_DT_ENDPOINT_SIZE);
 	
 	// now write the real one (high-speed)
@@ -218,10 +268,15 @@ static XnBool configureEndpoints(XnUSBDevice* pDevice, int nConfigID)
 	// first of all, we need to close all previous open endpoints
 	for (int i = 0; i < XN_USB_DEVICE_ENDPOINT_MAX_COUNT; ++i)
 	{
-		if (pDevice->endpointsFDs[i] != -1)
+		if (pDevice->endpoints[i].fd != -1)
 		{
-			close(pDevice->endpointsFDs[i]);
-			pDevice->endpointsFDs[i] = -1;
+			close(pDevice->endpoints[i].fd);
+			pDevice->endpoints[i].fd = -1;
+
+			for (int j = 0; j < XN_USB_MAX_WRITE_TX; ++j)
+			{
+				xnOSFreeAligned(pDevice->endpoints[i].txs[j].pBuffer);
+			}
 		}
 	}
 	
@@ -231,15 +286,29 @@ static XnBool configureEndpoints(XnUSBDevice* pDevice, int nConfigID)
 		return TRUE;
 	}
 
-	// open endpoint files
 	XnUSBInterfaceDescriptorHolder* pInterface = pDevice->pDescriptors->aConfigurations[0]->aInterfaces[0];
 	for (int i = 0; i < pInterface->descriptor.bNumEndpoints; ++i)
 	{
+		// open endpoint file
 		__u8 nAddress = pInterface->aEndpoints[i]->bEndpointAddress & 0xF;
-		pDevice->endpointsFDs[nAddress] = openEndpointFile(pInterface->aEndpoints[i]);
-		if (pDevice->endpointsFDs[nAddress] == -1)
+		pDevice->endpoints[nAddress].fd = openEndpointFile(pInterface->aEndpoints[i]);
+		if (pDevice->endpoints[nAddress].fd == -1)
 		{
 			return FALSE;
+		}
+
+		xnOSMemSet(pDevice->endpoints[nAddress].txs, 0, sizeof(pDevice->endpoints[nAddress].txs));
+
+		pDevice->endpoints[nAddress].nBufferSize = pInterface->aEndpoints[i]->wMaxPacketSize * XN_USB_MAX_WRITE_BUFFER_MULTIPLIER;
+
+		// create write buffers
+		for (int j = 0; j < XN_USB_MAX_WRITE_TX; ++j)
+		{
+			pDevice->endpoints[nAddress].txs[j].pBuffer = (XnUChar*)xnOSMallocAligned(pDevice->endpoints[nAddress].nBufferSize, XN_DEFAULT_MEM_ALIGN);
+			if (pDevice->endpoints[nAddress].txs[j].pBuffer == NULL)
+			{
+				return FALSE;
+			}
 		}
 	}
 	
@@ -547,13 +616,14 @@ XN_THREAD_PROC xnUSBDeviceEndPoint0Handler(XN_THREAD_PARAM pThreadParam)
 			break;
 		case GADGETFS_CONNECT:
 			pDevice->speed = event.u.speed;
-			pDevice->bConnected = TRUE;
+			SetConnectivityState(pDevice, XN_USB_DEVICE_CONNECTED);
 			break;
 		case GADGETFS_DISCONNECT:
 			pDevice->speed = USB_SPEED_UNKNOWN;
-			pDevice->bConnected = FALSE;
+			SetConnectivityState(pDevice, XN_USB_DEVICE_DISCONNECTED);
 			break;
 		case GADGETFS_SUSPEND:
+			SetConnectivityState(pDevice, XN_USB_DEVICE_SUSPENDED);
 			break;
 		case GADGETFS_SETUP:
 			// setup stage
@@ -634,7 +704,7 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceInit(const XnUSBDeviceDescriptorHolder* p
 	pDevice->deviceFD = device_fd;
 	for (int i = 0; i < XN_USB_DEVICE_ENDPOINT_MAX_COUNT; ++i)
 	{
-		pDevice->endpointsFDs[i] = -1;
+		pDevice->endpoints[i].fd = -1;
 	}
 	pDevice->nControlMessageMaxSize = nControlMessageMaxSize;
 	pDevice->pDescriptors = pDescriptors;
@@ -670,6 +740,9 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceInit(const XnUSBDeviceDescriptorHolder* p
 		xnUSBDeviceShutdown(pDevice);
 		return (nRetVal);
 	}
+
+	pDevice->pDump = xnDumpFileOpen("Gadget", "gadget.csv");
+	xnDumpFileWriteString(pDevice->pDump, "Time,HostState,DeviceState,Event,NewHostState,NewDeviceState\n","");
 	
 	*ppDevice = pDevice;
 	return XN_STATUS_OK;
@@ -736,7 +809,11 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceReceiveControlRequest(XnUSBDevice* pDevic
 	XN_VALIDATE_OUTPUT_PTR(pnRequestSize);
 	
 	XnAutoCSLocker locker(pDevice->hLock);
-	
+
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
+	xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,DeviceReadRequest,%s,%s\n", nNow, GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(pDevice->eDeviceControlState), GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(DEVICE_CONTROL_REQUEST_READ));
+
 	if (pDevice->eDeviceControlState != DEVICE_CONTROL_REQUEST_RECEIVED)
 	{
 		return XN_STATUS_USB_NO_REQUEST_PENDING;
@@ -762,11 +839,21 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceSendControlReply(XnUSBDevice* pDevice, co
 	XN_VALIDATE_INPUT_PTR(pBuffer);
 	
 	XnAutoCSLocker locker(pDevice->hLock);
+
+	HostControlState prevHost = pDevice->eHostControlState;
+	DeviceControlState prevDevice = pDevice->eDeviceControlState;
+
+	XnUInt64 nNow;
+	xnOSGetHighResTimeStamp(&nNow);
 	
-	if (pDevice->eDeviceControlState != DEVICE_CONTROL_REQUEST_READ)
+	if (pDevice->nControlSize != 0 || pDevice->eDeviceControlState != DEVICE_CONTROL_REPLY_READY)
 	{
-		xnLogError(XN_MASK_OS, "Device requested to send reply, but no request was received!");
-		return XN_STATUS_USB_NO_REQUEST_PENDING;
+		if (pDevice->eDeviceControlState != DEVICE_CONTROL_REQUEST_READ)
+		{
+			xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,DeviceSentReply,,,Device requested to send reply, but no request was received!\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice));
+			xnLogError(XN_MASK_OS, "Device requested to send reply, but no request was received!");
+			return XN_STATUS_USB_NO_REQUEST_PENDING;
+		}
 	}
 	
 	switch (pDevice->eHostControlState)
@@ -781,9 +868,20 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceSendControlReply(XnUSBDevice* pDevice, co
 				return XN_STATUS_USB_CONTROL_SEND_FAILED;
 			}
 
-			pDevice->eDeviceControlState = DEVICE_CONTROL_CLEAR;
-			pDevice->eHostControlState = HOST_CONTROL_CLEAR;
-			
+			if (nReplySize > 0)
+			{
+				pDevice->eDeviceControlState = DEVICE_CONTROL_CLEAR;
+				pDevice->eHostControlState = HOST_CONTROL_CLEAR;
+				xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,DeviceSentReply,%s,%s\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice), GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(pDevice->eDeviceControlState));
+			}
+			else
+			{
+				// fake response
+				pDevice->eDeviceControlState = DEVICE_CONTROL_REQUEST_READ;
+				pDevice->eHostControlState = HOST_CONTROL_REQUEST_RECEIVED;
+				xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,DeviceSentEmptyReply,%s,%s\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice), GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(pDevice->eDeviceControlState));
+			}
+
 			nRetVal = xnOSSetEvent(pDevice->hReplyEvent);
 			if (nRetVal != XN_STATUS_OK)
 			{
@@ -799,9 +897,11 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceSendControlReply(XnUSBDevice* pDevice, co
 			xnOSMemCopy(pDevice->pControlBuffer, pBuffer, nReplySize);
 			pDevice->nControlSize = nReplySize;
 			pDevice->eDeviceControlState = DEVICE_CONTROL_REPLY_READY;
+			xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,DeviceSentReply,%s,%s\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice), GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(pDevice->eDeviceControlState));
 			break;
 		}
 	default:
+		xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,DeviceSentReply,BAD-STATE\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice));
 		xnLogError(XN_MASK_OS, "Bad host state: %d", pDevice->eHostControlState);
 		return XN_STATUS_USB_NO_REQUEST_PENDING;
 	}
@@ -862,6 +962,10 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 		pDevice->eDeviceControlState = DEVICE_CONTROL_REQUEST_RECEIVED;
 		pDevice->eHostControlState = HOST_CONTROL_REQUEST_RECEIVED;
 
+		XnUInt64 nNow;
+		xnOSGetHighResTimeStamp(&nNow);
+		xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,HostOut,%s,%s\n", nNow, GetHostStateName(HOST_CONTROL_CLEAR), GetDeviceStateName(DEVICE_CONTROL_CLEAR), GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(pDevice->eDeviceControlState));
+
 		// raise callback
 		if (pDevice->pNewControlRequestCallback != NULL)
 		{
@@ -872,9 +976,16 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 	{
 		// host requests to read.
 		XnAutoCSLocker locker(pDevice->hLock);
+
+		HostControlState prevHost = pDevice->eHostControlState;
+		DeviceControlState prevDevice = pDevice->eDeviceControlState;
+
+		XnUInt64 nNow;
+		xnOSGetHighResTimeStamp(&nNow);
 		
 		if (pDevice->eHostControlState != HOST_CONTROL_REQUEST_RECEIVED)
 		{
+			xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,HostIn,,,Host asks for reply, but no request was received!\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice));
 			xnLogError(XN_MASK_OS, "Host asks for reply, but no request was received!");
 			return FALSE;
 		}
@@ -889,8 +1000,21 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 				{
 					return FALSE;
 				}
-				pDevice->eDeviceControlState = DEVICE_CONTROL_CLEAR;
-				pDevice->eHostControlState = HOST_CONTROL_CLEAR;
+
+				if (pDevice->nControlSize > 0)
+				{
+					pDevice->eDeviceControlState = DEVICE_CONTROL_CLEAR;
+					pDevice->eHostControlState = HOST_CONTROL_CLEAR;
+					xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,HostIn,%s,%s\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice), GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(pDevice->eDeviceControlState));
+				}
+				else
+				{
+					// fake response
+					pDevice->eDeviceControlState = DEVICE_CONTROL_REQUEST_READ;
+					pDevice->eHostControlState = HOST_CONTROL_REQUEST_RECEIVED;
+					xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,HostIn-EmptyReply,%s,%s\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice), GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(pDevice->eDeviceControlState));
+				}
+
 				break;
 			}
 		case DEVICE_CONTROL_REQUEST_RECEIVED:
@@ -899,14 +1023,14 @@ static XnBool handleVendorControl(XnUSBDevice* pDevice, struct usb_ctrlrequest *
 				// no reply yet. mark that we got the in control
 				pDevice->eHostControlState = HOST_CONTROL_WAITING_FOR_REPLY;
 
+				xnDumpFileWriteString(pDevice->pDump, "%llu,%s,%s,HostIn-Waiting,%s,%s\n", nNow, GetHostStateName(prevHost), GetDeviceStateName(prevDevice), GetHostStateName(pDevice->eHostControlState), GetDeviceStateName(pDevice->eDeviceControlState));
+
 				// we must not read any more events until a reply is made. Wait.
 				locker.Unlock();
 				if (xnOSWaitEvent(pDevice->hReplyEvent, XN_USB_CONTROL_TIMEOUT) == XN_STATUS_OS_EVENT_TIMEOUT)
 				{
 					xnLogError(XN_MASK_OS, "control command did not finish in %u milliseconds!", XN_USB_CONTROL_TIMEOUT);
-					// clear request (it was timed out)
-					pDevice->eHostControlState = HOST_CONTROL_CLEAR;
-					pDevice->eDeviceControlState = DEVICE_CONTROL_CLEAR;
+					pDevice->eHostControlState = HOST_CONTROL_REQUEST_RECEIVED;
 					return FALSE;
 				}
 
@@ -936,11 +1060,23 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceSetNewControlRequestCallback(XnUSBDevice*
 	return XN_STATUS_OK;
 }
 
+XN_C_API XnStatus XN_C_DECL xnUSBDeviceSetConnectivityChangedCallback(XnUSBDevice* pDevice, XnUSBDeviceConnectivityChangedCallback pFunc, void* pCookie)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+	
+	XN_VALIDATE_INPUT_PTR(pDevice);
+	
+	XnAutoCSLocker locker(pDevice->hLock);
+	
+	pDevice->pConnectivityChangedCallback = pFunc;
+	pDevice->pConnectivityChangedCallbackCookie = pCookie;
+	
+	return XN_STATUS_OK;
+}
+
 //---------------------------------------------------------------------------
 // Writing Data
 //---------------------------------------------------------------------------
-
-#include <aio.h>
 
 XN_C_API XnStatus XN_C_DECL xnUSBDeviceWriteEndpoint(XnUSBDevice* pDevice, XnUInt8 nEndpointID, const XnUChar* pData, XnUInt32 nDataSize)
 {
@@ -957,12 +1093,43 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceWriteEndpoint(XnUSBDevice* pDevice, XnUIn
 	}
 
 	__u8 nIndex = nEndpointID & 0x0F;
-	
-	// Do the write in asynch IO (otherwise if no client is reading, it will block forever)
-	struct aiocb cb;
+
+	// clear ended txs
+	while (pDevice->endpoints[nIndex].nQueued > 0)
+	{
+		XnUInt32 iTx = pDevice->endpoints[nIndex].nFirst;
+		int status = aio_error(&pDevice->endpoints[nIndex].txs[iTx].cb);
+		if (status == EINPROGRESS)
+		{
+			break;
+		}
+
+		aio_return(&pDevice->endpoints[nIndex].txs[iTx].cb);
+		pDevice->endpoints[nIndex].nFirst = (pDevice->endpoints[nIndex].nFirst + 1) % XN_USB_MAX_WRITE_TX;
+		pDevice->endpoints[nIndex].nQueued -= 1;
+	}
+
+	// check there's enough room in queue
+	if (pDevice->endpoints[nIndex].nQueued >= XN_USB_MAX_WRITE_TX)
+	{
+		xnLogWarning(XN_MASK_OS, "Gadget: Output queue has overflowed!");
+		return XN_STATUS_OUTPUT_BUFFER_OVERFLOW;
+	}
+
+	// check write size is in correct size
+	if (nDataSize > pDevice->endpoints[nIndex].nBufferSize)
+	{
+		xnLogWarning(XN_MASK_OS, "Gadget: Too much data!");
+		return XN_STATUS_OUTPUT_BUFFER_OVERFLOW;
+	}
+
+	XnUInt32 iTx = (pDevice->endpoints[nIndex].nFirst + pDevice->endpoints[nIndex].nQueued) % XN_USB_MAX_WRITE_TX;
+	xnOSMemCopy(pDevice->endpoints[nIndex].txs[iTx].pBuffer, pData, nDataSize);
+
+	struct aiocb& cb = pDevice->endpoints[nIndex].txs[iTx].cb;
 	xnOSMemSet(&cb, 0, sizeof(cb));
-	cb.aio_fildes = pDevice->endpointsFDs[nIndex];
-	cb.aio_buf = (void*)pData;
+	cb.aio_fildes = pDevice->endpoints[nIndex].fd;
+	cb.aio_buf = pDevice->endpoints[nIndex].txs[iTx].pBuffer;
 	cb.aio_nbytes = nDataSize;
 	
 	int status = aio_write(&cb);
@@ -971,40 +1138,8 @@ XN_C_API XnStatus XN_C_DECL xnUSBDeviceWriteEndpoint(XnUSBDevice* pDevice, XnUIn
 		xnLogWarning(XN_MASK_OS, "Failed to start asynch write! (%d)", errno);
 		return XN_STATUS_USB_ENDPOINT_WRITE_FAILED;
 	}
-	
-	XnUInt64 nStart;
-	XnUInt64 nNow;
-	xnOSGetHighResTimeStamp(&nStart);
-	
-	while (TRUE)
-	{
-		status = aio_error(&cb);
-		if (status == EINPROGRESS)
-		{
-			xnOSGetHighResTimeStamp(&nNow);
-			if ((nNow - nStart) > XN_USB_WRITE_DATA_TIMEOUT*1000)
-			{
-				xnLogWarning(XN_MASK_OS, "Timeout sending data (client not reading?)", errno);
-				// try to cancel write
-				aio_cancel(pDevice->endpointsFDs[nIndex], &cb);
-				return XN_STATUS_USB_ENDPOINT_WRITE_FAILED;
-			}
-			else
-			{
-				// sleep some time and try again
-				xnOSSleep(1);
-			}
-		}
-		else if (status == 0)
-		{
-			return XN_STATUS_OK;
-		}
-		else
-		{
-			xnLogWarning(XN_MASK_OS, "Failed to write data! (%d)", errno);
-			return XN_STATUS_USB_ENDPOINT_WRITE_FAILED;
-		}
-	}
+
+	++pDevice->endpoints[nIndex].nQueued;
 	
 	return XN_STATUS_OK;
 }

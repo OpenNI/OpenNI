@@ -19,7 +19,8 @@ XnDumpWriterFileHandle XnDumpFileWriter::OpenFile(const XnChar* /*strDumpName*/,
 		return result;
 	}
 	
-	nRetVal = xnLogCreateFileEx(strFileName, bSessionDump, phFile);
+	XnChar strFullPath[XN_FILE_MAX_PATH];
+	nRetVal = xnLogCreateNewFile(strFileName, bSessionDump, strFullPath, XN_FILE_MAX_PATH, phFile);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		// we don't have much to do if files can't be open. Dump will not be written

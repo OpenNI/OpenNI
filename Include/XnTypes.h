@@ -243,6 +243,27 @@ typedef void (XN_CALLBACK_TYPE* XnFreeHandler)(const void* pData);
 
 typedef void (XN_CALLBACK_TYPE* XnContextShuttingDownHandler)(XnContext* pContext, void* pCookie);
 
+/**
+* Prototype for the 'Node Creation' event handler.
+*
+* @param	[in]	pContext		The context raising the event.
+* @param	[in]	hCreatedNode	A handle to the newly created node.
+* @param	[in]	pCookie			A user-provided cookie that was given when registering to the event.
+*
+* @remark The passed handle (@c hCreatedNode) is not referenced. If your handler keeps this handle for later use,
+*		  it must call @ref xnProductionNodeAddRef().
+*/
+typedef void (XN_CALLBACK_TYPE* XnNodeCreationHandler)(XnContext* pContext, XnNodeHandle hCreatedNode, void* pCookie);
+
+/**
+* Prototype for the 'Node Destruction' event handler.
+*
+* @param	[in]	pContext				The context raising the event.
+* @param	[in]	strDestroyedNodeName	The name of the destroyed node.
+* @param	[in]	pCookie					A user-provided cookie that was given when registering to the event.
+*/
+typedef void (XN_CALLBACK_TYPE* XnNodeDestructionHandler)(XnContext* pContext, const XnChar* strDestroyedNodeName, void* pCookie);
+
 /** Handle to a registered callback function. **/
 typedef void* XnCallbackHandle;
 

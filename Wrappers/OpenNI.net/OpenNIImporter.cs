@@ -899,6 +899,8 @@ namespace OpenNI
 		};
 
 		public delegate void XnErrorStateChangedHandler(XnStatus errorState, IntPtr pCookie);
+		public delegate void XnNodeCreationHandler(XnContext pContext, XnNodeHandle hCreatedNode, IntPtr pCookie);
+		public delegate void XnNodeDestructionHandler(XnContext pContext, string strDestroyedNodeName, IntPtr pCookie);
 		public delegate void XnContextShuttingDownHandler(XnContext pContext, IntPtr pCookie);
 		public delegate void XnStateChangedHandler(XnNodeHandle hNode, IntPtr pCookie);
 		public delegate void XnGestureRecognized(XnNodeHandle hNode, string strGesture, ref Point3D pIDPosition, ref Point3D pEndPosition, IntPtr pCookie);
@@ -1009,7 +1011,17 @@ namespace OpenNI
 		public static extern XnStatus xnRegisterToGlobalErrorStateChange(XnContext pContext, [MarshalAs(UnmanagedType.FunctionPtr)] XnErrorStateChangedHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnUnregisterFromGlobalErrorStateChange(XnContext pContext, XnCallbackHandle hCallback);
-		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern XnStatus xnRegisterToNodeCreation(XnContext pContext, [MarshalAs(UnmanagedType.FunctionPtr)] XnNodeCreationHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void xnUnregisterFromNodeCreation(XnContext pContext, XnCallbackHandle hCallback);
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern XnStatus xnRegisterToNodeDestruction(XnContext pContext, [MarshalAs(UnmanagedType.FunctionPtr)] XnNodeDestructionHandler handler, IntPtr pCookie, out XnCallbackHandle phCallback);
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void xnUnregisterFromNodeDestruction(XnContext pContext, XnCallbackHandle hCallback);
+
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnEnumerationErrorsAllocate(out XnEnumerationErrors ppErrors);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void xnEnumerationErrorsFree(XnEnumerationErrors pErrors);
@@ -1678,7 +1690,10 @@ namespace OpenNI
 		public static extern XnStatus xnProductionNodeTypeFromString(string strType, NodeType pType);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnBool xnIsTypeGenerator(NodeType type);
-		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern XnBool xnIsTypeDerivedFrom(NodeType type, NodeType baseType);
+
+        [DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr xnPixelFormatToString(PixelFormat format);
 		[DllImport(openNILibraryName, CallingConvention = CallingConvention.Cdecl)]
 		public static extern XnStatus xnPixelFormatFromString(string strName, PixelFormat pFormat);

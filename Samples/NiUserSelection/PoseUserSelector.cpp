@@ -69,7 +69,7 @@ PoseUserSelector::PoseUserSelector(xn::UserGenerator* pUserGenerator,
     nRetVal = m_pUserGenerator->GetPoseDetectionCap().RegisterToPoseInProgress(PoseInProgressCallback,this,m_hPoseInProgressCallback);
     VALIDATE_WITH_ACTION(nRetVal == XN_STATUS_OK,"Failed to register to pose in progress",m_hPoseInProgressCallback = NULL);
     
-    int len=strlen(poseToTrack)+1;
+    int len = (int)strlen(poseToTrack)+1;
     m_strPoseToTrack=XN_NEW_ARR(char, len); // the length is +1 to accommodate the null terminator
     xnOSStrCopy(m_strPoseToTrack,poseToTrack,len);
 }
@@ -81,9 +81,9 @@ PoseUserSelector::~PoseUserSelector()
     {
         if(m_pUserGenerator->IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION))
         {
-            for(UserStateHash::Iterator iter = m_hUsersState.begin(); iter != m_hUsersState.end(); ++iter)
+            for(UserStateHash::Iterator iter = m_hUsersState.Begin(); iter != m_hUsersState.End(); ++iter)
             {
-                m_pUserGenerator->GetPoseDetectionCap().StopPoseDetection(iter.Key());
+                m_pUserGenerator->GetPoseDetectionCap().StopPoseDetection(iter->Key());
             }
             if(m_hPoseDetectCallback != NULL)
             {
@@ -157,7 +157,7 @@ XnStatus PoseUserSelector::DetectPose(XnUserID nUserId)
     return StartTracking(nUserId);
 }
 
-void XN_CALLBACK_TYPE PoseUserSelector::PoseInProgressCallback(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nUserId, XnPoseDetectionStatus ePoseError, void* pCookie)
+void XN_CALLBACK_TYPE PoseUserSelector::PoseInProgressCallback(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nUserId, XnPoseDetectionStatus ePoseError, void* pCookie)
 {
     PoseUserSelector* pPoseUserSelector = (PoseUserSelector *)pCookie;
     if(xnOSStrCmp(strPose,pPoseUserSelector->m_strPoseToTrack)!=0)
@@ -167,7 +167,7 @@ void XN_CALLBACK_TYPE PoseUserSelector::PoseInProgressCallback(xn::PoseDetection
     pPoseUserSelector->UpdatePoseProgress(nUserId,ePoseError);
 }
 
-void XN_CALLBACK_TYPE PoseUserSelector::PoseDetectedCallback(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE PoseUserSelector::PoseDetectedCallback(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nUserId, void* pCookie)
 {
     PoseUserSelector* pPoseUserSelector = (PoseUserSelector *)pCookie;
     if(xnOSStrCmp(strPose,pPoseUserSelector->m_strPoseToTrack)!=0)

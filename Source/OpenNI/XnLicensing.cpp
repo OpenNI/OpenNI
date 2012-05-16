@@ -83,15 +83,13 @@ public:
 	}
 };
 
-XN_DECLARE_LIST(XnLicenseXml, XnLicenseXmlList);
-
-class XnLicensesXml : public XnLicenseXmlList
+class XnLicensesXml : public XnListT<XnLicenseXml>
 {
 public:
 	TiXmlElement ToElement() const
 	{
 		TiXmlElement element(XN_XML_LICENSES_ROOT);
-		for (XnLicenseXmlList::ConstIterator it = begin(); it != end(); ++it)
+		for (ConstIterator it = Begin(); it != End(); ++it)
 		{
 			const XnLicenseXml& license = *it;
 			element.InsertEndChild(license.ToElement());
@@ -211,7 +209,7 @@ XN_C_API XnStatus xnRegisterGlobalLicense(XnLicense* pLicense)
 
 	// check if it's already there
 	XnBool bFound = FALSE;
-	for (XnLicenseXmlList::ConstIterator it = licenses.begin(); it != licenses.end(); ++it)
+	for (XnLicensesXml::ConstIterator it = licenses.Begin(); it != licenses.End(); ++it)
 	{
 		const XnLicenseXml& license = *it;
 		if (strcmp(license.strVendor, pLicense->strVendor) == 0 && strcmp(license.strKey, pLicense->strKey) == 0)
@@ -244,7 +242,7 @@ XN_C_API XnStatus xnUnregisterGlobalLicense(XnLicense* pLicense)
 
 	// check if it's there
 	XnBool bFound = FALSE;
-	for (XnLicenseXmlList::ConstIterator it = licenses.begin(); it != licenses.end(); ++it)
+	for (XnLicensesXml::ConstIterator it = licenses.Begin(); it != licenses.End(); ++it)
 	{
 		const XnLicenseXml& license = *it;
 		if (strcmp(license.strVendor, pLicense->strVendor) == 0 && strcmp(license.strKey, pLicense->strKey) == 0)
@@ -279,7 +277,7 @@ XN_C_API XnStatus xnPrintRegisteredLicenses()
 	printf("%-20s%-20s\n", "VENDOR", "KEY");
 	printf("%-20s%-20s\n", "======", "===");
 
-	for (XnLicenseXmlList::ConstIterator it = licenses.begin(); it != licenses.end(); ++it)
+	for (XnLicensesXml::ConstIterator it = licenses.Begin(); it != licenses.End(); ++it)
 	{
 		const XnLicenseXml& license = *it;
 		printf("%-20s%-20s\n", license.strVendor, license.strKey);
@@ -298,7 +296,7 @@ XnStatus xnLoadLicensesFromElement(XnContext* pContext, TiXmlElement* pElem)
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now add
-	for (XnLicensesXml::ConstIterator it = licenses.begin(); it != licenses.end(); ++it)
+	for (XnLicensesXml::ConstIterator it = licenses.Begin(); it != licenses.End(); ++it)
 	{
 		const XnLicenseXml& license = *it;
 		nRetVal = xnAddLicense(pContext, &license);
@@ -343,7 +341,7 @@ XN_C_API XnStatus xnAddLicense(XnContext* pContext, const XnLicense* pLicense)
 	XN_VALIDATE_INPUT_PTR(pContext);
 	XN_VALIDATE_INPUT_PTR(pLicense);
 
-	nRetVal = pContext->pLicenses->AddLast(*pLicense);
+	nRetVal = pContext->licenses.AddLast(*pLicense);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -358,7 +356,7 @@ XN_C_API XnStatus xnEnumerateLicenses(XnContext* pContext, XnLicense** paLicense
 	*paLicenses = NULL;
 	*pnCount = 0;
 
-	XnUInt32 nCount = pContext->pLicenses->Size();
+	XnUInt32 nCount = pContext->licenses.Size();
 
 	// allocate list
 	XnLicense* pList;
@@ -366,7 +364,7 @@ XN_C_API XnStatus xnEnumerateLicenses(XnContext* pContext, XnLicense** paLicense
 
 	// copy data
 	XnUInt32 i = 0;
-	for (XnLicenseList::ConstIterator it = pContext->pLicenses->begin(); it != pContext->pLicenses->end(); ++it, ++i)
+	for (XnLicenseList::ConstIterator it = pContext->licenses.Begin(); it != pContext->licenses.End(); ++it, ++i)
 	{
 		pList[i] = *it;
 	}

@@ -89,6 +89,7 @@ SimpleViewer::SimpleViewer(xn::Context& context)
 SimpleViewer::~SimpleViewer()
 {
 	delete[] m_pTexMap;
+	delete[] m_pDepthHist;
 }
 
 SimpleViewer& SimpleViewer::CreateInstance( xn::Context& context )
@@ -101,6 +102,7 @@ void SimpleViewer::DestroyInstance(SimpleViewer& instance)
 {
 	assert(sm_pInstance);
 	assert(sm_pInstance == &instance);
+	XN_REFERENCE_VARIABLE(instance);
 	delete sm_pInstance;
 	sm_pInstance = NULL;
 }
@@ -150,6 +152,8 @@ XnStatus SimpleViewer::Init(int argc, char **argv)
 	m_nTexMapX = MIN_CHUNKS_SIZE(m_depthMD.FullXRes(), TEXTURE_SIZE);
 	m_nTexMapY = MIN_CHUNKS_SIZE(m_depthMD.FullYRes(), TEXTURE_SIZE);
 	m_pTexMap = new XnRGB24Pixel[m_nTexMapX * m_nTexMapY];
+
+	m_pDepthHist = new float[m_depth.GetDeviceMaxDepth() + 1];
 
 	return InitOpenGL(argc, argv);
 }
@@ -202,9 +206,6 @@ void SimpleViewer::Display()
 	m_image.GetMetaData(m_imageMD);
 
 	const XnDepthPixel* pDepth = m_depthMD.Data();
-	const XnUInt8* pImage = m_imageMD.Data();
-
-	unsigned int nImageScale = GL_WIN_SIZE_X / m_depthMD.FullXRes();
 
 	// Copied from SimpleViewer
 	// Clear the OpenGL buffers
@@ -217,7 +218,7 @@ void SimpleViewer::Display()
 	glOrtho(0, GL_WIN_SIZE_X, GL_WIN_SIZE_Y, 0, -1.0, 1.0);
 
 	// Calculate the accumulative histogram (the yellow display...)
-	xnOSMemSet(m_pDepthHist, 0, MAX_DEPTH*sizeof(float));
+	xnOSMemSet(m_pDepthHist, 0, m_depthMD.ZRes()*sizeof(float));
 
 	unsigned int nNumberOfPoints = 0;
 	for (XnUInt y = 0; y < m_depthMD.YRes(); ++y)
@@ -231,13 +232,13 @@ void SimpleViewer::Display()
 			}
 		}
 	}
-	for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+	for (int nIndex=1; nIndex<m_depthMD.ZRes(); nIndex++)
 	{
 		m_pDepthHist[nIndex] += m_pDepthHist[nIndex-1];
 	}
 	if (nNumberOfPoints)
 	{
-		for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+		for (int nIndex=1; nIndex<m_depthMD.ZRes(); nIndex++)
 		{
 			m_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (m_pDepthHist[nIndex] / nNumberOfPoints)));
 		}
@@ -335,7 +336,7 @@ void SimpleViewer::Display()
 	glutSwapBuffers();
 }
 
-void SimpleViewer::OnKey(unsigned char key, int x, int y)
+void SimpleViewer::OnKey(unsigned char key, int /*x*/, int /*y*/)
 {
 	switch (key)
 	{

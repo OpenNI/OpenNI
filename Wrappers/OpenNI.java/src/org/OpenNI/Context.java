@@ -241,6 +241,16 @@ public class Context extends ObjectWrapper
 		return errorStateChangedEvent;
 	}
 	
+	public IObservable<NodeCreatedEventArgs> getNodeCreatedEvent()
+	{
+		return nodeCreatedEvent;
+	}
+	
+	public IObservable<NodeDestroyedEventArgs> getNodeDestroyedEvent()
+	{
+		return nodeDestroyedEvent;
+	}
+	
 	public static ProductionNode createProductionNodeFromNative(long nodeHandle) throws GeneralException
 	{
 		long pContext = NativeMethods.xnGetRefContextFromNodeHandle(nodeHandle);
@@ -280,6 +290,49 @@ public class Context extends ObjectWrapper
 			public void callback(int status)
 			{
 				notify(new ErrorStateEventArgs(status));
+			}
+		};
+		
+		nodeCreatedEvent = new Observable<NodeCreatedEventArgs>()
+		{
+			@Override
+			protected int registerNative(OutArg<Long> phCallback) throws StatusException 
+			{
+				return NativeMethods.xnRegisterToNodeCreation(toNative(), this, "callback", phCallback);
+			}
+
+			@Override
+			protected void unregisterNative(long hCallback) 
+			{
+				NativeMethods.xnUnregisterFromNodeCreation(toNative(), hCallback);
+			}
+			
+			@SuppressWarnings("unused")
+			public void callback(long hCreatedNode) throws GeneralException
+			{
+				ProductionNode createdNode = createProductionNodeObject(hCreatedNode);
+				notify(new NodeCreatedEventArgs(createdNode));
+			}
+		};
+		
+		nodeDestroyedEvent = new Observable<NodeDestroyedEventArgs>()
+		{
+			@Override
+			protected int registerNative(OutArg<Long> phCallback) throws StatusException 
+			{
+				return NativeMethods.xnRegisterToNodeDestruction(toNative(), this, "callback", phCallback);
+			}
+
+			@Override
+			protected void unregisterNative(long hCallback) 
+			{
+				NativeMethods.xnUnregisterFromNodeDestruction(toNative(), hCallback);
+			}
+			
+			@SuppressWarnings("unused")
+			public void callback(String destroyedNodeName) throws GeneralException
+			{
+				notify(new NodeDestroyedEventArgs(destroyedNodeName));
 			}
 		};
 		
@@ -379,6 +432,9 @@ public class Context extends ObjectWrapper
 	}
 
 	private Observable<ErrorStateEventArgs> errorStateChangedEvent;
+	private Observable<NodeCreatedEventArgs> nodeCreatedEvent;
+	private Observable<NodeDestroyedEventArgs> nodeDestroyedEvent;
+
 	private Hashtable<Long, ProductionNode> allNodes = new Hashtable<Long, ProductionNode>();
 	
 	private static Hashtable<Long, Context> allContexts = new Hashtable<Long, Context>(); 

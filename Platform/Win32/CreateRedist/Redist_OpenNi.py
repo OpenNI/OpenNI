@@ -32,7 +32,7 @@ import subprocess
 import shutil
 import stat
 import uuid
-path_to_base = os.path.dirname(os.path.abspath('common/redist_base.py'))
+path_to_base = os.path.dirname(os.path.abspath('../../../Externals/PSCommon/Windows/CreateRedist/redist_base.py'))
 if path_to_base not in sys.path:
     sys.path.insert(0, path_to_base)
 import redist_base
@@ -41,7 +41,8 @@ class RedistOpenNI(redist_base.RedistBase):
     def __init__(self):
         #RedistBase.__init__(self)
         super(RedistOpenNI,self).__init__()
-        self.VC_version = 9
+        self.VC_version = 10
+        self.project_is_2010 = True
         self.vc_build_bits = "32"
         self.config_xml_filename = "OpenNi_Config.xml"
         self.redist_name = "OpenNI"
@@ -193,7 +194,7 @@ class RedistOpenNI(redist_base.RedistBase):
             if os.path.isdir(filePath):
                 continue
 
-            ext = ['icproj','vcproj','csproj','cpp','h','c','ini','cs','py','bat','java']
+            ext = ['icproj','vcproj','vcxproj','csproj','cpp','h','c','ini','cs','py','bat','java']
             file_ext = os.path.splitext(filename)[1][1:]
             if file_ext in ext:
                 file = open(filePath, "r+")
@@ -223,14 +224,14 @@ class RedistOpenNI(redist_base.RedistBase):
                 # fix bin and lib path for 32 bit configuration
                 s = re.sub(r"../../../Bin/",r"../Bin/",s)
                 s = re.sub(r"..\\..\\..\\Bin\\",r"../Bin/",s)
-                s = re.sub(r"../../../Lib/\$\(ConfigurationName\)",r"$(OPEN_NI_LIB)",s)
-                s = re.sub(r"..\\..\\..\\Lib\\\$\(ConfigurationName\)",r"$(OPEN_NI_LIB)",s)
+                s = re.sub(r"../../../Lib/\$\(Configuration\)",r"$(OPEN_NI_LIB)",s)
+                s = re.sub(r"..\\..\\..\\Lib\\\$\(Configuration\)",r"$(OPEN_NI_LIB)",s)
                 
                 # fix bin and lib path for 64 bit configuration
                 s = re.sub(r"../../../Bin64/",r"../Bin64/",s)
                 s = re.sub(r"..\\..\\..\\Bin64\\",r"../Bin64/",s)
-                s = re.sub(r"../../../Lib64/\$\(ConfigurationName\)",r"$(OPEN_NI_LIB64)",s)
-                s = re.sub(r"..\\..\\..\\Lib64\\\$\(ConfigurationName\)",r"$(OPEN_NI_LIB64)",s)
+                s = re.sub(r"../../../Lib64/\$\(Configuration\)",r"$(OPEN_NI_LIB64)",s)
+                s = re.sub(r"..\\..\\..\\Lib64\\\$\(Configuration\)",r"$(OPEN_NI_LIB64)",s)
 
                 # fix general path problems
                 s = re.sub(r"..\\..\\..\\..\\..\\",r"..\\..\\",s)
@@ -248,7 +249,20 @@ class RedistOpenNI(redist_base.RedistBase):
                     link_re += r"\s*<Link>(?P=file)</Link>"
                     compiled_re = re.compile(link_re, re.MULTILINE)
                     s = compiled_re.sub("<Compile Include=\"\g<file>\">", s)
-
+                    
+                # remove dependencies from samples vcxproj to non-sample projects
+                if file_ext == "vcxproj":
+                    # dependency to another sample will be to ..\<sample>
+                    compiled_start = re.compile(r"<ProjectReference Include=\"\.\.\\\.\.\\")
+                    compiled_end = re.compile(r"</ProjectReference>")
+                    while True:
+                        match_start = compiled_start.search(s)
+                        if match_start is None:
+                            break
+                        # look for end
+                        match_end = compiled_end.search(s, match_start.end())
+                        s = s[:match_start.start()] + s[match_end.end():]
+                    
                 file.truncate()
                 file.write(s)
                 file.close()

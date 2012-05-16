@@ -1,0 +1,34 @@
+/**
+@page modules_module Module Entry Points
+
+Now that we have a node implementation and an exporter which exports it 
+to OpenNI, all that is left is to let OpenNI know which exporters exist 
+in your module. 
+
+The best way to do so is to create a new cpp file, and in it:
+
+1. Include OpenNI C++ registration header:
+
+@code
+#include <XnModuleCppRegistratration.h>
+@endcode
+
+2. Declare this module. This is done by the following line:
+
+@code
+XN_EXPORT_MODULE(xn::Module)
+@endcode
+
+If you want your module to behave differently than default (for example, 
+do some extra initialization upon shared library loading), you can 
+create a new class that inherits from xn::Module, and export that new 
+class instead. 
+
+3. Declare all exporters using the corresponding macros. For example, to 
+declare a HandsGenerator exporter: 
+
+@code
+XN_EXPORT_HANDS(xn::MyHandsExporter)
+@endcode
+
+*/

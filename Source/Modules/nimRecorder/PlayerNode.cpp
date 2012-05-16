@@ -86,8 +86,11 @@ PlayerNode::PlayerNode(xn::Context &context, const XnChar* strName) :
 	m_nMaxNodes(0),
 	m_bEOF(FALSE),
 	m_aSeekTempArray(NULL),
-	m_hSelf(NULL)
+	m_hSelf(NULL),
+	m_bIs32bitFileFormat(FALSE),
+	m_pUncompressedData(NULL)
 {
+	xnOSMemSet(&m_fileVersion, 0, sizeof(m_fileVersion));
 	xnOSStrCopy(m_strName, strName, sizeof(m_strName));
 }
 
@@ -291,6 +294,7 @@ DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnU
 	PlayerNodeInfo* pPlayerNodeInfo = &m_pNodeInfoMap[nNodeID];
 	if (pPlayerNodeInfo->pDataIndex == NULL)
 	{
+		xnLogVerbose(XN_MASK_OPEN_NI, "Slow seek being used (recording doesn't have seek tables)");
 		return NULL;
 	}
 
@@ -300,6 +304,7 @@ DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnU
 	if (pCurrentFrame->nConfigurationID != pDestFrame->nConfigurationID)
 	{
 		// can't use fast seek. We'll have to do it the old fashion way
+		xnLogVerbose(XN_MASK_OPEN_NI, "Seeking from %u to %u: Slow seek being used (configuration was changed between source and destination frames)", pPlayerNodeInfo->nCurFrame, nDestFrame);
 		return NULL;
 	}
 
@@ -313,6 +318,7 @@ DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnU
 			m_aSeekTempArray[i] = FindTimestampInDataIndex(i, pDestFrame->nTimestamp);
 			if (m_aSeekTempArray[i] != NULL && m_aSeekTempArray[i]->nConfigurationID != pCurrentFrame->nConfigurationID)
 			{
+				xnLogVerbose(XN_MASK_OPEN_NI, "Seeking from %u to %u: Slow seek being used (configuration was changed between source and destination frames or other nodes)", pPlayerNodeInfo->nCurFrame, nDestFrame);
 				return NULL;
 			}
 		}
@@ -425,17 +431,17 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 			nRetVal = HandleNewDataRecord(record, FALSE);
 			XnBool bUndone = FALSE;
 
-			for (XnUInt32 i = 0; i < m_nMaxNodes; i++)
+			for (XnUInt32 i = 0; i < m_nMaxNodes; ++i)
 			{
 				//Rollback all properties to match the state the stream was in at position nDestRecordPos
 				PlayerNodeInfo &pni = m_pNodeInfoMap[i];
-				for (RecordUndoInfoMap::Iterator it = pni.recordUndoInfoMap.begin(); 
-					 it != pni.recordUndoInfoMap.end(); it++)
+				for (RecordUndoInfoMap::Iterator it = pni.recordUndoInfoMap.Begin(); 
+					 it != pni.recordUndoInfoMap.End(); ++it)
 				{
-					if ((it.Value().nRecordPos > nDestRecordPos) && (it.Value().nRecordPos < nStartPos))
+					if ((it->Value().nRecordPos > nDestRecordPos) && (it->Value().nRecordPos < nStartPos))
 					{
 						//This property was set between nDestRecordPos and our start position, so we need to undo it.
-						nRetVal = UndoRecord(it.Value(), nDestRecordPos, bUndone);
+						nRetVal = UndoRecord(it->Value(), nDestRecordPos, bUndone);
 						XN_IS_STATUS_OK(nRetVal);
 					}
 				}
@@ -587,7 +593,7 @@ XnBool PlayerNode::IsEOF()
 
 XnStatus PlayerNode::RegisterToEndOfFileReached(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_eofReachedEvent.Register(handler, pCookie, &hCallback);
+	return m_eofReachedEvent.Register(handler, pCookie, hCallback);
 }
 
 void PlayerNode::UnregisterFromEndOfFileReached(XnCallbackHandle hCallback)
@@ -1695,6 +1701,7 @@ XnNodeHandle PlayerNode::GetSelfNodeHandle()
 		xn::Player thisPlayer;
 		XnStatus nRetVal = m_context.GetProductionNodeByName(m_strName, thisPlayer);
 		XN_ASSERT(nRetVal == XN_STATUS_OK);
+		XN_REFERENCE_VARIABLE(nRetVal);
 
 		// we keep just the handle, without a reference (otherwise, we keep a reference to ourselves, 
 		// and we will never be destroyed)

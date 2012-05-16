@@ -22,7 +22,7 @@ public class Screen extends View {
 
 	class Line extends Shape
 	{
-		public Line(int x0, int y0, int x1, int y1, int color) 
+		public Line(float x0, float y0, float x1, float y1, int color) 
 		{
 			this.x0 = x0;
 			this.y0 = y0;
@@ -37,18 +37,19 @@ public class Screen extends View {
 			canvas.drawLine(x0*magRatio, y0*magRatio, x1*magRatio, y1*magRatio, paint);
 		}
 		
-		private int x0,y0,x1,y1;
+		private float x0,y0,x1,y1;
 	}
 	
 	class Label extends Shape
 	{
-		public Label(String text, int x, int y, int color) 
+		public static final float FONT_SIZE = 12; 
+		public Label(String text, float x, float y, int color) 
 		{
 			this.x = x;
 			this.y = y;
 			this.text = text;
 			paint = new Paint();
-			paint.setTextSize(30);
+			paint.setTextSize(FONT_SIZE * magRatio);
 			paint.setColor(color);
 		}
 		public void draw(Canvas canvas)
@@ -56,7 +57,7 @@ public class Screen extends View {
 			canvas.drawText(text, x*magRatio, y*magRatio, paint);
 		}
 		
-		private int x, y;
+		private float x, y;
 		private String text;
 	}
 	
@@ -137,7 +138,7 @@ public class Screen extends View {
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		// TODO Auto-generated method stub
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-		int w,h;
+		float w,h;
 		w = View.MeasureSpec.getSize(widthMeasureSpec);
 		h = View.MeasureSpec.getSize(heightMeasureSpec);
 		magRatio = Math.min(w / inputWidth, h / inputHeight);
@@ -176,12 +177,12 @@ public class Screen extends View {
 		this.postInvalidate();
 	}
 	
-	public void drawLine(int x0, int y0, int x1, int y1)
+	public void drawLine(float x0, float y0, float x1, float y1)
 	{
 		shapes2Prepare.add(new Line(x0, y0, x1, y1, curColor));
 	}
 	
-	public void drawLabel(String text, int x, int y)
+	public void drawLabel(String text, float x, float y)
 	{
 		shapes2Prepare.add(new Label(text, x, y, curColor));
 	}
@@ -202,8 +203,8 @@ public class Screen extends View {
 		if(showFPS)
 		{
 			setColor(Color.WHITE);
-			drawLabel(String.format("%.1f FPS", FPS.calcAvgFPS()), 10, 10);
-			drawLabel(String.format("%.1f ms", FPS.calcAvgMillis()), 10, 20);
+			drawLabel(String.format("%.1f FPS", FPS.calcAvgFPS()),   2*magRatio, (float) (Label.FONT_SIZE*magRatio*0.35));
+			drawLabel(String.format("%.1f ms", FPS.calcAvgMillis()), 2*magRatio, (float) (Label.FONT_SIZE*magRatio*0.7));
 		}
         
 		synchronized (theLock) {

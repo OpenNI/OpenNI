@@ -26,9 +26,16 @@ import java.util.NoSuchElementException;
 
 public class NodeInfoList extends ObjectWrapper implements Iterable<NodeInfo>
 {
+	NodeInfoList(long ptr, boolean own)
+	{
+		super(ptr);
+		this.own = own;
+	}
+	
 	NodeInfoList(long ptr)
 	{
 		super(ptr);
+		this.own = true;
 	}
 	
 	public void add(ProductionNodeDescription description, String creationInfo, NodeInfoList neededNodes) throws StatusException
@@ -91,7 +98,10 @@ public class NodeInfoList extends ObjectWrapper implements Iterable<NodeInfo>
 	@Override
 	protected void freeObject(long ptr) 
 	{
-		NativeMethods.xnNodeInfoListFree(ptr);
+		if (this.own)
+		{
+			NativeMethods.xnNodeInfoListFree(ptr);
+		}
 	}
 	
 	private class NodeInfoListIterator implements Iterator<NodeInfo>
@@ -136,4 +146,6 @@ public class NodeInfoList extends ObjectWrapper implements Iterable<NodeInfo>
 
 		protected long it;
 	}
+	
+	private boolean own;
 }

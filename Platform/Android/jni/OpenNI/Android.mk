@@ -12,7 +12,7 @@ MY_PREFIX := $(LOCAL_PATH)/../../../../Source/OpenNI/
 MY_SRC_FILES := \
 	$(MY_PREFIX)*.cpp \
 	$(MY_PREFIX)Linux/*.cpp \
-	$(MY_PREFIX)../External/TinyXml/*.cpp
+	$(MY_PREFIX)../../Externals/TinyXml/*.cpp
 
 # expand the wildcards
 MY_SRC_FILE_EXPANDED := $(wildcard $(MY_SRC_FILES))
@@ -23,7 +23,7 @@ LOCAL_SRC_FILES := $(MY_SRC_FILE_EXPANDED:$(LOCAL_PATH)/%=%)
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../../../../Include/ \
 	$(LOCAL_PATH)/../../../../Source/ \
-	$(LOCAL_PATH)/../../../../Source/External/TinyXml/ \
+	$(LOCAL_PATH)/../../../../Externals/TinyXml/ \
 	$(LOCAL_PATH)/../External/libusb-1.0.8/libusb \
 
 LOCAL_CFLAGS:= -fvisibility=hidden -DXN_EXPORTS

@@ -198,7 +198,7 @@ int glh_init_extensions(const char *origReqExts)
 
     // Parse requested extension list
     for (reqExt = reqExts;
-        (reqExt = (char*)EatWhiteSpace(reqExt)) && *reqExt;
+        (reqExt = (char*)EatWhiteSpace(reqExt)) != NULL && *reqExt;
         reqExt = (char*)EatNonWhiteSpace(reqExt))
     {
         char *extEnd = (char*)EatNonWhiteSpace(reqExt);

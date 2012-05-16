@@ -74,7 +74,11 @@ class NativeMethods
 	static native int xnGetGlobalErrorState(long pContext);
 	static native int xnRegisterToGlobalErrorStateChange(long pContext, Object obj, String methodName, OutArg<Long> phCallback);
 	static native void xnUnregisterFromGlobalErrorStateChange(long pContext, long hCallback);
-	
+	static native int xnRegisterToNodeCreation(long pContext, Object obj, String methodName, OutArg<Long> phCallback);
+	static native void xnUnregisterFromNodeCreation(long pContext, long hCallback);
+	static native int xnRegisterToNodeDestruction(long pContext, Object obj, String methodName, OutArg<Long> phCallback);
+	static native void xnUnregisterFromNodeDestruction(long pContext, long hCallback);
+
 	// Licenses
 	static native int xnAddLicense(long pContext, String vendor, String key);
 	static native int xnEnumerateLicenses(long pContext, OutArg<License[]> licenses);

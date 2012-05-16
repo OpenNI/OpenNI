@@ -26,7 +26,7 @@ DOXYFILE_ENCODING      = UTF-8
 # identify the project. Note that if you do not use Doxywizard you need 
 # to put quotes around the project name if it contains spaces.
 
-PROJECT_NAME = "OpenNI 1.5.2"
+PROJECT_NAME = "OpenNI 1.5.4"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. 
 # This could be handy for archiving the generated documentation or 
@@ -638,7 +638,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = ../../Source/OpenNI/Documentation.txt \
+INPUT                  = Text \
                          ../../Include/XnContext.h \
                          ../../Include/XnPrdNodeInfo.h \
                          ../../Include/XnPrdNodeInfoList.h \
@@ -693,7 +693,8 @@ FILE_PATTERNS          = *.c \
                          *.f90 \
                          *.f \
                          *.vhd \
-                         *.vhdl
+                         *.vhdl \
+                         *.txt
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 
@@ -754,7 +755,7 @@ EXAMPLE_RECURSIVE      = NO
 # directories that contain image that are included in the documentation (see 
 # the \image command).
 
-IMAGE_PATH             = 
+IMAGE_PATH             = Images
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should 
 # invoke to filter for each input file. Doxygen will invoke the filter program 
@@ -1622,7 +1623,7 @@ HAVE_DOT               = YES
 # explicitly to a value larger than 0 to get control over the balance 
 # between CPU load and processing speed.
 
-DOT_NUM_THREADS        = 0
+DOT_NUM_THREADS        = 4
 
 # By default doxygen will use the Helvetica font for all dot files that 
 # doxygen generates. When you want a differently looking font you can specify 
@@ -1667,7 +1668,7 @@ GROUP_GRAPHS           = NO
 # collaboration diagrams in a style similar to the OMG's Unified Modeling 
 # Language.
 
-UML_LOOK               = YES
+UML_LOOK               = NO
 
 # If set to YES, the inheritance and collaboration graphs will show the 
 # relations between templates and their instances.

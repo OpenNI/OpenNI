@@ -511,7 +511,7 @@ int findUniqueFileName()
 	XnChar csDepthFileName[XN_FILE_MAX_PATH];
 	XnChar csIRFileName[XN_FILE_MAX_PATH];
 
-	while (true)
+	for (;;)
 	{
 		// check image
 		getImageFileName(num, csImageFileName);

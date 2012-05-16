@@ -1,0 +1,33 @@
+/**
+@page modules_topology Defining the Node Topology
+
+The first step in creating new node implementations is to define exactly 
+which nodes are to be implemented and the input requirements of each 
+node. 
+
+For example, you have a physical device able to create both depth data 
+and color image data. So you would want to create two node 
+implementations: a DepthGenerator node and an ImageGenerator node. It is 
+also highly recommended to create a Device node implementation. The 
+Device node does not necessarily participate in the data flow, but can 
+be useful when wanting to represent the physical device (to get its 
+serial number, for example). 
+
+For the above example, the topology scenario is defined as follows:
+- One Device node
+- One DepthGenerator node, depending on the specific device node that 
+  the developer defines, since in this example the characteristics of the 
+  DepthGenerator node is dependant on the characteristics of the Device 
+  node 
+- One ImageGenerator node, depending on the specific device node that 
+  the developer defines, as above for the DepthGenerator 
+
+Another topology scenario would be to create a module that provides an 
+algorithm to generate data from another input. For example, a 
+HandGenerator node that identifies hands in any color image - the 
+algorithm will create and track the hand and take the input from an 
+ImageGenerator node. Thus, the new module will include a single class 
+implementation, a HandGenerator class, which will depend on any image 
+generator. 
+
+*/

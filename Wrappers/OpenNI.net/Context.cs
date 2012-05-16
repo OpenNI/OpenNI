@@ -48,12 +48,46 @@ namespace OpenNI
 		private string currError;
 	}
 
+    public class NodeCreatedEventArgs : EventArgs
+    {
+        public NodeCreatedEventArgs(ProductionNode createdNode)
+        {
+            this.createdNode = createdNode;
+        }
+
+        public ProductionNode CreatedNode
+        {
+            get { return createdNode; }
+            set { createdNode = value; }
+        }
+
+        private ProductionNode createdNode;
+    }
+
+    public class NodeDestroyedEventArgs : EventArgs
+    {
+        public NodeDestroyedEventArgs(string destroyedNodeName)
+        {
+            this.destroyedNodeName = destroyedNodeName;
+        }
+
+        public string DestroyedNodeName
+        {
+            get { return destroyedNodeName; }
+            set { destroyedNodeName = value; }
+        }
+
+        private string destroyedNodeName;
+    }
+
 	public class Context : ObjectWrapper
 	{
 		private Context(IntPtr pContext, bool addRef) : 
 			base(pContext)
 		{
 			this.errorStateChangedHandler = this.ErrorStateChangedCallback;
+            this.nodeCreationHandler = this.NodeCreationCallback;
+            this.nodeDestructionHandler = this.NodeDestructionCallback;
 
 			lock (Context.staticLock)
 			{
@@ -171,18 +205,24 @@ namespace OpenNI
 
 		public ProductionNode OpenFileRecordingEx(string fileName)
 		{
-			IntPtr hScriptNode;
-			int status = SafeNativeMethods.xnContextOpenFileRecordingEx(this.InternalObject, fileName, out hScriptNode);
+			IntPtr hPlayer;
+            int status = SafeNativeMethods.xnContextOpenFileRecordingEx(this.InternalObject, fileName, out hPlayer);
 			WrapperUtils.ThrowOnError(status);
-			return CreateProductionNodeFromNative(hScriptNode);
+            return new Player(this, hPlayer, false);
 		}
 
 		[Obsolete("Do not use this function. You may use Release() instead, or count on GC.")]
 		public void Shutdown()
 		{
+            // take the original context pointer (it will soon be erased)
+            IntPtr pContext = this.InternalObject;
+            // shutdown (this will destroy the native context, and cause the shutdown event to be raised, 
+            // and our OnContextShuttingDown callback will be called)
 			SafeNativeMethods.xnShutdown(this.InternalObject);
-			UnsafeReplaceInternalObject(IntPtr.Zero);
-			Dispose();
+            // remove it from the static list
+            RemoveContext(pContext);
+
+            // (no need to dispose. Already done as part of OnContextShuttingDown callback)
 		}
 
 		public void Release()
@@ -247,6 +287,11 @@ namespace OpenNI
 
 			return new NodeInfoList(resultList);
 		}
+
+        public NodeInfoList EnumerateProductionTrees(NodeType type)
+        {
+            return EnumerateProductionTrees(type, null);
+        }
 
 		public ProductionNode CreateAnyProductionTree(NodeType type, Query query)
 		{
@@ -390,7 +435,53 @@ namespace OpenNI
 			}
 		}
 
-		public void WaitAndUpdateAll()
+        public event EventHandler<NodeCreatedEventArgs> NodeCreated
+        {
+            add
+            {
+                if (this.nodeCreated == null)
+                {
+                    int status = SafeNativeMethods.xnRegisterToNodeCreation(this.InternalObject, this.nodeCreationHandler, IntPtr.Zero, out this.nodeCreationCallbackHandle);
+                    WrapperUtils.ThrowOnError(status);
+                }
+
+                this.nodeCreated += value;
+            }
+            remove
+            {
+                this.nodeCreated -= value;
+
+                if (this.nodeCreated == null)
+                {
+                    SafeNativeMethods.xnUnregisterFromNodeCreation(this.InternalObject, this.nodeCreationCallbackHandle);
+                }
+            }
+        }
+
+        public event EventHandler<NodeDestroyedEventArgs> NodeDestroyed
+        {
+            add
+            {
+                if (this.nodeDestroyed == null)
+                {
+                    int status = SafeNativeMethods.xnRegisterToNodeDestruction(this.InternalObject, this.nodeDestructionHandler, IntPtr.Zero, out this.nodeDestructionCallbackHandle);
+                    WrapperUtils.ThrowOnError(status);
+                }
+
+                this.nodeDestroyed += value;
+            }
+            remove
+            {
+                this.nodeDestroyed -= value;
+
+                if (this.nodeDestroyed == null)
+                {
+                    SafeNativeMethods.xnUnregisterFromNodeDestruction(this.InternalObject, this.nodeDestructionCallbackHandle);
+                }
+            }
+        }
+
+        public void WaitAndUpdateAll()
 		{
 			int status = SafeNativeMethods.xnWaitAndUpdateAll(this.InternalObject);
 			WrapperUtils.ThrowOnError(status);
@@ -433,10 +524,7 @@ namespace OpenNI
 			if (disposing)
 			{
 				// remove it from the list
-				lock (Context.allContexts)
-				{
-					Context.allContexts.Remove(ptr);
-				}
+                RemoveContext(ptr);
 			}
 
 			if (this.usingDeprecatedAPI)
@@ -492,59 +580,77 @@ namespace OpenNI
 
 					ProductionNode node;
 
-					switch (type)
-					{
-						case NodeType.Device:
-							node = new Device(this, nodeHandle, true);
-							break;
-						case NodeType.Depth:
-							node = new DepthGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.Image:
-							node = new ImageGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.Audio:
-							node = new AudioGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.IR:
-							node = new IRGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.User:
-							node = new UserGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.Recorder:
-							node = new Recorder(this, nodeHandle, true);
-							break;
-						case NodeType.Player:
-							node = new Player(this, nodeHandle, true);
-							break;
-						case NodeType.Gesture:
-							node = new GestureGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.Scene:
-							node = new SceneAnalyzer(this, nodeHandle, true);
-							break;
-						case NodeType.Hands:
-							node = new HandsGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.Codec:
-							node = new Codec(this, nodeHandle, true);
-							break;
-						case NodeType.ProductionNode:
-							node = new ProductionNode(this, nodeHandle, true);
-							break;
-						case NodeType.Generator:
-							node = new Generator(this, nodeHandle, true);
-							break;
-						case NodeType.MapGenerator:
-							node = new MapGenerator(this, nodeHandle, true);
-							break;
-						case NodeType.ScriptNode:
-							node = new ScriptNode(this, nodeHandle, true);
-							break;
-						default:
-							throw new NotImplementedException("C# wrapper: Unknown generator type!");
-					}
+                   	// start with concrete types
+                    if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Device))
+                    {
+                        node = new Device(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Depth))
+                    {
+                        node = new DepthGenerator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Image))
+                    {
+                        node = new ImageGenerator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Audio))
+                    {
+                        node = new AudioGenerator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.IR))
+                    {
+                        node = new IRGenerator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.User))
+                    {
+                        node = new UserGenerator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Recorder))
+                    {
+                        node = new Recorder(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Player))
+                    {
+                        node = new Player(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Gesture))
+                    {
+                        node = new GestureGenerator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Scene))
+                    {
+                        node = new SceneAnalyzer(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Hands))
+                    {
+                        node = new HandsGenerator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Codec))
+                    {
+                        node = new Codec(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.ScriptNode))
+                    {
+                        node = new ScriptNode(this, nodeHandle, true);
+                    }
+                    // move on to abstract types
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.MapGenerator))
+                    {
+                        node = new MapGenerator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.Generator))
+                    {
+                        node = new Generator(this, nodeHandle, true);
+                    }
+                    else if (SafeNativeMethods.xnIsTypeDerivedFrom(type.Value, NodeType.ProductionNode))
+                    {
+                        node = new ProductionNode(this, nodeHandle, true);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException("C# wrapper: Unknown generator type!");
+                    }
+
 					this.allNodes[nodeHandle] = node;
 				}
 
@@ -567,7 +673,28 @@ namespace OpenNI
 			}
 		}
 
-		private void OnContextShuttingDown(IntPtr pContext, IntPtr pCookie)
+        private void NodeCreationCallback(IntPtr pContext, IntPtr hCreatedNode, IntPtr pCookie)
+        {
+            EventHandler<NodeCreatedEventArgs> handlers = this.nodeCreated;
+            if (handlers != null)
+            {
+                ProductionNode createdNode = Context.CreateProductionNodeFromNative(hCreatedNode);
+                NodeCreatedEventArgs args = new NodeCreatedEventArgs(createdNode);
+                handlers(this, args);
+            }
+        }
+
+        private void NodeDestructionCallback(IntPtr pContext, string strDestroyedNodeName, IntPtr pCookie)
+        {
+            EventHandler<NodeDestroyedEventArgs> handlers = this.nodeDestroyed;
+            if (handlers != null)
+            {
+                NodeDestroyedEventArgs args = new NodeDestroyedEventArgs(strDestroyedNodeName);
+                handlers(this, args);
+            }
+        }
+
+        private void OnContextShuttingDown(IntPtr pContext, IntPtr pCookie)
 		{
 			// context is shutting down. This object is no longer valid
 			// no need to unregister from event, the event is destroyed anyway
@@ -576,11 +703,29 @@ namespace OpenNI
 			Dispose();
 		}
 
+        private static void RemoveContext(IntPtr pContext)
+        {
+            lock (Context.allContexts)
+            {
+                Context.allContexts.Remove(pContext);
+            }
+        }
+
 		private bool usingDeprecatedAPI;
-		private IntPtr errorStateCallbackHandle;
+
+        private IntPtr errorStateCallbackHandle;
 		private event EventHandler<ErrorStateEventArgs> errorStateChanged;
 		private SafeNativeMethods.XnErrorStateChangedHandler errorStateChangedHandler;
-		private IntPtr shutdownCallbackHandle;
+
+        private IntPtr nodeCreationCallbackHandle;
+        private event EventHandler<NodeCreatedEventArgs> nodeCreated;
+        private SafeNativeMethods.XnNodeCreationHandler nodeCreationHandler;
+
+        private IntPtr nodeDestructionCallbackHandle;
+        private event EventHandler<NodeDestroyedEventArgs> nodeDestroyed;
+        private SafeNativeMethods.XnNodeDestructionHandler nodeDestructionHandler;
+
+        private IntPtr shutdownCallbackHandle;
 		private SafeNativeMethods.XnContextShuttingDownHandler shutdownHandler;
 		private Dictionary<IntPtr, ProductionNode> allNodes = new Dictionary<IntPtr, ProductionNode>();
 

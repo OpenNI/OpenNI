@@ -25,8 +25,8 @@
 #include <XnModuleCppInterface.h>
 #include <XnCppWrapper.h>
 #include <XnTypes.h>
-#include <XnEvent.h>
-#include <XnStringsHash.h>
+#include <XnEventT.h>
+#include <XnStringsHashT.h>
 #include "DataRecords.h"
 #include <XnCodecIDs.h>
 
@@ -66,7 +66,7 @@ private:
 		XnUInt64 nUndoRecordPos;
 	};
 
-	XN_DECLARE_STRINGS_HASH(RecordUndoInfo, RecordUndoInfoMap);
+	typedef XnStringsHashT<RecordUndoInfo> RecordUndoInfoMap;
 
 	struct PlayerNodeInfo
 	{
@@ -160,8 +160,7 @@ private:
 	XnUInt64 m_nTimeStamp;
 	XnUInt64 m_nGlobalMaxTimeStamp;
 
-	XN_DECLARE_EVENT_0ARG(EndOfFileReachedEvent, IEndOfFileReachedEvent);
-	EndOfFileReachedEvent m_eofReachedEvent;
+	XnEventNoArgs m_eofReachedEvent;
 
 	PlayerNodeInfo* m_pNodeInfoMap;
 	XnUInt32 m_nMaxNodes;

@@ -24,32 +24,37 @@
 #include <XnLog.h>
 
 
-MockProductionNode::MockProductionNode(const XnChar* strName) :
+MockProductionNode::MockProductionNode(xn::Context& context, const XnChar* strName) :
 	m_bExtendedSerializationCap(FALSE),
 	m_pNotifications(NULL),
-	m_pNotificationsCookie(NULL)
+	m_pNotificationsCookie(NULL),
+	m_bStateReady(FALSE),
+	m_context(context)
 {
 	xnOSStrNCopy(m_strName, strName, sizeof(m_strName)-1, sizeof(m_strName));
 }
 
 MockProductionNode::~MockProductionNode()
 {
-	for (StringProps::Iterator it = m_stringProps.begin(); it != m_stringProps.end(); it++)
+	for (StringProps::Iterator it = m_stringProps.Begin(); it != m_stringProps.End(); ++it)
 	{
-		xnOSFree(it.Value());
+		xnOSFree(it->Value());
 	}
 
-	for (GeneralProps::Iterator it2 = m_generalProps.begin(); it2 != m_generalProps.end(); it2++)
+	for (GeneralProps::Iterator it2 = m_generalProps.Begin(); it2 != m_generalProps.End(); ++it2)
 	{
-		XnGeneralBufferFree(&(it2.Value()));
+		XnGeneralBufferFree(&(it2->Value()));
 	}
 }
 
 XnBool MockProductionNode::IsCapabilitySupported(const XnChar* strCapabilityName)
 {
+	// during construction (until state is ready), mock node supports all capabilities it can. This is
+	// done because OpenNI checks for some capabilities *before* state is ready, and then it gets the
+	// wrong information
 	if (strcmp(strCapabilityName, XN_CAPABILITY_EXTENDED_SERIALIZATION) == 0)
 	{
-		return m_bExtendedSerializationCap;
+		return (!m_bStateReady || m_bExtendedSerializationCap);
 	}
 	else
 	{
@@ -197,30 +202,30 @@ XnStatus MockProductionNode::NotifyExState(XnNodeNotifications* pNotifications, 
 	XnStatus nRetVal = XN_STATUS_OK;
 	
 	// notify int props
-	for (IntProps::ConstIterator it = m_intProps.begin(); it != m_intProps.end(); ++it)
+	for (IntProps::ConstIterator it = m_intProps.Begin(); it != m_intProps.End(); ++it)
 	{
-		nRetVal = pNotifications->OnNodeIntPropChanged(pCookie, m_strName, it.Key(), it.Value());
+		nRetVal = pNotifications->OnNodeIntPropChanged(pCookie, m_strName, it->Key(), it->Value());
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
 	// notify real props
-	for (RealProps::ConstIterator it = m_realProps.begin(); it != m_realProps.end(); ++it)
+	for (RealProps::ConstIterator it = m_realProps.Begin(); it != m_realProps.End(); ++it)
 	{
-		nRetVal = pNotifications->OnNodeRealPropChanged(pCookie, m_strName, it.Key(), it.Value());
+		nRetVal = pNotifications->OnNodeRealPropChanged(pCookie, m_strName, it->Key(), it->Value());
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
 	// notify string props
-	for (StringProps::ConstIterator it = m_stringProps.begin(); it != m_stringProps.end(); ++it)
+	for (StringProps::ConstIterator it = m_stringProps.Begin(); it != m_stringProps.End(); ++it)
 	{
-		nRetVal = pNotifications->OnNodeStringPropChanged(pCookie, m_strName, it.Key(), it.Value());
+		nRetVal = pNotifications->OnNodeStringPropChanged(pCookie, m_strName, it->Key(), it->Value());
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
 	// notify general props
-	for (GeneralProps::ConstIterator it = m_generalProps.begin(); it != m_generalProps.end(); ++it)
+	for (GeneralProps::ConstIterator it = m_generalProps.Begin(); it != m_generalProps.End(); ++it)
 	{
-		nRetVal = pNotifications->OnNodeGeneralPropChanged(pCookie, m_strName, it.Key(), it.Value().nDataSize, it.Value().pData);
+		nRetVal = pNotifications->OnNodeGeneralPropChanged(pCookie, m_strName, it->Key(), it->Value().nDataSize, it->Value().pData);
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
@@ -239,5 +244,6 @@ void MockProductionNode::UnregisterExNotifications()
 
 XnStatus MockProductionNode::OnStateReady()
 {
+	m_bStateReady = TRUE;
 	return (XN_STATUS_OK);
 }

@@ -32,7 +32,9 @@ void audioPlay() {}
 void audioShutdown(void) {}
 #else // Win32
 
+#pragma warning(push, 3)
 #include <MMSystem.h>
+#pragma warning(pop)
 
 // --------------------------------
 // Defines
@@ -151,12 +153,12 @@ void audioPlay()
 	g_AudioData.nAudioNextBuffer = (g_AudioData.nAudioNextBuffer + 1) % NUMBER_OF_AUDIO_BUFFERS;
 }
 
-void CALLBACK audioCallback(HWAVEOUT hwo, UINT uMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+void CALLBACK audioCallback(HWAVEOUT /*hwo*/, UINT uMsg, DWORD_PTR /*dwInstance*/, DWORD_PTR dwParam1, DWORD_PTR /*dwParam2*/)
 {
 	if (uMsg == WOM_DONE)
 	{
 		WAVEHDR* pHeader = (WAVEHDR*)dwParam1;
-		XnUInt32 nIndex = pHeader->dwUser;
+		int nIndex = (int)pHeader->dwUser;
 
 		xnDumpFileWriteString(g_AudioData.SyncDump, "Done playing index %d.", nIndex);
 

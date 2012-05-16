@@ -24,6 +24,6 @@
 class MockDevice : public MockProductionNode
 {
 public:
-	MockDevice(const XnChar* strName);
+	MockDevice(xn::Context& context, const XnChar* strName);
 	virtual ~MockDevice();
 };

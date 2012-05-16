@@ -25,6 +25,7 @@
 #include "XnStatus.h"
 #include "XnInternalTypes.h"
 #include <XnModuleInterface.h>
+#include <XnStringsHashT.h>
 #include <XnTypes.h>
 #include <XnOS.h>
 
@@ -108,11 +109,12 @@ private:
 		XnLockHandle hLock;
 	} PlayedNodeInfo;
 
-	XN_DECLARE_STRINGS_HASH(PlayedNodeInfo, PlayedNodesHash);
+	typedef XnStringsHashT<PlayedNodeInfo> PlayedNodesHash;
 
-	XnNodeHandle m_hPlayer;
 	static XnPlayerInputStreamInterface s_fileInputStream;
 	static XnNodeNotifications s_nodeNotifications;
+
+	XnNodeHandle m_hPlayer;
 	XnBool m_bIsFileOpen;
 	XN_FILE_HANDLE m_hInFile;
 	XnChar m_strSource[XN_FILE_MAX_PATH];

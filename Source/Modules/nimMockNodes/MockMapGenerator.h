@@ -26,13 +26,15 @@
 #include <XnTypes.h>
 #include "MockGenerator.h"
 
+XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_INHERITS_VIA_DOMINANCE_WARNING_ID)
+
 class MockMapGenerator : 
 	public MockGenerator,
 	virtual public xn::ModuleMapGenerator,
 	virtual public xn::ModuleCroppingInterface
 {
 public:
-	MockMapGenerator(const XnChar* strName);
+	MockMapGenerator(xn::Context& context, const XnChar* strName);
 	virtual ~MockMapGenerator();
 
 	/*ProductionNode*/
@@ -71,5 +73,7 @@ private:
 	XnBool m_bSupportedMapOutputModesCountReceived;
 	XnMapOutputMode* m_pSupportedMapOutputModes;
 };
+
+XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
 
 #endif // __MOCKMAPGENERATOR_H__

@@ -57,11 +57,11 @@ XnStatus ExportedMockNodeBase::EnumerateProductionTrees(xn::Context& /*context*/
 	return XN_STATUS_OK;
 }
 
-XnStatus ExportedMockNodeBase::Create(xn::Context& /*context*/, const XnChar* strInstanceName, const XnChar* /*strCreationInfo*/, xn::NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, xn::ModuleProductionNode** ppInstance)
+XnStatus ExportedMockNodeBase::Create(xn::Context& context, const XnChar* strInstanceName, const XnChar* /*strCreationInfo*/, xn::NodeInfoList* /*pNeededTrees*/, const XnChar* /*strConfigurationDir*/, xn::ModuleProductionNode** ppInstance)
 {
 	XN_VALIDATE_OUTPUT_PTR(ppInstance);
 
-	*ppInstance = CreateImpl(strInstanceName);
+	*ppInstance = CreateImpl(context, strInstanceName);
 	XN_VALIDATE_ALLOC_PTR(*ppInstance);
 
 	return XN_STATUS_OK;
@@ -80,9 +80,9 @@ ExportedMockDevice::ExportedMockDevice() :
 {
 }
 
-xn::ModuleProductionNode* ExportedMockDevice::CreateImpl(const XnChar* strName)
+xn::ModuleProductionNode* ExportedMockDevice::CreateImpl(xn::Context& context, const XnChar* strName)
 {
-	return XN_NEW(MockDevice, strName);
+	return XN_NEW(MockDevice, context, strName);
 }
 
 /*********************/
@@ -93,9 +93,9 @@ ExportedMockDepth::ExportedMockDepth() :
 {
 }
 
-xn::ModuleProductionNode* ExportedMockDepth::CreateImpl(const XnChar* strName)
+xn::ModuleProductionNode* ExportedMockDepth::CreateImpl(xn::Context& context, const XnChar* strName)
 {
-	return XN_NEW(MockDepthGenerator, strName);
+	return XN_NEW(MockDepthGenerator, context, strName);
 }
 
 /**********************/
@@ -107,9 +107,9 @@ ExportedMockImage::ExportedMockImage() :
 {
 }
 
-xn::ModuleProductionNode* ExportedMockImage::CreateImpl(const XnChar* strName)
+xn::ModuleProductionNode* ExportedMockImage::CreateImpl(xn::Context& context, const XnChar* strName)
 {
-	return XN_NEW(MockImageGenerator, strName);
+	return XN_NEW(MockImageGenerator, context, strName);
 }
 
 /*******************/
@@ -121,9 +121,9 @@ ExportedMockIR::ExportedMockIR() :
 {
 }
 
-xn::ModuleProductionNode* ExportedMockIR::CreateImpl(const XnChar* strName)
+xn::ModuleProductionNode* ExportedMockIR::CreateImpl(xn::Context& context, const XnChar* strName)
 {
-	return XN_NEW(MockIRGenerator, strName);
+	return XN_NEW(MockIRGenerator, context, strName);
 }
 
 /*********************/
@@ -134,9 +134,9 @@ ExportedMockAudio::ExportedMockAudio() :
 {
 }
 
-xn::ModuleProductionNode* ExportedMockAudio::CreateImpl(const XnChar* strName)
+xn::ModuleProductionNode* ExportedMockAudio::CreateImpl(xn::Context& context, const XnChar* strName)
 {
-	return XN_NEW(MockAudioGenerator, strName);
+	return XN_NEW(MockAudioGenerator, context, strName);
 }
 
 /*************************/
@@ -149,9 +149,9 @@ ExportedMockProductionNode::ExportedMockProductionNode() :
 
 }
 
-xn::ModuleProductionNode* ExportedMockProductionNode::CreateImpl(const XnChar* strName)
+xn::ModuleProductionNode* ExportedMockProductionNode::CreateImpl(xn::Context& context, const XnChar* strName)
 {
-	return XN_NEW(MockProductionNode, strName);
+	return XN_NEW(MockProductionNode, context, strName);
 }
 
 /*************************/
@@ -164,9 +164,9 @@ ExportedMockGenerator::ExportedMockGenerator() :
 
 }
 
-xn::ModuleProductionNode* ExportedMockGenerator::CreateImpl(const XnChar* strName)
+xn::ModuleProductionNode* ExportedMockGenerator::CreateImpl(xn::Context& context, const XnChar* strName)
 {
-	return XN_NEW(MockGenerator, strName);
+	return XN_NEW(MockGenerator, context, strName);
 }
 
 /*************************/
@@ -179,7 +179,7 @@ ExportedMockMapGenerator::ExportedMockMapGenerator() :
 
 }
 
-xn::ModuleProductionNode* ExportedMockMapGenerator::CreateImpl(const XnChar* strName)
+xn::ModuleProductionNode* ExportedMockMapGenerator::CreateImpl(xn::Context& context, const XnChar* strName)
 {
-	return XN_NEW(MockMapGenerator, strName);
+	return XN_NEW(MockMapGenerator, context, strName);
 }

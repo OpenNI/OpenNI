@@ -28,6 +28,7 @@
 // Defines
 //---------------------------------------------------------------------------
 #define SAMPLE_XML_PATH "../../../../Data/SamplesConfig.xml"
+#define SAMPLE_XML_PATH_LOCAL "SamplesConfig.xml"
 
 //---------------------------------------------------------------------------
 // Macros
@@ -43,6 +44,13 @@
 // Code
 //---------------------------------------------------------------------------
 
+XnBool fileExists(const char *fn)
+{
+	XnBool exists;
+	xnOSDoesFileExist(fn, &exists);
+	return exists;
+}
+
 int main()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -53,11 +61,20 @@ int main()
 	XnDepthMetaData* pDepthMD;
 	const XnDepthPixel* pDepthMap;
 	XnDepthPixel middlePoint;
+	const char *fn = NULL;
 
 	nRetVal = xnEnumerationErrorsAllocate(&pErrors);
 	CHECK_RC(nRetVal, "Allocate errors object");
 
-	nRetVal = xnInitFromXmlFileEx(SAMPLE_XML_PATH, &pContext, pErrors, &hScriptNode);
+
+	if	(fileExists(SAMPLE_XML_PATH)) fn = SAMPLE_XML_PATH;
+	else if (fileExists(SAMPLE_XML_PATH_LOCAL)) fn = SAMPLE_XML_PATH_LOCAL;
+	else {
+		printf("Could not find '%s' nor '%s'. Aborting.\n" , SAMPLE_XML_PATH, SAMPLE_XML_PATH_LOCAL);
+		return XN_STATUS_ERROR;
+	}
+	printf("Reading config from: '%s'\n", fn);
+	nRetVal = xnInitFromXmlFileEx(fn, &pContext, pErrors, &hScriptNode);
 	if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
 	{
 		XnChar strError[1024];

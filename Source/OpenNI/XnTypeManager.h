@@ -25,7 +25,6 @@
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
-#include <XnStringsHash.h>
 #include <XnBitSet.h>
 #include <XnTypes.h>
 
@@ -48,6 +47,7 @@ public:
 	XnStatus GetTypeByName(const XnChar* strName, XnProductionNodeType* pType) const;
 	XnStatus IsTypeDerivedFrom(XnProductionNodeType type, XnProductionNodeType base, XnBool* pbIsDerived) const;
 	XnStatus GetTypeHierarchy(XnProductionNodeType type, const XnBitSet*& pHierarchy) const;
+	XnPredefinedProductionNodeType GetPredefinedBaseType(XnProductionNodeType type);
 
 private:
 	TypeManager();

@@ -25,7 +25,9 @@
 #include <XnCppWrapper.h>
 
 #if XN_PLATFORM == XN_PLATFORM_WIN32
+#pragma warning(push,3)
 #include <MMSystem.h>
+#pragma warning(pop)
 #endif
 
 //---------------------------------------------------------------------------
@@ -60,7 +62,7 @@ void printUsage(const XnChar* arg0)
 	printf("usage: %s [play | record]\n", arg0);
 }
 
-XnStatus play(Context& context, AudioGenerator* aGens, XnUInt32 nNodes)
+XnStatus play(Context& /*context*/, AudioGenerator* aGens, XnUInt32 nNodes)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -90,7 +92,7 @@ XnStatus play(Context& context, AudioGenerator* aGens, XnUInt32 nNodes)
 	if (mmRes != MMSYSERR_NOERROR)
 	{
 		printf("Warning: Failed opening wave out device. Audio could not be played!\n");
-		return -1;
+		return XN_STATUS_ERROR;
 	}
 
 	// create some wave headers for playing
@@ -170,7 +172,7 @@ XnStatus play(Context& context, AudioGenerator* aGens, XnUInt32 nNodes)
 	if (MMSYSERR_NOERROR != waveOutReset(hWaveOut))
 	{
 		printf("Warning: Failed stopping wave out device.!\n");
-		return -1;
+		return XN_STATUS_ERROR;
 	}
 
 	// close device

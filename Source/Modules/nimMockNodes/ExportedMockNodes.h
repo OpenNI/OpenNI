@@ -37,7 +37,7 @@ public:
 	virtual void Destroy(xn::ModuleProductionNode* pInstance);
 
 protected:
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName) = 0;
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName) = 0;
 
 private:
 	XnProductionNodeType m_type;
@@ -48,7 +48,7 @@ class ExportedMockDevice : public ExportedMockNodeBase
 public:
 	ExportedMockDevice();
 	virtual ~ExportedMockDevice() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockDepth : public ExportedMockNodeBase
@@ -56,7 +56,7 @@ class ExportedMockDepth : public ExportedMockNodeBase
 public:
 	ExportedMockDepth();
 	virtual ~ExportedMockDepth() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockImage : public ExportedMockNodeBase
@@ -64,7 +64,7 @@ class ExportedMockImage : public ExportedMockNodeBase
 public:
 	ExportedMockImage();
 	virtual ~ExportedMockImage() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockIR : public ExportedMockNodeBase
@@ -72,7 +72,7 @@ class ExportedMockIR : public ExportedMockNodeBase
 public:
 	ExportedMockIR();
 	virtual ~ExportedMockIR() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockAudio : public ExportedMockNodeBase
@@ -80,7 +80,7 @@ class ExportedMockAudio : public ExportedMockNodeBase
 public:
 	ExportedMockAudio();
 	virtual ~ExportedMockAudio() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockProductionNode : public ExportedMockNodeBase
@@ -88,7 +88,7 @@ class ExportedMockProductionNode : public ExportedMockNodeBase
 public:
 	ExportedMockProductionNode();
 	virtual ~ExportedMockProductionNode() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockGenerator : public ExportedMockNodeBase
@@ -96,7 +96,7 @@ class ExportedMockGenerator : public ExportedMockNodeBase
 public:
 	ExportedMockGenerator();
 	virtual ~ExportedMockGenerator() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockMapGenerator : public ExportedMockNodeBase
@@ -104,7 +104,7 @@ class ExportedMockMapGenerator : public ExportedMockNodeBase
 public:
 	ExportedMockMapGenerator();
 	virtual ~ExportedMockMapGenerator() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 #endif //__EXPORTED_MOCK_NODES_H__

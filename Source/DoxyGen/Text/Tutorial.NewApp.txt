@@ -1,0 +1,21 @@
+/**
+@page new_app Creating an empty project that uses OpenNI
+
+This section describes how to set the environment for developing your own applications using OpenNI.
+
+@section create_new_app To Create a simple project using OpenNI:
+-#	Open a new project or an existing one with which you want to use OpenNI.
+-#	In the Visual Studio menu, open the Project menu and choose Project properties.
+-#	In the C/C++ section, under the General node, find the "Additional Include Directories" and add 
+		"$(OPEN_NI_INCLUDE)". This is an environment variable pointing to where OpenNI include directory
+		is located (the default location will be: C:\\Program files\\OpenNI\\Include).
+-#	In the Linker section, under the General node, find the "Additional Library Directories" and add 
+		"$(OPEN_NI_LIB)". This is an environment variable pointing to where OpenNI libraries directory
+		is located (the default location will be: C:\\Program files\\OpenNI\\Lib).
+-#	In the Linker section, under the Input node, find the "Additional Dependencies" and add OpenNI.lib
+-#	If you wish to use an XML file to configure OpenNI, you can start from a basic one found under OpenNI
+		Data folder (the default location will be: C:\\Program files\\OpenNI\\Data).
+		For additional information about OpenNI xml scripts, see @ref xmlscripts.
+-#	Make sure to add the Additional Include and Library directories to both your Release and Debug configurations.
+-#	Your code files should include XnOpenNI.h if using the C interface, or XnCppWrapper.h if using the C++ interface.
+*/

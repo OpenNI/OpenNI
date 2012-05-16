@@ -35,6 +35,21 @@
 #include <XnOS.h>
 #include <XnLog.h>
 #include <XnOSCpp.h>
+#include "XnListT.h"
+
+
+//---------------------------------------------------------------------------
+// Types
+//---------------------------------------------------------------------------
+typedef struct XnUSBEventCallback
+{
+	XnUSBDeviceCallbackFunctionPtr pFunc;
+	void* pCookie;
+} XnUSBEventCallback;
+
+typedef XnListT<XnUSBEventCallback*> XnUSBEventCallbackList;
+
+XnUSBEventCallbackList g_connectivityEvent;
 
 //---------------------------------------------------------------------------
 // Defines
@@ -62,7 +77,7 @@ struct xnUSBInitData
 	libusb_context* pContext;
 	XN_THREAD_HANDLE hThread;
 	XnBool bShouldThreadRun;
-	XnUInt32 nThreads;
+	XnUInt32 nOpenDevices;
 	XN_CRITICAL_SECTION_HANDLE hLock;
 } g_InitData = {NULL, NULL, FALSE, 0, NULL};
 
@@ -113,7 +128,7 @@ XnStatus xnUSBAsynchThreadAddRef()
 
 	XnAutoCSLocker locker(g_InitData.hLock);
 
-	++g_InitData.nThreads;
+	++g_InitData.nOpenDevices;
 	
 	if (g_InitData.hThread == NULL)
 	{
@@ -151,6 +166,7 @@ void xnUSBAsynchThreadStop()
 		g_InitData.bShouldThreadRun = FALSE;
 		
 		// wait for it to exit
+		xnLogWarning(XN_MASK_USB, "Shutting down USB events thread...");
 		XnStatus nRetVal = xnOSWaitForThreadExit(g_InitData.hThread, XN_USB_HANDLE_EVENTS_TIMEOUT);
 		if (nRetVal != XN_STATUS_OK)
 		{
@@ -169,9 +185,9 @@ void xnUSBAsynchThreadRelease()
 {
 	XnAutoCSLocker locker(g_InitData.hLock);
 
-	--g_InitData.nThreads;
+	--g_InitData.nOpenDevices;
 
-	if (g_InitData.nThreads == 0)
+	if (g_InitData.nOpenDevices == 0)
 	{
 		xnUSBAsynchThreadStop();
 	}
@@ -409,6 +425,13 @@ XN_C_API XnStatus xnUSBOpenDeviceImpl(libusb_device* pDevice, XN_USB_DEV_HANDLE*
 	// mark the device is of high-speed
 	pDevHandle->nDevSpeed = XN_USB_DEVICE_HIGH_SPEED;
 	
+	nRetVal = xnUSBAsynchThreadAddRef();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(*pDevHandlePtr);
+		return (nRetVal);
+	}
+	
 	return (XN_STATUS_OK);
 }
 
@@ -500,6 +523,8 @@ XN_C_API XnStatus xnUSBCloseDevice(XN_USB_DEV_HANDLE pDevHandle)
 	libusb_close(pDevHandle->hDevice);
 
 	XN_FREE_AND_NULL(pDevHandle);
+	
+	xnUSBAsynchThreadRelease();
 
 	return (XN_STATUS_OK);
 }
@@ -983,8 +1008,6 @@ void xnCleanupThreadData(XnUSBReadThreadData* pThreadData)
 	}
 	
 	XN_ALIGNED_FREE_AND_NULL(pThreadData->pBuffersInfo);
-
-	xnUSBAsynchThreadRelease();
 }
 
 /** Checks if any transfer of the thread is queued. */
@@ -1128,6 +1151,18 @@ XN_THREAD_PROC xnUSBReadThreadMain(XN_THREAD_PARAM pThreadParam)
 					if (rc != 0)
 					{
 						xnLogError(XN_MASK_USB, "Endpoint 0x%x, Buffer %d: Failed to re-submit asynch I/O transfer (err=%d)!", pTransfer->endpoint, pBufferInfo->nBufferID, rc);
+						if (rc == LIBUSB_ERROR_NO_DEVICE)
+						{
+							for (XnUSBEventCallbackList::Iterator it = g_connectivityEvent.Begin(); it != g_connectivityEvent.End(); ++it)
+							{
+								XnUSBEventCallback* pCallback = *it;
+								XnUSBEventArgs args;
+								args.strDevicePath = NULL;
+								args.eventType = XN_USB_EVENT_DEVICE_DISCONNECT;
+								pCallback->pFunc(&args, pCallback->pCookie);
+							}
+						}
+
 					}
 				}
 			}
@@ -1166,16 +1201,12 @@ XN_C_API XnStatus xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBuff
 	XN_VALIDATE_EP_HANDLE(pEPHandle);
 	XN_VALIDATE_INPUT_PTR(pCallbackFunction);
 	
-	nRetVal = xnUSBAsynchThreadAddRef();
-	XN_IS_STATUS_OK(nRetVal);
-	
 	xnLogVerbose(XN_MASK_USB, "Starting a USB read thread...");
 
 	XnUSBReadThreadData* pThreadData = &pEPHandle->ThreadData;
 
 	if (pThreadData->bIsRunning == TRUE)
 	{
-		xnUSBAsynchThreadRelease();
 		return (XN_STATUS_USB_READTHREAD_ALREADY_INIT);
 	}
 
@@ -1329,4 +1360,39 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 XN_C_API XnStatus xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 /*nProductID*/, void* pExtraParam, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData)
 {
 	return (XN_STATUS_OS_UNSUPPORTED_FUNCTION);
+}
+
+XN_C_API XnStatus XN_C_DECL xnUSBRegisterToConnectivityEvents(XnUInt16 nVendorID, XnUInt16 nProductID, XnUSBDeviceCallbackFunctionPtr pFunc, void* pCookie, XnRegistrationHandle* phRegistration)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XN_VALIDATE_INPUT_PTR(pFunc);
+	XN_VALIDATE_OUTPUT_PTR(phRegistration);
+
+	XnUSBEventCallback* pCallback;
+	XN_VALIDATE_NEW(pCallback, XnUSBEventCallback);
+	pCallback->pFunc = pFunc;
+	pCallback->pCookie = pCookie;
+
+	nRetVal = g_connectivityEvent.AddLast(pCallback);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		XN_DELETE(pCallback);
+		return (nRetVal);
+	}
+
+	*phRegistration = (XnRegistrationHandle)pCallback;
+
+	return XN_STATUS_OK;
+}
+
+XN_C_API void XN_C_DECL xnUSBUnregisterFromConnectivityEvents(XnRegistrationHandle hRegistration)
+{
+	XnUSBEventCallback* pCallback = reinterpret_cast<XnUSBEventCallback*>(hRegistration);
+	XnUSBEventCallbackList::Iterator it = g_connectivityEvent.Find(pCallback);
+	if (it != g_connectivityEvent.End())
+	{
+		g_connectivityEvent.Remove(it);
+		XN_DELETE(pCallback);
+	}
 }

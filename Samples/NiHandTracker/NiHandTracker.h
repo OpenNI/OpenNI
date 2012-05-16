@@ -23,10 +23,14 @@
 #define NI_HAND_TRACKER_H__
 
 #include <XnCppWrapper.h>
-#include "NiTrailHistory.h"
+#include <XnCyclicStackT.h>
+#include <XnHashT.h>
 
 // Hand position history length (positions)
 #define MAX_HAND_TRAIL_LENGTH	10
+
+typedef XnCyclicStackT<XnPoint3D, MAX_HAND_TRAIL_LENGTH> Trail;
+typedef XnHashT<XnUserID, Trail> TrailHistory;
 
 class HandTracker
 {
@@ -46,11 +50,11 @@ private:
 													const XnPoint3D*		pIDPosition, 
 													const XnPoint3D*		pEndPosition, 
 													void*					pCookie);
-	static void XN_CALLBACK_TYPE Gesture_Process(	xn::GestureGenerator&	generator, 
-													const XnChar*			strGesture, 
-													const XnPoint3D*		pPosition, 
-													XnFloat					fProgress, 
-													void*					pCookie)	{}
+	static void XN_CALLBACK_TYPE Gesture_Process(	xn::GestureGenerator&	/*generator*/, 
+													const XnChar*			/*strGesture*/, 
+													const XnPoint3D*		/*pPosition*/, 
+													XnFloat					/*fProgress*/, 
+													void*					/*pCookie*/)	{}
 	static void XN_CALLBACK_TYPE Hand_Create(	xn::HandsGenerator& generator, 
 												XnUserID			nId, 
 												const XnPoint3D*	pPosition, 
@@ -71,7 +75,10 @@ private:
 	xn::GestureGenerator	m_GestureGenerator;
 	xn::HandsGenerator		m_HandsGenerator;
 
-	static XnList	sm_Instances;	// Living instances of the class
+	static XnListT<HandTracker*>	sm_Instances;	// Living instances of the class
+
+private:
+	XN_DISABLE_COPY_AND_ASSIGN(HandTracker);
 };
 
 #endif //NI_HAND_TRACKER_H__

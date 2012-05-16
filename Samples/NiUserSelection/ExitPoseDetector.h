@@ -26,7 +26,7 @@
 // Includes
 //---------------------------------------------------------------------------
 #include <XnCppWrapper.h>
-#include <XnHash.h>
+#include <XnHashT.h>
 
 //---------------------------------------------------------------------------
 // Code
@@ -63,7 +63,7 @@ public:
 private:
     /// @brief Defines the UserExitPoseTimes hash which holds the last time an exit pose was found 
     /// for each user. A value of 0 means an illegal time (e.g. because out of pose was found).
-    XN_DECLARE_DEFAULT_HASH(XnUserID,XnUInt64,UserExitPoseTimes);
+    typedef XnHashT<XnUserID, XnUInt64> UserExitPoseTimes;
 
     UserExitPoseTimes m_userExitPoseTimes; ///< @brief holds the hash which holds the last time and exit pose was found for each user.
 

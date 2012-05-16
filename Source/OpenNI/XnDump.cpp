@@ -24,10 +24,10 @@
 //---------------------------------------------------------------------------
 #include <XnDump.h>
 #include <XnDumpWriters.h>
-#include <XnStringsHash.h>
+#include <XnStringsHashT.h>
 #include <XnLogTypes.h>
 #include <XnLog.h>
-#include <XnList.h>
+#include <XnListT.h>
 #include <XnArray.h>
 #include "XnDumpFileWriter.h"
 
@@ -39,21 +39,37 @@
 //---------------------------------------------------------------------------
 // Types
 //---------------------------------------------------------------------------
-XN_DECLARE_LIST(XnDumpWriter*, XnDumpWriters);
-XN_DECLARE_STRINGS_HASH(XnBool, XnDumpsHash);
+typedef XnListT<XnDumpWriter*> XnDumpWriters;
+typedef XnStringsHashT<XnBool> XnDumpsHash;
 
 class DumpData
 {
 public:
-	DumpData() : bDefaultState(FALSE) {}
+	static DumpData& GetInstance()
+	{
+		// NOTE: this instance will never be destroyed (because some static object destructor might write/close dumps, and 
+		// destruction order is not-deterministic).
+		static DumpData* pSingleton = XN_NEW(DumpData);
+		return *pSingleton;
+	}
 
-	~DumpData() {}
+	void SetStateGlobally(XnBool bState)
+	{
+		// change default (for future dumps)
+		this->bDefaultState = bState;
+		// and set all existing ones
+		for (XnDumpsHash::Iterator it = this->dumpsState.Begin(); it != this->dumpsState.End(); ++it)
+		{
+			it->Value() = bState;
+		}
+	}
 
 	XnDumpWriters writers;
 	XnDumpsHash dumpsState;
 	XnBool bDefaultState;
 
-	XnDumpFileWriter fileWriter;
+private:
+	DumpData() : bDefaultState(FALSE) {}
 };
 
 typedef struct XnDumpWriterFile
@@ -70,8 +86,8 @@ typedef struct XnDumpFile
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
-static DumpData* g_pDumpData = new DumpData();
-static XnStatus _g_registerStatus = g_pDumpData->fileWriter.Register();
+XnDumpFileWriter g_fileWriter;
+XnStatus _register_status = g_fileWriter.Register();
 
 //---------------------------------------------------------------------------
 // Code
@@ -80,20 +96,15 @@ XN_C_API XnStatus xnDumpSetMaskState(const XnChar* csMask, XnBool bEnabled)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
+	DumpData& dumpData = DumpData::GetInstance();
+
 	if (strcmp(csMask, XN_LOG_MASK_ALL) == 0)
 	{
-		// change default (for future dumps)
-		g_pDumpData->bDefaultState = bEnabled;
-
-		// and set all existing ones
-		for (XnDumpsHash::Iterator it = g_pDumpData->dumpsState.begin(); it != g_pDumpData->dumpsState.end(); ++it)
-		{
-			it.Value() = bEnabled;
-		}
+		dumpData.SetStateGlobally(bEnabled);
 	}
 	else
 	{
-		nRetVal = g_pDumpData->dumpsState.Set(csMask, bEnabled);
+		nRetVal = dumpData.dumpsState.Set(csMask, bEnabled);
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
@@ -105,29 +116,29 @@ XN_C_API XnBool XN_C_DECL xnLogIsDumpMaskEnabled(const XnChar* strDumpMask)
 	XN_VALIDATE_INPUT_PTR(strDumpMask);
 
 	XnBool bEnabled = FALSE;
-	g_pDumpData->dumpsState.Get(strDumpMask, bEnabled);
+	DumpData::GetInstance().dumpsState.Get(strDumpMask, bEnabled);
 	return bEnabled;
 }
 
 XN_C_API XnStatus XN_C_DECL xnDumpRegisterWriter(XnDumpWriter* pWriter)
 {
-	return g_pDumpData->writers.AddLast(pWriter);
+	return DumpData::GetInstance().writers.AddLast(pWriter);
 }
 
 XN_C_API void XN_C_DECL xnDumpUnregisterWriter(XnDumpWriter* pWriter)
 {
-	g_pDumpData->writers.Remove(pWriter);
+	DumpData::GetInstance().writers.Remove(pWriter);
 }
 
 XN_C_API XnStatus XN_C_DECL xnDumpSetFilesOutput(XnBool bOn)
 {
 	if (bOn)
 	{
-		return g_pDumpData->fileWriter.Register();
+		return g_fileWriter.Register();
 	}
 	else
 	{
-		g_pDumpData->fileWriter.Unregister();
+		g_fileWriter.Unregister();
 	}
 
 	return XN_STATUS_OK;
@@ -137,8 +148,10 @@ XnDumpFile* xnDumpFileOpenImpl(const XnChar* strDumpName, XnBool bForce, XnBool 
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
+	DumpData& dumpData = DumpData::GetInstance();
+
 	// check if there are writers
-	if (g_pDumpData->writers.IsEmpty())
+	if (dumpData.writers.IsEmpty())
 	{
 		return NULL;
 	}
@@ -165,7 +178,7 @@ XnDumpFile* xnDumpFileOpenImpl(const XnChar* strDumpName, XnBool bForce, XnBool 
 	XnDumpFile* pFile = XN_NEW(XnDumpFile);
 
 	// try to add writers
-	for (XnDumpWriters::Iterator it = g_pDumpData->writers.begin(); it != g_pDumpData->writers.end(); ++it)
+	for (XnDumpWriters::Iterator it = dumpData.writers.Begin(); it != dumpData.writers.End(); ++it)
 	{
 		XnDumpWriterFile writerFile;
 		writerFile.pWriter = *it;
@@ -242,6 +255,7 @@ XN_C_API void XN_C_DECL _xnDumpFileWriteBuffer(XnDumpFile* pFile, const void* pB
 XN_C_API void XN_C_DECL _xnDumpFileWriteString(XnDumpFile* pFile, const XnChar* strFormat, ...)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
+	XN_REFERENCE_VARIABLE(nRetVal);
 	
 	if (pFile == NULL)
 	{
@@ -275,6 +289,8 @@ XN_C_API void XN_C_DECL _xnDumpFileClose(XnDumpFile* pFile)
 
 		pWriter->CloseFile(pWriter->pCookie, hWriterFile);
 	}
+
+    XN_DELETE(pFile);
 }
 
 //---------------------------------------------------------------------------
@@ -291,7 +307,8 @@ XnStatus xnDumpCreate(XnDump* pDump, const XnChar* csHeader, const XnChar* csFil
 	nRetVal = xnOSStrFormatV(strFileName, XN_FILE_MAX_PATH, &nChars, csFileNameFormat, args);
 	XN_IS_STATUS_OK(nRetVal);
 
-	nRetVal = xnLogCreateFile(strFileName, &pDump->hFile);
+	XnChar strFullPath[XN_FILE_MAX_PATH];
+	nRetVal = xnLogCreateNewFile(strFileName, TRUE, strFullPath, XN_FILE_MAX_PATH, &pDump->hFile);
 	if (nRetVal != XN_STATUS_OK)
 	{
 		// we don't have much to do if files can't be open. Dump will not be written

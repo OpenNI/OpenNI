@@ -93,11 +93,16 @@ private:
 
 	static void XN_CALLBACK_TYPE HandleGenerationRunningChange(ProductionNode& node, void* pCookie);
 	static void XN_CALLBACK_TYPE HandleMirrorChange(ProductionNode& node, void* pCookie);
+	static void XN_CALLBACK_TYPE HandleFrameSyncChange(ProductionNode& node, void* pCookie);
+
+	XnStatus UpdateFrameSync();
 
 	XnCallbackHandle m_hGenerationRunningChangeCB;
 	XnCallbackHandle m_hMirrorChangeCB;
+	XnCallbackHandle m_hFrameSyncChangeCB;
 
 	XnUInt64 m_nLastDataTimeStamp;
+	XnUInt32 m_nLastDataFrameID;
 };
 
 class MapWatcher : public GeneratorWatcher

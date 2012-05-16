@@ -117,7 +117,7 @@ XnStatus DefaultTrackingInitializer::AbortTracking(XnUserID nUserId)
     return m_pUserGenerator->GetSkeletonCap().AbortCalibration(nUserId);
 }
 
-XnStatus DefaultTrackingInitializer::CalibrationStart(XnUserID nUserId)
+XnStatus DefaultTrackingInitializer::CalibrationStart(XnUserID /*nUserId*/)
 {
     return XN_STATUS_OK;
 }
@@ -151,19 +151,19 @@ XnStatus DefaultTrackingInitializer::CalibrationInProgress(XnUserID nUserId,XnCa
 
 
 // Callback: Started calibration
-void XN_CALLBACK_TYPE DefaultTrackingInitializer::CalibrationStartCallback(xn::SkeletonCapability& capability, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE DefaultTrackingInitializer::CalibrationStartCallback(xn::SkeletonCapability& /*capability*/, XnUserID nUserId, void* pCookie)
 {
     DefaultTrackingInitializer *pDefaultTrackingInitializer=(DefaultTrackingInitializer *)pCookie;
     pDefaultTrackingInitializer->CalibrationStart(nUserId);
 }
 
-void XN_CALLBACK_TYPE DefaultTrackingInitializer::CalibrationCompleteCallback(xn::SkeletonCapability& capability, XnUserID nUserId, XnCalibrationStatus eStatus, void* pCookie)
+void XN_CALLBACK_TYPE DefaultTrackingInitializer::CalibrationCompleteCallback(xn::SkeletonCapability& /*capability*/, XnUserID nUserId, XnCalibrationStatus eStatus, void* pCookie)
 {
     DefaultTrackingInitializer *pDefaultTrackingInitializer=(DefaultTrackingInitializer *)pCookie;
     pDefaultTrackingInitializer->CalibrationComplete(nUserId,eStatus);
 }
 
-void XN_CALLBACK_TYPE DefaultTrackingInitializer::CalibrationInProgressCallback(xn::SkeletonCapability& capability, XnUserID nUserId, XnCalibrationStatus eStatus, void* pCookie)
+void XN_CALLBACK_TYPE DefaultTrackingInitializer::CalibrationInProgressCallback(xn::SkeletonCapability& /*capability*/, XnUserID nUserId, XnCalibrationStatus eStatus, void* pCookie)
 {
     DefaultTrackingInitializer *pDefaultTrackingInitializer=(DefaultTrackingInitializer *)pCookie;
     pDefaultTrackingInitializer->CalibrationInProgress(nUserId,eStatus);

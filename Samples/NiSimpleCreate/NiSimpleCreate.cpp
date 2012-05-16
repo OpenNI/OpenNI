@@ -68,8 +68,6 @@ int main()
 		}
 
 		depth.GetMetaData(depthMD);
-		const XnDepthPixel* pDepthMap = depthMD.Data();
-
 		printf("Frame %d Middle point is: %u.\n", depthMD.FrameID(), depthMD(depthMD.XRes() / 2, depthMD.YRes() / 2));
 	}
 

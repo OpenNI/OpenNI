@@ -59,7 +59,7 @@ XnDouble SampleRotatingDevice::GetViewAngle()
 
 XnStatus SampleRotatingDevice::RegisterToViewAngleChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_angleEvent.Register(handler, pCookie, &hCallback);
+	return m_angleEvent.Register(handler, pCookie, hCallback);
 }
 
 void SampleRotatingDevice::UnregisterFromViewAngleChange(XnCallbackHandle hCallback)

@@ -31,6 +31,7 @@
 #define XN_PROP_TIMESTAMP "xnTimeStamp" //int
 #define XN_PROP_FRAME_ID "xnFrameID" //int
 #define XN_PROP_NEWDATA "xnNewData" //general. Meant only for mock nodes.
+#define XN_PROP_FRAME_SYNCED_WITH "xnFrameSyncedWith" // String. name of the frame synced
 
 //MapGenerator
 #define XN_PROP_MAP_OUTPUT_MODE "xnMapOutputMode" //general

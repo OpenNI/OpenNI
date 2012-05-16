@@ -1,0 +1,16 @@
+/**
+@page tutorials Getting Started - A Tutorial
+
+This section is intended to provide a user with the first steps needed to write OpenNI applications.
+
+- @subpage build_and_run_sample
+- @subpage new_app
+- @subpage error_codes
+- @subpage basic
+- @subpage tut_enum
+- @subpage tut_enumeration_errors
+- @subpage tut_config
+- @subpage tut_xml
+- @subpage tut_playing
+- @subpage tut_recording
+*/

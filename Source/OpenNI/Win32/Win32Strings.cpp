@@ -129,7 +129,7 @@ XN_C_API XnStatus xnOSStrPrefix(const XnChar* cpPrefixString, XnChar* cpDestStri
 	strncpy (cpDestString, cpTempBuffer, nOutStringLength);
 
 	// Free the temporary buffer
-	XN_FREE_AND_NULL(cpTempBuffer);
+	xnOSFree(cpTempBuffer);
 
 	// All is good...
 	return (XN_STATUS_OK);

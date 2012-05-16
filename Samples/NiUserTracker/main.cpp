@@ -45,6 +45,9 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
+XnBool g_bPrintFrameID = FALSE;
+XnBool g_bMarkJoints = FALSE;
+
 #ifndef USE_GLES
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#include <GLUT/glut.h>
@@ -85,7 +88,7 @@ void CleanupExit()
 }
 
 // Callback: New user was detected
-void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& /*generator*/, XnUserID nId, void* /*pCookie*/)
 {
 	XnUInt32 epochTime = 0;
 	xnOSGetEpochTime(&epochTime);
@@ -101,14 +104,14 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 	}
 }
 // Callback: An existing user was lost
-void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& /*generator*/, XnUserID nId, void* /*pCookie*/)
 {
 	XnUInt32 epochTime = 0;
 	xnOSGetEpochTime(&epochTime);
 	printf("%d Lost user %d\n", epochTime, nId);	
 }
 // Callback: Detected a pose
-void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nId, void* /*pCookie*/)
 {
 	XnUInt32 epochTime = 0;
 	xnOSGetEpochTime(&epochTime);
@@ -117,14 +120,14 @@ void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& capabil
 	g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, TRUE);
 }
 // Callback: Started calibration
-void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& /*capability*/, XnUserID nId, void* /*pCookie*/)
 {
 	XnUInt32 epochTime = 0;
 	xnOSGetEpochTime(&epochTime);
 	printf("%d Calibration started for user %d\n", epochTime, nId);
 }
 // Callback: Finished calibration
-void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& capability, XnUserID nId, XnCalibrationStatus eStatus, void* pCookie)
+void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& /*capability*/, XnUserID nId, XnCalibrationStatus eStatus, void* /*pCookie*/)
 {
 	XnUInt32 epochTime = 0;
 	xnOSGetEpochTime(&epochTime);
@@ -246,7 +249,7 @@ void glutIdle (void)
 	glutPostRedisplay();
 }
 
-void glutKeyboard (unsigned char key, int x, int y)
+void glutKeyboard (unsigned char key, int /*x*/, int /*y*/)
 {
 	switch (key)
 	{
@@ -271,6 +274,14 @@ void glutKeyboard (unsigned char key, int x, int y)
 	case 'l':
 		// Print ID & state as label, or only ID?
 		g_bPrintState = !g_bPrintState;
+		break;
+	case 'f':
+		// Print FrameID
+		g_bPrintFrameID = !g_bPrintFrameID;
+		break;
+	case 'j':
+		// Mark joints
+		g_bMarkJoints = !g_bMarkJoints;
 		break;
 	case'p':
 		g_bPause = !g_bPause;
@@ -409,15 +420,15 @@ int main(int argc, char **argv)
 		nRetVal = g_UserGenerator.GetPoseDetectionCap().RegisterToPoseDetected(UserPose_PoseDetected, NULL, hPoseDetected);
 		CHECK_RC(nRetVal, "Register to Pose Detected");
 		g_UserGenerator.GetSkeletonCap().GetCalibrationPose(g_strPose);
+
+		nRetVal = g_UserGenerator.GetPoseDetectionCap().RegisterToPoseInProgress(MyPoseInProgress, NULL, hPoseInProgress);
+		CHECK_RC(nRetVal, "Register to pose in progress");
 	}
 
 	g_UserGenerator.GetSkeletonCap().SetSkeletonProfile(XN_SKEL_PROFILE_ALL);
 
 	nRetVal = g_UserGenerator.GetSkeletonCap().RegisterToCalibrationInProgress(MyCalibrationInProgress, NULL, hCalibrationInProgress);
 	CHECK_RC(nRetVal, "Register to calibration in progress");
-
-	nRetVal = g_UserGenerator.GetPoseDetectionCap().RegisterToPoseInProgress(MyPoseInProgress, NULL, hPoseInProgress);
-	CHECK_RC(nRetVal, "Register to pose in progress");
 
 	nRetVal = g_Context.StartGeneratingAll();
 	CHECK_RC(nRetVal, "StartGenerating");

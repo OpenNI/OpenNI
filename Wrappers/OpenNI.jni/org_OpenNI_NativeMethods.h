@@ -273,6 +273,38 @@ JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromGlobalError
 
 /*
  * Class:     org_OpenNI_NativeMethods
+ * Method:    xnRegisterToNodeCreation
+ * Signature: (JLjava/lang/Object;Ljava/lang/String;Lorg/OpenNI/OutArg;)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToNodeCreation
+  (JNIEnv *, jclass, jlong, jobject, jstring, jobject);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
+ * Method:    xnUnregisterFromNodeCreation
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromNodeCreation
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
+ * Method:    xnRegisterToNodeDestruction
+ * Signature: (JLjava/lang/Object;Ljava/lang/String;Lorg/OpenNI/OutArg;)I
+ */
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToNodeDestruction
+  (JNIEnv *, jclass, jlong, jobject, jstring, jobject);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
+ * Method:    xnUnregisterFromNodeDestruction
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromNodeDestruction
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     org_OpenNI_NativeMethods
  * Method:    xnAddLicense
  * Signature: (JLjava/lang/String;Ljava/lang/String;)I
  */

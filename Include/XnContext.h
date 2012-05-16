@@ -520,6 +520,48 @@ XN_C_API XnStatus XN_C_DECL xnRegisterToGlobalErrorStateChange
 XN_C_API void XN_C_DECL xnUnregisterFromGlobalErrorStateChange
 	(XnContext* pContext, XnCallbackHandle hCallback);
 
+/**
+* @brief Registers a callback function to 'Node Creation' event. This event is raised whenever node are created.
+*
+* @param	pContext	[in]	OpenNI context.
+* @param	handler		[in]	A pointer to a function that will be called when a new node is created.
+* @param	pCookie		[in]	A user cookie that will be passed to the callback function.
+* @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromNodeCreation().
+*/
+XN_C_API XnStatus XN_C_DECL xnRegisterToNodeCreation
+	(XnContext* pContext, XnNodeCreationHandler handler,
+	void* pCookie, XnCallbackHandle* phCallback);
+
+/**
+ * @brief Unregisters a callback function which was registered using @ref xnRegisterToNodeCreation().
+ *
+ * @param	pContext	 [in]	OpenNI context.
+ * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToNodeCreation().
+ */
+XN_C_API void XN_C_DECL xnUnregisterFromNodeCreation
+	(XnContext* pContext, XnCallbackHandle hCallback);
+
+/**
+* @brief Registers a callback function to 'Node Destruction' event. This event is raised whenever a node is destroyed.
+*
+* @param	pContext	[in]	OpenNI context.
+* @param	handler		[in]	A pointer to a function that will be called when a node is destroyed.
+* @param	pCookie		[in]	A user cookie that will be passed to the callback function.
+* @param	phCallback	[out]	Optional. Will be filled with a handle to be passed to @ref xnUnregisterFromNodeDestruction().
+*/
+XN_C_API XnStatus XN_C_DECL xnRegisterToNodeDestruction
+	(XnContext* pContext, XnNodeDestructionHandler handler,
+	void* pCookie, XnCallbackHandle* phCallback);
+
+/**
+ * @brief Unregisters a callback function which was registered using @ref xnRegisterToNodeDestruction().
+ *
+ * @param	pContext	 [in]	OpenNI context.
+ * @param	hCallback	[in]	The handle to the callback returned from @ref xnRegisterToNodeDestruction().
+ */
+XN_C_API void XN_C_DECL xnUnregisterFromNodeDestruction
+	(XnContext* pContext, XnCallbackHandle hCallback);
+
 /// @}
 
 /** @} */

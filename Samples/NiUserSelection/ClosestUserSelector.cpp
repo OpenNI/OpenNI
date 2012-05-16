@@ -77,10 +77,10 @@ void ClosestUserSelector::UpdateFrame()
     ClearUserList();
 
     // find out who are the closest ones.
-    for(UserStateHash::Iterator iter=m_hUsersState.begin(); iter!=m_hUsersState.end(); ++iter)
+    for(UserStateHash::Iterator iter = m_hUsersState.Begin(); iter!=m_hUsersState.End(); ++iter)
     {
-        UserSelectionState* val=iter.Value();
-        XnUserID newUser=iter.Key();
+        UserSelectionState* val = iter->Value();
+        XnUserID newUser = iter->Key();
         XnPoint3D newCom;
         if(m_pUserGenerator->GetCoM(newUser,newCom)!=XN_STATUS_OK)
             continue; // irrelevant user.
@@ -119,10 +119,10 @@ void ClosestUserSelector::UpdateFrame()
 
 
     // go over the list and start or stop tracking.
-    for(UserStateHash::Iterator iter=m_hUsersState.begin(); iter!=m_hUsersState.end(); ++iter)
+    for(UserStateHash::Iterator iter = m_hUsersState.Begin(); iter!=m_hUsersState.End(); ++iter)
     {
-        UserSelectionState* pState=iter.Value();
-        XnUInt32 curUser=iter.Key();
+        UserSelectionState* pState = iter->Value();
+        XnUInt32 curUser = iter->Key();
         if(TestIfShouldTrack(curUser))
         {
             // this means the user is in the list of those which need to track
@@ -178,7 +178,7 @@ void ClosestUserSelector::InsertNewUser(XnUserID userID, XnFloat COMZ)
         if(m_pUsersList[i].m_COMZ>0)
         {
             // we need to push everyone else forward...
-            for(XnUInt32 j=i+1; j<m_nMaxNumUsers; j++)
+            for(XnUInt32 j=m_nMaxNumUsers-1; j>i; j--)
             {
                 m_pUsersList[j]=m_pUsersList[j-1];
             }

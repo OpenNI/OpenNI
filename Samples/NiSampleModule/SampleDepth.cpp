@@ -99,7 +99,7 @@ void SampleDepth::StopGenerating()
 
 XnStatus SampleDepth::RegisterToGenerationRunningChange( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
 {
-	return m_generatingEvent.Register(handler, pCookie, &hCallback);
+	return m_generatingEvent.Register(handler, pCookie, hCallback);
 }
 
 void SampleDepth::UnregisterFromGenerationRunningChange( XnCallbackHandle hCallback )
@@ -109,7 +109,7 @@ void SampleDepth::UnregisterFromGenerationRunningChange( XnCallbackHandle hCallb
 
 XnStatus SampleDepth::RegisterToNewDataAvailable( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
 {
-	return m_dataAvailableEvent.Register(handler, pCookie, &hCallback);
+	return m_dataAvailableEvent.Register(handler, pCookie, hCallback);
 }
 
 void SampleDepth::UnregisterFromNewDataAvailable( XnCallbackHandle hCallback )
@@ -119,13 +119,13 @@ void SampleDepth::UnregisterFromNewDataAvailable( XnCallbackHandle hCallback )
 
 XnBool SampleDepth::IsNewDataAvailable( XnUInt64& nTimestamp )
 {
+	// return next timestamp
+	nTimestamp = 1000000 / SUPPORTED_FPS;
 	return m_bDataAvailable;
 }
 
 XnStatus SampleDepth::UpdateData()
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	XnDepthPixel* pPixel = m_pDepthMap;
 
 	// change our internal data, so that pixels go from frameID incrementally in both axes.
@@ -205,7 +205,7 @@ XnBool SampleDepth::IsMirrored()
 
 XnStatus SampleDepth::RegisterToMirrorChange( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
 {
-	return m_mirrorEvent.Register(handler, pCookie, &hCallback);
+	return m_mirrorEvent.Register(handler, pCookie, hCallback);
 }
 
 void SampleDepth::UnregisterFromMirrorChange( XnCallbackHandle hCallback )
@@ -255,14 +255,14 @@ XnStatus SampleDepth::GetMapOutputMode( XnMapOutputMode& Mode )
 	return (XN_STATUS_OK);
 }
 
-XnStatus SampleDepth::RegisterToMapOutputModeChange( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
+XnStatus SampleDepth::RegisterToMapOutputModeChange( XnModuleStateChangedHandler /*handler*/, void* /*pCookie*/, XnCallbackHandle& hCallback )
 {
 	// no need. we only allow one mode
 	hCallback = this;
 	return XN_STATUS_OK;
 }
 
-void SampleDepth::UnregisterFromMapOutputModeChange( XnCallbackHandle hCallback )
+void SampleDepth::UnregisterFromMapOutputModeChange( XnCallbackHandle /*hCallback*/ )
 {
 	// do nothing (we didn't really register)	
 }
@@ -284,14 +284,14 @@ void SampleDepth::GetFieldOfView( XnFieldOfView& FOV )
 	FOV.fVFOV = 1.35;
 }
 
-XnStatus SampleDepth::RegisterToFieldOfViewChange( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
+XnStatus SampleDepth::RegisterToFieldOfViewChange( XnModuleStateChangedHandler /*handler*/, void* /*pCookie*/, XnCallbackHandle& hCallback )
 {
 	// no need. it never changes
 	hCallback = this;
 	return XN_STATUS_OK;
 }
 
-void SampleDepth::UnregisterFromFieldOfViewChange( XnCallbackHandle hCallback )
+void SampleDepth::UnregisterFromFieldOfViewChange( XnCallbackHandle /*hCallback*/ )
 {
 	// do nothing (we didn't really register)	
 }

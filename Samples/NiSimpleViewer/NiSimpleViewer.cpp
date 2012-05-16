@@ -46,15 +46,14 @@ using namespace xn;
 #define DISPLAY_MODE_IMAGE		3
 #define DEFAULT_DISPLAY_MODE	DISPLAY_MODE_DEPTH
 
-#define MAX_DEPTH 10000
-
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
-float g_pDepthHist[MAX_DEPTH];
+float* g_pDepthHist;
 XnRGB24Pixel* g_pTexMap = NULL;
 unsigned int g_nTexMapX = 0;
 unsigned int g_nTexMapY = 0;
+XnDepthPixel g_nZRes;
 
 unsigned int g_nViewState = DEFAULT_DISPLAY_MODE;
 
@@ -91,9 +90,6 @@ void glutDisplay (void)
 	g_image.GetMetaData(g_imageMD);
 
 	const XnDepthPixel* pDepth = g_depthMD.Data();
-	const XnUInt8* pImage = g_imageMD.Data();
-
-	unsigned int nImageScale = GL_WIN_SIZE_X / g_depthMD.FullXRes();
 
 	// Copied from SimpleViewer
 	// Clear the OpenGL buffers
@@ -106,7 +102,7 @@ void glutDisplay (void)
 	glOrtho(0, GL_WIN_SIZE_X, GL_WIN_SIZE_Y, 0, -1.0, 1.0);
 
 	// Calculate the accumulative histogram (the yellow display...)
-	xnOSMemSet(g_pDepthHist, 0, MAX_DEPTH*sizeof(float));
+	xnOSMemSet(g_pDepthHist, 0, g_nZRes*sizeof(float));
 
 	unsigned int nNumberOfPoints = 0;
 	for (XnUInt y = 0; y < g_depthMD.YRes(); ++y)
@@ -120,13 +116,13 @@ void glutDisplay (void)
 			}
 		}
 	}
-	for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+	for (int nIndex=1; nIndex<g_nZRes; nIndex++)
 	{
 		g_pDepthHist[nIndex] += g_pDepthHist[nIndex-1];
 	}
 	if (nNumberOfPoints)
 	{
-		for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+		for (int nIndex=1; nIndex<g_nZRes; nIndex++)
 		{
 			g_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
 		}
@@ -217,7 +213,7 @@ void glutDisplay (void)
 	glutSwapBuffers();
 }
 
-void glutKeyboard (unsigned char key, int x, int y)
+void glutKeyboard (unsigned char key, int /*x*/, int /*y*/)
 {
 	switch (key)
 	{
@@ -295,6 +291,9 @@ int main(int argc, char* argv[])
 	g_nTexMapX = (((unsigned short)(g_depthMD.FullXRes()-1) / 512) + 1) * 512;
 	g_nTexMapY = (((unsigned short)(g_depthMD.FullYRes()-1) / 512) + 1) * 512;
 	g_pTexMap = (XnRGB24Pixel*)malloc(g_nTexMapX * g_nTexMapY * sizeof(XnRGB24Pixel));
+
+	g_nZRes = g_depthMD.ZRes();
+	g_pDepthHist = (float*)malloc(g_nZRes * sizeof(float));
 
 	// OpenGL init
 	glutInit(&argc, argv);

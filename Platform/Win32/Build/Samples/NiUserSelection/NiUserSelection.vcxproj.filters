@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{fff52ac5-e5bf-4df3-828f-e28dd6787f76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Sample">
+      <UniqueIdentifier>{8f2644e1-3b1e-4b93-be8a-8a7c820cfa13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UserSelector">
+      <UniqueIdentifier>{77c79320-997e-4278-b0c0-aebea7493c08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UserSelector\headers">
+      <UniqueIdentifier>{ee5da20b-e43a-4792-9cb7-c1aa0409c68f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UserSelector\Sources">
+      <UniqueIdentifier>{21f99f58-9edc-4e8e-a282-f516aa659611}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Res">
+      <UniqueIdentifier>{5a8873c4-e251-4aac-8507-1f8e54205e61}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\Documentation.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\SceneDrawer.h">
+      <Filter>Source Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\ExitPoseDetector.h">
+      <Filter>Source Files\Sample</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\SampleManager.h">
+      <Filter>Source Files\Sample</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\UserTracker.h">
+      <Filter>Source Files\Sample</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\ClosestUserSelector.h">
+      <Filter>Source Files\UserSelector\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\DefaultTrackingInitializer.h">
+      <Filter>Source Files\UserSelector\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\PoseToggleUserSelector.h">
+      <Filter>Source Files\UserSelector\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\PoseUserSelector.h">
+      <Filter>Source Files\UserSelector\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\SinglePoseUserSelector.h">
+      <Filter>Source Files\UserSelector\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\TrackingInitializer.h">
+      <Filter>Source Files\UserSelector\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\UserSelectionStructures.h">
+      <Filter>Source Files\UserSelector\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Samples\NiUserSelection\UserSelector.h">
+      <Filter>Source Files\UserSelector\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Res\Resource-OpenNI.h">
+      <Filter>Res</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\SceneDrawer.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\ExitPoseDetector.cpp">
+      <Filter>Source Files\Sample</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\main.cpp">
+      <Filter>Source Files\Sample</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\SampleManager.cpp">
+      <Filter>Source Files\Sample</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\UserTracker.cpp">
+      <Filter>Source Files\Sample</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\ClosestUserSelector.cpp">
+      <Filter>Source Files\UserSelector\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\DefaultTrackingInitializer.cpp">
+      <Filter>Source Files\UserSelector\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\PoseToggleUserSelector.cpp">
+      <Filter>Source Files\UserSelector\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\PoseUserSelector.cpp">
+      <Filter>Source Files\UserSelector\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\SinglePoseUserSelector.cpp">
+      <Filter>Source Files\UserSelector\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\TrackingInitializer.cpp">
+      <Filter>Source Files\UserSelector\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Samples\NiUserSelection\UserSelector.cpp">
+      <Filter>Source Files\UserSelector\Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Res\mainicon.ico">
+      <Filter>Res</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\Res\OpenNI.rc">
+      <Filter>Res</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

@@ -275,9 +275,6 @@ XN_C_API XnStatus xnOSGetFileSize(const XnChar* cpFileName, XnUInt32* pnFileSize
 
 XN_C_API XnStatus xnOSCreateDirectory(const XnChar* cpDirName)
 {
-	// Local function variables
-	XnBool bRetVal = FALSE;
-
 	// Validate the input/output pointers (to make sure none of them is NULL)
 	XN_VALIDATE_INPUT_PTR(cpDirName);
 
@@ -288,8 +285,6 @@ XN_C_API XnStatus xnOSCreateDirectory(const XnChar* cpDirName)
 
 XN_C_API XnStatus xnOSGetDirName(const XnChar* cpFilePath, XnChar* cpDirName, const XnUInt32 nBufferSize)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	XN_IMPLEMENT_OS;
 
 	return (XN_STATUS_OK);
@@ -311,8 +306,6 @@ XN_C_API XnStatus xnOSGetFileName(const XnChar* cpFilePath, XnChar* cpFileName, 
 
 XN_C_API XnStatus xnOSGetFullPathName(const XnChar* strFilePath, XnChar* strFullPath, XnUInt32 nBufferSize)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	XN_IMPLEMENT_OS;
 
 	return (XN_STATUS_OK);

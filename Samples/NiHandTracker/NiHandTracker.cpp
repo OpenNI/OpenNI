@@ -27,7 +27,6 @@
 
 
 using namespace xn;
-typedef TrailHistory::Trail Trail;
 
 
 //---------------------------------------------------------------------------
@@ -58,22 +57,22 @@ static const char* const	cGestures[] =
 //---------------------------------------------------------------------------
 // Statics
 //---------------------------------------------------------------------------
-XnList	HandTracker::sm_Instances;
+XnListT<HandTracker*>	HandTracker::sm_Instances;
 
 
 //---------------------------------------------------------------------------
 // Hooks
 //---------------------------------------------------------------------------
-void XN_CALLBACK_TYPE HandTracker::Gesture_Recognized(	xn::GestureGenerator&	generator, 
+void XN_CALLBACK_TYPE HandTracker::Gesture_Recognized(	xn::GestureGenerator&	/*generator*/, 
 														const XnChar*			strGesture, 
-														const XnPoint3D*		pIDPosition, 
+														const XnPoint3D*		/*pIDPosition*/, 
 														const XnPoint3D*		pEndPosition, 
 														void*					pCookie)
 {
 	printf("Gesture recognized: %s\n", strGesture);
 
 	HandTracker*	pThis = static_cast<HandTracker*>(pCookie);
-	if(sm_Instances.Find(pThis) == sm_Instances.end())
+	if(sm_Instances.Find(pThis) == sm_Instances.End())
 	{
 		printf("Dead HandTracker: skipped!\n");
 		return;
@@ -82,60 +81,57 @@ void XN_CALLBACK_TYPE HandTracker::Gesture_Recognized(	xn::GestureGenerator&	gen
 	pThis->m_HandsGenerator.StartTracking(*pEndPosition);
 }
 
-void XN_CALLBACK_TYPE HandTracker::Hand_Create(	xn::HandsGenerator& generator, 
+void XN_CALLBACK_TYPE HandTracker::Hand_Create(	xn::HandsGenerator& /*generator*/, 
 												XnUserID			nId, 
 												const XnPoint3D*	pPosition, 
-												XnFloat				fTime, 
+												XnFloat				/*fTime*/, 
 												void*				pCookie)
 {
 	printf("New Hand: %d @ (%f,%f,%f)\n", nId, pPosition->X, pPosition->Y, pPosition->Z);
 
 	HandTracker*	pThis = static_cast<HandTracker*>(pCookie);
-	if(sm_Instances.Find(pThis) == sm_Instances.end())
+	if(sm_Instances.Find(pThis) == sm_Instances.End())
 	{
 		printf("Dead HandTracker: skipped!\n");
 		return;
 	}
 
-	// Add to hands history if this user is not already tracked
-	if(!pThis->m_History.Find(nId))
-	{
-		pThis->m_History.Add(nId).Push(*pPosition);
-	}
+	pThis->m_History[nId].Push(*pPosition);
 }
 
-void XN_CALLBACK_TYPE HandTracker::Hand_Update(	xn::HandsGenerator& generator, 
+void XN_CALLBACK_TYPE HandTracker::Hand_Update(	xn::HandsGenerator& /*generator*/, 
 												XnUserID			nId, 
 												const XnPoint3D*	pPosition, 
-												XnFloat				fTime, 
+												XnFloat				/*fTime*/, 
 												void*				pCookie)
 {
 	HandTracker*	pThis = static_cast<HandTracker*>(pCookie);
-	if(sm_Instances.Find(pThis) == sm_Instances.end())
+	if(sm_Instances.Find(pThis) == sm_Instances.End())
 	{
 		printf("Dead HandTracker: skipped!\n");
 		return;
 	}
 
 	// Add to this user's hands history
-	Trail*	const trail = pThis->m_History.Find(nId);
-	if(!trail)
+	TrailHistory::Iterator it = pThis->m_History.Find(nId);
+	if (it == pThis->m_History.End())
 	{
 		printf("Dead hand update: skipped!\n");
 		return;
 	}
-	trail->Push(*pPosition);
+
+	it->Value().Push(*pPosition);
 }
 
-void XN_CALLBACK_TYPE HandTracker::Hand_Destroy(	xn::HandsGenerator& generator, 
+void XN_CALLBACK_TYPE HandTracker::Hand_Destroy(	xn::HandsGenerator& /*generator*/, 
 													XnUserID			nId, 
-													XnFloat				fTime, 
+													XnFloat				/*fTime*/, 
 													void*				pCookie)
 {
 	printf("Lost Hand: %d\n", nId);
 
 	HandTracker*	pThis = static_cast<HandTracker*>(pCookie);
-	if(sm_Instances.Find(pThis) == sm_Instances.end())
+	if(sm_Instances.Find(pThis) == sm_Instances.End())
 	{
 		printf("Dead HandTracker: skipped!\n");
 		return;
@@ -149,9 +145,7 @@ void XN_CALLBACK_TYPE HandTracker::Hand_Destroy(	xn::HandsGenerator& generator,
 //---------------------------------------------------------------------------
 // Method Definitions
 //---------------------------------------------------------------------------
-HandTracker::HandTracker(xn::Context& context)
-:m_rContext(context),
-m_History(MAX_HAND_TRAIL_LENGTH)
+HandTracker::HandTracker(xn::Context& context) : m_rContext(context)
 {
 	// Track all living instances (to protect against calling dead pointers in the Gesture/Hand Generator hooks)
 	XnStatus rc = sm_Instances.AddLast(this);
@@ -165,8 +159,8 @@ m_History(MAX_HAND_TRAIL_LENGTH)
 HandTracker::~HandTracker()
 {
 	// Remove the current instance from living instances list
-	XnList::ConstIterator it = sm_Instances.Find(this);
-	assert(it != sm_Instances.end());
+	XnListT<HandTracker*>::ConstIterator it = sm_Instances.Find(this);
+	assert(it != sm_Instances.End());
 	sm_Instances.Remove(it);
 }
 

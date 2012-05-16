@@ -59,10 +59,15 @@ XnNodeNotifications PlayerImpl::s_nodeNotifications =
 PlayerImpl::PlayerImpl() : 
 	m_hPlayer(NULL), 
 	m_bIsFileOpen(FALSE),
-	m_bHasTimeReference(FALSE),
+	m_hInFile(NULL),
+	m_sourceType(XnRecordMedium(-1)),
 	m_dPlaybackSpeed(1.0),
+	m_nStartTimestamp(0),
+	m_nStartTime(0),
+	m_bHasTimeReference(FALSE),
 	m_hPlaybackThread(NULL),
 	m_hPlaybackEvent(NULL),
+	m_hPlaybackLock(NULL),
 	m_bPlaybackThreadShutdown(FALSE)
 {
 	xnOSMemSet(m_strSource, 0, sizeof(m_strSource));
@@ -177,9 +182,9 @@ void PlayerImpl::Destroy()
 		m_hPlaybackLock = NULL;
 	}
 
-	for (PlayedNodesHash::Iterator it = m_playedNodes.begin(); it != m_playedNodes.end(); ++it)
+	for (PlayedNodesHash::Iterator it = m_playedNodes.Begin(); it != m_playedNodes.End(); ++it)
 	{
-		PlayedNodeInfo& nodeInfo = it.Value();
+		PlayedNodeInfo& nodeInfo = it->Value();
 		xnUnlockNodeForChanges(nodeInfo.hNode, nodeInfo.hLock);
 		xnProductionNodeRelease(nodeInfo.hNode);
 	}
@@ -194,9 +199,9 @@ XnStatus PlayerImpl::EnumerateNodes(XnNodeInfoList** ppList)
 	nRetVal = xnNodeInfoListAllocate(ppList);
 	XN_IS_STATUS_OK(nRetVal);
 
-	for (PlayedNodesHash::Iterator it = m_playedNodes.begin(); it != m_playedNodes.end(); ++it)
+	for (PlayedNodesHash::Iterator it = m_playedNodes.Begin(); it != m_playedNodes.End(); ++it)
 	{
-		XnNodeInfo* pNodeInfo = xnGetNodeInfo(it.Value().hNode);
+		XnNodeInfo* pNodeInfo = xnGetNodeInfo(it->Value().hNode);
 
 		nRetVal = xnNodeInfoListAddNode(*ppList, pNodeInfo);
 		if (nRetVal != XN_STATUS_OK)

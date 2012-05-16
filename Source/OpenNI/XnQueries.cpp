@@ -71,6 +71,18 @@ XN_C_API XnStatus xnNodeQueryAllocate(XnNodeQuery** ppQuery)
 
 XN_C_API void xnNodeQueryFree(XnNodeQuery* pQuery)
 {
+	// free needed nodes list
+	for (XnUInt32 i = 0; i < pQuery->nNeededNodes; ++i)
+	{
+		xnOSFree(pQuery->astrNeededNodes[i]);
+	}
+
+	// free capabilities list
+	for (XnUInt32 i = 0; i < pQuery->nSupportedCapabilities; ++i)
+	{
+		xnOSFree(pQuery->astrSupportedCapabilities[i]);
+	}
+
 	xnOSFree(pQuery);
 }
 
@@ -110,7 +122,7 @@ XN_C_API XnStatus xnNodeQueryAddSupportedCapability(XnNodeQuery* pQuery, const X
 {
 	XN_VALIDATE_INPUT_PTR(pQuery);
 	XN_VALIDATE_INPUT_PTR(strNeededCapability);
-	pQuery->astrSupportedCapabilities[pQuery->nSupportedCapabilities++] = strNeededCapability;
+	pQuery->astrSupportedCapabilities[pQuery->nSupportedCapabilities++] = xnOSStrDup(strNeededCapability);
 	return (XN_STATUS_OK);
 }
 
@@ -136,7 +148,6 @@ XN_C_API XnStatus xnNodeQuerySetExistingNodeOnly(XnNodeQuery* pQuery, XnBool bEx
 	return (XN_STATUS_OK);
 }
 
-
 XN_C_API XnStatus XN_C_DECL xnNodeQuerySetNonExistingNodeOnly(XnNodeQuery* pQuery, XnBool bNonExistingNode)
 {
 	XN_VALIDATE_INPUT_PTR(pQuery);
@@ -148,7 +159,7 @@ XN_C_API XnStatus xnNodeQueryAddNeededNode(XnNodeQuery* pQuery, const XnChar* st
 {
 	XN_VALIDATE_INPUT_PTR(pQuery);
 	XN_VALIDATE_INPUT_PTR(strInstanceName);
-	pQuery->astrNeededNodes[pQuery->nNeededNodes++] = strInstanceName;
+	pQuery->astrNeededNodes[pQuery->nNeededNodes++] = xnOSStrDup(strInstanceName);
 	return (XN_STATUS_OK);
 }
 
@@ -156,7 +167,7 @@ XN_C_API XnStatus xnNodeQuerySetCreationInfo(XnNodeQuery* pQuery, const XnChar* 
 {
 	XN_VALIDATE_INPUT_PTR(pQuery);
 	XN_VALIDATE_INPUT_PTR(strCreationInfo);
-	strncpy(pQuery->strCreationInfo, strCreationInfo, XN_MAX_NAME_LENGTH);
+	strncpy(pQuery->strCreationInfo, strCreationInfo, sizeof(pQuery->strCreationInfo));
 	return (XN_STATUS_OK);
 }
 

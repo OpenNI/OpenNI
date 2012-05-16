@@ -54,30 +54,30 @@ typedef struct XnEnumString
 	};
 
 #define XN_ENUM_FROM_STRING(nRetVal, enumType, strValue, nValue)						\
-	do {																				\
+	{																					\
 		XnInt _nTemp;																	\
 		nRetVal = _xnEnumFromString(XN_STRINGIFY(enumType),								\
 			_XN_ENUM_MAP_NAME(enumType), strValue, &_nTemp);							\
 		nValue = (enumType)_nTemp;														\
-	} while (0)
+	}
 
 #define XN_ENUM_TO_STRING(nRetVal, enumType, nValue, strValue)							\
 	nRetVal = _xnEnumToString(XN_STRINGIFY(enumType),									\
 		_XN_ENUM_MAP_NAME(enumType), (XnInt)nValue, &strValue)
 
 #define XN_ENUM_VALIDATE_FROM_STRING(enumType, strValue, nValue)			\
-	do {																	\
+	{																		\
 			XnStatus _nTempRetVal;											\
 			XN_ENUM_FROM_STRING(_nTempRetVal, enumType, strValue, nValue);	\
 			XN_IS_STATUS_OK(_nTempRetVal);									\
-	} while (0)
+	}
 
 #define XN_ENUM_VALIDATE_TO_STRING(enumType, nValue, strValue)				\
-	do {																	\
+	{																		\
 			XnStatus _nTempRetVal;											\
 			XN_ENUM_TO_STRING(_nTempRetVal, enumType, nValue, strValue);	\
 			XN_IS_STATUS_OK(_nTempRetVal);									\
-	} while (0)
+	}
 
 //---------------------------------------------------------------------------
 // Functions

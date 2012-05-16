@@ -24,8 +24,8 @@
 #include <XnOS.h>
 #include <XnLog.h>
 
-MockDepthGenerator::MockDepthGenerator(const XnChar* strName) : 
-	MockMapGenerator(strName),
+MockDepthGenerator::MockDepthGenerator(xn::Context& context, const XnChar* strName) : 
+	MockMapGenerator(context, strName),
 	m_nDeviceMaxDepth(0),
 	m_nSupportedUserPositionsCount(0),
 	m_bSupportedUserPositionsCountReceived(FALSE),
@@ -131,7 +131,7 @@ void MockDepthGenerator::GetFieldOfView(XnFieldOfView& FOV)
 
 XnStatus MockDepthGenerator::RegisterToFieldOfViewChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_fieldOfViewChangeEvent.Register(handler, pCookie, &hCallback);
+	return m_fieldOfViewChangeEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockDepthGenerator::UnregisterFromFieldOfViewChange(XnCallbackHandle hCallback)

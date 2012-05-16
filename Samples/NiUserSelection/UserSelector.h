@@ -26,7 +26,7 @@
 // Includes
 //---------------------------------------------------------------------------
 #include <XnCppWrapper.h>
-#include <XnHash.h>
+#include <XnHashT.h>
 #include "UserSelectionStructures.h"
 
 //---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ protected:
     virtual XnStatus UpdateUserSelectionState(XnUserID nUserId, XnSelectionState eState , XnInt64 subState);
 
     /// @brief Defines the UserHash hash which holds a state for each user
-    XN_DECLARE_DEFAULT_HASH(XnUserID,UserSelectionState *,UserStateHash);
+	typedef XnHashT<XnUserID, UserSelectionState*> UserStateHash;
 
     xn::UserGenerator *m_pUserGenerator; ///< @brief the user generator to get user information from
     /// @brief A hash for user states.

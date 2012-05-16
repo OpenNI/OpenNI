@@ -92,9 +92,9 @@ XnUInt64 ExitPoseDetector::GetExitPoseTimeStamp(XnUserID nUserId)
     if(nUserId==0)
     {
         XnUInt64 maxTime=0;
-        for(UserExitPoseTimes::Iterator iter=m_userExitPoseTimes.begin(); iter!=m_userExitPoseTimes.end(); ++iter)
+        for(UserExitPoseTimes::Iterator iter=m_userExitPoseTimes.Begin(); iter!=m_userExitPoseTimes.End(); ++iter)
         {
-            XnUInt64 userTime=iter.Value();
+            XnUInt64 userTime=iter->Value();
             if(userTime>maxTime)
             {
                 maxTime=userTime;
@@ -112,7 +112,7 @@ XnUInt64 ExitPoseDetector::GetExitPoseTimeStamp(XnUserID nUserId)
 }
 
 
-void XN_CALLBACK_TYPE ExitPoseDetector::PoseDetectedCallback(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE ExitPoseDetector::PoseDetectedCallback(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nUserId, void* pCookie)
 {
     if(xnOSStrCmp(strPose,CROSS_HANDS_POSE)!=0)
     {
@@ -127,7 +127,7 @@ void XN_CALLBACK_TYPE ExitPoseDetector::PoseDetectedCallback(xn::PoseDetectionCa
     }
 }
 
-void XN_CALLBACK_TYPE ExitPoseDetector::OutOfPoseDetectedCallback(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE ExitPoseDetector::OutOfPoseDetectedCallback(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nUserId, void* pCookie)
 {
     if(xnOSStrCmp(strPose,CROSS_HANDS_POSE)!=0)
     {
@@ -138,13 +138,13 @@ void XN_CALLBACK_TYPE ExitPoseDetector::OutOfPoseDetectedCallback(xn::PoseDetect
     detector->m_userExitPoseTimes.Set(nUserId,tmpTime); // we are not in pose any more.
 }
 
-void XN_CALLBACK_TYPE ExitPoseDetector::NewUserCallback(xn::UserGenerator& generator, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE ExitPoseDetector::NewUserCallback(xn::UserGenerator& /*generator*/, XnUserID nUserId, void* pCookie)
 {
     ExitPoseDetector *detector=(ExitPoseDetector *)pCookie;
     detector->m_userGenerator.GetPoseDetectionCap().StartPoseDetection(CROSS_HANDS_POSE,nUserId);
 }
 
-void XN_CALLBACK_TYPE ExitPoseDetector::LostUserCallback(xn::UserGenerator& generator, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE ExitPoseDetector::LostUserCallback(xn::UserGenerator& /*generator*/, XnUserID nUserId, void* pCookie)
 {
     ExitPoseDetector *detector=(ExitPoseDetector *)pCookie;
     detector->m_userExitPoseTimes.Remove(nUserId);

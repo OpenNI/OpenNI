@@ -1,0 +1,16 @@
+/**
+@page additional Additional Utilities
+
+OpenNI has a framework, allowing:
+- Portability over various architectures and operating systems.
+- A USB access abstraction layer (provided with a driver for Microsoft Windows)
+- Some basic data types (like list, hash, etc.)
+- Log and Dumps system
+- Memory and Performance profiling
+- Events (allowing callbacks to be registered to a specific event)
+- Scheduling of tasks
+
+Those utilities are also available to any application using OpenNI. OpenNI guarentees backwards compatibility
+for this framework (up to a certain extent, as opposed to OpenNI actual API, which guarentees full backwards
+compatibility).
+*/

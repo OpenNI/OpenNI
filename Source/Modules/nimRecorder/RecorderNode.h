@@ -23,7 +23,7 @@
 #define __RECORDER_NODE_H__
 
 #include <XnModuleCppInterface.h>
-#include <XnStringsHash.h>
+#include <XnStringsHashT.h>
 #include <DataRecords.h>
 
 class Record;
@@ -61,8 +61,8 @@ private:
 		XnUInt64 nPos;		//Position in stream of record that did this property change
 	};
 
-	XN_DECLARE_STRINGS_HASH(RecordedNodePropInfo, RecordedNodePropInfoMap);
-	XN_DECLARE_LIST(DataIndexEntry, DataIndexEntryList)
+	typedef XnStringsHashT<RecordedNodePropInfo> RecordedNodePropInfoMap;
+	typedef XnListT<DataIndexEntry> DataIndexEntryList;
 
 	struct RecordedNodeInfo
 	{
@@ -72,7 +72,6 @@ private:
 		XnUInt32 nNodeID;
 		XnProductionNodeType type;
 		XnUInt64 nNodeAddedPos;
-		XnUInt32 nMinFrameNum;
 		XnUInt32 nMaxFrameNum;
 		XnUInt32 nCurFrameNum;
 		XnUInt64 nMinTimeStamp;
@@ -84,7 +83,7 @@ private:
 		DataIndexEntryList dataIndex;
 	};
 
-	XN_DECLARE_STRINGS_HASH(RecordedNodeInfo, RecordedNodesInfo);
+	typedef XnStringsHashT<RecordedNodeInfo> RecordedNodesInfo;
 
 	XnStatus OpenStream();
 	XnStatus WriteHeader(XnUInt64 nGlobalMaxTimeStamp, XnUInt32 nMaxNodeID);

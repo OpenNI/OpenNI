@@ -36,8 +36,8 @@
 typedef struct MouseInput
 {
 	SelectionState nSelectionState;
-	UIntPair StartSelection;
-	UIntPair LastLocation;
+	IntPair StartSelection;
+	IntPair LastLocation;
 	SelectionRectangleChangedPtr pSelectionCallback;
 	CursorMovedPtr pCursorCallback;
 } MouseInput;
@@ -48,7 +48,7 @@ void mouseInputCallSelection()
 {
 	if (g_MouseInput.pSelectionCallback != NULL)
 	{
-		UIntRect selection;
+		IntRect selection;
 		selection.uBottom = XN_MIN(g_MouseInput.StartSelection.Y, g_MouseInput.LastLocation.Y);
 		selection.uTop = XN_MAX(g_MouseInput.StartSelection.Y, g_MouseInput.LastLocation.Y);
 		selection.uLeft = XN_MIN(g_MouseInput.StartSelection.X, g_MouseInput.LastLocation.X);

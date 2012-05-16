@@ -5,12 +5,12 @@ BIN_DIR = ../../Bin
 INC_DIRS = \
 	../../../../Include \
 	../../../../Source \
-	../../../../Source/External/TinyXml
+	../../../../Externals/TinyXml
 
 SRC_FILES = \
 	../../../../Source/OpenNI/*.cpp \
 	../../../../Source/OpenNI/Linux/*.cpp \
-	../../../../Source/External/TinyXml/*.cpp
+	../../../../Externals/TinyXml/*.cpp
 
 ifeq ("$(OSTYPE)","Darwin")
 	INC_DIRS += /opt/local/include

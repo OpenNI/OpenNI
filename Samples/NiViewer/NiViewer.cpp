@@ -59,8 +59,10 @@
 #endif
 
 #define GLH_EXT_SINGLE_FILE
+#pragma warning(push, 3)
 #include <glh/glh_obs.h>
 #include <glh/glh_glut2.h>
+#pragma warning(pop)
 
 using namespace glh;
 
@@ -104,30 +106,26 @@ bool g_bPause = false;
 /* When true, only a single frame will be read, and then reading will be paused. */
 bool g_bStep = false;
 
-glut_simple_mouse_interactor camera, light, room, object;
-display_list face;
-vec4f light_position(1,1,1,1);
-float room_ambient = .4;
 glut_perspective_reshaper reshaper;
 glut_callbacks cb;
 
-UIntPair mouseLocation;
-UIntPair windowSize;
+IntPair mouseLocation;
+IntPair windowSize;
 
 // --------------------------------
 // Utilities
 // --------------------------------
 void MotionCallback(int x, int y)
 {
-	mouseInputMotion((double)x/windowSize.X*WIN_SIZE_X, (double)y/windowSize.Y*WIN_SIZE_Y);
+	mouseInputMotion(int((double)x/windowSize.X*WIN_SIZE_X), int((double)y/windowSize.Y*WIN_SIZE_Y));
 }
 
 void MouseCallback(int button, int state, int x, int y)
 {
-	mouseInputButton(button, state, (double)x/windowSize.X*WIN_SIZE_X, (double)y/windowSize.Y*WIN_SIZE_Y);
+	mouseInputButton(button, state, int((double)x/windowSize.X*WIN_SIZE_X), int((double)y/windowSize.Y*WIN_SIZE_Y));
 }
 
-void KeyboardCallback(unsigned char key, int x, int y)
+void KeyboardCallback(unsigned char key, int /*x*/, int /*y*/)
 {
 	if (isCapturing())
 	{
@@ -205,9 +203,7 @@ void init_opengl()
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 	GLfloat ambient[] = {0.5, 0.5, 0.5, 1};
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-	glLightf (GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.1);
-	face.new_list(GL_COMPILE);
-	face.end_list();
+	glLightf (GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.1f);
 }
 
 void closeSample(int errCode)
@@ -224,7 +220,7 @@ void closeSample(int errCode)
 	exit(errCode);
 }
 
-void togglePause(int nDummy)
+void togglePause(int)
 {
 	g_bPause = !g_bPause;
 }
@@ -238,22 +234,22 @@ void resetCropping(MapGenerator* pGenerator)
 	setStreamCropping(pGenerator, &crop);
 }
 
-void resetDepthCropping(int dummy)
+void resetDepthCropping(int)
 {
 	resetCropping(getDepthGenerator());
 }
 
-void resetImageCropping(int dummy)
+void resetImageCropping(int)
 {
 	resetCropping(getImageGenerator());
 }
 
-void resetIRCropping(int dummy)
+void resetIRCropping(int)
 {
 	resetCropping(getIRGenerator());
 }
 
-void resetAllCropping(int dummy)
+void resetAllCropping(int)
 {
 	if (getDepthGenerator() != NULL)
 		resetDepthCropping(0);
@@ -650,34 +646,6 @@ int main(int argc, char **argv)
 	init_opengl();
 
 	glut_helpers_initialize();
-
-	camera.configure_buttons(0);
-	camera.set_camera_mode(true);
-	camera.set_parent_rotation( & camera.trackball.r);
-	camera.enable();
-
-	object.configure_buttons(1);
-	object.translator.t[2] = -1;
-	object.translator.scale *= .1f;
-	object.trackball.r = rotationf(vec3f(2.0,0.01,0.01), to_radians(180));
-	object.set_parent_rotation( & camera.trackball.r);
-	object.disable();
-
-	light.configure_buttons(0);
-	light.translator.t = vec3f(.5, .5, -1);
-	light.set_parent_rotation( & camera.trackball.r);
-	light.disable();
-
-	// make sure all interactors get glut events
-	glut_add_interactor(&camera);
-	glut_add_interactor(&light);
-	glut_add_interactor(&object);
-
-	camera.translator.t = vec3f(0, 0, 0);
-	camera.trackball.r = rotationf(vec3f(0, 0, 0), to_radians(0));
-
-	light.translator.t = vec3f (0, 1.13, -2.41);
-	light.trackball.r = rotationf(vec3f(0.6038, -0.1955, -0.4391), to_radians(102));
 
 	glutIdleFunc(IdleCallback);
 	glutDisplayFunc(drawFrame);

@@ -22,6 +22,7 @@
 #include "DataRecords.h"
 #include <XnLog.h>
 #include <XnOpenNI.h>
+#include <XnCodecIDs.h>
 
 const RecordingHeader DEFAULT_RECORDING_HEADER = 
 {
@@ -152,7 +153,7 @@ XnStatus Record::Write(const void* pData, XnUInt32 nSize)
 XnStatus Record::WriteString(const XnChar* str)
 {
 	XN_VALIDATE_INPUT_PTR(str);
-	XnUInt32 nStrSize = strlen(str) + 1; //+1 for terminating '\0'
+	XnUInt32 nStrSize = (XnUInt32)strlen(str) + 1; //+1 for terminating '\0'
 	XnStatus nRetVal = Write(&nStrSize, sizeof(nStrSize));
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = Write(str, nStrSize); 
@@ -266,13 +267,13 @@ XnStatus Record::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& nCharsWritt
 /* NodeAdded_1_0_0_4_Record */
 /****************************/
 NodeAdded_1_0_0_4_Record::NodeAdded_1_0_0_4_Record(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header) :
-	Record(pData, nMaxSize, bUseOld32Header), m_strNodeName(NULL), m_type(XnProductionNodeType(0))
+	Record(pData, nMaxSize, bUseOld32Header), m_strNodeName(NULL), m_type(XnProductionNodeType(0)), m_compression(XN_CODEC_NULL)
 {
 	xnOSMemSet(&m_compression, 0, sizeof(m_compression));
 }
 
 NodeAdded_1_0_0_4_Record::NodeAdded_1_0_0_4_Record(const Record& record) : 
-	Record(record), m_strNodeName(NULL), m_type(XnProductionNodeType(0))
+	Record(record), m_strNodeName(NULL), m_type(XnProductionNodeType(0)), m_compression(XN_CODEC_NULL)
 {
 
 }
@@ -582,8 +583,8 @@ XnStatus NodeRemovedRecord::AsString(XnChar* strDest, XnUInt32 nSize, XnUInt32& 
 /* GeneralPropRecord */
 /*********************/
 GeneralPropRecord::GeneralPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32Header, XnUInt32 nPropRecordType /*= RECORD_GENERAL_PROPERTY*/) : 
-	m_nPropRecordType(nPropRecordType),
 	Record(pData, nMaxSize, bUseOld32Header), 
+	m_nPropRecordType(nPropRecordType),
 	m_strPropName(NULL),
 	m_nPropDataSize(0),
 	m_pPropData(NULL)
@@ -592,6 +593,7 @@ GeneralPropRecord::GeneralPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool b
 
 GeneralPropRecord::GeneralPropRecord(const Record& record) : 
 	Record(record),
+	m_nPropRecordType(RECORD_GENERAL_PROPERTY),
 	m_strPropName(NULL),
 	m_nPropDataSize(0),
 	m_pPropData(NULL)
@@ -694,7 +696,9 @@ IntPropRecord::IntPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld32
 {
 }
 
-IntPropRecord::IntPropRecord(const Record &record) : GeneralPropRecord(record)
+IntPropRecord::IntPropRecord(const Record &record) : 
+	GeneralPropRecord(record),
+	m_nValue(0)
 {
 }
 
@@ -733,7 +737,9 @@ RealPropRecord::RealPropRecord(XnUInt8* pData, XnUInt32 nMaxSize, XnBool bUseOld
 {
 }
 
-RealPropRecord::RealPropRecord(const Record &record) : GeneralPropRecord(record)
+RealPropRecord::RealPropRecord(const Record &record) : 
+	GeneralPropRecord(record),
+	m_dValue(0)
 {
 }
 
@@ -777,7 +783,7 @@ StringPropRecord::StringPropRecord(const Record &record) : GeneralPropRecord(rec
 
 void StringPropRecord::SetValue(const XnChar* strValue)
 {
-	SetPropDataSize(strlen(strValue)+1);
+	SetPropDataSize((XnUInt32)strlen(strValue)+1);
 	SetPropData(const_cast<XnChar*>(strValue));
 }
 

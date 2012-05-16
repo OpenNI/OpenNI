@@ -1,0 +1,61 @@
+
+/**
+@page smpl_niviewer  NiViewer - sample program
+
+	<b>Source files:</b> Click the links to view the source code files:
+		- NiViewer.cpp	
+		- Audio.cpp
+		- Capture.cpp
+ 		- Device.cpp
+		- Draw.cpp
+		- Keyboard.cpp
+		- Menu.cpp
+		- MouseInput.cpp
+		- Statistics.cpp
+
+	This section describes the NiViewer OpenNI sample program. The OpenNI code is contained in
+	the following files. Click any of the links to go straight to the start of the code
+	descriptions and skip this overview.
+	
+	<b>Important :</b> 
+	
+	This sample program is a relatively long and complex example of OpenNI features. Thus, it is
+	recommended to first study the other - smaller - sample programs provided with this release.		
+	
+	- @subpage smpl_niviewer_capture_cpp 
+	- @subpage smpl_niviewer_device_cpp 
+	- @subpage smpl_niviewer_draw_cpp 
+	- @subpage smpl_niviewer_stat
+
+	
+	<b>Purpose:</b>  This sample program demonstrates a large variety of OpenNI features. The
+	intention for NiViewer is that is will be able to present any kind of data defined by
+	OpenNI, and be able to configure any kind of configuration that OpenNI defines. Currently,
+	NiViewer supports a reduced set. It can now display depth, image and IR maps, play audio,
+	and supplies a wide set of configuration (though not complete). NiViewer has two modes: If
+	passed a file name in command-line, it will open this file as a recording. Otherwise, it
+	will configure OpenNI using the SamplesConfig XML file.
+	
+	NiViewer is automatically associated with the .ONI file extension, for opening OpenNI
+	recordings. 
+	
+	NiViewer provides a menu GUI access using GL functionality to display the various types of
+	data generated. 
+	
+	<b>Organization:</b>  This documentation item describes the sample program's code, one
+	source code file at a time. There is a separate major section describing each source file
+	containing OpenNI code. The source code files are described in an order that is intended to
+	be the most convenient for the new reader. Namely, the files described first are those that
+	contain the most basic object and function declarations.
+	
+	Each source code file is described from the top of the file to bottom.
+	
+	Every OpenNI feature is described the first time it appears in this sample program. If
+	required, or a forward reference is provided to descriptions of declarations later in this
+	document corresponding to the location of the declarations in the code. Additional
+	appearances of the same feature are not described again; look for ecscriptions earlier in
+	the documentation of this sample program.
+
+
+*/
+

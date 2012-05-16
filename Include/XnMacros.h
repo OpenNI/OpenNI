@@ -118,7 +118,7 @@
 /** Disables Copy ctor and assignment operator. Should be placed under "private:" section. */
 #define XN_DISABLE_COPY_AND_ASSIGN(TypeName)			\
 	TypeName(const TypeName&);							\
-	void operator=(const TypeName&)
+	void operator=(const TypeName&);
 
 /** Disables the "local variable is initialized but not referenced" warning (if you need
     to use this variable in an assert */

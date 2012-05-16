@@ -22,6 +22,7 @@
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
+#include <math.h>
 #include "SceneDrawer.h"
 
 #ifndef USE_GLES
@@ -43,19 +44,20 @@ extern XnBool g_bDrawSkeleton;
 extern XnBool g_bPrintID;
 extern XnBool g_bPrintState;
 
+extern XnBool g_bPrintFrameID;
+extern XnBool g_bMarkJoints;
+
 #include <map>
 std::map<XnUInt32, std::pair<XnCalibrationStatus, XnPoseDetectionStatus> > m_Errors;
-void XN_CALLBACK_TYPE MyCalibrationInProgress(xn::SkeletonCapability& capability, XnUserID id, XnCalibrationStatus calibrationError, void* pCookie)
+void XN_CALLBACK_TYPE MyCalibrationInProgress(xn::SkeletonCapability& /*capability*/, XnUserID id, XnCalibrationStatus calibrationError, void* /*pCookie*/)
 {
 	m_Errors[id].first = calibrationError;
 }
-void XN_CALLBACK_TYPE MyPoseInProgress(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID id, XnPoseDetectionStatus poseError, void* pCookie)
+void XN_CALLBACK_TYPE MyPoseInProgress(xn::PoseDetectionCapability& /*capability*/, const XnChar* /*strPose*/, XnUserID id, XnPoseDetectionStatus poseError, void* /*pCookie*/)
 {
 	m_Errors[id].second = poseError;
 }
 
-#define MAX_DEPTH 10000
-float g_pDepthHist[MAX_DEPTH];
 unsigned int getClosestPowerOfTwo(unsigned int n)
 {
 	unsigned int m = 2;
@@ -121,7 +123,7 @@ XnUInt32 nColors = 10;
 #ifndef USE_GLES
 void glPrintString(void *font, char *str)
 {
-	int i,l = strlen(str);
+	int i,l = (int)strlen(str);
 
 	for(i=0; i<l; i++)
 	{
@@ -129,12 +131,18 @@ void glPrintString(void *font, char *str)
 	}
 }
 #endif
-void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
+bool DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 {
 	if (!g_UserGenerator.GetSkeletonCap().IsTracking(player))
 	{
 		printf("not tracked!\n");
-		return;
+		return true;
+	}
+
+	if (!g_UserGenerator.GetSkeletonCap().IsJointActive(eJoint1) ||
+		!g_UserGenerator.GetSkeletonCap().IsJointActive(eJoint2))
+	{
+		return false;
 	}
 
 	XnSkeletonJointPosition joint1, joint2;
@@ -143,7 +151,7 @@ void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 
 	if (joint1.fConfidence < 0.5 || joint2.fConfidence < 0.5)
 	{
-		return;
+		return true;
 	}
 
 	XnPoint3D pt[2];
@@ -160,6 +168,51 @@ void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 	glDrawArrays(GL_LINES, 0, 2);
 	glFlush();
 #endif
+
+	return true;
+}
+
+static const float DEG2RAD = 3.14159/180;
+ 
+void drawCircle(float x, float y, float radius)
+{
+   glBegin(GL_TRIANGLE_FAN);
+ 
+   for (int i=0; i < 360; i++)
+   {
+      float degInRad = i*DEG2RAD;
+      glVertex2f(x + cos(degInRad)*radius, y + sin(degInRad)*radius);
+   }
+ 
+   glEnd();
+}
+void DrawJoint(XnUserID player, XnSkeletonJoint eJoint)
+{
+	if (!g_UserGenerator.GetSkeletonCap().IsTracking(player))
+	{
+		printf("not tracked!\n");
+		return;
+	}
+
+	if (!g_UserGenerator.GetSkeletonCap().IsJointActive(eJoint))
+	{
+		return;
+	}
+
+	XnSkeletonJointPosition joint;
+	g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, eJoint, joint);
+
+	if (joint.fConfidence < 0.5)
+	{
+		return;
+	}
+
+	XnPoint3D pt;
+	pt = joint.position;
+
+	g_DepthGenerator.ConvertRealWorldToProjective(1, &pt, &pt);
+
+	drawCircle(pt.X, pt.Y, 2);
 }
 
 const XnChar* GetCalibrationErrorString(XnCalibrationStatus error)
@@ -258,8 +311,11 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 	const XnDepthPixel* pDepth = dmd.Data();
 	const XnLabel* pLabels = smd.Data();
 
+	static unsigned int nZRes = dmd.ZRes();
+	static float* pDepthHist = (float*)malloc(nZRes* sizeof(float));
+
 	// Calculate the accumulative histogram
-	memset(g_pDepthHist, 0, MAX_DEPTH*sizeof(float));
+	memset(pDepthHist, 0, nZRes*sizeof(float));
 	for (nY=0; nY<g_nYRes; nY++)
 	{
 		for (nX=0; nX<g_nXRes; nX++)
@@ -268,7 +324,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 
 			if (nValue != 0)
 			{
-				g_pDepthHist[nValue]++;
+				pDepthHist[nValue]++;
 				nNumberOfPoints++;
 			}
 
@@ -276,15 +332,15 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 		}
 	}
 
-	for (nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+	for (nIndex=1; nIndex<nZRes; nIndex++)
 	{
-		g_pDepthHist[nIndex] += g_pDepthHist[nIndex-1];
+		pDepthHist[nIndex] += pDepthHist[nIndex-1];
 	}
 	if (nNumberOfPoints)
 	{
-		for (nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+		for (nIndex=1; nIndex<nZRes; nIndex++)
 		{
-			g_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
+			pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (pDepthHist[nIndex] / nNumberOfPoints)));
 		}
 	}
 
@@ -313,7 +369,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 
 					if (nValue != 0)
 					{
-						nHistValue = g_pDepthHist[nValue];
+						nHistValue = pDepthHist[nValue];
 
 						pDestImage[0] = nHistValue * Colors[nColorID][0]; 
 						pDestImage[1] = nHistValue * Colors[nColorID][1];
@@ -357,26 +413,28 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			g_UserGenerator.GetCoM(aUsers[i], com);
 			g_DepthGenerator.ConvertRealWorldToProjective(1, &com, &com);
 
+			XnUInt32 nDummy = 0;
+
 			xnOSMemSet(strLabel, 0, sizeof(strLabel));
 			if (!g_bPrintState)
 			{
 				// Tracking
-				sprintf(strLabel, "%d", aUsers[i]);
+				xnOSStrFormat(strLabel, sizeof(strLabel), &nDummy, "%d", aUsers[i]);
 			}
 			else if (g_UserGenerator.GetSkeletonCap().IsTracking(aUsers[i]))
 			{
 				// Tracking
-				sprintf(strLabel, "%d - Tracking", aUsers[i]);
+				xnOSStrFormat(strLabel, sizeof(strLabel), &nDummy, "%d - Tracking", aUsers[i]);
 			}
 			else if (g_UserGenerator.GetSkeletonCap().IsCalibrating(aUsers[i]))
 			{
 				// Calibrating
-				sprintf(strLabel, "%d - Calibrating [%s]", aUsers[i], GetCalibrationErrorString(m_Errors[aUsers[i]].first));
+				xnOSStrFormat(strLabel, sizeof(strLabel), &nDummy, "%d - Calibrating [%s]", aUsers[i], GetCalibrationErrorString(m_Errors[aUsers[i]].first));
 			}
 			else
 			{
 				// Nothing
-				sprintf(strLabel, "%d - Looking for pose [%s]", aUsers[i], GetPoseErrorString(m_Errors[aUsers[i]].second));
+				xnOSStrFormat(strLabel, sizeof(strLabel), &nDummy, "%d - Looking for pose [%s]", aUsers[i], GetPoseErrorString(m_Errors[aUsers[i]].second));
 			}
 
 
@@ -388,19 +446,73 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 #endif
 		if (g_bDrawSkeleton && g_UserGenerator.GetSkeletonCap().IsTracking(aUsers[i]))
 		{
+			glColor4f(1-Colors[aUsers[i]%nColors][0], 1-Colors[aUsers[i]%nColors][1], 1-Colors[aUsers[i]%nColors][2], 1);
+
+			// Draw Joints
+			if (g_bMarkJoints)
+			{
+				// Try to draw all joints
+				DrawJoint(aUsers[i], XN_SKEL_HEAD);
+				DrawJoint(aUsers[i], XN_SKEL_NECK);
+				DrawJoint(aUsers[i], XN_SKEL_TORSO);
+				DrawJoint(aUsers[i], XN_SKEL_WAIST);
+
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_COLLAR);
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_SHOULDER);
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_ELBOW);
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_WRIST);
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_HAND);
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_FINGERTIP);
+
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_COLLAR);
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_SHOULDER);
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_ELBOW);
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_WRIST);
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_HAND);
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_FINGERTIP);
+
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_HIP);
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_KNEE);
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_ANKLE);
+				DrawJoint(aUsers[i], XN_SKEL_LEFT_FOOT);
+
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_HIP);
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_KNEE);
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_ANKLE);
+				DrawJoint(aUsers[i], XN_SKEL_RIGHT_FOOT);
+			}
+
 #ifndef USE_GLES
 			glBegin(GL_LINES);
 #endif
-			glColor4f(1-Colors[aUsers[i]%nColors][0], 1-Colors[aUsers[i]%nColors][1], 1-Colors[aUsers[i]%nColors][2], 1);
+
+			// Draw Limbs
 			DrawLimb(aUsers[i], XN_SKEL_HEAD, XN_SKEL_NECK);
 
 			DrawLimb(aUsers[i], XN_SKEL_NECK, XN_SKEL_LEFT_SHOULDER);
 			DrawLimb(aUsers[i], XN_SKEL_LEFT_SHOULDER, XN_SKEL_LEFT_ELBOW);
-			DrawLimb(aUsers[i], XN_SKEL_LEFT_ELBOW, XN_SKEL_LEFT_HAND);
+			if (!DrawLimb(aUsers[i], XN_SKEL_LEFT_ELBOW, XN_SKEL_LEFT_WRIST))
+			{
+				DrawLimb(aUsers[i], XN_SKEL_LEFT_ELBOW, XN_SKEL_LEFT_HAND);
+			}
+			else
+			{
+				DrawLimb(aUsers[i], XN_SKEL_LEFT_WRIST, XN_SKEL_LEFT_HAND);
+				DrawLimb(aUsers[i], XN_SKEL_LEFT_HAND, XN_SKEL_LEFT_FINGERTIP);
+			}
+
 
 			DrawLimb(aUsers[i], XN_SKEL_NECK, XN_SKEL_RIGHT_SHOULDER);
 			DrawLimb(aUsers[i], XN_SKEL_RIGHT_SHOULDER, XN_SKEL_RIGHT_ELBOW);
-			DrawLimb(aUsers[i], XN_SKEL_RIGHT_ELBOW, XN_SKEL_RIGHT_HAND);
+			if (!DrawLimb(aUsers[i], XN_SKEL_RIGHT_ELBOW, XN_SKEL_RIGHT_WRIST))
+			{
+				DrawLimb(aUsers[i], XN_SKEL_RIGHT_ELBOW, XN_SKEL_RIGHT_HAND);
+			}
+			else
+			{
+				DrawLimb(aUsers[i], XN_SKEL_RIGHT_WRIST, XN_SKEL_RIGHT_HAND);
+				DrawLimb(aUsers[i], XN_SKEL_RIGHT_HAND, XN_SKEL_RIGHT_FINGERTIP);
+			}
 
 			DrawLimb(aUsers[i], XN_SKEL_LEFT_SHOULDER, XN_SKEL_TORSO);
 			DrawLimb(aUsers[i], XN_SKEL_RIGHT_SHOULDER, XN_SKEL_TORSO);
@@ -418,5 +530,19 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd)
 			glEnd();
 #endif
 		}
+	}
+
+	if (g_bPrintFrameID)
+	{
+		static XnChar strFrameID[80];
+		xnOSMemSet(strFrameID, 0, 80);
+		XnUInt32 nDummy = 0;
+		xnOSStrFormat(strFrameID, sizeof(strFrameID), &nDummy, "%d", dmd.FrameID());
+
+		glColor4f(1, 0, 0, 1);
+
+		glRasterPos2i(10, 10);
+
+		glPrintString(GLUT_BITMAP_HELVETICA_18, strFrameID);
 	}
 }

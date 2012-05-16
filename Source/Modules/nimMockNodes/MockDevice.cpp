@@ -21,7 +21,7 @@
 ****************************************************************************/
 #include "MockDevice.h"
 
-MockDevice::MockDevice(const XnChar* strName) : MockProductionNode(strName)
+MockDevice::MockDevice(xn::Context& context, const XnChar* strName) : MockProductionNode(context, strName)
 {}
 
 

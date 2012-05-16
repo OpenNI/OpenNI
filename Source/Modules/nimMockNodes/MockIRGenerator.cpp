@@ -21,7 +21,7 @@
 ****************************************************************************/
 #include "MockIRGenerator.h"
 
-MockIRGenerator::MockIRGenerator(const XnChar* strName) : MockMapGenerator(strName)
+MockIRGenerator::MockIRGenerator(xn::Context& context, const XnChar* strName) : MockMapGenerator(context, strName)
 {
 
 }

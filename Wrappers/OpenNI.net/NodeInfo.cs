@@ -78,7 +78,7 @@ namespace OpenNI
 		{
 			get
 			{
-				return new NodeInfoList(SafeNativeMethods.xnNodeInfoGetNeededNodes(this.InternalObject));
+				return new NodeInfoList(SafeNativeMethods.xnNodeInfoGetNeededNodes(this.InternalObject), false);
 			}
 		}
 

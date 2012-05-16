@@ -58,12 +58,12 @@ UserSelector::UserSelector(xn::UserGenerator* pUserGenerator) : m_bValid(FALSE),
 
 UserSelector::~UserSelector()
 {
-    while(m_hUsersState.begin() != m_hUsersState.end())
+    while(m_hUsersState.Begin() != m_hUsersState.End())
     {
-        UserStateHash::Iterator iter=m_hUsersState.begin();
-        if(iter.Value() != NULL)
+        UserStateHash::Iterator iter=m_hUsersState.Begin();
+        if(iter->Value() != NULL)
         {
-            XN_DELETE(iter.Value());
+            XN_DELETE(iter->Value());
         }
         m_hUsersState.Remove(iter);
     }
@@ -145,12 +145,12 @@ XnStatus UserSelector::RemoveUser(XnUserID nUserId)
 }
 
 
-void XN_CALLBACK_TYPE UserSelector::NewUserCallback(xn::UserGenerator& generator, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE UserSelector::NewUserCallback(xn::UserGenerator& /*generator*/, XnUserID nUserId, void* pCookie)
 {
     UserSelector* pUserSelector=(UserSelector *)pCookie;
     pUserSelector->AddNewUser(nUserId);
 }
-void XN_CALLBACK_TYPE UserSelector::LostUserCallback(xn::UserGenerator& generator, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE UserSelector::LostUserCallback(xn::UserGenerator& /*generator*/, XnUserID nUserId, void* pCookie)
 {
     UserSelector* pUserSelector=(UserSelector *)pCookie;
     pUserSelector->RemoveUser(nUserId);
@@ -225,10 +225,10 @@ XnStatus UserSelector::TranslateStateToLabel(const UserSelectionState* pUserStat
 XnUInt32 UserSelector::GetNumberOfSelectedUsers()
 {
     XnUInt32 nUsers=0;
-    for(UserStateHash::Iterator iter=m_hUsersState.begin(); iter!=m_hUsersState.end(); ++iter)
+    for(UserStateHash::Iterator iter = m_hUsersState.Begin(); iter != m_hUsersState.End(); ++iter)
     {
-        UserSelectionState* val=iter.Value();
-        if(val->m_eState==XN_SELECTION_SELECTED || val->m_eState==XN_SELECTION_TRACKING)
+        UserSelectionState* val = iter->Value();
+        if(val->m_eState == XN_SELECTION_SELECTED || val->m_eState == XN_SELECTION_TRACKING)
         {
             nUsers++;
         }

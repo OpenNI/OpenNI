@@ -4,17 +4,17 @@
 		<License vendor="vendor" key="key"/>
 		-->
 	</Licenses>
-	<Log writeToConsole="true" writeToFile="false">
+	<Log writeToConsole="false" writeToFile="false">
 		<!-- 0 - Verbose, 1 - Info, 2 - Warning, 3 - Error (default) -->
-		<LogLevel value="0"/>
+		<LogLevel value="3"/>
 		<Masks>
-			<Mask name="ALL" on="true"/>
+			<Mask name="ALL" on="false"/>
 		</Masks>
 		<Dumps>
 		</Dumps>
 	</Log>
 	<ProductionNodes>
-		<!--Recording file="/data/amit/cap/Captured.oni"/-->
+		<!--Recording file="/data/NIAndroid/cap/Captured.oni"/-->
 		<Node type="Depth" name="Depth1">
 			<Configuration>
 				<Mirror on="true"/>

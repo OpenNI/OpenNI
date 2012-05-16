@@ -20,7 +20,7 @@
 *                                                                           *
 ****************************************************************************/
 #include <XnModuleCppInterface.h>
-#include <XnEvent.h>
+#include <XnEventT.h>
 
 class SampleDepth : 
 	public virtual xn::ModuleDepthGenerator,
@@ -73,8 +73,6 @@ public:
 	virtual void UnregisterFromFieldOfViewChange(XnCallbackHandle hCallback);
 
 private:
-	XN_DECLARE_EVENT_0ARG(ChangeEvent, ChangeEventInterface);
-
 	static XN_THREAD_PROC SchedulerThread(void* pCookie);
 	void OnNewFrame();
 
@@ -85,7 +83,7 @@ private:
 	XnUInt64 m_nTimestamp;
 	XN_THREAD_HANDLE m_hScheduler;
 	XnBool m_bMirror;
-	ChangeEvent m_generatingEvent;
-	ChangeEvent m_dataAvailableEvent;
-	ChangeEvent m_mirrorEvent;
+	XnEventNoArgs m_generatingEvent;
+	XnEventNoArgs m_dataAvailableEvent;
+	XnEventNoArgs m_mirrorEvent;
 };

@@ -1,0 +1,163 @@
+/**
+@page smpl_record_raw NiRecordRaw.cpp - sample program
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- NiRecordRaw.cpp
+
+	This section describes an OpenNI sample program for recording raw data, and then playing it back. Recording raw data may be useful for middleware developers who produce a custom type of data that isn't defined by OpenNI. In addition, recording raw data may also be useful for middleware developers who save additional debugging information in the ONI file. This additional data may be used in conjunction with the standard OpenNI data types such as depth output data stored in the file. In this case, each frame of debugging information will match a depth frame. 
+	
+	In this sample, the raw data is artificial data that the application itself synthesizes.
+
+	
+	@section recraw__sample_xml_path Declaration of File Paths
+	
+		In the following definitions, SAMPLE_XML_PATH is for the path to an OpenNI XML script input file for building a stored production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object model. See @ref prod_graph for more about production graph. RECORDING_FILE_NAME is the OpenNI output file to store the recording.
+		@code
+			#define SAMPLE_XML_PATH "../../../../Data/SamplesConfig.xml"
+			#define RECORDING_FILE_NAME "recordingWithRaw.oni"
+		@endcode			
+
+	@section bkrec_macros Macro Declarations
+	
+		At the top of the program are two macro utility declarations, both of which call OpenNI methods. They are described below. However, for the sake of conciseness, the rest of this documentation skips calls to these macros.
+
+		The CHECK_RC_ERR() macro checks whether the most recent OpenNI operation for creating a production graph actually created a production graph or not. If no production graph was created (indicated by the <code>XN_STATUS_NO_NODE_PRESENT</code> return code), the @ref xn::xnGetStatusString "xnGetStatusString()" method converts an error list to a  error string for printing. Either way, this macro then calls the <code>CHECK_RC()</code> macro described above.
+		@code
+			#define CHECK_RC_ERR(rc, what, error) \
+			  ...			
+		@endcode	
+
+	@section recraw_mainprg_dcl_blk Main Program - Declaration Block
+	
+		The declaration block at the top of the main program declares an OpenNI status flag for collecting return values from method calls.
+		@code	
+			XnStatus nRetVal = XN_STATUS_OK;
+		@endcode
+		
+		
+	@section recraw_mainprg Main Program
+	
+		@subsection recraw_record Recording Data
+	
+			In the following, the @ref xn::xnLogInitFromXmlFile() function initializes the log from an XML file. 
+			@code		
+				nRetVal = xnLogInitFromXmlFile(SAMPLE_XML_PATH);
+			@endcode
+			
+			The following initalizes the @ref xn::Context object. This is a workspace where the application builds an OpenNI production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object structure.
+			@code		
+				Context context;
+				nRetVal = context.Init();
+			@endcode
+
+			The following statement initializes a Recorder object. This object records to a specified destination medium the frames of data from each node that was added to the Recorder node. 
+			@code		
+				nRetVal = recorder.Create(context);
+			@endcode
+			
+			The following call specifies to where the recorder must send its recording. 
+			
+			@note Disk files are the only medium that this installation currently supports.
+			
+			@code		
+				nRetVal = recorder.SetDestination(XN_RECORD_MEDIUM_FILE, RECORDING_FILE_NAME);
+			@endcode		
+			
+			The following code creates a mock node. This is to simulate an actual node when recording or playing data from a recording. A mock node does not contain any logic for generating data. Instead, it allows an outside component &ndash; such as an application or a real node &ndash; to feed it configuration changes and data. 
+			@code		
+				MockRawGenerator rawGenerator;
+				nRetVal = rawGenerator.Create(context, "MockRaw");
+			@endcode		
+			
+			The following statements set properties of the @ref xn::MockRawGenerator "rawGenerator" node. It creates a string property named Type and assigns it the value "ReverseT", creates an integer property named X and assigns it the value 5.  This depends on the middleware developer that is using this feature. It could be any parameter that the middleware code might later need for debugging purposes or for custom data types.
+			@code
+				nRetVal = rawGenerator.SetStringProperty("Type", "ReverseT");
+				nRetVal = rawGenerator.SetIntProperty("X", 5);
+			@endcode
+			
+			The following statement adds the node to the recording setup, and starts recording it.
+			@code
+				nRetVal = recorder.AddNodeToRecording(rawGenerator);
+			@endcode
+			
+			The following example shows that properties can also be set after the node has been added to the recording. 
+			@code
+				nRetVal = rawGenerator.SetIntProperty("Y", 8);
+			@endcode
+			
+			The following main application loop sets artificial data in the rawGenerator node. The parameters to the SetData() call, in order, are nFrameID and nTimestamp, both generated from the loop counter - abd then the nDataSize and a pointer to the data buffer. 		
+			@code	
+				XnChar buff[20];
+				for (XnUInt32 i = 1; i <= 10; i++)
+				{
+					for (XnUInt32 j = 0; j < 20; j++)
+					{
+						buff[j] = i;
+					}
+					nRetVal = rawGenerator.SetData(1000 * i, i, sizeof(buff), buff);nRetVal = recorder.Record();
+			@endcode
+			
+			In the above, the @ref xn::Recorder::Record() "Record()" method records one frame of data from each node added to the recorder. To record continually, the recorder node must be called repeatedly for each frame.
+			
+			On completion of the loop, the following code removes the node from the Recorder object and so stops recording the node output. The code then releases the @ref xn::Recorder "Recorder" and  @ref xn::MockRawGenerator "MockRawGenerator" nodes. Releasing the nodes unreferences them, decreasing their reference counts by 1. If a node's reference count reaches zero, it will be destroyed. 
+			@code
+				nRetVal = recorder.RemoveNodeFromRecording(rawGenerator);
+				   ...
+				recorder.Release();
+				   ...
+				rawGenerator.Release();
+			@endcode
+			
+			This completes the recording example. All recorded data has been recorded in the file whose name is given in RECORDING_FILE_NAME.
+			
+		
+		@subsection recraw_play Plays Back Recorded Data
+		
+			The application now builds a production graph to play back the data recorded above 
+			
+			The following statement gets a handle to an existing production node instance using that instance name. It is already known that there exists a node with the instance name "MockRaw".	
+			@code
+				nRetVal = context.GetProductionNodeByName("MockRaw", rawGenerator);
+			@endcode
+			
+			The following code replays a recorded file of a session of OpenNI data generation exactly as it was recorded. the @ref xn::Player node is for playing a saved recording of an OpenNI data generation session. The RECORDING_FILE_NAME string contains the file name, as above. 
+			@code
+				Player player;
+				nRetVal = context.OpenFileRecording(RECORDING_FILE_NAME, player);
+			@endcode			
+			
+			The following statement specifies whether the player will automatically rewind to the beginning of the recording after reaching the end of the recording.
+			@code
+				nRetVal = player.SetRepeat(FALSE);
+			@endcode
+			
+			@code
+				nRetVal = context.GetProductionNodeByName("MockRaw", rawGenerator);
+			@endcode
+			
+			The following program loop waits for available data from any generator node and prints it out. The @ref xn::Context::WaitAnyUpdateAll() "WaitAnyUpdateAll()" method updates all generator nodes in the context that have new data available, first waiting for any of the nodes to have new data available. The application can then get the data (for example, using a metadata <code>GetData()</code> method). This method has a timeout.			
+			@code
+				while ((nRetVal = context.WaitAnyUpdateAll()) != XN_STATUS_EOF)
+				{
+					CHECK_RC(nRetVal, "Read data from file");
+					pData = (const XnChar*)rawGenerator.GetData();
+					nSize = rawGenerator.GetDataSize();
+					for (XnUInt32 i = 0; i < nSize; i++)
+					{
+						printf("%d ", pData[i]);
+					}
+					printf("\n");
+				}
+			@endcode
+			
+			On completion of the loop, the following code removes the node from the Player  object and and so stops playing the recording. All other objects are also released. See ealier for a more detailed description of Release().
+			@code			
+				player.Release();
+				rawGenerator.Release();
+				recorder.Release();
+				context.Release();
+			@endcode
+
+*/
+
+

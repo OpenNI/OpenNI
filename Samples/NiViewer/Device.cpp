@@ -106,7 +106,7 @@ void initConstants()
 	g_Resolution.nValuesCount = nIndex;
 }
 
-void XN_CALLBACK_TYPE onErrorStateChanged(XnStatus errorState, void* pCookie)
+void XN_CALLBACK_TYPE onErrorStateChanged(XnStatus errorState, void* /*pCookie*/)
 {
 	if (errorState != XN_STATUS_OK)
 	{
@@ -249,7 +249,7 @@ XnStatus openDeviceFromXmlWithChoice(const char* csXmlFile, EnumerationErrors& e
 	printf("Choose device to open (1): ");
 
 	int chosen = 1;
-	int nRetval = scanf("%d", &chosen);
+	scanf("%d", &chosen);
 
 	// create it
 	NodeInfoList::Iterator it = list.Begin();
@@ -341,8 +341,6 @@ void changeRegistration(int nValue)
 
 void changePrimaryStream(int nIndex)
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-
 	if (nIndex == 0)
 	{
 		g_pPrimary = NULL;
@@ -419,27 +417,27 @@ void toggleStream(Generator& generator, XnProductionNodeType type, bool* bIsOn)
 	*bIsOn = (generator.IsGenerating() == TRUE);
 }
 
-void toggleDepthState(int nDummy)
+void toggleDepthState(int )
 {
 	toggleStream(g_Depth, XN_NODE_TYPE_DEPTH, &g_bIsDepthOn);
 }
 
-void toggleImageState(int nDummy)
+void toggleImageState(int )
 {
 	toggleStream(g_Image, XN_NODE_TYPE_IMAGE, &g_bIsImageOn);
 }
 
-void toggleIRState(int nDummy)
+void toggleIRState(int )
 {
 	toggleStream(g_IR, XN_NODE_TYPE_IR, &g_bIsIROn);
 }
 
-void toggleAudioState(int nDummy)
+void toggleAudioState(int )
 {
 	toggleStream(g_Audio, XN_NODE_TYPE_AUDIO, &g_bIsAudioOn);
 }
 
-void toggleMirror(int nDummy)
+void toggleMirror(int )
 {
 	XnStatus nRetVal = g_Context.SetGlobalMirror(!g_Context.GetGlobalMirror());
 	if (nRetVal != XN_STATUS_OK)

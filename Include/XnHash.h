@@ -342,33 +342,6 @@ public:
 	}
 
 	/**
-	* Copy constructor
-	*/
-	XnHash(const XnHash& other)
-	{
-		m_nInitStatus = Init();
-		if (m_nInitStatus == XN_STATUS_OK)
-		{
-			m_nMinBin = other.m_nMinBin;
-			m_CompareFunction = other.m_CompareFunction;
-			m_HashFunction = other.m_HashFunction;
-			for (int i = 0; i < XN_HASH_NUM_BINS; i++)
-			{
-				if (other.m_Bins[i] != NULL)
-				{
-					m_Bins[i] = XN_NEW(XnList);
-					if (m_Bins[i] == NULL)
-					{
-						m_nInitStatus = XN_STATUS_ALLOC_FAILED;
-						return;
-					}
-					*(m_Bins[i]) = *(other.m_Bins[i]);
-				}
-			}
-		}
-	}
-
-	/**
 	* Destructor. Destroys internal representations.
 	*/
 	virtual ~XnHash()
@@ -755,6 +728,8 @@ protected:
 	XnCompareFunction m_CompareFunction;
 
 private:
+	XN_DISABLE_COPY_AND_ASSIGN(XnHash);
+
 	XnStatus ConstFind(const XnKey& key, ConstIterator& hiter) const
 	{
 		XnHashValue HashValue = (*m_HashFunction)(key);
@@ -882,29 +857,10 @@ private:
 			SetHashFunction(Hash);																	\
 			SetCompareFunction(Compare);															\
 		}																							\
-		ClassName(const ClassName& other)															\
-		{																							\
-			SetHashFunction(Hash);																	\
-			SetCompareFunction(Compare);															\
-			*this = other;																			\
-		}																							\
 		virtual ~ClassName()																		\
 		{																							\
 			while (!IsEmpty())																		\
 				Remove(begin());																	\
-		}																							\
-		ClassName& operator=(const ClassName& other)												\
-		{																							\
-			Clear();																				\
-			for (ConstIterator it = other.begin(); it != other.end(); it++)							\
-			{																						\
-				m_nInitStatus = Set(it.Key(), it.Value());											\
-				if (m_nInitStatus != XN_STATUS_OK)													\
-				{																					\
-					return *this;																	\
-				}																					\
-			}																						\
-			return *this;																			\
 		}																							\
 		XnStatus Set(KeyType const& key, ValueType const& value)									\
 		{																							\
@@ -1000,12 +956,14 @@ private:
 			KeyType const& _key = KeyTranslator::GetFromValue(key);									\
 			return KeyManager::Hash(_key);															\
 		}																							\
-		inline static XnInt32 Compare(const XnKey& key1, const XnKey& key2)						\
+		inline static XnInt32 Compare(const XnKey& key1, const XnKey& key2)							\
 		{																							\
 			KeyType const _key1 = KeyTranslator::GetFromValue(key1);								\
 			KeyType const _key2 = KeyTranslator::GetFromValue(key2);								\
 			return KeyManager::Compare(_key1, _key2);												\
 		}																							\
+	private:																						\
+		XN_DISABLE_COPY_AND_ASSIGN(ClassName);														\
 	};
 
 /**

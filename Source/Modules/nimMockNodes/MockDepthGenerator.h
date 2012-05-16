@@ -26,12 +26,14 @@
 #include <XnTypes.h>
 #include "MockMapGenerator.h"
 
+XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_INHERITS_VIA_DOMINANCE_WARNING_ID)
+
 class MockDepthGenerator : 
 	public MockMapGenerator,
 	virtual public xn::ModuleDepthGenerator
 {
 public:
-	MockDepthGenerator(const XnChar* strName);
+	MockDepthGenerator(xn::Context& context, const XnChar* strName);
 	virtual ~MockDepthGenerator();
 
 	/*ProductionNode*/
@@ -64,5 +66,7 @@ protected:
 	XnBool m_bSupportedUserPositionsCountReceived;
 	XnBoundingBox3D* m_pUserPositions;
 };
+
+XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
 
 #endif // __MOCKDEPTHGENERATOR_H__

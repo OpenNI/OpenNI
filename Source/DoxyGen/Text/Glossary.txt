@@ -1,0 +1,95 @@
+/**
+@page glossary Glossary  
+
+@section dict_gen_class Generator Class
+
+	A class derived directly or indirectly from the @ref xn::Generator class.
+
+@section dict_gen_node Generator Node 
+
+	A node instantiated and created from any one of the @ref dict_gen_class 
+	"generator classes". 
+
+@section node_alternative Node Alternative
+
+	Any existing (already created) node or plug-in that satisfies an 
+	enumeration query. The nodes are checked first. 
+
+	See also @ref create_method
+
+@section glos_frame_object Frame Objects
+
+	A @ref dict_gen_node "generator node's" metadata object is a frame 
+	object containing a saved data frame from the node, and all the data 
+	frame's associated properties. For example, a DepthMetaData object is 
+	for containing a depth map 'frame object' from the DepthGenerator node. 
+
+	In principle, an application can save a number of frame objects, each 
+	in a different metadata object. 
+
+	The frame data can also be accessed directly from the generator node -
+	by using the node's @ref xn::Generator::GetData() "GetData()" 
+	method. 
+
+	Thus:
+	@verbatim
+		metadata == frame object { <br>
+		   frame data <br>		
+		   frame configuration <br>
+		} <br>
+	
+		generator 'outputs =>' frame object == frame configuration + frame data <br>
+		<br>
+	@endverbatim
+	
+	This means that a @ref dict_gen_node "generator node" outputs the frame 
+	object, and the frame configuration is copied from the original 
+	configuration at the time of the generation of the frame object.
+		   
+	Typically: 
+	@verbatim
+		current configuration = frame configuration
+    @endverbatim
+
+	For more detailed information about frame objects, see @ref conc_meta_data.
+
+@section frame_data Frame Data (Data Frame) 
+
+	The map generated from the node. This map is contained in the node's 
+	@ref glos_frame_object "frame object". 
+
+@section frame_cfg Frame Configuration
+
+	The frame configuration associated with a generated @ref frame_data "data frame". 
+
+@section holder_node Holder Node
+
+	The term 'holder node', is used in regards to a capability object. The 
+	'holder node' is the production node that a particular capability object 
+	is associated with. 
+
+@section meanings_of_user Meanings of 'User' 
+
+	This document uses the term 'human user' when referring to the human 
+	user seen by the sensor. The term 'user' refers to OpenNI's internal 
+	representation of human users that are pre-calibration or are being 
+	calibrated. The term 'skeleton' refers to skeletons that are, by 
+	definition, after calibration. The term 'skeleton' refers to the 
+	on-screen graphic representation of the skeleton. 
+
+@section upd_node Updating Nodes
+
+	'Updating' a node means that the node puts new data in its application 
+	buffer so that the application can access it. 
+
+	On updating a node that did not have new data generated, the available 
+	@ref glos_frame_object "frame object" remains the same. 
+
+	The application can access a node's data by calling the node's @ref 
+	xn::Generator::GetData() "GetData()" method. 
+
+	If a node has an associated metadata object, an application can access 
+	the node's data through the metadata object by calling the node's 
+	<code>GetMetaData()</code> method, e.g., @ref 
+	xn::ImageGenerator::GetMetaData() "GetMetaData()". 
+*/

@@ -26,12 +26,14 @@
 #include <XnTypes.h>
 #include "MockMapGenerator.h"
 
+XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_INHERITS_VIA_DOMINANCE_WARNING_ID)
+
 class MockIRGenerator : 
 	public MockMapGenerator,
 	virtual public xn::ModuleIRGenerator
 {
 public:
-	MockIRGenerator(const XnChar* strName);
+	MockIRGenerator(xn::Context& context, const XnChar* strName);
 	virtual ~MockIRGenerator();
 	/*Generator*/
 	virtual const void* GetData() { return MockMapGenerator::GetData(); }
@@ -42,4 +44,7 @@ public:
 	/*IR Generator*/
 	virtual XnIRPixel* GetIRMap();
 };
+
+XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
+
 #endif // __MOCKIRGENERATOR_H__

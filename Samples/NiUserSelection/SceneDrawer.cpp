@@ -38,8 +38,6 @@ static EGLContext context = EGL_NO_CONTEXT;
 #define GL_WIN_SIZE_X 720
 #define GL_WIN_SIZE_Y 480
 
-// Maximum allowed depth (in mm from sensor).
-#define MAX_DEPTH 10000
 // Maximum number of limbs (lines) we will draw as a skeleton.
 #define MAX_LIMBS 16
 
@@ -213,7 +211,7 @@ void SceneDrawer::DrawLabels(XnUserID nUserId)
     glColor4f(1-color[0], 1-color[1], 1-color[2], 1);
 
     glRasterPos2i(com.X, com.Y);
-    int len = strlen(strOutputLabel);
+    int len = (int)strlen(strOutputLabel);
 
     for(int c=0; c<len; c++)
     {
@@ -389,7 +387,7 @@ void SceneDrawer::glutIdle (void)
 
 
 
-void SceneDrawer::glutKeyboard (unsigned char key, int x, int y)
+void SceneDrawer::glutKeyboard (unsigned char key, int /*x*/, int /*y*/)
 {
     SceneDrawer *singleton=GetInstance();
     switch (key)

@@ -24,21 +24,24 @@
 
 #include <XnModuleCppInterface.h>
 #include <XnTypes.h>
-#include <XnEvent.h>
 #include "MockProductionNode.h"
+
+XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_INHERITS_VIA_DOMINANCE_WARNING_ID)
 
 class MockGenerator : 
 	public MockProductionNode,
 	virtual public xn::ModuleGenerator,
-	virtual public xn::ModuleMirrorInterface
+	virtual public xn::ModuleMirrorInterface,
+	virtual public xn::ModuleFrameSyncInterface
 {
 public:
-	MockGenerator(const XnChar* strName, XnBool bAggregateData = FALSE);
+	MockGenerator(xn::Context& context, const XnChar* strName, XnBool bAggregateData = FALSE);
 	virtual ~MockGenerator();
 
 	/*ModuleProductionNode*/
 	virtual XnBool IsCapabilitySupported(const XnChar* strCapabilityName);
 	virtual XnStatus SetIntProperty(const XnChar* strName, XnUInt64 nValue);
+	virtual XnStatus SetStringProperty(const XnChar* strName, const XnChar* strValue);
 	virtual XnStatus SetGeneralProperty(const XnChar* strName, XnUInt32 nBufferSize, const void* pBuffer);
 
 	/*ModuleGenerator*/
@@ -65,6 +68,14 @@ public:
 	virtual XnStatus RegisterToMirrorChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback);
 	virtual void UnregisterFromMirrorChange(XnCallbackHandle hCallback);
 
+	/*ModuleFrameSyncInterface*/
+	virtual XnBool CanFrameSyncWith(xn::ProductionNode& other);
+	virtual XnStatus FrameSyncWith(xn::ProductionNode& other);
+	virtual XnStatus StopFrameSyncWith(xn::ProductionNode& other);
+	virtual XnBool IsFrameSyncedWith(xn::ProductionNode& other);
+	virtual XnStatus RegisterToFrameSyncChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback);
+	virtual void UnregisterFromFrameSyncChange(XnCallbackHandle hCallback);
+
 protected:
 	XnStatus OnStateReady();
 	XnStatus ResizeBuffer(XnUInt32 nIndex, XnUInt32 nNeededSize);
@@ -76,11 +87,19 @@ private:
 	XnStatus SetNextData(const void *pData, XnUInt32 nSize);
 	XnStatus AppendToNextData(const void *pData, XnUInt32 nSize);
 	void SetGenerating(XnBool bGenerating);
+	XnStatus SetFrameSyncNode(const XnChar* strOther);
+	void OnNodeCreation(xn::ProductionNode& createdNode);
+	void OnNodeDestruction(const XnChar* strDestroyedNodeName);
+	void FrameSyncChanged();
+
+	static void XN_CALLBACK_TYPE OnNodeCreationCallback(xn::Context& context, xn::ProductionNode& createdNode, void* pCookie);
+	static void XN_CALLBACK_TYPE OnNodeDestructionCallback(xn::Context& context, const XnChar* strDestroyedNodeName, void* pCookie);
 
 	XnBool m_bAggregateData;
 	PropChangeEvent m_generatingChangedEvent;
 	PropChangeEvent m_newDataAvailableEvent;
 	PropChangeEvent m_mirrorChangeEvent;
+	PropChangeEvent m_frameSyncChangeEvent;
 
 	enum {NUM_BUFFERS = 2};
 	struct DataInfo
@@ -104,6 +123,13 @@ private:
 	XnBool m_bMirror;
 	XnBool m_bNewDataAvailable;
 	XnBool m_bMirrorCap;
+	XnBool m_bFrameSyncCap;
+	XnChar m_strFrameSyncWith[XN_MAX_NAME_LENGTH]; // We store frame sync by name, as it might not be part of recording
+	XnBool m_bFrameSyncWithExists;
+	XnCallbackHandle m_hNodeCreationCallback;
+	XnCallbackHandle m_hNodeDestructionCallback;
 };
+
+XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
 
 #endif // __MOCKGENERATOR_H__

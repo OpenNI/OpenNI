@@ -548,6 +548,9 @@ protected:
 	
 	INiNodeAllocator* m_pNodeAllocator;
 	XnBool m_bOwnsAllocator;
+
+private:
+	XN_DISABLE_COPY_AND_ASSIGN(XnList);
 };
 
 /**
@@ -633,23 +636,10 @@ protected:
 		ClassName()																				\
 		{																						\
 		}																						\
-		ClassName(const ClassName& other)														\
-		{																						\
-			*this = other;																		\
-		}																						\
 		~ClassName()																			\
 		{																						\
 			while (!IsEmpty())																	\
 				Remove(begin());																\
-		}																						\
-		ClassName& operator=(const ClassName& other)											\
-		{																						\
-			Clear();																			\
-			for (ConstIterator it = other.begin(); it != other.end(); ++it)						\
-			{																					\
-				AddLast(*it);																	\
-			}																					\
-			return *this;																		\
 		}																						\
 		inline XnStatus AddFirst(Type const& value)												\
 		{																						\
@@ -731,6 +721,8 @@ protected:
 		{																						\
 			return Remove(ConstIterator(where));												\
 		}																						\
+	private:																					\
+		XN_DISABLE_COPY_AND_ASSIGN(ClassName);													\
 	};
 
 /**

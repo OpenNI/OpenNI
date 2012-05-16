@@ -196,7 +196,9 @@ GeneratorWatcher::GeneratorWatcher(const Generator &generator,
 	m_generator(generator),
 	m_hGenerationRunningChangeCB(NULL),
 	m_hMirrorChangeCB(NULL),
-	m_nLastDataTimeStamp(0)
+	m_hFrameSyncChangeCB(NULL),
+	m_nLastDataTimeStamp(0),
+	m_nLastDataFrameID(0)
 {
 }
 
@@ -222,6 +224,12 @@ XnStatus GeneratorWatcher::Register()
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
+	if (m_generator.IsCapabilitySupported(XN_CAPABILITY_FRAME_SYNC))
+	{
+		nRetVal = m_generator.GetFrameSyncCap().RegisterToFrameSyncChange(&HandleFrameSyncChange, this, m_hFrameSyncChangeCB);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
 	if (m_generator.IsCapabilitySupported(XN_CAPABILITY_EXTENDED_SERIALIZATION))
 	{
 		//TODO: Add a call to m_generator.GetExtendedSerializationCap().RegisterExNotifications()
@@ -242,6 +250,12 @@ void GeneratorWatcher::Unregister()
 	{
 		m_generator.GetMirrorCap().UnregisterFromMirrorChange(m_hMirrorChangeCB);
 		m_hMirrorChangeCB = NULL;
+	}
+
+	if (m_generator.IsCapabilitySupported(XN_CAPABILITY_FRAME_SYNC) && (m_hFrameSyncChangeCB != NULL))
+	{
+		m_generator.GetFrameSyncCap().UnregisterFromFrameSyncChange(m_hFrameSyncChangeCB);
+		m_hFrameSyncChangeCB = NULL;
 	}
 
 	if (m_generator.IsCapabilitySupported(XN_CAPABILITY_EXTENDED_SERIALIZATION))
@@ -278,8 +292,13 @@ XnStatus GeneratorWatcher::NotifyStateImpl()
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
+	if (bFrameSyncCap)
+	{
+		nRetVal = UpdateFrameSync();
+		XN_IS_STATUS_OK(nRetVal);
+	}
+
 	//TODO: Notify alt view cap props
-	//TODO: Notify frame sync cap props
 	
 	return XN_STATUS_OK;
 }
@@ -297,9 +316,16 @@ XnStatus GeneratorWatcher::Watch()
 	XN_IS_STATUS_OK(nRetVal);
 
 	XnUInt64 nCurrentTimeStamp = m_generator.GetTimestamp();
-	if ((nCurrentTimeStamp > m_nLastDataTimeStamp) || ((nCurrentTimeStamp == 0) && (m_generator.GetFrameID() > 0)))
+	XnUInt32 nCurrentFrameID = m_generator.GetFrameID();
+
+	// check if timestamp has changed since last time.
+	// Note that the first frame might have a timestamp of zero, so also make sure frame ID changes
+	if ((nCurrentTimeStamp > m_nLastDataTimeStamp) || 
+		(nCurrentFrameID > m_nLastDataFrameID))
 	{
 		m_nLastDataTimeStamp = nCurrentTimeStamp;
+		m_nLastDataFrameID = nCurrentFrameID;
+
 		const void* pData = GetCurrentData();
 		if (pData != NULL)
 		{
@@ -343,6 +369,56 @@ void XN_CALLBACK_TYPE GeneratorWatcher::HandleMirrorChange(ProductionNode& /*nod
 
 	pThis->NotifyIntPropChanged(XN_PROP_MIRROR, pThis->m_generator.GetMirrorCap().IsMirrored());
 }
+
+void XN_CALLBACK_TYPE GeneratorWatcher::HandleFrameSyncChange(ProductionNode& /*node*/, void* pCookie)
+{
+	GeneratorWatcher *pThis = (GeneratorWatcher*)pCookie;
+	if ((pThis == NULL) || !pThis->m_generator.IsCapabilitySupported(XN_CAPABILITY_FRAME_SYNC))
+	{
+		XN_ASSERT(FALSE);
+		return;
+	}
+
+	pThis->UpdateFrameSync();
+}
+
+XnStatus GeneratorWatcher::UpdateFrameSync()
+{
+	// go over all nodes, and find the frame synced one
+	Context context;
+	m_generator.GetContext(context);
+	
+	NodeInfoList nodes;
+	XnStatus nRetVal = context.EnumerateExistingNodes(nodes);
+	XN_IS_STATUS_OK(nRetVal);
+
+	for (NodeInfoList::Iterator it = nodes.Begin(); it != nodes.End(); ++it)
+	{
+		NodeInfo info = *it;
+		// make sure this is a generator
+		if (xnIsTypeDerivedFrom(info.GetDescription().Type, XN_NODE_TYPE_GENERATOR))
+		{
+			Generator otherGen;
+			nRetVal = info.GetInstance(otherGen);
+			XN_IS_STATUS_OK(nRetVal);
+
+			if (m_generator.GetFrameSyncCap().IsFrameSyncedWith(otherGen))
+			{
+				nRetVal = NotifyStringPropChanged(XN_PROP_FRAME_SYNCED_WITH, otherGen.GetName());
+				XN_IS_STATUS_OK(nRetVal);
+
+				return XN_STATUS_OK;
+			}
+		}
+	}
+
+	// if we got here, we're not frame synced
+	nRetVal = NotifyStringPropChanged(XN_PROP_FRAME_SYNCED_WITH, "");
+	XN_IS_STATUS_OK(nRetVal);
+
+	return XN_STATUS_OK;
+}
+
 
 /**************/
 /* MapWatcher */
@@ -401,6 +477,8 @@ XnStatus MapWatcher::NotifyStateImpl()
 	XN_IS_STATUS_OK(nRetVal);
 	XnBool bCapCropping = m_mapGenerator.IsCapabilitySupported(XN_CAPABILITY_CROPPING);
 	nRetVal = NotifyIntPropChanged(XN_CAPABILITY_CROPPING, bCapCropping);
+	XN_IS_STATUS_OK(nRetVal);
+	nRetVal = NotifyIntPropChanged(XN_PROP_BYTES_PER_PIXEL, m_mapGenerator.GetBytesPerPixel());
 	XN_IS_STATUS_OK(nRetVal);
 	nRetVal = NotifySupportedOutputModes();
 	XN_IS_STATUS_OK(nRetVal);

@@ -28,6 +28,7 @@
 #include "XnInternalTypes.h"
 #include "XnPropNames.h"
 #include <XnCodecIDs.h>
+#include "XnTypeManager.h"
 
 namespace xn 
 {
@@ -44,9 +45,10 @@ XnRecorderOutputStreamInterface RecorderImpl::s_fileOutputStream =
 };
 
 RecorderImpl::RecorderImpl() : 
-	m_hRecorder(NULL),
+	m_destType(XN_RECORD_MEDIUM_FILE),
 	m_bIsFileOpen(FALSE),
-	m_destType(XN_RECORD_MEDIUM_FILE)
+	m_hOutFile(NULL),
+	m_hRecorder(NULL)
 {
 	xnOSMemSet(m_strFileName, 0, sizeof(m_strFileName));
 }
@@ -78,9 +80,9 @@ void RecorderImpl::BeforeNodeDestroy()
 
 void RecorderImpl::Destroy()
 {
-	for (NodeWatchersMap::Iterator it = m_nodeWatchersMap.begin(); it != m_nodeWatchersMap.end(); it++)
+	for (NodeWatchersMap::Iterator it = m_nodeWatchersMap.Begin(); it != m_nodeWatchersMap.End(); ++it)
 	{
-		XN_DELETE(it.Value());
+		XN_DELETE(it->Value());
 	}
 	m_nodeWatchersMap.Clear();
 	CloseFileImpl();	
@@ -93,8 +95,8 @@ XnStatus RecorderImpl::AddNode(ProductionNode &node, XnCodecID compression)
 		return XN_STATUS_BAD_PARAM;		
 	}
 
-	NodeWatchersMap::ConstIterator it = m_nodeWatchersMap.end();
-	if (m_nodeWatchersMap.Find(node.GetHandle(), it) == XN_STATUS_OK)
+	NodeWatchersMap::ConstIterator it = m_nodeWatchersMap.Find(node.GetHandle());
+	if (it != m_nodeWatchersMap.End())
 	{
 		return XN_STATUS_NODE_ALREADY_RECORDED;
 	}
@@ -104,7 +106,9 @@ XnStatus RecorderImpl::AddNode(ProductionNode &node, XnCodecID compression)
 		compression = GetDefaultCodecID(node);
 	}
 
-	XnProductionNodeType type = node.GetInfo().GetDescription().Type;
+	// take the predefined type (if we'll store extension types, we won't be able to play them later on)
+	XnProductionNodeType type = TypeManager::GetInstance().GetPredefinedBaseType(node.GetInfo().GetDescription().Type);
+
 	NodeWatcher* pNodeWatcher = NULL;
 	XnStatus nRetVal = CreateNodeWatcher(node, type, ModuleHandle(), Notifications(), pNodeWatcher);
 	XN_IS_STATUS_OK(nRetVal);
@@ -116,7 +120,12 @@ XnStatus RecorderImpl::AddNode(ProductionNode &node, XnCodecID compression)
 	}
 
 	nRetVal = NotifyNodeAdded(node.GetHandle(), type, compression);
-	XN_IS_STATUS_OK(nRetVal);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		XN_DELETE(pNodeWatcher);
+		return nRetVal;
+	}
+
 	nRetVal = pNodeWatcher->NotifyState();
 	if (nRetVal != XN_STATUS_OK)
 	{
@@ -269,11 +278,19 @@ XnStatus RecorderImpl::SetRawNodeNewData(const XnChar* strNodeName, XnUInt64 nTi
 
 XnStatus RecorderImpl::RemoveNodeImpl(ProductionNode &node)
 {
-	NodeWatcher* pNodeWatcher = NULL;
 	XnNodeHandle hNode = node.GetHandle();
-	XnStatus nRetVal = m_nodeWatchersMap.Remove(hNode, pNodeWatcher);
-	XN_DELETE(pNodeWatcher);
+
+	NodeWatchersMap::ConstIterator it = m_nodeWatchersMap.Find(hNode);
+	if (it == m_nodeWatchersMap.End())
+	{
+		return XN_STATUS_NO_MATCH;
+	}
+
+	XN_DELETE(it->Value());
+
+	XnStatus nRetVal = m_nodeWatchersMap.Remove(it);
 	XN_IS_STATUS_OK(nRetVal);
+
 	return XN_STATUS_OK;
 }
 
@@ -399,10 +416,10 @@ XnStatus RecorderImpl::Record()
 	WatcherData watchers[MAX_SUPPORTED_NODES];
 	XnUInt32 nCount = 0;
 
-	for (NodeWatchersMap::Iterator it = m_nodeWatchersMap.begin(); it != m_nodeWatchersMap.end(); it++)
+	for (NodeWatchersMap::Iterator it = m_nodeWatchersMap.Begin(); it != m_nodeWatchersMap.End(); ++it)
 	{
-		watchers[nCount].pWatcher = it.Value();
-		watchers[nCount].nTimestamp = it.Value()->GetTimestamp();
+		watchers[nCount].pWatcher = it->Value();
+		watchers[nCount].nTimestamp = it->Value()->GetTimestamp();
 		++nCount;
 
 		if (nCount > MAX_SUPPORTED_NODES)

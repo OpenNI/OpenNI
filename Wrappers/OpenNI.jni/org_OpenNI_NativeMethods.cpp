@@ -148,7 +148,7 @@ JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_copyToBuffer(JNIEnv *env, j
 }
 
 JNIEXPORT jlong JNICALL 
-Java_org_OpenNI_NativeMethods_createProductionNodeDescription(JNIEnv *env, jclass cls, jint type, jstring vendor, jstring name, jbyte major, jbyte minor, jshort maintenance, jint build)
+Java_org_OpenNI_NativeMethods_createProductionNodeDescription(JNIEnv *env, jclass /*cls*/, jint type, jstring vendor, jstring name, jbyte major, jbyte minor, jshort maintenance, jint build)
 {
 	XnProductionNodeDescription* pDesc = (XnProductionNodeDescription*)xnOSMalloc(sizeof(XnProductionNodeDescription));
 	if (pDesc == NULL)
@@ -166,7 +166,7 @@ Java_org_OpenNI_NativeMethods_createProductionNodeDescription(JNIEnv *env, jclas
 }
 
 JNIEXPORT void JNICALL 
-Java_org_OpenNI_NativeMethods_freeProductionNodeDescription(JNIEnv *env, jclass cls, jlong pNative)
+Java_org_OpenNI_NativeMethods_freeProductionNodeDescription(JNIEnv* /*env*/, jclass /*cls*/, jlong pNative)
 {
 	xnOSFree((void*)pNative);
 }
@@ -297,7 +297,7 @@ void JavaPointArrayToNative(JNIEnv* env, jobjectArray javaArray, XnPoint3D* nati
 	}
 }
 
-void NativePointArrayToJave(JNIEnv* env, const XnPoint3D* nativeArray, jobjectArray javaArray)
+void NativePointArrayToJava(JNIEnv* env, const XnPoint3D* nativeArray, jobjectArray javaArray)
 {
 	int count = env->GetArrayLength(javaArray);
 	for (int i = 0; i < count; ++i)
@@ -404,7 +404,7 @@ void SetOutArgStringValue(JNIEnv* env, jobject p, const XnChar* value)
 typedef XnStatus XN_C_DECL StateChangedRegisterFunc(XnNodeHandle hInstance, XnStateChangedHandler handler, void* pCookie, XnCallbackHandle* phCallback);
 typedef void XN_C_DECL StateChangedUnregisterFunc(XnNodeHandle hInstance, XnCallbackHandle hCallback);
 
-static void XN_CALLBACK_TYPE StateChangedHandler(XnNodeHandle hNode, void* pCookie)
+static void XN_CALLBACK_TYPE StateChangedHandler(XnNodeHandle /*hNode*/, void* pCookie)
 {
 	StateChangedCallbackCookie* pCallback = (StateChangedCallbackCookie*)pCookie;
 	JNIEnvSupplier().GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid);
@@ -429,7 +429,7 @@ void UnregisterFromStateChangeEvent(StateChangedUnregisterFunc func, jlong hNode
 // General
 //---------------------------------------------------------------------------
 JNIEXPORT jstring JNICALL 
-Java_org_OpenNI_NativeMethods_xnGetStatusString(JNIEnv *env, jclass cls, jint status)
+Java_org_OpenNI_NativeMethods_xnGetStatusString(JNIEnv *env, jclass /*cls*/, jint status)
 {
 	const XnChar* errorMessage = xnGetStatusString(status);
 
@@ -440,7 +440,7 @@ Java_org_OpenNI_NativeMethods_xnGetStatusString(JNIEnv *env, jclass cls, jint st
 // Context
 //---------------------------------------------------------------------------
 JNIEXPORT jint JNICALL 
-Java_org_OpenNI_NativeMethods_xnInit(JNIEnv *env, jclass cls, jobject cxt)
+Java_org_OpenNI_NativeMethods_xnInit(JNIEnv *env, jclass /*cls*/, jobject cxt)
 {
 	XnContext* pContext = NULL;
 	XnStatus rc = xnInit(&pContext);
@@ -467,7 +467,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnContextRunXmlScriptEx(JNI
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenNI_NativeMethods_xnInitFromXmlFileEx(JNIEnv *env, jclass cls, jstring xmlFile, jobject cxt, jlong errors, jobject scriptNode)
+Java_org_OpenNI_NativeMethods_xnInitFromXmlFileEx(JNIEnv *env, jclass /*cls*/, jstring xmlFile, jobject cxt, jlong /*errors*/, jobject scriptNode)
 {
 	XnContext* pContext = NULL;
 	XnInternalNodeData* pScriptNode = NULL;
@@ -489,13 +489,13 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnContextOpenFileRecordingE
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_OpenNI_NativeMethods_xnContextAddRef(JNIEnv *env, jclass cls, jlong pContext)
+Java_org_OpenNI_NativeMethods_xnContextAddRef(JNIEnv* /*env*/, jclass /*cls*/, jlong pContext)
 {
 	return xnContextAddRef((XnContext*)pContext);
 }
 
 JNIEXPORT void JNICALL 
-Java_org_OpenNI_NativeMethods_xnContextRelease(JNIEnv *env, jclass cls, jlong pContext)
+Java_org_OpenNI_NativeMethods_xnContextRelease(JNIEnv* /*env*/, jclass /*cls*/, jlong pContext)
 {
 	xnContextRelease((XnContext*)pContext);
 }
@@ -534,7 +534,7 @@ static void XN_CALLBACK_TYPE ErrorStateChangedHandler(XnStatus errorState, void*
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_OpenNI_NativeMethods_xnRegisterToGlobalErrorStateChange(JNIEnv *env, jclass cls, jlong pContext, jobject obj, jstring cb, jobject hCallback)
+Java_org_OpenNI_NativeMethods_xnRegisterToGlobalErrorStateChange(JNIEnv *env, jclass /*cls*/, jlong pContext, jobject obj, jstring cb, jobject hCallback)
 {
 	CallbackCookie* pCookie = new CallbackCookie(env, obj, cb, "(I)V");
 	XnStatus rc = xnRegisterToGlobalErrorStateChange((XnContext*)pContext, ErrorStateChangedHandler, pCookie, &pCookie->hCallback);
@@ -543,10 +543,57 @@ Java_org_OpenNI_NativeMethods_xnRegisterToGlobalErrorStateChange(JNIEnv *env, jc
 }
 
 JNIEXPORT void JNICALL 
-Java_org_OpenNI_NativeMethods_xnUnregisterFromGlobalErrorStateChange(JNIEnv *env, jclass cls, jlong pContext, jlong hCallback)
+Java_org_OpenNI_NativeMethods_xnUnregisterFromGlobalErrorStateChange(JNIEnv* /*env*/, jclass /*cls*/, jlong pContext, jlong hCallback)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)hCallback;
 	xnUnregisterFromGlobalErrorStateChange((XnContext*)pContext, pCallback->hCallback);
+	delete pCallback;
+}
+
+static void XN_CALLBACK_TYPE NodeCreatedHandler(XnContext* /*pContext*/, XnNodeHandle hCreatedNode, void* pCookie)
+{
+	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
+	JNIEnvSupplier().GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, hCreatedNode);
+}
+
+JNIEXPORT jint JNICALL 
+Java_org_OpenNI_NativeMethods_xnRegisterToNodeCreation(JNIEnv *env, jclass /*cls*/, jlong pContext, jobject obj, jstring cb, jobject hCallback)
+{
+	CallbackCookie* pCookie = new CallbackCookie(env, obj, cb, "(J)V");
+	XnStatus rc = xnRegisterToNodeCreation((XnContext*)pContext, NodeCreatedHandler, pCookie, &pCookie->hCallback);
+	SetOutArgPointerValue(env, hCallback, pCookie);
+	return rc;
+}
+
+JNIEXPORT void JNICALL 
+Java_org_OpenNI_NativeMethods_xnUnregisterFromNodeCreation(JNIEnv* /*env*/, jclass /*cls*/, jlong pContext, jlong hCallback)
+{
+	CallbackCookie* pCallback = (CallbackCookie*)hCallback;
+	xnUnregisterFromNodeCreation((XnContext*)pContext, pCallback->hCallback);
+	delete pCallback;
+}
+
+static void XN_CALLBACK_TYPE NodeDestroyedHandler(XnContext* /*pContext*/, const XnChar* strDestroyedNodeName, void* pCookie)
+{
+	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
+	JNIEnvSupplier supplier;
+	supplier.GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, supplier.GetEnv()->NewStringUTF(strDestroyedNodeName));
+}
+
+JNIEXPORT jint JNICALL 
+Java_org_OpenNI_NativeMethods_xnRegisterToNodeDestruction(JNIEnv *env, jclass /*cls*/, jlong pContext, jobject obj, jstring cb, jobject hCallback)
+{
+	CallbackCookie* pCookie = new CallbackCookie(env, obj, cb, "(Ljava/lang/String;)V");
+	XnStatus rc = xnRegisterToNodeDestruction((XnContext*)pContext, NodeDestroyedHandler, pCookie, &pCookie->hCallback);
+	SetOutArgPointerValue(env, hCallback, pCookie);
+	return rc;
+}
+
+JNIEXPORT void JNICALL 
+Java_org_OpenNI_NativeMethods_xnUnregisterFromNodeDestruction(JNIEnv* /*env*/, jclass /*cls*/, jlong pContext, jlong hCallback)
+{
+	CallbackCookie* pCallback = (CallbackCookie*)hCallback;
+	xnUnregisterFromNodeDestruction((XnContext*)pContext, pCallback->hCallback);
 	delete pCallback;
 }
 
@@ -610,7 +657,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetGlobalMirror(JNIEnv *,
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnGetGlobalMirror(JNIEnv *, jclass, jlong pContext)
 {
-	return xnGetGlobalMirror((XnContext*)pContext);
+	return (jboolean)xnGetGlobalMirror((XnContext*)pContext);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetGlobalErrorState(JNIEnv *, jclass, jlong pContext)
@@ -654,24 +701,24 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetRefNodeHandleByName(JN
 	return XN_STATUS_OK;
 }
 
-JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnWaitAndUpdateAll(JNIEnv *env, jclass cls, jlong hContext)
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnWaitAndUpdateAll(JNIEnv* /*env*/, jclass /*cls*/, jlong hContext)
 {
 	return xnWaitAndUpdateAll((XnContext*)hContext);
 }
 
-JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnWaitOneUpdateAll(JNIEnv *env, jclass, jlong pContext, jlong hNode)
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnWaitOneUpdateAll(JNIEnv* /*env*/, jclass, jlong pContext, jlong hNode)
 {
 	return xnWaitOneUpdateAll((XnContext*)pContext, (XnNodeHandle)hNode);
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_OpenNI_NativeMethods_xnWaitAnyUpdateAll(JNIEnv *env, jclass cls, jlong hContext)
+Java_org_OpenNI_NativeMethods_xnWaitAnyUpdateAll(JNIEnv* /*env*/, jclass /*cls*/, jlong hContext)
 {
 	return xnWaitAnyUpdateAll((XnContext*)hContext);
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_OpenNI_NativeMethods_xnWaitNoneUpdateAll(JNIEnv *env, jclass cls, jlong hContext)
+Java_org_OpenNI_NativeMethods_xnWaitNoneUpdateAll(JNIEnv* /*env*/, jclass /*cls*/, jlong hContext)
 {
 	return xnWaitNoneUpdateAll((XnContext*)hContext);
 }
@@ -741,7 +788,7 @@ JNIEXPORT jlong JNICALL Java_org_OpenNI_NativeMethods_xnEnumerationErrorsGetFirs
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnEnumerationErrorsIteratorIsValid(JNIEnv *, jclass, jlong it)
 {
-	return xnEnumerationErrorsIteratorIsValid((XnEnumerationErrorsIterator)it);
+	return (jboolean)xnEnumerationErrorsIteratorIsValid((XnEnumerationErrorsIterator)it);
 }
 
 //---------------------------------------------------------------------------
@@ -754,7 +801,7 @@ Java_org_OpenNI_NativeMethods_xnNodeInfoSetInstanceName(JNIEnv *env, jclass, jlo
 }
 
 JNIEXPORT jobject JNICALL 
-Java_org_OpenNI_NativeMethods_xnNodeInfoGetDescription(JNIEnv *env, jclass cls, jlong pNodeInfo)
+Java_org_OpenNI_NativeMethods_xnNodeInfoGetDescription(JNIEnv *env, jclass /*cls*/, jlong pNodeInfo)
 {
 	const XnProductionNodeDescription* pDesc = xnNodeInfoGetDescription((XnNodeInfo*)pNodeInfo);
 	return CreateProductionNodeDescription(env, pDesc);
@@ -771,27 +818,27 @@ Java_org_OpenNI_NativeMethods_xnNodeInfoGetTreeStringRepresentation(JNIEnv *env,
 }
 
 JNIEXPORT jstring JNICALL 
-Java_org_OpenNI_NativeMethods_xnNodeInfoGetInstanceName(JNIEnv *env, jclass cls, jlong pNodeInfo)
+Java_org_OpenNI_NativeMethods_xnNodeInfoGetInstanceName(JNIEnv *env, jclass /*cls*/, jlong pNodeInfo)
 {
 	const XnChar* strName = xnNodeInfoGetInstanceName((XnNodeInfo*)pNodeInfo);
 	return env->NewStringUTF(strName);
 }
 
 JNIEXPORT jstring JNICALL 
-Java_org_OpenNI_NativeMethods_xnNodeInfoGetCreationInfo(JNIEnv *env, jclass cls, jlong pNodeInfo)
+Java_org_OpenNI_NativeMethods_xnNodeInfoGetCreationInfo(JNIEnv *env, jclass /*cls*/, jlong pNodeInfo)
 {
 	const XnChar* strCreationInfo = xnNodeInfoGetCreationInfo((XnNodeInfo*)pNodeInfo);
 	return env->NewStringUTF(strCreationInfo);
 }
 
 JNIEXPORT jlong JNICALL 
-Java_org_OpenNI_NativeMethods_xnNodeInfoGetNeededNodes(JNIEnv *env, jclass cls, jlong pNodeInfo)
+Java_org_OpenNI_NativeMethods_xnNodeInfoGetNeededNodes(JNIEnv* /*env*/, jclass /*cls*/, jlong pNodeInfo)
 {
 	return (jlong)xnNodeInfoGetNeededNodes((XnNodeInfo*)pNodeInfo);
 }
 
 JNIEXPORT jlong JNICALL 
-Java_org_OpenNI_NativeMethods_xnNodeInfoGetRefHandle(JNIEnv *env, jclass cls, jlong pNodeInfo)
+Java_org_OpenNI_NativeMethods_xnNodeInfoGetRefHandle(JNIEnv* /*env*/, jclass /*cls*/, jlong pNodeInfo)
 {
 	return (jlong)xnNodeInfoGetRefHandle((XnNodeInfo*)pNodeInfo);
 }
@@ -800,7 +847,7 @@ Java_org_OpenNI_NativeMethods_xnNodeInfoGetRefHandle(JNIEnv *env, jclass cls, jl
 // NodeInfoList
 //---------------------------------------------------------------------------
 JNIEXPORT jint JNICALL 
-Java_org_OpenNI_NativeMethods_xnNodeInfoListAllocate(JNIEnv *env, jclass cls, jobject ppList)
+Java_org_OpenNI_NativeMethods_xnNodeInfoListAllocate(JNIEnv *env, jclass /*cls*/, jobject ppList)
 {
 	XnNodeInfoList* pList = NULL;
 	int rc = xnNodeInfoListAllocate(&pList);
@@ -809,13 +856,13 @@ Java_org_OpenNI_NativeMethods_xnNodeInfoListAllocate(JNIEnv *env, jclass cls, jo
 }
 
 JNIEXPORT void JNICALL 
-Java_org_OpenNI_NativeMethods_xnNodeInfoListFree(JNIEnv *env, jclass cls, jlong pList)
+Java_org_OpenNI_NativeMethods_xnNodeInfoListFree(JNIEnv* /*env*/, jclass /*cls*/, jlong pList)
 {
 	xnNodeInfoListFree((XnNodeInfoList*)pList);
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_OpenNI_NativeMethods_xnNodeInfoListAdd(JNIEnv *env, jclass cls, jlong pList, jlong desc, jstring creationInfo, jlong pNeeded)
+Java_org_OpenNI_NativeMethods_xnNodeInfoListAdd(JNIEnv *env, jclass /*cls*/, jlong pList, jlong desc, jstring creationInfo, jlong pNeeded)
 {
 	return xnNodeInfoListAdd((XnNodeInfoList*)pList, (XnProductionNodeDescription*)desc, JavaString(env, creationInfo), (XnNodeInfoList*)pNeeded);
 }
@@ -877,7 +924,7 @@ Java_org_OpenNI_NativeMethods_xnNodeInfoListGetFirst(JNIEnv *, jclass, jlong pLi
 JNIEXPORT jboolean JNICALL 
 Java_org_OpenNI_NativeMethods_xnNodeInfoListIteratorIsValid(JNIEnv *, jclass, jlong it)
 {
-	return xnNodeInfoListIteratorIsValid(GetInfoListIterator(it));
+	return (jboolean)xnNodeInfoListIteratorIsValid(GetInfoListIterator(it));
 }
 
 JNIEXPORT jlong JNICALL 
@@ -936,7 +983,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnNodeQueryAddSupportedCapa
 	return xnNodeQueryAddSupportedCapability((XnNodeQuery*)pQuery, JavaString(env, cap));
 }
 
-JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnNodeQueryAddSupportedMapOutputMode(JNIEnv *env, jclass, jlong pQuery, jint xRes, jint yRes, jint FPS)
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnNodeQueryAddSupportedMapOutputMode(JNIEnv* /*env*/, jclass, jlong pQuery, jint xRes, jint yRes, jint FPS)
 {
 	XnMapOutputMode mode = { xRes, yRes, FPS };
 	return xnNodeQueryAddSupportedMapOutputMode((XnNodeQuery*)pQuery, &mode);
@@ -976,13 +1023,13 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnNodeQueryFilterList(JNIEn
 // ProductionNode
 //---------------------------------------------------------------------------
 JNIEXPORT jint JNICALL 
-Java_org_OpenNI_NativeMethods_xnProductionNodeAddRef(JNIEnv *env, jclass cls, jlong hNode)
+Java_org_OpenNI_NativeMethods_xnProductionNodeAddRef(JNIEnv *, jclass /*cls*/, jlong hNode)
 {
 	return xnProductionNodeAddRef((XnNodeHandle)hNode);
 }
 
 JNIEXPORT void JNICALL 
-Java_org_OpenNI_NativeMethods_xnProductionNodeRelease(JNIEnv *env, jclass cls, jlong hNode)
+Java_org_OpenNI_NativeMethods_xnProductionNodeRelease(JNIEnv *, jclass /*cls*/, jlong hNode)
 {
 	xnProductionNodeRelease((XnNodeHandle)hNode);
 }
@@ -994,7 +1041,7 @@ Java_org_OpenNI_NativeMethods_xnGetNodeName(JNIEnv *env, jclass, jlong hNode)
 }
 
 JNIEXPORT jlong JNICALL 
-Java_org_OpenNI_NativeMethods_xnGetNodeInfo(JNIEnv *env, jclass, jlong hNode)
+Java_org_OpenNI_NativeMethods_xnGetNodeInfo(JNIEnv *, jclass, jlong hNode)
 {
 	return (jlong)xnGetNodeInfo((XnNodeHandle)hNode);
 }
@@ -1008,7 +1055,7 @@ Java_org_OpenNI_NativeMethods_xnGetRefContextFromNodeHandle(JNIEnv *, jclass, jl
 JNIEXPORT jboolean JNICALL 
 Java_org_OpenNI_NativeMethods_xnIsCapabilitySupported(JNIEnv *env, jclass, jlong hNode, jstring strName)
 {
-	return xnIsCapabilitySupported((XnNodeHandle)hNode, JavaString(env, strName));
+	return (jboolean)xnIsCapabilitySupported((XnNodeHandle)hNode, JavaString(env, strName));
 }
 
 JNIEXPORT jint JNICALL 
@@ -1258,7 +1305,7 @@ Java_org_OpenNI_NativeMethods_xnStartGenerating(JNIEnv *, jclass, jlong hNode)
 JNIEXPORT jboolean JNICALL
 Java_org_OpenNI_NativeMethods_xnIsGenerating(JNIEnv *, jclass, jlong hNode)
 {
-	return xnIsGenerating((XnNodeHandle)hNode);
+	return (jboolean)xnIsGenerating((XnNodeHandle)hNode);
 }
 
 JNIEXPORT jint JNICALL
@@ -1295,9 +1342,9 @@ JNIEXPORT jboolean JNICALL
 Java_org_OpenNI_NativeMethods_xnIsNewDataAvailable(JNIEnv *env, jclass, jlong hNode, jobject pnTimestamp)
 {
 	XnUInt64 nTimestamp = 0;
-	XnStatus rc = xnIsNewDataAvailable((XnNodeHandle)hNode, &nTimestamp);
+	XnBool rc = xnIsNewDataAvailable((XnNodeHandle)hNode, &nTimestamp);
 	SetOutArgLongValue(env, pnTimestamp, nTimestamp);
-	return rc;
+	return (jboolean)rc;
 }
 
 JNIEXPORT jint JNICALL
@@ -1309,7 +1356,7 @@ Java_org_OpenNI_NativeMethods_xnWaitAndUpdateData(JNIEnv *, jclass, jlong hNode)
 JNIEXPORT jboolean JNICALL
 Java_org_OpenNI_NativeMethods_xnIsDataNew(JNIEnv *, jclass, jlong hNode)
 {
-	return xnIsDataNew((XnNodeHandle)hNode);
+	return (jboolean)xnIsDataNew((XnNodeHandle)hNode);
 }
 
 JNIEXPORT jlong JNICALL
@@ -1347,7 +1394,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetMirror(JNIEnv *, jclas
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsMirrored(JNIEnv *, jclass, jlong hNode)
 {
-	return xnIsMirrored((XnNodeHandle)hNode);
+	return (jboolean)xnIsMirrored((XnNodeHandle)hNode);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToMirrorChange(JNIEnv *env, jclass, jlong hNode, jobject obj, jstring cb, jobject phCallback)
@@ -1365,7 +1412,7 @@ JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromMirrorChang
 //---------------------------------------------------------------------------
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsViewPointSupported(JNIEnv *, jclass, jlong hNode, jlong hOther)
 {
-	return xnIsViewPointSupported((XnNodeHandle)hNode, (XnNodeHandle)hOther);
+	return (jboolean)xnIsViewPointSupported((XnNodeHandle)hNode, (XnNodeHandle)hOther);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetViewPoint(JNIEnv *, jclass, jlong hNode, jlong hOther)
@@ -1380,7 +1427,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnResetViewPoint(JNIEnv *, 
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsViewPointAs(JNIEnv *, jclass, jlong hNode, jlong hOther)
 {
-	return xnIsViewPointAs((XnNodeHandle)hNode, (XnNodeHandle)hOther);
+	return (jboolean)xnIsViewPointAs((XnNodeHandle)hNode, (XnNodeHandle)hOther);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToViewPointChange(JNIEnv *env, jclass, jlong hNode, jobject obj, jstring cb, jobject phCallback)
@@ -1399,7 +1446,7 @@ JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromViewPointCh
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnCanFrameSyncWith(JNIEnv *, jclass, jlong hNode, jlong hOther)
 {
-	return xnCanFrameSyncWith((XnNodeHandle)hNode, (XnNodeHandle)hOther);
+	return (jboolean)xnCanFrameSyncWith((XnNodeHandle)hNode, (XnNodeHandle)hOther);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnFrameSyncWith(JNIEnv *, jclass, jlong hNode, jlong hOther)
@@ -1414,7 +1461,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStopFrameSyncWith(JNIEnv 
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsFrameSyncedWith(JNIEnv *, jclass, jlong hNode, jlong hOther)
 {
-	return xnIsFrameSyncedWith((XnNodeHandle)hNode, (XnNodeHandle)hOther);
+	return (jboolean)xnIsFrameSyncedWith((XnNodeHandle)hNode, (XnNodeHandle)hOther);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToFrameSyncChange(JNIEnv *env, jclass, jlong hNode, jobject obj, jstring cb, jobject phCallback)
@@ -1444,7 +1491,7 @@ jobject CreateMapOutputMode(JNIEnv *env, const XnMapOutputMode* pMode)
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetSupportedMapOutputModes(JNIEnv *env, jclass, jlong hNode, jobjectArray outputModes)
 {
-	int size = env->GetArrayLength(outputModes);
+	XnUInt32 size = env->GetArrayLength(outputModes);
 	XnMapOutputMode* modes = new XnMapOutputMode[size];
 	XN_VALIDATE_ALLOC_PTR(modes);
 
@@ -1459,7 +1506,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetSupportedMapOutputMode
 	XN_ASSERT(nCount == size);
 
 	// now copy to managed array
-	for (int i = 0; i < size; ++i)
+	for (XnUInt32 i = 0; i < size; ++i)
 	{
 		env->SetObjectArrayElement(outputModes, i, CreateMapOutputMode(env, &modes[i]));
 	}
@@ -1609,7 +1656,9 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnConvertProjectiveToRealWo
 		return (nRetVal);
 	}
 
-	NativePointArrayToJave(env, aRealWorld, realWorld);
+	NativePointArrayToJava(env, aRealWorld, realWorld);
+	delete[] aProjective;
+	delete[] aRealWorld;
 	return XN_STATUS_OK;
 }
 
@@ -1629,7 +1678,9 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnConvertRealWorldToProject
 		return (nRetVal);
 	}
 
-	NativePointArrayToJave(env, aProjective, projective);
+	NativePointArrayToJava(env, aProjective, projective);
+	delete[] aProjective;
+	delete[] aRealWorld;
 	return XN_STATUS_OK;
 }
 
@@ -1653,7 +1704,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetSupportedUserPositions
 	return xnGetSupportedUserPositionsCount((XnNodeHandle)hNode);
 }
 
-JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetUserPosition(JNIEnv *env, jclass, jlong hNode, jint index, jfloat xMin, jfloat yMin, jfloat zMin, jfloat xMax, jfloat yMax, jfloat zMax)
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetUserPosition(JNIEnv *, jclass, jlong hNode, jint index, jfloat xMin, jfloat yMin, jfloat zMin, jfloat xMax, jfloat yMax, jfloat zMax)
 {
 	XnBoundingBox3D box = {
 		{ xMin, yMin, zMin },
@@ -1700,7 +1751,7 @@ JNIEXPORT jlong JNICALL Java_org_OpenNI_NativeMethods_xnGetImageMap(JNIEnv *, jc
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsPixelFormatSupported(JNIEnv *, jclass, jlong hNode, jint format)
 {
-	return xnIsPixelFormatSupported((XnNodeHandle)hNode, (XnPixelFormat)format);
+	return (jboolean)xnIsPixelFormatSupported((XnNodeHandle)hNode, (XnPixelFormat)format);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetPixelFormat(JNIEnv *, jclass, jlong hNode, jint format)
@@ -1863,7 +1914,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnEnumerateAllGestures(JNIE
 	return XN_STATUS_OK;
 }
 
-JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetNumberOfAvailableGestures(JNIEnv *env, jclass, jlong hNode)
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetNumberOfAvailableGestures(JNIEnv *, jclass, jlong hNode)
 {
     return xnGetNumberOfAvailableGestures((XnNodeHandle)hNode);
 }
@@ -1871,22 +1922,22 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetNumberOfAvailableGestu
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsGestureAvailable(JNIEnv *env, jclass, jlong hNode, jstring strGesture)
 {
 	JavaString jName(env, strGesture);
-	return xnIsGestureAvailable((XnNodeHandle)hNode, jName);
+	return (jboolean)xnIsGestureAvailable((XnNodeHandle)hNode, jName);
 }
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsGestureProgressSupported(JNIEnv *env, jclass, jlong hNode, jstring strGesture)
 {
 	JavaString jName(env, strGesture);
-	return xnIsGestureProgressSupported((XnNodeHandle)hNode, jName);
+	return (jboolean)xnIsGestureProgressSupported((XnNodeHandle)hNode, jName);
 }
 
-void XN_CALLBACK_TYPE GestureRecognizedHandler(XnNodeHandle hNode, const XnChar* strGesture, const XnPoint3D* pIDPosition, const XnPoint3D* pEndPosition, void* pCookie)
+void XN_CALLBACK_TYPE GestureRecognizedHandler(XnNodeHandle , const XnChar* strGesture, const XnPoint3D* pIDPosition, const XnPoint3D* pEndPosition, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier supplier;
 	jstring gestureName = supplier.GetEnv()->NewStringUTF(strGesture);
 	supplier.GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, gestureName, CreatePoint3D(supplier.GetEnv(), pIDPosition), CreatePoint3D(supplier.GetEnv(), pEndPosition));
 }
-void XN_CALLBACK_TYPE GestureProgressHandler(XnNodeHandle hNode, const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie)
+void XN_CALLBACK_TYPE GestureProgressHandler(XnNodeHandle , const XnChar* strGesture, const XnPoint3D* pPosition, XnFloat fProgress, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier supplier;
@@ -1933,7 +1984,7 @@ JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromGestureChan
 {
 	return UnregisterFromStateChangeEvent(xnUnregisterFromGestureChange, hNode, hCallback);
 }
-void XN_CALLBACK_TYPE GesturePositionRecognizedHandler(XnNodeHandle hNode, const XnChar* strGesture, const XnPoint3D* pPosition, void* pCookie)
+void XN_CALLBACK_TYPE GesturePositionRecognizedHandler(XnNodeHandle , const XnChar* strGesture, const XnPoint3D* pPosition, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier supplier;
@@ -2067,7 +2118,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetUserPixels(JNIEnv *env
 	return XN_STATUS_OK;
 }
 
-void XN_CALLBACK_TYPE UserEventHandler(XnNodeHandle hNode, XnUserID id, void* pCookie)
+void XN_CALLBACK_TYPE UserEventHandler(XnNodeHandle , XnUserID id, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier().GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, id);
@@ -2098,7 +2149,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterUserCallbacks(JNI
 	}
 	return -1;
 }
-JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterUserCallbacks(JNIEnv * env, jclass, jlong hNode, jlong hCallback)
+JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterUserCallbacks(JNIEnv * , jclass, jlong hNode, jlong hCallback)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)hCallback;
 	xnUnregisterUserCallbacks((XnNodeHandle)hNode, pCallback->hCallback);
@@ -2111,7 +2162,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToUserExit(JNIEnv
 	SetOutArgPointerValue(env, phCallback, pCookie);
 	return rc;
 }
-JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromUserExit(JNIEnv * env, jclass, jlong hNode, jlong hCallback)
+JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromUserExit(JNIEnv * , jclass, jlong hNode, jlong hCallback)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)hCallback;
 	xnUnregisterFromUserExit((XnNodeHandle)hNode, pCallback->hCallback);
@@ -2124,7 +2175,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToUserReEnter(JNI
 	SetOutArgPointerValue(env, phCallback, pCookie);
 	return rc;
 }
-JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromUserReEnter(JNIEnv * env, jclass, jlong hNode, jlong hCallback)
+JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromUserReEnter(JNIEnv * , jclass, jlong hNode, jlong hCallback)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)hCallback;
 	xnUnregisterFromUserReEnter((XnNodeHandle)hNode, pCallback->hCallback);
@@ -2136,11 +2187,11 @@ JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromUserReEnter
 //---------------------------------------------------------------------------
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsJointAvailable(JNIEnv *, jclass, jlong hNode, jint eJoint)
 {
-	return xnIsJointAvailable((XnNodeHandle)hNode, XnSkeletonJoint(eJoint));
+	return (jboolean)xnIsJointAvailable((XnNodeHandle)hNode, XnSkeletonJoint(eJoint));
 }
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsProfileAvailable(JNIEnv *, jclass, jlong hNode, jint eProfile)
 {
-	return xnIsProfileAvailable((XnNodeHandle)hNode, XnSkeletonProfile(eProfile));
+	return (jboolean)xnIsProfileAvailable((XnNodeHandle)hNode, XnSkeletonProfile(eProfile));
 }
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetSkeletonProfile(JNIEnv *, jclass, jlong hNode, jint eProfile)
 {
@@ -2152,7 +2203,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetJointActive(JNIEnv *, 
 }
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsJointActive(JNIEnv *, jclass, jlong hNode, jint eJoint)
 {
-	return xnIsJointActive((XnNodeHandle)hNode, XnSkeletonJoint(eJoint));
+	return (jboolean)xnIsJointActive((XnNodeHandle)hNode, XnSkeletonJoint(eJoint));
 }
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToJointConfigurationChange(JNIEnv* env, jclass, jlong hNode, jobject obj, jstring cb, jobject phCallback)
 {
@@ -2214,15 +2265,15 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetSkeletonJointOrientati
 }
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsSkeletonTracking(JNIEnv *, jclass, jlong hNode, jint user)
 {
-	return xnIsSkeletonTracking((XnNodeHandle)hNode, user);
+	return (jboolean)xnIsSkeletonTracking((XnNodeHandle)hNode, user);
 }
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsSkeletonCalibrated(JNIEnv *, jclass, jlong hNode, jint user)
 {
-	return xnIsSkeletonCalibrated((XnNodeHandle)hNode, user);
+	return (jboolean)xnIsSkeletonCalibrated((XnNodeHandle)hNode, user);
 }
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsSkeletonCalibrating(JNIEnv *, jclass, jlong hNode, jint user)
 {
-	return xnIsSkeletonCalibrating((XnNodeHandle)hNode, user);
+	return (jboolean)xnIsSkeletonCalibrating((XnNodeHandle)hNode, user);
 }
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRequestSkeletonCalibration(JNIEnv *, jclass, jlong hNode, jint user, jboolean bForce)
 {
@@ -2256,7 +2307,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnClearSkeletonCalibrationD
 }
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsSkeletonCalibrationData(JNIEnv *, jclass, jlong hNode, jint nSlot)
 {
-	return xnIsSkeletonCalibrationData((XnNodeHandle)hNode, nSlot);
+	return (jboolean)xnIsSkeletonCalibrationData((XnNodeHandle)hNode, nSlot);
 }
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStartSkeletonTracking(JNIEnv *, jclass, jlong hNode, jint user)
 {
@@ -2272,13 +2323,12 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnResetSkeleton(JNIEnv *, j
 }
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnNeedPoseForSkeletonCalibration(JNIEnv *, jclass, jlong hNode)
 {
-	return xnNeedPoseForSkeletonCalibration((XnNodeHandle)hNode);
+	return (jboolean)xnNeedPoseForSkeletonCalibration((XnNodeHandle)hNode);
 }
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetSkeletonCalibrationPose(JNIEnv* env, jclass, jlong hNode, jobject pPose)
 {
 	XnChar* poseName = new XnChar[80];
 	XnStatus rc = xnGetSkeletonCalibrationPose((XnNodeHandle)hNode, poseName);
-	jstring pose = env->NewStringUTF(poseName);
 	if (rc == XN_STATUS_OK)
 	{
 		SetOutArgStringValue(env, pPose, poseName);
@@ -2290,7 +2340,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetSkeletonSmoothing(JNIE
 {
 	return xnSetSkeletonSmoothing((XnNodeHandle)hNode, factor);
 }
-void XN_CALLBACK_TYPE CalibrationStartHandler(XnNodeHandle hNode, XnUserID user, void* pCookie)
+void XN_CALLBACK_TYPE CalibrationStartHandler(XnNodeHandle , XnUserID user, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier().GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, user);
@@ -2308,7 +2358,7 @@ JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromCalibration
 	xnUnregisterFromCalibrationStart((XnNodeHandle)hNode, pCallback->hCallback);
 	delete pCallback;
 }
-void XN_CALLBACK_TYPE CalibrationProgressHandler(XnNodeHandle hNode, XnUserID user, XnCalibrationStatus state, void* pCookie)
+void XN_CALLBACK_TYPE CalibrationProgressHandler(XnNodeHandle , XnUserID user, XnCalibrationStatus state, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier().GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, user, state);
@@ -2389,7 +2439,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetAllAvailablePoses(JNIE
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsPoseSupported(JNIEnv* env, jclass, jlong hNode, jstring strPose)
 {
     JavaString jPose(env, strPose);
-    return xnIsPoseSupported((XnNodeHandle)hNode, jPose);
+    return (jboolean)xnIsPoseSupported((XnNodeHandle)hNode, jPose);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetPoseStatus(JNIEnv* env, jclass, jlong hNode, jint user, jstring strPose, jobject pTime, jobject eStatus, jobject eState)
@@ -2422,7 +2472,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnStopSinglePoseDetection(J
 	JavaString jPose(env, strPose);
 	return xnStopSinglePoseDetection((XnNodeHandle)hNode, user, jPose);
 }
-void XN_CALLBACK_TYPE PoseDetectionHandler(XnNodeHandle hNode, const XnChar* strPose, XnUserID user, void* pCookie)
+void XN_CALLBACK_TYPE PoseDetectionHandler(XnNodeHandle , const XnChar* strPose, XnUserID user, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier supplier;
@@ -2456,7 +2506,7 @@ JNIEXPORT void JNICALL Java_org_OpenNI_NativeMethods_xnUnregisterFromOutOfPose(J
 	delete pCallback;
 }
 
-void XN_CALLBACK_TYPE PoseDetectionInProgressHandler(XnNodeHandle hNode, const XnChar* strPose, XnUserID user, XnPoseDetectionStatus eStatus, void* pCookie)
+void XN_CALLBACK_TYPE PoseDetectionInProgressHandler(XnNodeHandle , const XnChar* strPose, XnUserID user, XnPoseDetectionStatus eStatus, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier supplier;
@@ -2490,12 +2540,12 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnCreateHandsGenerator(JNIE
 	return XN_STATUS_OK;
 }
 
-void XN_CALLBACK_TYPE ActiveHandHandler(XnNodeHandle hNode, XnUserID nId, const XnPoint3D* pPosition, XnFloat fTime, void* pCookie)
+void XN_CALLBACK_TYPE ActiveHandHandler(XnNodeHandle , XnUserID nId, const XnPoint3D* pPosition, XnFloat fTime, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier().GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, nId, CreatePoint3D(JNIEnvSupplier().GetEnv(), pPosition), fTime);
 }
-void XN_CALLBACK_TYPE InactiveHandHandler(XnNodeHandle hNode, XnUserID nId, XnFloat fTime, void* pCookie)
+void XN_CALLBACK_TYPE InactiveHandHandler(XnNodeHandle , XnUserID nId, XnFloat fTime, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier().GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, nId, fTime);
@@ -2560,12 +2610,12 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnSetTrackingSmoothing(JNIE
 {
 	return xnSetTrackingSmoothing((XnNodeHandle)hNode, fFactor);
 }
-void XN_CALLBACK_TYPE HandTouchingFOVEdgeHandler(XnNodeHandle hNode, XnUserID nId, const XnPoint3D* pPosition, XnFloat fTime, XnDirection eDirection, void* pCookie)
+void XN_CALLBACK_TYPE HandTouchingFOVEdgeHandler(XnNodeHandle , XnUserID nId, const XnPoint3D* pPosition, XnFloat fTime, XnDirection eDirection, void* pCookie)
 {
 	CallbackCookie* pCallback = (CallbackCookie*)pCookie;
 	JNIEnvSupplier().GetEnv()->CallVoidMethod(pCallback->obj, pCallback->mid, nId, pPosition, fTime, eDirection);
 }
-JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToHandTouchingFOVEdge(JNIEnv *env, jclass cls, jlong hNode, jobject obj, jstring cb, jobject hCallback)
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToHandTouchingFOVEdge(JNIEnv *env, jclass /*cls*/, jlong hNode, jobject obj, jstring cb, jobject hCallback)
 {
 	CallbackCookie* pCookie = new CallbackCookie(env, obj, cb, "(ILorg/OpenNI/Point3D;FI)V");
 	XnStatus rc = xnRegisterToHandTouchingFOVEdge((XnNodeHandle)hNode, HandTouchingFOVEdgeHandler, pCookie, &pCookie->hCallback);
@@ -2609,7 +2659,7 @@ jobject CreateWaveOutputMode(JNIEnv *env, const XnWaveOutputMode* pMode)
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetSupportedWaveOutputModes(JNIEnv *env, jclass, jlong hNode, jobjectArray outputModes)
 {
-	int size = env->GetArrayLength(outputModes);
+	XnUInt32 size = env->GetArrayLength(outputModes);
 	XnWaveOutputMode* modes = new XnWaveOutputMode[size];
 	XN_VALIDATE_ALLOC_PTR(modes);
 
@@ -2624,7 +2674,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetSupportedWaveOutputMod
 	XN_ASSERT(nCount == size);
 
 	// now copy to managed array
-	for (int i = 0; i < size; ++i)
+	for (XnUInt32 i = 0; i < size; ++i)
 	{
 		env->SetObjectArrayElement(outputModes, i, CreateWaveOutputMode(env, &modes[i]));
 	}
@@ -2731,7 +2781,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetRecorderDestination(JN
 	return XN_STATUS_OK;
 }
 
-JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnAddNodeToRecording(JNIEnv *env, jclass, jlong hNode, jlong hOther, jint codecID)
+JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnAddNodeToRecording(JNIEnv *, jclass, jlong hNode, jlong hOther, jint codecID)
 {
 	return xnAddNodeToRecording((XnNodeHandle)hNode, (XnNodeHandle)hOther, (XnCodecID)codecID);
 }
@@ -2843,7 +2893,7 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnEnumeratePlayerNodes(JNIE
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsPlayerAtEOF(JNIEnv *, jclass, jlong hNode)
 {
-	return xnIsPlayerAtEOF((XnNodeHandle)hNode);
+	return (jboolean)xnIsPlayerAtEOF((XnNodeHandle)hNode);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnRegisterToEndOfFileReached(JNIEnv *env, jclass, jlong hNode, jobject obj, jstring cb, jobject phCallback)
@@ -2943,12 +2993,12 @@ JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetVersion(JNIEnv *env, j
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsTypeGenerator(JNIEnv *, jclass, jint type)
 {
-	return xnIsTypeGenerator(type);
+	return (jboolean)xnIsTypeGenerator(type);
 }
 
 JNIEXPORT jboolean JNICALL Java_org_OpenNI_NativeMethods_xnIsTypeDerivedFrom(JNIEnv *, jclass, jint type, jint base)
 {
-	return xnIsTypeDerivedFrom(type, base);
+	return (jboolean)xnIsTypeDerivedFrom(type, base);
 }
 
 JNIEXPORT jint JNICALL Java_org_OpenNI_NativeMethods_xnGetBytesPerPixelForPixelFormat(JNIEnv *, jclass, jint format)

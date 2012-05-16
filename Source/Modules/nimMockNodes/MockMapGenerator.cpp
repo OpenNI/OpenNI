@@ -24,11 +24,12 @@
 #include <XnOS.h>
 #include <XnLog.h>
 
-MockMapGenerator::MockMapGenerator(const XnChar* strName) : 
-	MockGenerator(strName),
+MockMapGenerator::MockMapGenerator(xn::Context& context, const XnChar* strName) : 
+	MockGenerator(context, strName),
 	m_nSupportedMapOutputModesCount(0),
 	m_bSupportedMapOutputModesCountReceived(0),
-	m_pSupportedMapOutputModes(NULL)
+	m_pSupportedMapOutputModes(NULL),
+	m_nBytesPerPixel(0)
 {
 	xnOSMemSet(&m_mapOutputMode, 0, sizeof(m_mapOutputMode));
 	xnOSMemSet(&m_cropping, 0, sizeof(m_cropping));
@@ -114,8 +115,10 @@ XnStatus MockMapGenerator::SetGeneralProperty(const XnChar* strName, XnUInt32 nB
 	}
 	else if (strcmp(strName, XN_PROP_NEWDATA) == 0)
 	{
+		// Check buffer size. Note: the expected size is the minimum one. We allow bigger frames (sometimes generators
+		// place debug information *after* the data)
 		XnUInt32 nExpectedSize = GetExpectedBufferSize();
-		if (nBufferSize != nExpectedSize)
+		if (nBufferSize < nExpectedSize)
 		{
 			xnLogWarning(XN_MASK_OPEN_NI, "%s: Got new data with illegal buffer size (%u) - ignoring.", m_strName, nBufferSize);
 		}
@@ -172,7 +175,7 @@ XnStatus MockMapGenerator::GetMapOutputMode(XnMapOutputMode& mode)
 
 XnStatus MockMapGenerator::RegisterToMapOutputModeChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_outputModeChangeEvent.Register(handler, pCookie, &hCallback);
+	return m_outputModeChangeEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockMapGenerator::UnregisterFromMapOutputModeChange(XnCallbackHandle hCallback)
@@ -210,7 +213,7 @@ XnStatus MockMapGenerator::GetCropping(XnCropping &Cropping)
 
 XnStatus MockMapGenerator::RegisterToCroppingChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_croppingChangeEvent.Register(handler, pCookie, &hCallback);
+	return m_croppingChangeEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockMapGenerator::UnregisterFromCroppingChange(XnCallbackHandle hCallback)

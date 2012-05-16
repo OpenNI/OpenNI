@@ -39,7 +39,6 @@
 //---------------------------------------------------------------------------
 // Forward Declarations
 //---------------------------------------------------------------------------
-struct XnModuleExportedProductionNodeInterface;
 struct XnModuleProductionNodeInterface;
 struct XnModuleDeviceInterface;
 struct XnModuleDepthGeneratorInterface;

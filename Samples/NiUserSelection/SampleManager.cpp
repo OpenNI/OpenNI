@@ -132,18 +132,18 @@ XnStatus DefaultInitializerWithCalibPose::SetSelectors()
 
     // pick the user selector.
 
-    // make sure we have a pose detection capability (which is what this selector is all about).
-    if(pUserGenerator->IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION)==FALSE)
-    {
-        RETURN_WITH_CLEANUP(XN_STATUS_ERROR, "User tracker invalid"); 
-    }
-
 
     // figure out which type of user selection to use.
     // Option 1: if we need calibration pose - that is the type to use (and exit if we can't support it)
     // Option 2: if do not need calibration pose we choose the overridden selector
     if(pUserGenerator->GetSkeletonCap().NeedPoseForCalibration()==TRUE)
     {
+		// make sure we have a pose detection capability (which is what this selector is all about).
+		if(pUserGenerator->IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION)==FALSE)
+		{
+			RETURN_WITH_CLEANUP(XN_STATUS_ERROR, "User tracker invalid"); 
+		
+		}
         // first we get the pose from the skeleton capability
         char poseString[50];
         pUserGenerator->GetSkeletonCap().GetCalibrationPose(poseString);

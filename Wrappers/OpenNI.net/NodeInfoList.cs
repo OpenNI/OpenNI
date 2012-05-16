@@ -27,20 +27,37 @@ namespace OpenNI
 {
 	public class NodeInfoList : ObjectWrapper, IEnumerable<NodeInfo>
 	{
-		internal NodeInfoList(IntPtr pList)
+		internal NodeInfoList(IntPtr pList, bool bOwn)
 			: base(pList)
 		{
+            this.owns = bOwn;
 		}
 
-		/// <summary>
+        internal NodeInfoList(IntPtr pList)
+            : this(pList, true)
+        {
+        }
+
+        /// <summary>
 		/// Creates a managed NodeInfoList object to wrap a native one.
 		/// </summary>
 		/// <param name="pList">The native node info list pointer</param>
+        /// <param name="bOwn">Should the native object be freed when this object is destroyed</param>
 		/// <returns>A managed NodeInfoList object</returns>
-		static public NodeInfoList FromNative(IntPtr pList)
+		static public NodeInfoList FromNative(IntPtr pList, bool bOwn)
 		{
-			return new NodeInfoList(pList);
+			return new NodeInfoList(pList, bOwn);
 		}
+
+        /// <summary>
+        /// Creates a managed NodeInfoList object to wrap a native one.
+        /// </summary>
+        /// <param name="pList">The native node info list pointer</param>
+        /// <returns>A managed NodeInfoList object</returns>
+        static public NodeInfoList FromNative(IntPtr pList)
+        {
+            return FromNative(pList, true);
+        }
 
 		#region NodeInfoListEnumerator Class
 
@@ -181,7 +198,10 @@ namespace OpenNI
 
 		protected override void FreeObject(IntPtr ptr, bool disposing)
 		{
-			SafeNativeMethods.xnNodeInfoListFree(ptr);
+            if (this.owns)
+			    SafeNativeMethods.xnNodeInfoListFree(ptr);
 		}
+
+        private bool owns;
 	}
 }

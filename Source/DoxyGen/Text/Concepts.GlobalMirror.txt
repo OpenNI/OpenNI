@@ -1,0 +1,15 @@
+/**
+@page conc_global_mirror Global Mirror
+
+One of the capabilities defined is the @b Mirror capability. This 
+capability allows mirroring of the output data. This is useful when the 
+sensor is placed in front of the user (for example, by the TV), and so 
+in the application the users see themselves from behind . 
+
+In most cases, once a specific node is mirrored, the application would 
+probably want all nodes to be mirrored. OpenNI supplies a mechanism 
+called Global Mirror, which, when turned on, changes the mirror state of 
+every node that supports this capability. It will also set the mirror 
+state of all new nodes on creation. 
+
+*/

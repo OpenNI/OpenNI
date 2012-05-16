@@ -45,12 +45,17 @@
 //---------------------------------------------------------------------------
 // Structs
 //---------------------------------------------------------------------------
+
+XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_STRUCT_PADDED_WARNING_ID);
+
 typedef struct XnLibJpegErrorMgr
 {
 	struct jpeg_error_mgr pub;
 
 	jmp_buf setjmpBuffer;
 } XnLibJpegErrorMgr; 
+
+XN_PRAGMA_STOP_DISABLED_WARNING_SECTION;
 
 typedef struct XnStreamCompJPEGContext
 {

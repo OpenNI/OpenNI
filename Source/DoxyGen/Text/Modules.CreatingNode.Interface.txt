@@ -1,0 +1,96 @@
+/**
+@page modules_node_interface Implement the Proper Interface
+
+Note that OpenNI has a different interface for a node implementation 
+(MPI) than the actual API of the node. Although they seem superficially 
+very similar, the MPI and API interfaces are different. 
+
+The module's MPI interfaces (C++ ones) are defined in file @ref 
+XnModuleCppInterface.h. 
+
+The following table lists current OpenNI node types and their module 
+interface. 
+
+<table>
+	<tr>
+		<th>Node Type</th>
+		<th>Module Interface</th>
+	</tr>
+	<tr>
+		<td>Production Node</td>
+		<td>@ref xn::ModuleProductionNode</td>
+	</tr>
+	<tr>
+		<td>Device</td>
+		<td>@ref xn::ModuleDevice</td>
+	</tr>
+	<tr>
+		<td>Generator</td>
+		<td>@ref xn::ModuleGenerator</td>
+	</tr>
+	<tr>
+		<td>Recorder</td>
+		<td>@ref xn::ModuleRecorder</td>
+	</tr>
+	<tr>
+		<td>Player</td>
+		<td>@ref xn::ModulePlayer</td>
+	</tr>
+	<tr>
+		<td>Map Generator</td>
+		<td>@ref xn::ModuleMapGenerator</td>
+	</tr>
+	<tr>
+		<td>Depth Generator</td>
+		<td>@ref xn::ModuleDepthGenerator</td>
+	</tr>
+	<tr>
+		<td>Image Generator</td>
+		<td>@ref xn::ModuleImageGenerator</td>
+	</tr>
+	<tr>
+		<td>IR Generator</td>
+		<td>@ref xn::ModuleIRGenerator</td>
+	</tr>
+	<tr>
+		<td>Gestures Generator</td>
+		<td>@ref xn::ModuleGestureGenerator</td>
+	</tr>
+	<tr>
+		<td>Scene Analyzer</td>
+		<td>@ref xn::ModuleSceneAnalyzer</td>
+	</tr>
+	<tr>
+		<td>Hands Generator</td>
+		<td>@ref xn::ModuleHandsGenerator</td>
+	</tr>
+	<tr>
+		<td>User Generator</td>
+		<td>@ref xn::ModuleUserGenerator</td>
+	</tr>
+	<tr>
+		<td>Audio Generator</td>
+		<td>@ref xn::ModuleAudioGenerator</td>
+	</tr>
+	<tr>
+		<td>Codec</td>
+		<td>@ref xn::ModuleCodec</td>
+	</tr>
+	<tr>
+		<td>Script</td>
+		<td>@ref xn::ModuleScriptNode</td>
+	</tr>
+</table>
+
+When you want to create a new class, it must inherit virtually from the 
+corresponding interface. For example, if you are developing a hand 
+generator, the class declaration must be as follows: 
+
+@code
+class MyHandGenerator: public virtual xn::ModuleHandsGenerator
+{
+...
+};
+@endcode
+
+*/

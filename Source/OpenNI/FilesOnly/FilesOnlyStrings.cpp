@@ -128,7 +128,7 @@ XN_C_API XnStatus xnOSStrPrefix(const XnChar* cpPrefixString, XnChar* cpDestStri
 	strncpy (cpDestString, cpTempBuffer, nOutStringLength);
 
 	// Free the temporary buffer
-	XN_FREE_AND_NULL(cpTempBuffer);
+	xnOSFree(cpTempBuffer);
 
 	// All is good...
 	return (XN_STATUS_OK);
@@ -228,7 +228,6 @@ XN_C_API XnStatus xnOSStrNCRC32(XnUChar* cpBuffer, XnUInt32 nBufferSize, XnUInt3
 {
 	// Local function variables
 	XnUInt32 nTempCRC32 = 0xffffffff;
-	XnUInt32 nStrLen = 0;
 	XnUInt32 nIdx = 0;
 
 	// Validate the input/output pointers (to make sure none of them is NULL)

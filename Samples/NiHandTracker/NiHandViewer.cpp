@@ -77,7 +77,6 @@ void HandViewer::DisplayPostDraw()
 {
 	typedef TrailHistory			History;
 	typedef History::ConstIterator	HistoryIterator;
-	typedef History::Trail			Trail;
 	typedef Trail::ConstIterator	TrailIterator;
 
 	static const float colours[][3] =
@@ -94,16 +93,16 @@ void HandViewer::DisplayPostDraw()
 	// History points coordinates buffer
 	XnFloat	coordinates[3 * MAX_HAND_TRAIL_LENGTH];
 
-	const HistoryIterator	hend = history.end();
-	for(HistoryIterator		hit = history.begin(); hit != hend; ++hit)
+	const HistoryIterator	hend = history.End();
+	for(HistoryIterator		hit = history.Begin(); hit != hend; ++hit)
 	{
 
 		// Dump the history to local buffer
 		int				numpoints = 0;
-		const Trail&	trail = hit.GetTrail();
+		const Trail&	trail = hit->Value();
 
-		const TrailIterator	tend = trail.end();
-		for(TrailIterator	tit = trail.begin(); tit != tend; ++tit)
+		const TrailIterator	tend = trail.End();
+		for(TrailIterator	tit = trail.Begin(); tit != tend; ++tit)
 		{
 			XnPoint3D	point = *tit;
 			m_depth.ConvertRealWorldToProjective(1, &point, &point);
@@ -117,7 +116,7 @@ void HandViewer::DisplayPostDraw()
 		assert(numpoints <= MAX_HAND_TRAIL_LENGTH);
 
 		// Draw the hand trail history
-		XnUInt32 nColor = hit.GetKey() % LENGTHOF(colours);
+		XnUInt32 nColor = hit->Key() % LENGTHOF(colours);
 		glColor4f(colours[nColor][0],
 			colours[nColor][1],
 			colours[nColor][2],

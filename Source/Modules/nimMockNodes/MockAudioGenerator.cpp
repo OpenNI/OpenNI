@@ -25,11 +25,13 @@
 #include <XnLog.h>
 
 
-MockAudioGenerator::MockAudioGenerator(const XnChar* strName) : 
-	MockGenerator(strName, TRUE),
+MockAudioGenerator::MockAudioGenerator(xn::Context& context, const XnChar* strName) : 
+	MockGenerator(context, strName, TRUE),
 	m_pSupportedOutputModes(NULL),
-	m_nSupportedOutputModesCount(0)
+	m_nSupportedOutputModesCount(0),
+	m_bSupportedOutputModesCountReceived(FALSE)
 {
+	xnOSMemSet(&m_waveOutputMode, 0, sizeof(m_waveOutputMode));
 }
 
 MockAudioGenerator::~MockAudioGenerator()
@@ -75,7 +77,7 @@ XnStatus MockAudioGenerator::GetWaveOutputMode(XnWaveOutputMode& OutputMode)
 
 XnStatus MockAudioGenerator::RegisterToWaveOutputModeChanges(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_outputModeChangeEvent.Register(handler, pCookie, &hCallback);
+	return m_outputModeChangeEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockAudioGenerator::UnregisterFromWaveOutputModeChanges(XnCallbackHandle hCallback)

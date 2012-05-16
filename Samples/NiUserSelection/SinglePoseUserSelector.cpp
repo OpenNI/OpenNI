@@ -49,17 +49,17 @@ XnStatus SinglePoseUserSelector::StartTracking(XnUserID nUserId)
     }
 
     // stop tracking for everyone other than the current one.
-    for(UserStateHash::Iterator iter = m_hUsersState.begin(); iter != m_hUsersState.end(); ++iter)
+    for(UserStateHash::Iterator iter = m_hUsersState.Begin(); iter != m_hUsersState.End(); ++iter)
     {
-        if(iter.Key() == nUserId)
+        if(iter->Key() == nUserId)
         {
             continue; // this is the new one, not interesting...
         }
-        if(iter.Value()->m_eState!=XN_SELECTION_FAILED)
+        if(iter->Value()->m_eState!=XN_SELECTION_FAILED)
         {
-            UpdateUserSelectionState(iter.Key(),XN_SELECTION_UNSELECTED,0);
+            UpdateUserSelectionState(iter->Key(),XN_SELECTION_UNSELECTED,0);
         }        
-        m_pTrackingInitializer->AbortTracking(iter.Key()); // stop tracking
+        m_pTrackingInitializer->AbortTracking(iter->Key()); // stop tracking
     }
     return XN_STATUS_OK;
 }

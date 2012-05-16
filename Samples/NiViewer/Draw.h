@@ -26,7 +26,10 @@
 // Includes
 // --------------------------------
 #include <XnPlatform.h>
+
+#pragma warning(push, 3)
 #include <GL/gl.h>
+#pragma warning(pop)
 
 // --------------------------------
 // Defines
@@ -53,6 +56,7 @@ typedef enum
 	PSYCHEDELIC_SHADES,
 	RAINBOW,
 	CYCLIC_RAINBOW,
+	CYCLIC_RAINBOW_HISTOGRAM,
 	STANDARD_DEVIATION,
 	NUM_OF_DEPTH_TYPES,
 } DepthColoringType;

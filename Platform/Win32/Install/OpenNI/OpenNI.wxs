@@ -337,9 +337,11 @@
     <!--  Install the visual studio 2008 DLLs-->
     <DirectoryRef Id="TARGETDIR">
       <?if $(var.Platform)="x86"?>
-        <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86.msm" DiskId="1" Language="0" />
+        <Merge Id="VCRedist2008" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86.msm" DiskId="1" Language="0" />
+        <Merge Id="VCRedist2010" SourceFile="$(var.ResourcesDir)\\Microsoft_VC100_CRT_x86.msm" DiskId="1" Language="0" />
       <?else?>
-        <Merge Id="VCRedist" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" Language="0"/>
+        <Merge Id="VCRedist2008" SourceFile="$(var.ResourcesDir)\\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" Language="0"/>
+        <Merge Id="VCRedist2010" SourceFile="$(var.ResourcesDir)\\Microsoft_VC100_CRT_x64.msm" DiskId="1" Language="0"/>
       <?endif?>
     </DirectoryRef>
     
@@ -493,16 +495,12 @@
       <ComponentRef Id="OpenNIPolicy1.5"/>
       
       <ComponentRef Id="EnviromentVars"/>
-
-      
-     
-
-
-
+          
     </Feature>
 
     <Feature Id="VCRedist" Title="Visual C++ 9.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1" >
-      <MergeRef Id="VCRedist" />
+      <MergeRef Id="VCRedist2008" />
+      <MergeRef Id="VCRedist2010" />
     </Feature>
     
     <WixVariable Id="WixUICostingPopupOptOut" Value="0" />

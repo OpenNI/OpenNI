@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\gmock">
+      <UniqueIdentifier>{973650f1-7536-430b-9be3-bf5c9c1d5a8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ContextTests">
+      <UniqueIdentifier>{a7cac49d-5ced-4a80-93ea-f9677b307577}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\Testing\OpenNITester\ListTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Testing\OpenNITester\EventTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Testing\OpenNITester\QueueTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Testing\OpenNITester\ProductionGraphEvents_C.cpp">
+      <Filter>Source Files\ContextTests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Testing\OpenNITester\ProductionGraphEvents_Cpp.cpp">
+      <Filter>Source Files\ContextTests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Externals\PSCommon\Testing\gmock_main.cc">
+      <Filter>Source Files\gmock</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Externals\PSCommon\Testing\gmock-gtest-all.cc">
+      <Filter>Source Files\gmock</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Externals\PSCommon\Testing\gtest\gtest.h">
+      <Filter>Source Files\gmock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Externals\PSCommon\Testing\gmock\gmock.h">
+      <Filter>Source Files\gmock</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

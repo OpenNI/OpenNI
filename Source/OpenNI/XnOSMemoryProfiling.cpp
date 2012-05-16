@@ -68,7 +68,7 @@ typedef struct
 //---------------------------------------------------------------------------
 static XnMemBlockDataLinkedList g_allocatedMemory = {NULL, NULL};
 static XN_CRITICAL_SECTION_HANDLE g_hCS;
-static XnDumpFile* g_dump;
+static XnDumpFile* g_dump = NULL;
 
 //---------------------------------------------------------------------------
 // Code
@@ -117,6 +117,7 @@ XN_C_API void* xnOSLogMemAlloc(void* pMemBlock, XnAllocationType nAllocType, XnU
 		bReentrent = FALSE;
 	}
 
+	// ignore stuff that is being allocated during "first time"
 	if (bReentrent)
 	{
 		return pMemBlock;

@@ -24,16 +24,16 @@
 
 #include <XnModuleCppInterface.h>
 #include <XnTypes.h>
-#include <XnStringsHash.h>
+#include <XnStringsHashT.h>
 #include <XnGeneralBuffer.h>
-#include <XnEvent.h>
+#include <XnEventT.h>
 
 class MockProductionNode : 
 	virtual public xn::ModuleProductionNode,
 	virtual public xn::ModuleExtendedSerializationInterface
 {
 public:
-	MockProductionNode(const XnChar* strName);
+	MockProductionNode(xn::Context& context, const XnChar* strName);
 	virtual ~MockProductionNode();
 
 	virtual XnBool IsCapabilitySupported(const XnChar* strCapabilityName);
@@ -52,21 +52,23 @@ public:
 	virtual void UnregisterExNotifications();
 
 protected:
-	XN_DECLARE_EVENT_0ARG(PropChangeEvent, PropChangeEventInterface);
+	typedef XnEventNoArgs PropChangeEvent;
 
 	virtual XnStatus OnStateReady();
 
-	XN_DECLARE_STRINGS_HASH(XnUInt64, IntProps);
-	XN_DECLARE_STRINGS_HASH(XnDouble, RealProps);
-	XN_DECLARE_STRINGS_HASH(const XnChar*, StringProps);
-	XN_DECLARE_STRINGS_HASH(XnGeneralBuffer, GeneralProps);
+	typedef XnStringsHashT<XnUInt64> IntProps;
+	typedef XnStringsHashT<XnDouble> RealProps;
+	typedef XnStringsHashT<const XnChar*> StringProps;
+	typedef XnStringsHashT<XnGeneralBuffer> GeneralProps;
 
+	xn::Context m_context;
 	XnChar m_strName[XN_MAX_NAME_LENGTH];
 	IntProps m_intProps;
 	RealProps m_realProps;
 	StringProps m_stringProps;
 	GeneralProps m_generalProps;
 	XnBool m_bExtendedSerializationCap;
+	XnBool m_bStateReady;
 	XnNodeNotifications* m_pNotifications;
 	void* m_pNotificationsCookie;
 };

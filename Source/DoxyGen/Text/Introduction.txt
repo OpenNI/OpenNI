@@ -1,0 +1,169 @@
+/**
+@page introduction Introduction
+
+@section intro_motivation Motivation 
+
+OpenNI is intended to help develop applications that use 3D vision 
+inputs (such as full body control), by breaking the rigid connection 
+between the application and the sensor and/or vision algorithms. Its 
+purpose is to shorten the time-to-market of such applications when 
+wanting to port them to use other algorithms, or another sensor. 
+
+@section intro_general_description General Description
+
+OpenNI is a standard interface for 3D sensor data processing algorithms. 
+It is open for all (published on web site) and open source. The purpose 
+is to define data types (depth map, color map, user pose, etc.) and an 
+interface to a module that can generate them (sensor, skeleton 
+algorithm, etc.), for 3rd party developers. 
+
+- Applications / Games developers can write their applications 
+  regardless of the actual supplier that creates the 3D vision products 
+  (skeleton, hand points, etc.) Middleware developers can write algorithms 
+  on top of raw data formats, regardless of the actual device producing 
+  them. 
+
+- Sensors Manufacturers can implement the device interface for their 
+  sensor, so that applications written on top of OpenNI can work with any 
+  sensor. 
+
+OpenNI main purpose is to provide an interface for applications that use 
+natural interface (gestures / poses) as their input. The application can 
+be written once, and then it can be run regardless of the vendor or 
+version of the natural interface provider. 
+
+OpenNI guarantees full backwards compatibility, so that drivers written 
+for older versions will still work in new versions. Each 
+driver/application that installs itself on a machine should also install 
+the latest version of OpenNI. 
+
+@section intro_nodes Production Nodes
+
+Creating a 3D vision product is usually more complex than simply getting 
+the output of a specific sensor. It usually starts with an actual device 
+(the sensor) producing some sort of output (the most common case is a 
+depth map, where each pixel has its distance from the sensor). Some sort 
+of middleware is then used to process this output, and produce a 
+higher-level output, like the location of a user, or its current pose. 
+
+OpenNI defines "production units", where each such unit can receive data 
+from other such units, and, optionally, producing data that might be 
+used by other units or by the application itself. To support this flow, 
+each such unit is called a Production Node, and all those nodes are 
+connected in a production graph. 
+
+In most cases, an application is only interested in the top-most product 
+of such a graph. OpenNI allows the application to use a single node, 
+without knowing anything about the entire graph behind this node. Of 
+course, for advanced tweaking, there is an option to access that graph, 
+and configure each of the nodes. 
+
+Depending on the machine on which the application is running, and on the 
+accessories attached to it in a specific moment, different graphs can be 
+created to generate the same type of data. OpenNI provides an interface 
+for enumerating possible production trees for receiving a specific 
+product. The application can then choose one of those graphs and create 
+it. It is entirely the application's responsibility of choosing one tree 
+out of the possibilities returned by OpenNI framework. It may do so by 
+preferring specific vendors, components, or versions. 
+
+@section intro_node_types Nodes Types
+
+Each production node has a type. Current supported types are:
+
+- @b Device - represents a physical device
+- @b Depth - generates depth-maps
+- @b Image - generates colored image-maps
+- @b IR - generates IR image-maps
+- @b Audio - generates an audio stream
+- @b Gestures - generates callbacks when specific gestures are identified
+- @b SceneAnalyzer - analyzes a scene (separates background from foreground, etc.)
+- @b Hands - generates callbacks when hand points are created, their positions 
+  change, and are destroyed
+- @b User - generates a representation of a user in the 3D space.
+
+Also, for implementation, the following node types are supported:
+
+- @b Recorder - implements a recording of data.
+- @b Player - can read data from a recording and play it.
+- @b Codec - used for compression and decompression of data in recordings.
+- @b Script - used for running XML scripts
+
+Each type of production node provides different functionality for 
+configuration. Some functions are common for all generators (to exclude 
+physical device, which doesn't actually produce anything). Some are 
+common for all map generators (depth, image, IR), etc. 
+
+@section intro_caps Capabilities
+
+OpenNI acknowledges that different providers might have different 
+configuration options for their production nodes. Thus, a set of common 
+configurations was chosen to be mandatory from all providers. In 
+addition, some non-mandatory configuration options were defined, and 
+each provider can decide whether it wishes to implement them or not. 
+These are called <i>capabilities</i>. You can think of capabilities as 
+extensions to the common interface. 
+
+Each capability is composed of a set of functions which OpenNI exposes. 
+A production node can be asked if it supports a specific capability. If 
+it does, those functions can be called for that specific node. 
+
+Currently, all capabilities must be defined by OpenNI. Future OpenNI 
+versions might allow vendors to add new capabilities and provide them to 
+applications. 
+
+@section intro_modules Modules
+
+An OpenNI Module is a shared library (.DLL file on Windows, .SO file on 
+Linux) which contains an implementation of one or more nodes. A module 
+is actually a plug-in to the OpenNI framework. Once a module is 
+registered with OpenNI, it is part of the enumeration process, and, 
+depending on the application, can be used. 
+
+@section intro_bc Backwards Compatibility
+
+OpenNI declares a full backwards compatibility. This means every 
+application developed over version X of OpenNI, will also work (without 
+the need of recompilation) in every future version. Each machine should 
+have the latest OpenNI version (at least the latest of every OpenNI 
+version needed by every application installed on this machine). In order 
+to achieve this, every application installation should also install 
+OpenNI. 
+
+@section intro_choosing_c Choosing C over C++
+
+OpenNI's core interface is defined C. Supposedly, a native C++ interface 
+would have been easier and prettier, but issues such as name mangling 
+and class representation in memory are not standardized, so a C++ 
+interface would have caused inter-compiler compatibility problems. This 
+could cause a situation in which OpenNI would be compiled in one 
+compiler and an application in another compiler, and when the 
+application called OpenNI's API it would produce unexpected results. The 
+advantage of a C interface is that all C compilers use the same naming 
+scheme, and there are no memory representation issues (a struct is just 
+a struct for all compilers, unlike a C++ class). An alternative to this 
+approach could be providing seperate pre-compiled versions of the 
+library for each compiler, but that could cause a situation in which a 
+plugin that was built with OpenNI for compiler A would use OpenNI 
+compiled for compiler A, and that library's state would be affected, but 
+an application that was compiled with compiler B would not be affected 
+by that state change, because it sees a version of the OpenNI library 
+compiled for compiler B. In addition, maintaining these seperate 
+versions would add a lot of overhead, and it would block usage by 
+unsupported compilers. 
+
+@section intro_cpp C++ Wrappers
+
+Although OpenNI's interface is completely defined in C, OpenNI also 
+supplies a set of C++ wrappers, for developers preferring C++, providing 
+better type-safety and better readability. Those C++ wrappers are 
+defined solely in header files, and they take all OpenNI C functions, 
+and separate them into classes. The reason these wrappers are all 
+defined in header files is that each C++ compiler can choose to 
+represent classes in memory in a different way, so we avoid the problem 
+by letting each project that uses OpenNI compile the wrappers (See also 
+@ref intro_choosing_c). Every method in those classes is defines inline, 
+so that performance is not affected. Please note that most of the 
+samples arriving with OpenNI are written using the C++ wrappers. 
+
+*/

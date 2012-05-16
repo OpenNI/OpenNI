@@ -1,0 +1,31 @@
+/**
+@page modules_root Creating OpenNI Modules
+
+This help document presents a tutorial showing how to build new module 
+OpenNI implementations. 
+
+OpenNI is a plug-in system. It defines the interfaces and data flow of 
+common 3D computer vision types. 
+
+The OpenNI MPI lets you create new OpenNI modules. An OpenNI module is a 
+shared-library which exports one or more node implementations. 
+
+This section presents the necessary steps for creating an OpenNI module.
+
+@note OpenNI native interface is written in C. However, just as there 
+are C++ wrappers for the API, there are also C++ wrappers for creating 
+modules. Using the C++ wrappers is the easiest way to create a new 
+module, so all further descriptions will assume the use of C++. 
+<b>Creating new modules in C is not covered currently in this 
+documentation.</b> 
+
+This tutorial comprises the following major sections. Work through them 
+in the order given. 
+
+-# @subpage modules_topology
+-# @subpage modules_node
+-# @subpage modules_exporter
+-# @subpage modules_module
+-# @subpage modules_registration
+
+*/
