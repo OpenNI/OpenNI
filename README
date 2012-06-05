@@ -170,9 +170,7 @@ MacOSX:
 			  * You will also need to install LibTool:
 			      sudo port install libtool			  
 			  * And finally, LibUSB itself:
-			      sudo port install libusb-devel +universal
-		      Note: Do not forget the +universal, it's very important!!
-		            If you're previously already installed libusb-devel then use "sudo port uninstall libusb-devel" and reinstall it again with the +universal flag.
+			      sudo port install libusb
 					
 		   B) Compile the source & install LibUSB yourself:
 			  * Change the working directory to the prerequisites directory: "cd Platform\Linux\Build\Prerequisites"
