@@ -173,6 +173,10 @@ MacOSX:
 			      sudo port install libusb-devel +universal
 		      Note: Do not forget the +universal, it's very important!!
 		            If you're previously already installed libusb-devel then use "sudo port uninstall libusb-devel" and reinstall it again with the +universal flag.
+                            If problem persist, use this command:
+                                  "sudo rm -f /opt/local/lib/libusb-1.0.0.dylib"
+                                  "sudo port clean libusb"
+                                  "sudo port install libusb +universal"
 					
 		   B) Compile the source & install LibUSB yourself:
 			  * Change the working directory to the prerequisites directory: "cd Platform\Linux-x86\Build\Prerequisites"
