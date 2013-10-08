@@ -8,7 +8,7 @@
            Version="$(var.VersionNumber)" Manufacturer="!(loc.ManufacturerName)" UpgradeCode="$(var.UpgradeCode)">
     <!-- Define the minimum supported installer version (3.0) and that the install should be done for the whole machine not just the current user -->
     <Package InstallerVersion="300" Compressed="yes" InstallScope="perMachine" Platform="$(var.Platform)" InstallPrivileges="elevated"  />
-    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" CompressionLevel="high"/>   
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" CompressionLevel="low"/>   
 
     <MajorUpgrade Schedule="afterInstallInitialize" AllowSameVersionUpgrades="yes" IgnoreRemoveFailure="yes"
       DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
@@ -316,7 +316,7 @@
 
 
         <Environment Id="ClassPath" Action="set" Part="last" Name="CLASSPATH" Permanent="yes" System="yes"
-                           Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)\org.OpenNI.jar"/>
+                           Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)\org.openni.jar"/>
         
         <Environment Id="Path" Action="set" Part="last" Name="Path" Permanent="yes" System="yes"
                      Value="[INSTALLLOCATION]Bin$(var.PlatformSuffix)"/>
@@ -455,7 +455,7 @@
     </CustomAction>
 
     <!-- Remove OpenNI path from the env CLASSPATH  -->
-    <CustomAction Id="SetRemoveOpenNIClassPathData" Property="RemoveOpenNIClassPath" Value="[INSTALLLOCATIONBin]org.OpenNI.jar|[%CLASSPATH]"/>
+    <CustomAction Id="SetRemoveOpenNIClassPathData" Property="RemoveOpenNIClassPath" Value="[INSTALLLOCATIONBin]org.openni.jar|[%CLASSPATH]"/>
     <CustomAction Id="RemoveOpenNIClassPath" Script="vbscript" Execute="deferred" Impersonate="no"  Win64="$(var.Win64)">
       <![CDATA[
       strArgs = Session.Property("CustomActionData")      

@@ -4,11 +4,8 @@
   <?include $(sys.CURRENTDIR)Includes\OpenNIVariables.wxi ?>
   <Fragment>
     <DirectoryRef Id="INSTALLLOCATION">
-      <Component Id="GPL" Guid="*">
-        <File Id="fil04BD68110BAAE6738D69A12AA064B5B9" KeyPath="yes" Source="$(var.OpenNIFilesDir)\GPL.txt" />
-      </Component>
-      <Component Id="LGPL" Guid="*">
-        <File Id="fil8EFDF8514913AD728CF1798610E899A6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\LGPL.txt" />
+      <Component Id="LICENSE" Guid="*">
+        <File Id="fil04BD68110BAAE6738D69A12AA064B5B9" KeyPath="yes" Source="$(var.OpenNIFilesDir)\LICENSE" />
       </Component>
       <Directory Id="dir62F52A486FD7E5CC0678D32FDE0B6B51" Name="Data">
         <Component Id="cmp14657BC5BBC8A9B152526BB875809D9D" Guid="33EF8427-C3AB-42ED-8D3B-701641EBD580" KeyPath="yes">
@@ -35,7 +32,7 @@
           <File Id="filF374558A6F08B598A4FA106496D94FA6" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\OpenNI$(var.PlatformSuffix).dll" />
         </Component>
         <Component Id="OpenNIjar" Guid="*">
-          <File Id="filF374558A6F08B598A4FA106496D94JAR" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\org.OpenNI.jar" />
+          <File Id="filF374558A6F08B598A4FA106496D94JAR" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\org.openni.jar" />
         </Component>
         <Component Id="OpenNIjnidll" Guid="*">
           <File Id="filF374558A6F08B598A4FA106496D94JNI" KeyPath="yes" Source="$(var.OpenNIFilesDir)\Bin$(var.PlatformSuffix)\OpenNI.jni$(var.PlatformSuffix).dll" />
@@ -82,8 +79,7 @@
   <Fragment>
     <ComponentGroup Id="OpenNIBinaryFiles">
       <ComponentRef Id="cmp14657BC5BBC8A9B152526BB875809D9D"/>
-      <ComponentRef Id="GPL"/>
-      <ComponentRef Id="LGPL"/>
+      <ComponentRef Id="LICENSE"/>
       <ComponentRef Id="niLicense"/>
       <ComponentRef Id="nimCodecs"/>
       <ComponentRef Id="nimMockNodes"/>

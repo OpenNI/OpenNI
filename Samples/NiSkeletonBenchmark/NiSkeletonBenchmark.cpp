@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -29,7 +28,7 @@
 //---------------------------------------------------------------------------
 // Defines
 //---------------------------------------------------------------------------
-#define SAMPLE_XML_PATH "../../../../Data/SamplesConfig.xml"
+#define SAMPLE_XML_PATH "../../Config/SamplesConfig.xml"
 #define SAMPLE_XML_PATH_LOCAL "SamplesConfig.xml"
 //printf tweaks
 #define BRIGHT 1
@@ -232,7 +231,7 @@ int main(int argc, char **argv)
     nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator);
     CHECK_RC(nRetVal,"No depth");
 
-#if (XN_PLATFORM != XN_PLATFORM_MACOSX)	
+#if (XN_PLATFORM != XN_PLATFORM_MACOSX && XN_PLATFORM != XN_PLATFORM_ANDROID_ARM)
     //we want out benchmark application will be running only on one CPU core
     cpu_set_t mask;
 	CPU_ZERO(&mask);
@@ -293,6 +292,9 @@ int main(int argc, char **argv)
     }
 
     XnUInt32 epochTime = 0;
+	XnUInt64 totalLatency = 0;
+	XnUInt32 nFrame = 0;
+
     //each 30 frames (1 second) we start the CPU resources usages
     while (!xnOSWasKeyboardHit())
     {
@@ -308,9 +310,19 @@ int main(int argc, char **argv)
     		w=(double)Wall.tv_sec * 1000000.0 + (double)Wall.tv_usec;
     		Sample = false;
     	}
-    	g_Context.WaitOneUpdateAll(g_UserGenerator);
+
+		g_DepthGenerator.WaitAndUpdateData();
+
+		XnUInt64 before;
+		xnOSGetHighResTimeStamp(&before);
+		g_UserGenerator.WaitAndUpdateData();
+		XnUInt64 end;
+		xnOSGetHighResTimeStamp(&end);
+		totalLatency += (end - before);
+
     	xnFPSMarkFrame(&xnFPS);
         // print the torso information for the first user already tracking every 1 second to prevent CPU of printf
+        TotalFrames++;
         if(TotalFrames % 30 == 0)
         {
 			nUsers=MAX_NUM_USERS;
@@ -324,7 +336,6 @@ int main(int argc, char **argv)
 
 				g_UserGenerator.GetSkeletonCap().GetSkeletonJoint(aUsers[i],XN_SKEL_TORSO,torsoJoint);
 				printf("User %d Located At distance of %6.2f mm from the sensor\n",aUsers[i],torsoJoint.position.position.Z);
-
 			 }
 			//get the finish sample of the CPU resources
 			getrusage(RUSAGE_SELF, &ru);
@@ -338,13 +349,13 @@ int main(int argc, char **argv)
 
 			XnDouble fps=xnFPSCalc(&xnFPS);
 			//print stuff.
-			printf("%c[%d;%d;%dmCPU Utilization=%3.2f%%\t", 0x1B, BRIGHT,RED,BG_BLACK,(double)100*t/w);
-			printf("%c[%d;%d;%dmFPS=%3.2f ", 0x1B, BRIGHT,RED,BG_BLACK,(double)fps);
+			printf("%c[%d;%d;%dmCPU Utilization=%3.2f%%\t", 0x1B, BRIGHT,RED,BG_BLACK,(double)(100*t/w));
+			printf("%c[%d;%d;%dmFPS=%3.2f ", 0x1B, BRIGHT,RED,BG_BLACK,fps);
+			printf("%c[%d;%d;%dmSkeleton Latency=%3.2f ms", 0x1B, BRIGHT,RED,BG_BLACK,totalLatency/3e4);
 			printf("%c[%dm\n", 0x1B, 0);
 			Sample= true;
-
+			totalLatency = 0;
 		}
-        TotalFrames++;
         
     }
     g_scriptNode.Release();

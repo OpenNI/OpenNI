@@ -1,24 +1,23 @@
-#/***************************************************************************
-#*                                                                          *
-#*  OpenNI 1.x Alpha                                                        *
-#*  Copyright (C) 2011 PrimeSense Ltd.                                      *
-#*                                                                          *
-#*  This file is part of OpenNI.                                            *
-#*                                                                          *
-#*  OpenNI is free software: you can redistribute it and/or modify          *
-#*  it under the terms of the GNU Lesser General Public License as published*
-#*  by the Free Software Foundation, either version 3 of the License, or    *
-#*  (at your option) any later version.                                     *
-#*                                                                          *
-#*  OpenNI is distributed in the hope that it will be useful,               *
-#*  but WITHOUT ANY WARRANTY; without even the implied warranty of          *
-#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
-#*  GNU Lesser General Public License for more details.                     *
-#*                                                                          *
-#*  You should have received a copy of the GNU Lesser General Public License*
-#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
-#*                                                                          *
-#***************************************************************************/
+#/****************************************************************************
+#*                                                                           *
+#*  OpenNI 1.x Alpha                                                         *
+#*  Copyright (C) 2012 PrimeSense Ltd.                                       *
+#*                                                                           *
+#*  This file is part of OpenNI.                                             *
+#*                                                                           *
+#*  Licensed under the Apache License, Version 2.0 (the "License");          *
+#*  you may not use this file except in compliance with the License.         *
+#*  You may obtain a copy of the License at                                  *
+#*                                                                           *
+#*      http://www.apache.org/licenses/LICENSE-2.0                           *
+#*                                                                           *
+#*  Unless required by applicable law or agreed to in writing, software      *
+#*  distributed under the License is distributed on an "AS IS" BASIS,        *
+#*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+#*  See the License for the specific language governing permissions and      *
+#*  limitations under the License.                                           *
+#*                                                                           *
+#****************************************************************************/
 #-------------Imports----------------------------------------------------------#
 from xml.dom.minidom import parse, parseString
 import win32con,pywintypes,win32api
@@ -131,8 +130,7 @@ class RedistOpenNI(redist_base.RedistBase):
         os.chdir(self.WORK_DIR + "\\Platform\\Win32")
 
         #license
-        os.system ("copy \"..\\..\\GPL.txt\" Redist")
-        os.system ("copy \"..\\..\\LGPL.txt\" Redist")
+        os.system ("copy \"..\\..\\LICENSE\" Redist")
 
         #bin
         os.system ("copy " + self.bin_dir + "\\Release\\OpenNI*.dll Redist\\" + self.bin_dir)
@@ -145,7 +143,7 @@ class RedistOpenNI(redist_base.RedistBase):
         os.system ("copy " + self.bin_dir + "\\Release\\niReg*.exe Redist\\" + self.bin_dir)
         os.system ("copy " + self.bin_dir + "\\Release\\niLicense*.exe Redist\\" + self.bin_dir)
         os.system ("copy " + self.bin_dir + "\\Release\\OpenNI.jni.dll Redist\\" + self.bin_dir)
-        os.system ("copy " + self.bin_dir + "\\Release\\org.OpenNI.jar Redist\\" + self.bin_dir)
+        os.system ("copy " + self.bin_dir + "\\Release\\org.openni.jar Redist\\" + self.bin_dir)
 
         for minor in range(1, int(self.version_minor)+1):
             policy_congfig_name = 'PublisherPolicy1.' + str(minor) + '.config'
@@ -179,8 +177,8 @@ class RedistOpenNI(redist_base.RedistBase):
         # Copy the wrappers to the samples
         shutil.copy(os.path.join(self.bin_dir, "Release", "OpenNI.net.dll"), os.path.join("Redist", "Samples", self.bin_dir, "Release"))
         shutil.copy(os.path.join(self.bin_dir, "Release", "OpenNI.net.dll"), os.path.join("Redist", "Samples", self.bin_dir, "Debug"))
-        shutil.copy(os.path.join(self.bin_dir, "Release", "org.OpenNI.jar"), os.path.join("Redist", "Samples", self.bin_dir, "Release"))
-        shutil.copy(os.path.join(self.bin_dir, "Release", "org.OpenNI.jar"), os.path.join("Redist", "Samples", self.bin_dir, "Debug"))
+        shutil.copy(os.path.join(self.bin_dir, "Release", "org.openni.jar"), os.path.join("Redist", "Samples", self.bin_dir, "Release"))
+        shutil.copy(os.path.join(self.bin_dir, "Release", "org.openni.jar"), os.path.join("Redist", "Samples", self.bin_dir, "Debug"))
 
         # Copy the release notes
         os.system ("copy .\\ReleaseNotes.txt Redist\\Documentation\\")

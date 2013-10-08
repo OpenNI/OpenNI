@@ -1,24 +1,23 @@
-#/***************************************************************************
-#*                                                                          *
-#*  OpenNI 1.x Alpha                                                        *
-#*  Copyright (C) 2011 PrimeSense Ltd.                                      *
-#*                                                                          *
-#*  This file is part of OpenNI.                                            *
-#*                                                                          *
-#*  OpenNI is free software: you can redistribute it and/or modify          *
-#*  it under the terms of the GNU Lesser General Public License as published*
-#*  by the Free Software Foundation, either version 3 of the License, or    *
-#*  (at your option) any later version.                                     *
-#*                                                                          *
-#*  OpenNI is distributed in the hope that it will be useful,               *
-#*  but WITHOUT ANY WARRANTY; without even the implied warranty of          *
-#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
-#*  GNU Lesser General Public License for more details.                     *
-#*                                                                          *
-#*  You should have received a copy of the GNU Lesser General Public License*
-#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
-#*                                                                          *
-#***************************************************************************/
+#/****************************************************************************
+#*                                                                           *
+#*  OpenNI 1.x Alpha                                                         *
+#*  Copyright (C) 2012 PrimeSense Ltd.                                       *
+#*                                                                           *
+#*  This file is part of OpenNI.                                             *
+#*                                                                           *
+#*  Licensed under the Apache License, Version 2.0 (the "License");          *
+#*  you may not use this file except in compliance with the License.         *
+#*  You may obtain a copy of the License at                                  *
+#*                                                                           *
+#*      http://www.apache.org/licenses/LICENSE-2.0                           *
+#*                                                                           *
+#*  Unless required by applicable law or agreed to in writing, software      *
+#*  distributed under the License is distributed on an "AS IS" BASIS,        *
+#*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+#*  See the License for the specific language governing permissions and      *
+#*  limitations under the License.                                           *
+#*                                                                           *
+#****************************************************************************/
 import os
 import subprocess
 import sys
@@ -71,20 +70,24 @@ if not os.path.exists(TEMP_BUILD_DIR):
     os.mkdir(TEMP_BUILD_DIR)
  
 # build
-cmd = '"' + os.path.join(JAVA_HOME, 'bin\javac.exe') + '" '
+cmd = [os.path.join(JAVA_HOME, 'bin\javac.exe')]
 if needed_jar_files != "":
     # add class path
-    cmd += '-cp "' + CLASS_PATH + ';'
+    cp = ''
     needed_list = needed_jar_files.split(';')
     for needed in needed_list:
-        cmd += os.path.join(RELEASE_DIR, needed) + ';'
-    cmd += '" '
+        cp += os.path.join(RELEASE_DIR, needed) + ';'
+    cp += CLASS_PATH + ';'
+    cmd.append('-cp')
+    cmd.append(cp)
 
-cmd += '-d ' + TEMP_BUILD_DIR + ' ' + os.path.join(source_dir, '*.java')
-res = subprocess.call(cmd)
-if res != 0:
-    print ("Failed to build!")
-    exit(1)
+cmd.append('-d')
+cmd.append(TEMP_BUILD_DIR)
+cmd.append('-Xlint:unchecked')
+
+cmd.append(os.path.join(source_dir, '*.java'))
+print cmd
+subprocess.check_call(cmd)
 
 # create JAR file
 cmd = '"' + os.path.join(JAVA_HOME, 'bin\jar.exe') + '" -cf'
@@ -103,10 +106,10 @@ if manifest:
         manifest.write("Main-Class: " + main_class + "\n")
     manifest.close()
     cmd += 'm'
-cmd += ' ' + JAR_FILE + ' '
+cmd += ' "' + JAR_FILE + '" '
 if manifest:
-    cmd += TEMP_MANIFEST_FILE + ' '
-cmd += '-C ' + TEMP_BUILD_DIR + ' .'
+    cmd += '"' + TEMP_MANIFEST_FILE + '" '
+cmd += '-C "' + TEMP_BUILD_DIR + '" .'
 res = subprocess.call(cmd)
 if res != 0:
     print ("Failed to jar!")

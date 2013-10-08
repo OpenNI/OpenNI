@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 // --------------------------------
 // Includes
 // --------------------------------
@@ -99,6 +98,7 @@ XnUInt8 PalletIntsR [256] = {0};
 XnUInt8 PalletIntsG [256] = {0};
 XnUInt8 PalletIntsB [256] = {0};
 
+unsigned short g_nMaxGrayscale16Value = 0;
 /* Linear Depth Histogram */
 float* g_pDepthHist;
 
@@ -233,30 +233,30 @@ void TextureMapSetPixel(XnTextureMap* pTex, int x, int y, int red, int green, in
 		pPixel[3] = 255;
 }
 
-void TextureMapDrawCursor(XnTextureMap* pTex, IntPair cursor)
+void TextureMapDrawCursor(XnTextureMap* pTex, IntPair cursor, int red = 255, int green = 0, int blue = 0)
 {
 	// marked pixel
-	TextureMapSetPixel(pTex, cursor.X, cursor.Y, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X, cursor.Y, red, green, 0);
 
 	// top left marker
-	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y-2, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y-1, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X-1, cursor.Y-2, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y-2, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y-1, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X-1, cursor.Y-2, red, green, blue);
 
 	// top right marker
-	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y-2, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y-1, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X+1, cursor.Y-2, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y-2, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y-1, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X+1, cursor.Y-2, red, green, blue);
 
 	// bottom left marker
-	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y+2, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y+1, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X-1, cursor.Y+2, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y+2, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y+1, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X-1, cursor.Y+2, red, green, blue);
 
 	// bottom right marker
-	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y+2, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y+1, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X+1, cursor.Y+2, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y+2, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y+1, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X+1, cursor.Y+2, red, green, blue);
 }
 
 void TextureMapUpdate(XnTextureMap* pTex)
@@ -763,7 +763,7 @@ void drawClosedStream(IntRect* pLocation, const char* csStreamName)
 	glPrintString(pFont, csMessage);
 }
 
-void drawColorImage(IntRect* pLocation, IntPair* pPointer)
+void drawColorImage(IntRect* pLocation, IntPair* pPointer, int pointerRed, int pointerGreen, int pointerBlue)
 {
 	if (g_DrawConfig.Streams.bBackground)
 		TextureMapDraw(&g_texBackground, pLocation);
@@ -799,6 +799,23 @@ void drawColorImage(IntRect* pLocation, IntPair* pPointer)
 	}
 
 	const DepthMetaData* pDepthMetaData = getDepthMetaData();
+
+	double grayscale16Factor = 1.0;
+	if (pImageMD->PixelFormat() == XN_PIXEL_FORMAT_GRAYSCALE_16_BIT)
+	{
+		int nPixelsCount = pImageMD->XRes()*pImageMD->YRes();
+		XnUInt16* pPixel = (XnUInt16*)pImage;
+		for (int i = 0; i < nPixelsCount; ++i,++pPixel)
+		{
+			if (*pPixel > g_nMaxGrayscale16Value)
+				g_nMaxGrayscale16Value = *pPixel;
+		}
+
+		if (g_nMaxGrayscale16Value > 0)
+		{
+			grayscale16Factor = 255.0 / g_nMaxGrayscale16Value;
+		}
+	}
 
 	for (XnUInt16 nY = pImageMD->YOffset(); nY < pImageMD->YRes() + pImageMD->YOffset(); nY++)
 	{
@@ -847,7 +864,9 @@ void drawColorImage(IntRect* pLocation, IntPair* pPointer)
 					break;
 				case XN_PIXEL_FORMAT_GRAYSCALE_16_BIT:
 					XnUInt16* p16 = (XnUInt16*)pImage;
-					pTexture[0] = pTexture[1] = pTexture[2] = (*p16) >> 2;
+					XnUInt8 textureValue = 0;
+					textureValue = (XnUInt8)((*p16) * grayscale16Factor);
+					pTexture[0] = pTexture[1] = pTexture[2] = textureValue;
 					pImage+=2; 
 					break;
 				}
@@ -868,7 +887,7 @@ void drawColorImage(IntRect* pLocation, IntPair* pPointer)
 
 	if (pPointer != NULL)
 	{
-		TextureMapDrawCursor(&g_texImage, *pPointer);
+		TextureMapDrawCursor(&g_texImage, *pPointer, pointerRed, pointerGreen, pointerBlue);
 	}
 
 	TextureMapUpdate(&g_texImage);
@@ -1447,18 +1466,20 @@ void fixLocation(IntRect* pLocation, int xRes, int yRes)
 {
 	double resRatio = (double)xRes / yRes;
 
-	double locationRatio = (pLocation->uRight - pLocation->uLeft) / (pLocation->uTop - pLocation->uBottom);
+	double locationRatio = double(pLocation->uRight - pLocation->uLeft) / (pLocation->uTop - pLocation->uBottom);
 
 	if (locationRatio > resRatio) 
 	{
 		// location is wider. use height as reference.
 		double width = (pLocation->uTop - pLocation->uBottom) * resRatio;
+		pLocation->uLeft += (pLocation->uRight - pLocation->uLeft - width) / 2;
 		pLocation->uRight = (pLocation->uLeft + width);
 	}
 	else if (locationRatio < resRatio)
 	{
 		// res is wider. use width as reference.
 		double height = (pLocation->uRight - pLocation->uLeft) / resRatio;
+		pLocation->uBottom += (pLocation->uTop - pLocation->uBottom - height) / 2;
 		pLocation->uTop = (pLocation->uBottom + height);
 	}
 }
@@ -1536,20 +1557,44 @@ void drawFrame()
 	// check if pointer is over a map
 	bool bOverDepth = (pDepthMD != NULL) && isPointInRect(g_DrawUserInput.Cursor, &g_DrawConfig.DepthLocation);
 	bool bOverImage = (pImageMD != NULL) && isPointInRect(g_DrawUserInput.Cursor, &g_DrawConfig.ImageLocation);
+	bool bDrawDepthPointer = false;
+	bool bDrawImagePointer = false;
+	int imagePointerRed = 255;
+	int imagePointerGreen = 0;
+	int imagePointerBlue = 0;
 
 	IntPair pointerInDepth;
 	IntPair pointerInImage;
-
-	if (bOverDepth)
-	{
-		pointerInDepth.X = (double)(g_DrawUserInput.Cursor.X - g_DrawConfig.DepthLocation.uLeft) / (g_DrawConfig.DepthLocation.uRight - g_DrawConfig.DepthLocation.uLeft + 1) * pDepthMD->FullXRes();
-		pointerInDepth.Y = (double)(g_DrawUserInput.Cursor.Y - g_DrawConfig.DepthLocation.uBottom) / (g_DrawConfig.DepthLocation.uTop - g_DrawConfig.DepthLocation.uBottom + 1) * pDepthMD->FullYRes();
-	}
 
 	if (bOverImage)
 	{
 		pointerInImage.X = (double)(g_DrawUserInput.Cursor.X - g_DrawConfig.ImageLocation.uLeft) / (g_DrawConfig.ImageLocation.uRight - g_DrawConfig.ImageLocation.uLeft + 1) * pImageMD->FullXRes();
 		pointerInImage.Y = (double)(g_DrawUserInput.Cursor.Y - g_DrawConfig.ImageLocation.uBottom) / (g_DrawConfig.ImageLocation.uTop - g_DrawConfig.ImageLocation.uBottom + 1) * pImageMD->FullYRes();
+		bDrawImagePointer = true;
+	}
+
+	if (bOverDepth)
+	{
+		pointerInDepth.X = (double)(g_DrawUserInput.Cursor.X - g_DrawConfig.DepthLocation.uLeft) / (g_DrawConfig.DepthLocation.uRight - g_DrawConfig.DepthLocation.uLeft + 1) * pDepthMD->FullXRes();
+		pointerInDepth.Y = (double)(g_DrawUserInput.Cursor.Y - g_DrawConfig.DepthLocation.uBottom) / (g_DrawConfig.DepthLocation.uTop - g_DrawConfig.DepthLocation.uBottom + 1) * pDepthMD->FullYRes();
+
+		// make sure we're in cropped area
+		if (pointerInDepth.X >= pDepthMD->XOffset() && pointerInDepth.X < (pDepthMD->XOffset() + pDepthMD->XRes()) &&
+			pointerInDepth.Y >= pDepthMD->YOffset() && pointerInDepth.Y < (pDepthMD->YOffset() + pDepthMD->YRes()))
+		{
+			bDrawDepthPointer = true;
+			if (!bOverImage && g_DrawConfig.bShowPointer)
+			{
+				// try to translate depth pixel to image
+				if (getImageCoordinatesForDepthPixel(pointerInDepth.X, pointerInDepth.Y, pointerInImage.X, pointerInImage.Y))
+				{
+					bDrawImagePointer = true;
+					imagePointerRed = 0;
+					imagePointerGreen = 0;
+					imagePointerBlue = 255;
+				}
+			}
+		}
 	}
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -1564,15 +1609,15 @@ void drawFrame()
 	if (g_DrawConfig.Streams.Depth.Coloring == CYCLIC_RAINBOW_HISTOGRAM || g_DrawConfig.Streams.Depth.Coloring == LINEAR_HISTOGRAM || g_DrawConfig.bShowPointer)
 		calculateHistogram();
 
-	drawColorImage(&g_DrawConfig.ImageLocation, bOverImage ? &pointerInImage : NULL);
+	drawColorImage(&g_DrawConfig.ImageLocation, bDrawImagePointer ? &pointerInImage : NULL, imagePointerRed, imagePointerGreen, imagePointerBlue);
 
-	drawDepth(&g_DrawConfig.DepthLocation, bOverDepth ? &pointerInDepth : NULL);
+	drawDepth(&g_DrawConfig.DepthLocation, bDrawDepthPointer ? &pointerInDepth : NULL);
 
 	printStatisticsInfo();
 	printRecordingInfo();
 
 	if (g_DrawConfig.bShowPointer)
-		drawPointerMode(bOverDepth ? &pointerInDepth : NULL);
+		drawPointerMode(bDrawDepthPointer ? &pointerInDepth : NULL);
 
 	drawUserInput(!bOverDepth && !bOverImage);
 
@@ -1596,4 +1641,9 @@ void setDepthDrawing(int nColoring)
 void setImageDrawing(int nColoring)
 {
 	g_DrawConfig.Streams.Image.Coloring	= (ImageColoringType)nColoring;
+}
+
+void resetIRHistogram(int /*dummy*/)
+{
+	g_nMaxGrayscale16Value = 0;
 }

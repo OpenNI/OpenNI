@@ -1,6 +1,57 @@
 Detailed Change log:
 --------------------
 
+Version 1.5.8
+-------------
+  * JAVA Wrappers: Updated the build script for JDK 7u21.
+  * When loading libraries in Android, look for the library both in the app lib dir and in /system/lib.
+    This fixes an issue when building apps as part of the Android image, since their .so files are placed /system/lib.
+  * New Windows USB driver (v3.2.0.2) - Added a workaround for suspend/resume & hibernation problems on Intel USB2 controllers.
+  * Don't save objects in a hashtable, it prevents them from ever being deleted by the garbage collector.
+  * Bug Fix: mock nodes did not support extended serialization by default.
+  * UserTracker: notify about exit/re-enter events
+
+Version 1.5.7
+-------------
+  * Fix Android Compilation on Mac OSX
+  * Android libusb: Added a fallback option that allows native non-java application to work with usbfs
+  * Android libusb: allow logging to Android log
+  * Android libusb: Prevent libusb from trying to open /dev/bus/usb when is not permitted in that device
+  * Updated the Android LibUSB from 1.0.8 to 1.0.9.
+  * Android: Fixed xnOSSetThreadPriority.
+  * Fixed Linux compilation
+  * NiViewer: added depth QQVGA mode
+  * NiViewer: Fixed crash when IR image is blank.
+  * NiViewer: add an option to turn off IR histogram (press 'h')
+  * USB: update driver to include more PrimeSense devices
+  * Added a new "XN_CAPABILITY_AUTO_EXPOSURE" to control the CMOS auto exposure loop.
+  * Bug Fix: file is played back according to file position, but seeking backwards is done according to timestamp. Behavior was changed to always go according to file position
+  * OSX: fix compilation warnings in OpenNI headers
+
+Version 1.5.6
+-------------
+  * Switch to Apache v2 license
+  * Java bug fix: GetCropping() throws a bad cast exception
+  * Java bug fix: getSkeletonJoint would throw an exception
+  * Java samples bug fix: can't build samples if directory name contains spaces
+  * Java: add JavaDoc documentation
+  * Java: rename package name from OpenNI to openni (to comply with Android)
+  * NiViewer bug fix: assumes IR stream is only 10 bit
+  * NiViewer bug fix: potential crash when in pointer mode and cropping is on
+  * Skeleton benchmark bug fix: would print half the real FPS.
+  * Change installer compression for faster builds (neglectable change in resulting image)
+
+Version 1.5.5
+-------------
+  * .Net wrapper Bug Fix: opening a file recording would cause player node ref count leak (can never be destroyed)
+  * SimpleSkeleton sample: remove code that takes the depth generator. It isn't used anywhere.
+  * NiBackRecorder Bug Fix: use default codec when recording
+  * Documentation: better Linux doc
+  * NiViewer Bug Fix: use default codec when recording (unless user asked otherwise)
+  * New method in AlternativeViewPoint capability: GetPixelCoordinatesInViewPoint
+  * NiViewer: mark corresponding point on the image when in side-by-side view (when pointer mode is on)
+  * NiViewer: center maps in the drawing area (better match of 720p to VGA depth)
+  
 Version 1.5.4.0 (Unstable version - May 7th 2012)
 -------------------------------------------------
   * Gadget: now also notifies about SUSPEND state.

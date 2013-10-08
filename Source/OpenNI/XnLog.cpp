@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -33,6 +32,9 @@
 
 #include "XnLogConsoleWriter.h"
 #include "XnLogFileWriter.h"
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+#include "XnLogAndroidWriter.h"
+#endif
 
 //---------------------------------------------------------------------------
 // Defines
@@ -108,6 +110,9 @@ public:
 	// Writers
 	XnLogConsoleWriter consoleWriter;
 	XnLogFileWriter fileWriter;
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+	XnLogAndroidWriter AndroidWriter;
+#endif
 
 private:
 	LogData()
@@ -440,6 +445,15 @@ XN_C_API XnStatus xnLogInitFromINIFile(const XnChar* cpINIFileName, const XnChar
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+	nRetVal = xnOSReadIntFromINI(cpINIFileName, cpSectionName, "LogWriteToAndroidLog", &nTemp);
+	if (nRetVal == XN_STATUS_OK)
+	{
+		nRetVal = xnLogSetAndroidOutput(nTemp);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+#endif
+
 	nRetVal = xnOSReadIntFromINI(cpINIFileName, cpSectionName, "LogWriteLineInfo", &nTemp);
 	if (nRetVal == XN_STATUS_OK)
 	{
@@ -519,6 +533,17 @@ XN_C_API XnStatus xnLogInitFromXmlFile(const XnChar* strFileName)
 				nRetVal = xnLogSetFileOutput(bOn);
 				XN_IS_STATUS_OK(nRetVal);
 			}
+
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+			if (pLog->Attribute("writeToAndroidLog"))
+			{
+				nRetVal = xnXmlReadBoolAttribute(pLog, "writeToAndroidLog", &bOn);
+				XN_IS_STATUS_OK(nRetVal);
+
+				nRetVal = xnLogSetAndroidOutput(bOn);
+				XN_IS_STATUS_OK(nRetVal);
+			}
+#endif
 
 			if (pLog->Attribute("writeLineInfo"))
 			{
@@ -665,6 +690,26 @@ XN_C_API XnStatus xnLogSetFileOutput(XnBool bFileOutput)
 
 	return XN_STATUS_OK;
 }
+
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+XN_C_API XnStatus xnLogSetAndroidOutput(XnBool bAndroidOutput)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	LogData& logData = LogData::GetInstance();
+	if (bAndroidOutput)
+	{
+		nRetVal = logData.AndroidWriter.Register();
+		XN_IS_STATUS_OK(nRetVal);
+	}
+	else
+	{
+		logData.AndroidWriter.Unregister();
+	}
+
+	return XN_STATUS_OK;
+}
+#endif
 
 XN_C_API XnStatus xnLogSetLineInfo(XnBool bLineInfo)
 {

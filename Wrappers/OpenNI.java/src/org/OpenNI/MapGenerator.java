@@ -1,28 +1,41 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
-package org.OpenNI;
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
+package org.openni;
 
+/**
+ * Base class for all map generators. <BR><BR>
+ * 
+ * This class primarily serves as the base class for the image, IR, and depth
+ * generators.  It would not generally be instantiated on its own.
+ *
+ */
 public class MapGenerator extends Generator 
 {
+	/**
+	 * Create a new MapGenerator
+	 * @param context OpenNI Context
+	 * @param nodeHandle
+	 * @param addRef
+	 * @throws GeneralException Function may touch hardware, so exceptions will be common
+	 */
 	MapGenerator(Context context, long nodeHandle, boolean addRef) throws GeneralException 
 	{
 		super(context, nodeHandle, addRef);
@@ -43,6 +56,11 @@ public class MapGenerator extends Generator
 		}; 
 	}
 
+	/**
+	 * This function is used to obtain a list of all available output modes of this generator
+	 * @return List of available map output modes
+	 * @throws StatusException Function may communicate with hardware, so status exceptions are possible
+	 */
 	public MapOutputMode[] getSupportedMapOutputModes() throws StatusException
 	{
 		int count = NativeMethods.xnGetSupportedMapOutputModesCount(this.toNative());
@@ -52,6 +70,11 @@ public class MapGenerator extends Generator
 		return supportedModes;
 	}
 
+	/**
+	 * Obtains the current map output mode of this generator
+	 * @return MapOutputMode set to match the current settings of this generator
+	 * @throws StatusException Function may communicate with hardware, so status exceptions are possible
+	 */
 	public MapOutputMode getMapOutputMode() throws StatusException
 	{
 		OutArg<Integer> xRes = new OutArg<Integer>();
@@ -62,104 +85,227 @@ public class MapGenerator extends Generator
 		return new MapOutputMode(xRes.value, yRes.value, FPS.value);
 	}
 	
+	/**
+	 * Sets the MapOutputMode of this generator
+	 * @param mode MapOutputMode object set to the desired new settings of this generator
+	 * @throws StatusException Function may communicate with hardware, so status exceptions are possible
+	 */
 	public void setMapOutputMode(MapOutputMode mode) throws StatusException
 	{
 		int status = NativeMethods.xnSetMapOutputMode(this.toNative(), mode.getXRes(), mode.getYRes(), mode.getFPS());
 		WrapperUtils.throwOnError(status);
 	}
 
+	/**
+	 * Used to observe MapOutputModeChangedEvents generated by objects of this class
+	 * @return
+	 */
 	public IStateChangedObservable getMapOutputModeChangedEvent() { return this.mapOutputModeChanged; }
 
+	/**
+	 * Requests a CroppingCapability for this generator.
+	 * This is the normal way to gain access to a CroppingCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public CroppingCapability getCroppingCapability() throws StatusException
 	{
 		return new CroppingCapability(this);
 	}
 
+	/**
+	 * Requests a BrightnessCapability for this generator.
+	 * This is the normal way to gain access to a BrightnessCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getBrightnessCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Brightness);
 	}
 
+	/**
+	 * Requests a ContrastCapability for this generator.
+	 * This is the normal way to gain access to a ContrastCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getContrastCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Contrast);
 	}
 
+	/**
+	 * Requests a SaturationCapability for this generator.
+	 * This is the normal way to gain access to a SaturationCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getSaturationCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Saturation);
 	}
 
+	/**
+	 * Requests a HueCapability for this generator.
+	 * This is the normal way to gain access to a HueCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getHueCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Hue);
 	}
 
+	/**
+	 * Requests a SharpnessCapability for this generator.
+	 * This is the normal way to gain access to a SharpnessCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getSharpnessCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Sharpness);
 	}
 
+	/**
+	 * Requests a GammaCapability for this generator.
+	 * This is the normal way to gain access to a GammaCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getGammaCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Gamma);
 	}
 
+	/**
+	 * Requests a WhiteBalanceCapability for this generator.
+	 * This is the normal way to gain access to a WhiteBalanceCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getWhiteBalanceCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.WhiteBalance);
 	}
 
+	/**
+	 * Requests a BacklightCompensationCapability for this generator.
+	 * This is the normal way to gain access to a BacklightCompensationCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getBacklightCompensationCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.BacklightCompensation);
 	}
 
+	/**
+	 * Requests a GainCapability for this generator.
+	 * This is the normal way to gain access to a GainCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getGainCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Gain);
 	}
 
+	/**
+	 * Requests a PanCapability for this generator.
+	 * This is the normal way to gain access to a PanCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getPanCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Pan);
 	}
 
+	/**
+	 * Requests a TiltCapability for this generator.
+	 * This is the normal way to gain access to a TiltCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getTiltCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Tilt);
 	}
 
+	/**
+	 * Requests a RollCapability for this generator.
+	 * This is the normal way to gain access to a RollCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getRollCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Roll);
 	}
 
+	/**
+	 * Requests a getZoomCapability for this generator.
+	 * This is the normal way to gain access to a getZoomCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getZoomCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Zoom);
 	}
 
+	/**
+	 * Requests a ExposureCapability for this generator.
+	 * This is the normal way to gain access to a ExposureCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getExposureCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Exposure);
 	}
 
+	/**
+	 * Requests a IrisCapability for this generator.
+	 * This is the normal way to gain access to a IrisCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getIrisCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Iris);
 	}
 
+	/**
+	 * Requests a FocusCapability for this generator.
+	 * This is the normal way to gain access to a FocusCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getFocusCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.Focus);
 	}
 
+	/**
+	 * Requests a LowLightCompensationCapability for this generator.
+	 * This is the normal way to gain access to a LowLightCompensationCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public GeneralIntCapability getLowLightCompensationCapability() throws StatusException
 	{
 		return new GeneralIntCapability(this, Capability.LowLightCompensation);
 	}
 
+	/**
+	 * Requests a AntiFlickerCapability for this generator.
+	 * This is the normal way to gain access to a AntiFlickerCapability.
+	 * @return This is the actual capability object
+	 * @throws StatusException Function may touch hardware, so status exceptions are possible
+	 */
 	public AntiFlickerCapability getAntiFlickerCapability() throws StatusException
 	{
 		return new AntiFlickerCapability(this);

@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -91,6 +90,11 @@ static XnUInt32 XN_CALLBACK_TYPE GetIRBytesPerPixel(XnModuleNodeHandle /*hNode*/
 static XnUInt32 XN_CALLBACK_TYPE GetSceneBytesPerPixel(XnModuleNodeHandle /*hNode*/)
 {
 	return sizeof(XnLabel);
+}
+
+static XnStatus XN_CALLBACK_TYPE UnimplementedGetPixelCoordinatesInViewPoint(XnModuleNodeHandle /*hGenerator*/, XnNodeHandle /*hOther*/, XnUInt32 /*x*/, XnUInt32 /*y*/, XnUInt32* /*pAltX*/, XnUInt32* /*pAltY*/)
+{
+	return XN_STATUS_NOT_IMPLEMENTED;
 }
 
 //---------------------------------------------------------------------------
@@ -258,7 +262,17 @@ XnStatus XnModuleLoader::LoadAllModules()
 		XN_IS_STATUS_OK(nRetVal);
 
 		const XnChar* strConfigDir = pModule->Attribute("configDir");
-
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+		if (strConfigDir != NULL)
+		{
+			// In Android we treat the provided config dir as relative to the app root dir
+			// so we have to append a suffix
+			XnChar strActualConfigDir[1024];
+			xnOSGetApplicationFilesDir(strActualConfigDir, sizeof(strActualConfigDir));
+			strncat(strActualConfigDir, strConfigDir, sizeof(strActualConfigDir));
+			strConfigDir = strActualConfigDir;
+		}
+#endif
 		nRetVal = LoadModule(strModulePath, strConfigDir);
 		XN_IS_STATUS_OK(nRetVal);
 
@@ -1066,6 +1080,12 @@ XnStatus XnModuleLoader::ValidateGeneratorInterface(XnVersion& moduleOpenNIVersi
 	XN_VALIDATE_FUNC_NOT_NULL(pInterface, GetDataSize);
 	XN_VALIDATE_FUNC_NOT_NULL(pInterface, GetTimestamp);
 	XN_VALIDATE_FUNC_NOT_NULL(pInterface, GetFrameID);
+
+	// Fix BC issues
+	if (pInterface->pAlternativeViewPointInterface->GetPixelCoordinatesInViewPoint == NULL)
+	{
+		pInterface->pAlternativeViewPointInterface->GetPixelCoordinatesInViewPoint = UnimplementedGetPixelCoordinatesInViewPoint;
+	}
 
 	// validate mirror capability
 	XN_VALIDATE_CAPABILITY(pInterface, Mirror);

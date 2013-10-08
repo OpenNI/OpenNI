@@ -5,7 +5,7 @@
 	<b>Source file:</b> Click the following link to view the source code file:
 		- UserTracker.java
 
-	The User Tracker sample program demonstrates the OpenNI code for tracking the movement of a user through its skeleton capability. This sample program is encapsulated in the org.OpenNI.Samples.UserTracker.jar (java archive).
+	The User Tracker sample program demonstrates the OpenNI code for tracking the movement of a user through its skeleton capability. This sample program is encapsulated in the org.openni.Samples.UserTracker.jar (java archive).
 	
 	This major section describes the OpenNI program code of the UserTracker sample program written in the Java language.
 	

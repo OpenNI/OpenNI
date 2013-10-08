@@ -5,6 +5,9 @@ This step is needed to ensure that OpenNI was installed properly, and that the d
 is properly set up to enable you to build OpenNI-based applications.
 
 To build and run a sample application:
+
+@section build_and_run_sample_windows Windows
+
 -# Make sure you have the latest Microsoft Platform SDK installed (You
 		can currently download this via the following hyperlink: 
 		<a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=a55b6b43-e24f-4ea3-a93e-40c0ec4f68e5&DisplayLang=en">Microsoft's
@@ -17,7 +20,7 @@ To build and run a sample application:
 -# After successfully building the project, before trying to run it, please ensure that the 
 		SamplesConfig.xml file is correctly configured:
 		-# Browse to the 'Data' directory (the default location of this directory is C:\\Program Files\\OpenNI\\Data).
-		-# Open the SamplesConfig.xml for editing using a text editor (additional information can under @ref xmlscripts).
+		-# Open the SamplesConfig.xml for editing using a text editor (additional information can be found under @ref xmlscripts).
 
 @note Throughout the sample applications tutorial you will encounter use of relative paths in the sample 
 application source files. Note that when your application is executed from within a debugging environment 
@@ -29,4 +32,15 @@ the Working Directory to be the sub-folder into which the executable is located.
 You can also use Visual Studio's macro \$(TargetDir) instead of setting an actual path.
 
 @note Use "Project Properties"->"Debugging"->"Working Directory" to set the value.
+
+@section build_and_run_sample_linux Linux
+
+-# Go to the folder from which you installed OpenNI.
+-# Browse to Samples/NiSimpleRead
+-# Run 'make'
+-# The binary is output to ../Bin/$(platform)-Release/Sample-NiSimpleRead
+-# Before trying to run it, please ensure that the SamplesConfig.xml file is correctly configured:
+	-# Browse to Samples/Config directory
+	-# Open the SamplesConfig.xml file for editing using a text editor (additional information can be found under @ref xmlscripts).
+
 */

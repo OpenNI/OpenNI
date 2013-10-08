@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -477,7 +476,7 @@ static void xnContextDestroy(XnContext* pContext, XnBool bForce /* = FALSE */)
 		xnOSCloseCriticalSection(&pContext->hLock);
 		xnOSCloseEvent(&pContext->hNewDataEvent);
 		xnFPSFree(&pContext->readFPS);
-		xnOSFree(pContext);
+		XN_DELETE(pContext);
 
 #ifdef XN_MEM_PROFILING
 	#ifdef _WIN32
@@ -4140,6 +4139,16 @@ XN_C_API void xnUnregisterFromViewPointChange(XnNodeHandle hInstance, XnCallback
 	xnUnregisterFromModuleStateChange(pInterface->AlternativeViewPoint.UnregisterFromViewPointChange, hModuleNode, hCallback);
 }
 
+XN_C_API XnStatus XN_C_DECL xnGetPixelCoordinatesInViewPoint(XnNodeHandle hInstance, XnNodeHandle hOther, XnUInt32 x, XnUInt32 y, XnUInt32* pAltX, XnUInt32* pAltY)
+{
+	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_GENERATOR);
+	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
+	XnGeneratorInterfaceContainer* pInterface = (XnGeneratorInterfaceContainer*)hInstance->pModuleInstance->pLoaded->pInterface;
+	XnModuleNodeHandle hModuleNode = hInstance->pModuleInstance->hNode;
+	XN_VALIDATE_FUNC_PTR(pInterface->AlternativeViewPoint.GetPixelCoordinatesInViewPoint);
+	return pInterface->AlternativeViewPoint.GetPixelCoordinatesInViewPoint(hModuleNode, hOther, x, y, pAltX, pAltY);
+}
+
 //---------------------------------------------------------------------------
 // Frame Sync Capability
 //---------------------------------------------------------------------------
@@ -7065,7 +7074,7 @@ XN_C_API XnStatus xnScriptNodeRun(XnNodeHandle hScript, XnEnumerationErrors* pEr
 #elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#define XN_OPEN_NI_FILES_LOCATION "/var/lib/ni/"
 #elif (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM)
-	#define XN_OPEN_NI_FILES_LOCATION "/data/ni/"
+	/* Resolved dynamically in Android */
 #else
 	#error "Unsupported platform!"
 #endif
@@ -7074,6 +7083,11 @@ XnStatus xnGetOpenNIConfFilesPath(XnChar* strDest, XnUInt32 nBufSize)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+	
+
+	xnOSGetApplicationFilesDir(strDest, nBufSize);
+#else
 	nRetVal = xnOSGetEnvironmentVariable(XN_OPEN_NI_INSTALL_PATH_ENV, strDest, nBufSize);
 	if (nRetVal == XN_STATUS_OS_ENV_VAR_NOT_FOUND)
 	{
@@ -7092,6 +7106,7 @@ XnStatus xnGetOpenNIConfFilesPath(XnChar* strDest, XnUInt32 nBufSize)
 
 	nRetVal = xnOSStrAppend(strDest, XN_OPEN_NI_FILES_LOCATION, nBufSize);
 	XN_IS_STATUS_OK(nRetVal);
+#endif
 	
 	return (XN_STATUS_OK);
 }

@@ -199,7 +199,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\Wrappers\OpenNI.jni\jni.h" />
     <ClInclude Include="..\..\..\..\..\Wrappers\OpenNI.jni\jni_md.h" />
-    <ClInclude Include="..\..\..\..\..\Wrappers\OpenNI.jni\org_OpenNI_NativeMethods.h" />
+    <ClInclude Include="..\..\..\..\..\Wrappers\OpenNI.jni\org_openni_NativeMethods.h" />
     <ClInclude Include="..\..\Res\Resource-OpenNI.h" />
   </ItemGroup>
   <ItemGroup>
@@ -208,7 +208,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\Wrappers\OpenNI.jni\OpenNI.jni.cpp" />
-    <ClCompile Include="..\..\..\..\..\Wrappers\OpenNI.jni\org_OpenNI_NativeMethods.cpp" />
+    <ClCompile Include="..\..\..\..\..\Wrappers\OpenNI.jni\org_openni_NativeMethods.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\Res\OpenNI.rc" />

@@ -1,34 +1,53 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
-package org.OpenNI;
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
+package org.openni;
 
+/**
+ * Allows identification of a hardware device. <BR><BR>
+ * 
+ * This capability is used to query identification strings stored in 
+ * a hardware device.  
+ *
+ */
 public class DeviceIdentificationCapability extends CapabilityBase
 {
+	/**
+	 * Constructor to create a new Device Identification Capability
+	 * This function will not normally be called directly by application code. 
+	 * The GetDeviceIdentificationCapability() function in class Device should instead
+	 * be used to create a new capability.
+	 * @param node The device the capability will be attached to
+	 * @throws StatusException Talks to hardware, so Status Exceptions are possible
+	 */
 	public DeviceIdentificationCapability(ProductionNode node)
 			throws StatusException
 	{
 		super(node);
 	}
 
+	/**
+	 * Requests the device name string
+	 * @return String value of the Device Name stored in the hardware device
+	 * @throws StatusException Talks to hardware, so Status Exceptions are possible
+	 */
 	public String getDeviceName() throws StatusException
 	{
 		OutArg<String> result = new OutArg<String>();
@@ -37,6 +56,11 @@ public class DeviceIdentificationCapability extends CapabilityBase
 		return result.value;
 	}
 
+	/**
+	 * Requests any vendor specific data strings stored in the device
+	 * @return String value of the vendor specific data stored in the device
+	 * @throws StatusException Talks to hardware, so Status Exceptions are possible
+	 */
 	public String getVendorSpecificData() throws StatusException
 	{
 		OutArg<String> result = new OutArg<String>();
@@ -45,6 +69,11 @@ public class DeviceIdentificationCapability extends CapabilityBase
 		return result.value;
 	}
 
+	/**
+	 * Requests the serial number string stored in the device
+	 * @return String value of the serial number stored in the device
+	 * @throws StatusException Talks to hardware, so Status Exceptions are possible
+	 */
 	public String getSerialNumber() throws StatusException
 	{
 		OutArg<String> result = new OutArg<String>();

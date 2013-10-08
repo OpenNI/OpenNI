@@ -82,7 +82,7 @@ ifneq "$(LIB_NAME)" ""
 	else
 		LDFLAGS += -undefined error
 		OUTPUT_NAME = lib$(LIB_NAME).dylib
-		OUTPUT_COMMAND = $(CXX) -o $(OUTPUT_FILE) $(OBJ_FILES) $(LDFLAGS) -dynamiclib -headerpad_max_install_names
+		OUTPUT_COMMAND = $(CXX) -o $(OUTPUT_FILE) $(OBJ_FILES) $(LDFLAGS) -dynamiclib -headerpad_max_install_names -install_name $(OUTPUT_NAME)
 	endif
 endif
 ifneq "$(EXE_NAME)" ""
@@ -92,7 +92,12 @@ endif
 ifneq "$(SLIB_NAME)" ""
 	CFLAGS += -fPIC
 	OUTPUT_NAME = lib$(SLIB_NAME).a
-	OUTPUT_COMMAND = $(AR) -cq $(OUTPUT_FILE) $(OBJ_FILES)
+
+	ifneq ("$(OSTYPE)","Darwin")
+		OUTPUT_COMMAND = $(AR) -cq $(OUTPUT_FILE) $(OBJ_FILES)
+	else
+		OUTPUT_COMMAND = libtool -static -o $(OUTPUT_FILE) $(OBJ_FILES)
+	endif
 endif
 
 define CREATE_SRC_TARGETS

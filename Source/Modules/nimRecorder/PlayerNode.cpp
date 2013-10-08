@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #include "PlayerNode.h"
 #include "DataRecords.h"
 #include <XnPropNames.h>
@@ -41,7 +40,7 @@
 	#ifdef __WIN32
 		#define DEBUG_LOG_RECORD __noop
 	#else
-		#define DEBUG_LOG_RECORD
+		#define DEBUG_LOG_RECORD(x,y)
 	#endif
 #endif
 
@@ -256,7 +255,7 @@ XnStatus PlayerNode::UndoRecord(PlayerNode::RecordUndoInfo& undoInfo, XnUInt64 n
 	return XN_STATUS_OK;
 }
 
-DataIndexEntry* PlayerNode::FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 nTimestamp)
+DataIndexEntry* PlayerNode::FindFrameForSeekPosition(XnUInt32 nNodeID, XnUInt64 nSeekPos)
 {
 	XN_ASSERT((nNodeID != INVALID_NODE_ID) && (nNodeID < m_nMaxNodes));
 	PlayerNodeInfo* pPlayerNodeInfo = &m_pNodeInfoMap[nNodeID];
@@ -265,18 +264,18 @@ DataIndexEntry* PlayerNode::FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 
 	int first = 1;
 	int last = pPlayerNodeInfo->nFrames;
 	int mid;
-	XnUInt64 nMidTimestamp;
+	XnUInt64 nMidPos;
 
 	while (first <= last)
 	{
 		mid = (first + last) / 2;
-		nMidTimestamp = pPlayerNodeInfo->pDataIndex[mid].nTimestamp;
+		nMidPos = pPlayerNodeInfo->pDataIndex[mid].nSeekPos;
 
-		if (nMidTimestamp > nTimestamp)
+		if (nMidPos > nSeekPos)
 		{
 			last = mid - 1;
 		}
-		else if (nMidTimestamp < nTimestamp)
+		else if (nMidPos < nSeekPos)
 		{
 			first = mid + 1;
 		}
@@ -315,7 +314,7 @@ DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnU
 	{
 		if (m_pNodeInfoMap[i].bIsGenerator && i != nNodeID)
 		{
-			m_aSeekTempArray[i] = FindTimestampInDataIndex(i, pDestFrame->nTimestamp);
+			m_aSeekTempArray[i] = FindFrameForSeekPosition(i, pDestFrame->nSeekPos);
 			if (m_aSeekTempArray[i] != NULL && m_aSeekTempArray[i]->nConfigurationID != pCurrentFrame->nConfigurationID)
 			{
 				xnLogVerbose(XN_MASK_OPEN_NI, "Seeking from %u to %u: Slow seek being used (configuration was changed between source and destination frames or other nodes)", pPlayerNodeInfo->nCurFrame, nDestFrame);

@@ -26,7 +26,7 @@ DOXYFILE_ENCODING      = UTF-8
 # identify the project. Note that if you do not use Doxywizard you need 
 # to put quotes around the project name if it contains spaces.
 
-PROJECT_NAME = "OpenNI 1.5.4"
+PROJECT_NAME = "OpenNI 1.5.8"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. 
 # This could be handy for archiving the generated documentation or 
@@ -1002,7 +1002,7 @@ DOCSET_BUNDLE_ID       = org.doxygen.Project
 # the documentation publisher. This should be a reverse domain-name style 
 # string, e.g. com.mycompany.MyDocSet.documentation.
 
-DOCSET_PUBLISHER_ID    = org.OpenNI
+DOCSET_PUBLISHER_ID    = org.openni
 
 # The GENERATE_PUBLISHER_NAME tag identifies the documentation publisher.
 

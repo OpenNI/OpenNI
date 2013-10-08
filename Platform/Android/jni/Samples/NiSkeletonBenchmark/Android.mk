@@ -15,4 +15,6 @@ LOCAL_SHARED_LIBRARIES := libc libusb OpenNI
 
 LOCAL_MODULE := NiSkeletonBenchmark
 
+LOCAL_LDLIBS += -llog
+
 include $(BUILD_EXECUTABLE)

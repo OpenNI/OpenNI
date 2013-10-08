@@ -15,4 +15,6 @@ LOCAL_SHARED_LIBRARIES := libusb OpenNI
 
 LOCAL_MODULE := niLicense
 
+LOCAL_LDLIBS += -llog
+
 include $(BUILD_EXECUTABLE)

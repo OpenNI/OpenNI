@@ -17,7 +17,7 @@
     <ClInclude Include="..\..\..\..\..\Wrappers\OpenNI.jni\jni_md.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\Wrappers\OpenNI.jni\org_OpenNI_NativeMethods.h">
+    <ClInclude Include="..\..\..\..\..\Wrappers\OpenNI.jni\org_openni_NativeMethods.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Res\Resource-OpenNI.h">
@@ -36,7 +36,7 @@
     <ClCompile Include="..\..\..\..\..\Wrappers\OpenNI.jni\OpenNI.jni.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\Wrappers\OpenNI.jni\org_OpenNI_NativeMethods.cpp">
+    <ClCompile Include="..\..\..\..\..\Wrappers\OpenNI.jni\org_openni_NativeMethods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

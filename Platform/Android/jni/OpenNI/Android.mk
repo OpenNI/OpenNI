@@ -24,11 +24,13 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../../../../Include/ \
 	$(LOCAL_PATH)/../../../../Source/ \
 	$(LOCAL_PATH)/../../../../Externals/TinyXml/ \
-	$(LOCAL_PATH)/../External/libusb-1.0.8/libusb \
+	$(LOCAL_PATH)/../External/libusb/libusb \
 
 LOCAL_CFLAGS:= -fvisibility=hidden -DXN_EXPORTS
 
-LOCAL_LDFLAGS += -Wl,--export-dynamic --dynamic-linker 
+LOCAL_LDFLAGS += -Wl,--export-dynamic -llog
+
+LOCAL_LDLIBS += -llog
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../../Include
 LOCAL_SHARED_LIBRARIES := libusb 

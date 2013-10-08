@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #ifndef __XN_CPP_WRAPPER_H__
 #define __XN_CPP_WRAPPER_H__
 
@@ -3182,6 +3181,22 @@ namespace xn
 		{
 			_UnregisterFromStateChange(xnUnregisterFromViewPointChange, GetHandle(), hCallback);
 		}
+
+		/**
+		 * @brief Gets a single pixel coordinates in an alternative view point. This method uses current frame data.
+		 *
+		 * @param	other		[in]	The view point to translate to.
+		 * @param	x			[in]	X-coordinate of the pixel to be translated
+		 * @param	y			[in]	Y-coordinate of the pixel to be translated
+		 * @param	altX		[out]	X-coordinate of the pixel in the alternative view point
+		 * @param	altY		[out]	Y-coordinate of the pixel in the alternative view point
+		 *
+		 * @returns XN_STATUS_INVALID_OPERATION	Generator doesn't support this method.
+		 */
+		XnStatus GetPixelCoordinatesInViewPoint(ProductionNode& other, XnUInt32 x, XnUInt32 y, XnUInt32& altX, XnUInt32& altY)
+		{
+			return xnGetPixelCoordinatesInViewPoint(GetHandle(), other.GetHandle(), x, y, &altX, &altY);
+		}
 	};
 
 	/**
@@ -4533,6 +4548,17 @@ namespace xn
 			return GeneralIntCapability(GetHandle(), XN_CAPABILITY_EXPOSURE);
 		}
 
+		/**
+		 * Gets an @ref GeneralIntCapability object for accessing Auto Exposure functionality.
+		 * It is the application responsibility to check first if @ref XN_CAPABILITY_AUTO_EXPOSURE
+		 * is supported by calling @ref IsCapabilitySupported().
+		 */
+		inline GeneralIntCapability GetAutoExposureCap()
+		{
+			return GeneralIntCapability(GetHandle(), XN_CAPABILITY_AUTO_EXPOSURE);
+		}
+		
+		
 		/**
 		 * Gets an @ref GeneralIntCapability object for accessing Iris functionality.
 		 * It is the application responsibility to check first if @ref XN_CAPABILITY_IRIS

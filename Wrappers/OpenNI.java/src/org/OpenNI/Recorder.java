@@ -1,26 +1,37 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
-package org.OpenNI;
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
+package org.openni;
 
+/**
+ * Allows recording of the output from another Production Node. <BR><BR>
+ *
+ * OpenNI's recording functionality can be used to record the output of a Production Node for later
+ * playback.  This can be used for creating applications that record and playback image, depth, IR, and 
+ * audio data.  It is also useful for algorithmic testing, since it allows for repeated testing of different
+ * algorithms with identical input data sets.  It also allows for the simulation of a sensor when actual
+ * hardware is not available for whatever reason.
+ * 
+ * The recorder can record the output of a specific node, or any subset of all the nodes in the current context.
+ *
+ */
 public class Recorder extends ProductionNode
 {
 	Recorder(Context context, long nodeHandle, boolean addRef) throws StatusException
@@ -67,6 +78,11 @@ public class Recorder extends ProductionNode
 		return pDest.value;
 	}
 	
+	/** Specifies that the given node should be included while recording, using the specified codec
+	 * @param node Production Node to be recorded
+	 * @param codec Codec to be used to record data from the node
+	 * @throws StatusException Potentially triggered by disk access and hardware sensor access
+	 */
 	public void addNodeToRecording(ProductionNode node, CodecID codec) throws StatusException
 	{
 		int status = NativeMethods.xnAddNodeToRecording(toNative(), node.toNative(), codec.toNative());
@@ -84,6 +100,10 @@ public class Recorder extends ProductionNode
 		WrapperUtils.throwOnError(status);
 	}
 	
+	/**
+	 * Starts recording.
+	 * @throws StatusException We are potentially accessing disk and hardware, so exceptions are possible
+	 */
 	public void Record() throws StatusException
 	{
 		int status = NativeMethods.xnRecord(toNative());

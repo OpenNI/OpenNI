@@ -1,0 +1,12 @@
+OpenNI 1.x
+Copyright (c) 2012 PrimeSense Ltd.
+
+This product is licensed under the Apache License, Version 2.0 (the "License");
+
+You should have received a copy of the Apache License
+along with OpenNI. If not, see:
+    http://www.apache.org/licenses/LICENSE-2.0  
+
+This software is based in part on the work of the Independent JPEG Group.
+
+OpenNI uses TinyXML for its implementation (www.sourceforge.net/projects/tinyxml).
