@@ -19,7 +19,7 @@
 *                                                                            *
 *****************************************************************************/
 #include <jni.h>
-#include "org_openni_NativeMethods.h"
+#include "org_OpenNI_NativeMethods.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -43,7 +43,7 @@ typedef union {
 
 extern JavaVM* g_pVM;
 
-static const char *classPathName = "org/openni/NativeMethods";
+static const char *classPathName = "org/OpenNI/NativeMethods";
 
 #include "methods.inl"
 
