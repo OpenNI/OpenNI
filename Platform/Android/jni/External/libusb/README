@@ -20,3 +20,12 @@ http://libusb.org/wiki/MailingList
 
 - Peter Stuge <peter@stuge.se>
 (use the mailing list rather than mailing developers directly)
+
+**********************
+NOTE
+**********************
+This is a modified version of the library. Some modifications were made by PrimeSense
+to overcome some permission issues on Android.
+All modifications are marked with the following line before and after the patch:
+
+// *** PrimeSense patch for Android ***

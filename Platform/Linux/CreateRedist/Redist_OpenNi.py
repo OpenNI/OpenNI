@@ -294,6 +294,7 @@ logger.info("Copying files to redist dir...")
 
 #license
 shutil.copy("../../LICENSE", REDIST_DIR)
+shutil.copy("../../NOTICE", REDIST_DIR)
 
 #lib
 if ostype == "Darwin":

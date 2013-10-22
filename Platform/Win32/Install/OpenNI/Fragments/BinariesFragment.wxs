@@ -7,6 +7,9 @@
       <Component Id="LICENSE" Guid="*">
         <File Id="fil04BD68110BAAE6738D69A12AA064B5B9" KeyPath="yes" Source="$(var.OpenNIFilesDir)\LICENSE" />
       </Component>
+      <Component Id="NOTICE" Guid="*">
+        <File Id="fil04BD68110BAAE6738D69A12AA064B5B8" KeyPath="yes" Source="$(var.OpenNIFilesDir)\NOTICE" />
+      </Component>
       <Directory Id="dir62F52A486FD7E5CC0678D32FDE0B6B51" Name="Data">
         <Component Id="cmp14657BC5BBC8A9B152526BB875809D9D" Guid="33EF8427-C3AB-42ED-8D3B-701641EBD580" KeyPath="yes">
           <CreateFolder />
@@ -80,6 +83,7 @@
     <ComponentGroup Id="OpenNIBinaryFiles">
       <ComponentRef Id="cmp14657BC5BBC8A9B152526BB875809D9D"/>
       <ComponentRef Id="LICENSE"/>
+      <ComponentRef Id="NOTICE"/>
       <ComponentRef Id="niLicense"/>
       <ComponentRef Id="nimCodecs"/>
       <ComponentRef Id="nimMockNodes"/>

@@ -131,6 +131,7 @@ class RedistOpenNI(redist_base.RedistBase):
 
         #license
         os.system ("copy \"..\\..\\LICENSE\" Redist")
+        os.system ("copy \"..\\..\\NOTICE\" Redist")
 
         #bin
         os.system ("copy " + self.bin_dir + "\\Release\\OpenNI*.dll Redist\\" + self.bin_dir)
