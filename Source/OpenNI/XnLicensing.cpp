@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -83,15 +82,13 @@ public:
 	}
 };
 
-XN_DECLARE_LIST(XnLicenseXml, XnLicenseXmlList);
-
-class XnLicensesXml : public XnLicenseXmlList
+class XnLicensesXml : public XnListT<XnLicenseXml>
 {
 public:
 	TiXmlElement ToElement() const
 	{
 		TiXmlElement element(XN_XML_LICENSES_ROOT);
-		for (XnLicenseXmlList::ConstIterator it = begin(); it != end(); ++it)
+		for (ConstIterator it = Begin(); it != End(); ++it)
 		{
 			const XnLicenseXml& license = *it;
 			element.InsertEndChild(license.ToElement());
@@ -211,7 +208,7 @@ XN_C_API XnStatus xnRegisterGlobalLicense(XnLicense* pLicense)
 
 	// check if it's already there
 	XnBool bFound = FALSE;
-	for (XnLicenseXmlList::ConstIterator it = licenses.begin(); it != licenses.end(); ++it)
+	for (XnLicensesXml::ConstIterator it = licenses.Begin(); it != licenses.End(); ++it)
 	{
 		const XnLicenseXml& license = *it;
 		if (strcmp(license.strVendor, pLicense->strVendor) == 0 && strcmp(license.strKey, pLicense->strKey) == 0)
@@ -244,7 +241,7 @@ XN_C_API XnStatus xnUnregisterGlobalLicense(XnLicense* pLicense)
 
 	// check if it's there
 	XnBool bFound = FALSE;
-	for (XnLicenseXmlList::ConstIterator it = licenses.begin(); it != licenses.end(); ++it)
+	for (XnLicensesXml::ConstIterator it = licenses.Begin(); it != licenses.End(); ++it)
 	{
 		const XnLicenseXml& license = *it;
 		if (strcmp(license.strVendor, pLicense->strVendor) == 0 && strcmp(license.strKey, pLicense->strKey) == 0)
@@ -279,7 +276,7 @@ XN_C_API XnStatus xnPrintRegisteredLicenses()
 	printf("%-20s%-20s\n", "VENDOR", "KEY");
 	printf("%-20s%-20s\n", "======", "===");
 
-	for (XnLicenseXmlList::ConstIterator it = licenses.begin(); it != licenses.end(); ++it)
+	for (XnLicensesXml::ConstIterator it = licenses.Begin(); it != licenses.End(); ++it)
 	{
 		const XnLicenseXml& license = *it;
 		printf("%-20s%-20s\n", license.strVendor, license.strKey);
@@ -298,7 +295,7 @@ XnStatus xnLoadLicensesFromElement(XnContext* pContext, TiXmlElement* pElem)
 	XN_IS_STATUS_OK(nRetVal);
 
 	// now add
-	for (XnLicensesXml::ConstIterator it = licenses.begin(); it != licenses.end(); ++it)
+	for (XnLicensesXml::ConstIterator it = licenses.Begin(); it != licenses.End(); ++it)
 	{
 		const XnLicenseXml& license = *it;
 		nRetVal = xnAddLicense(pContext, &license);
@@ -343,7 +340,7 @@ XN_C_API XnStatus xnAddLicense(XnContext* pContext, const XnLicense* pLicense)
 	XN_VALIDATE_INPUT_PTR(pContext);
 	XN_VALIDATE_INPUT_PTR(pLicense);
 
-	nRetVal = pContext->pLicenses->AddLast(*pLicense);
+	nRetVal = pContext->licenses.AddLast(*pLicense);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
@@ -358,7 +355,7 @@ XN_C_API XnStatus xnEnumerateLicenses(XnContext* pContext, XnLicense** paLicense
 	*paLicenses = NULL;
 	*pnCount = 0;
 
-	XnUInt32 nCount = pContext->pLicenses->Size();
+	XnUInt32 nCount = pContext->licenses.Size();
 
 	// allocate list
 	XnLicense* pList;
@@ -366,7 +363,7 @@ XN_C_API XnStatus xnEnumerateLicenses(XnContext* pContext, XnLicense** paLicense
 
 	// copy data
 	XnUInt32 i = 0;
-	for (XnLicenseList::ConstIterator it = pContext->pLicenses->begin(); it != pContext->pLicenses->end(); ++it, ++i)
+	for (XnLicenseList::ConstIterator it = pContext->licenses.Begin(); it != pContext->licenses.End(); ++it, ++i)
 	{
 		pList[i] = *it;
 	}

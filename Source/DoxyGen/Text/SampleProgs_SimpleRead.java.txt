@@ -1,0 +1,77 @@
+/**
+@page smpl_simple_read_java SimpleRead.java - sample program (Java)
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- SimpleRead.java
+
+
+	This part describes the SimpleRead sample program in the Java language.
+	
+	The documentation describes the sample program's code from the top of the program file(s) to bottom.
+	
+	Every OpenNI feature is described the first time it appears in this sample program. Further appearances of the same feature are not decribed again.	
+	
+	@section srj_path_decl  Declaration for Script File Path
+	
+		The following declaration sets the full path to an OpenNI XML script file of a OpenNI @ref prod_graph "production graph". The production graph is the main object model in OpenNI. It is a network of objects &ndash; called production nodes that implement Natural Interaction operations. 		
+		@code			
+			public static final String SAMPLES_XML = "../../../../Data/SamplesConfig.xml";
+		@endcode			
+
+	@section srj_node_inits  Node Declarations and Initializations
+	
+		The following statement declares a @ref xn::ScriptNode "ScriptNode" object. The script node object loads and contains the OpenNI script and is the base node for the production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object model.
+		@code
+			OutArg<ScriptNode> scriptNodeArg = new OutArg<ScriptNode>();
+		@endcode			
+
+		The following statement declares a @ref xn::Context "Context" object and creates the production graph from an OpenNI XML script file. The context is the workspace where the application builds an OpenNI production graph. 
+		@code
+			Context context = Context.createFromXmlFile(SAMPLES_XML, scriptNodeArg);
+		@endcode					
+
+		The following statement registers an event handler for the 'Global Error State Change' event.  The <b>Error State</b> capability allows a node implementation to notify OpenNI that it is in an error state, meaning it cannot function properly. An application can check each node's error state separately, but most of the times the application only needs to know if any one of the nodes is in an error state, and does not really care which one or how many (except for user notification purposes).
+
+		OpenNI aggregates the error state of all the nodes together into a single error state, the Global Error State, making it easier for the application to find out about current state. When the Global Error State is <code>XN_STATUS_OK</code> this means <i>all</i> the nodes are OK.
+		@code
+			context.getErrorStateChangedEvent().addObserver(pThis);
+		@endcode	
+
+		The @ref xn::Context::FindExistingNode() "FindExistingNode()" method in the following code block tries to get a reference to any production nodes in the production graph. This call specifies XN_NODE_TYPE_DEPTH to get a reference to a DepthGenerator node. A DepthGenerator node generates a depth map as an array of pixels, where each pixel is a depth value representing a distance from the sensor in millimeters. A reference to the node is returned in the depth parameter.   
+		@code
+			DepthGenerator depth;
+			nRetVal = context.FindExistingNode(XN_NODE_TYPE_DEPTH, depth);
+		@endcode	
+
+		The following is the declaration of the @ref glos_frame_object "<i>frame object</i>" for quick and easy access to data from the @ref xn::DepthGenerator "DepthGenerator" data.	
+		@code
+			DepthMetaData depthMD = new DepthMetaData();
+		@endcode		
+	
+	@section smpl_simple_read_mainloop Main Program Loop
+	
+		The main program loop repeatedly updates the data available in the node for output, and then gets the frame object (via the metadata object). The program then calculates the mid-point of the scene's 2D (two-dimensional) area.
+		
+		@subsection srj_main_upd_data Updating the Data Available for Output 
+			
+			The @ref xn::Context::WaitAnyUpdateAll() "waitAnyUpdateAll()" method in the following statement updates all generator nodes in the context that have new data available, first waiting for any of the nodes to have new data available. The application can then get the data (for example, using a metadata GetData() method). This method has a timeout.
+			@code
+				context.waitAnyUpdateAll();
+			@endcode
+				
+		@subsection srj_main_get Get the DepthGenerator's Data
+		
+			In the following statement, the @ref glos_frame_object "frame object" is generated is copied to a metadata object for quick and easy access by the application. (To be exact, only a reference to the frame data itself is passed; whereas the configuration properties are actually copied.) The node's <code>getMetaData() </code>method gets this frame object and copies it to a <code>depthMD</code> metadata object. (It passes a reference to the frame data and actually copies the frame configuration information. The metadata includes all configuration information associated with the data itself. )
+			@code				
+				depth.GetMetaData(depthMD);
+			@endcode					
+			
+			The following print statement accesses the frame data, its ID, and the frame data's associated configuration, The frame ID is the ID of the generated frame. Frame IDs are a sequential unique number with a wrap around. This method is inherited from the OutputMetaData class.
+			@code						
+				printf("Frame %d Middle point is: %u. FPS: %f\n", depthMD.FrameID(), depthMD(depthMD.XRes() / 2, depthMD.YRes() / 2), xnFPSCalc(&xnFPS));
+			@endcode
+			
+			In the above, @ref xn::MapMetaData::XRes() "XRes()" and @ref xn::MapMetaData::YRes() "YRes()" are the dimensions of the FOV in the scene. The call to <b>depthMD()</b> accesses a depth pixel through an X,Y coordinate. By calculating <b>XRes()/2</b> and <b>YRes()/2</b>, this accesses the middle pixel.					
+				
+*/
+

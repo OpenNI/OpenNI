@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #include "RecorderNode.h"
 #include "DataRecords.h"
 #include "XnPropNames.h"
@@ -40,7 +39,7 @@ RecorderNode::RecorderNode(xn::Context &context) :
 	m_pRecordBuffer(NULL),
 	m_context(context),
 	m_pPayloadData(NULL),
-	m_nGlobalStartTimeStamp(0),
+	m_nGlobalStartTimeStamp(XN_MAX_UINT64),
 	m_nGlobalMaxTimeStamp(0),
 	m_nNumNodes(0),
 	m_nConfigurationID(0)
@@ -311,7 +310,7 @@ XnStatus RecorderNode::OnNodeNewData(const XnChar* strNodeName, XnUInt64 nTimeSt
 	}
 
 	// correct timestamp according to first data recorded
-	if (m_nGlobalStartTimeStamp == 0)
+	if (m_nGlobalStartTimeStamp == XN_MAX_UINT64)
 	{
 		m_nGlobalStartTimeStamp = nTimeStamp;
 	}
@@ -450,12 +449,12 @@ XnStatus RecorderNode::FinalizeStream()
 	XN_IS_STATUS_OK(nRetVal);
 
 	/* Remove all nodes in the map. When each node is removed, we write its number of frames and max time stamp */
-	RecordedNodesInfo::ConstIterator it = m_recordedNodesInfo.begin();
-	while (it != m_recordedNodesInfo.end())
+	RecordedNodesInfo::ConstIterator it = m_recordedNodesInfo.Begin();
+	while (it != m_recordedNodesInfo.End())
 	{
 		RecordedNodesInfo::ConstIterator curr = it;
 		++it;
-		nRetVal = RemoveNode(curr.Key());
+		nRetVal = RemoveNode(curr->Key());
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
@@ -521,13 +520,13 @@ XnStatus RecorderNode::UpdateNodeSeekInfo(const XnChar* strNodeName, const Recor
 		pPayload++;
 
 		// now write the table itself
-		for (DataIndexEntryList::ConstIterator it = recordedNodeInfo.dataIndex.begin(); it != recordedNodeInfo.dataIndex.end(); ++it, ++pPayload)
+		for (DataIndexEntryList::ConstIterator it = recordedNodeInfo.dataIndex.Begin(); it != recordedNodeInfo.dataIndex.End(); ++it, ++pPayload)
 		{
 			*pPayload = *it;
 		}
 		XN_ASSERT((recordedNodeInfo.nMaxFrameNum+1) == XnUInt32(pPayload - (DataIndexEntry*)m_pPayloadData));
 
-		nRetVal = WriteToStream(strNodeName, m_pPayloadData, (XnUInt8*)pPayload - m_pPayloadData);
+		nRetVal = WriteToStream(strNodeName, m_pPayloadData, (XnUInt32)((XnUInt8*)pPayload - m_pPayloadData));
 		if (nRetVal != XN_STATUS_OK)
 		{
 			xnLogWarning(XN_MASK_OPEN_NI, "Failed to write Seek Table to file: %s", xnGetStatusString(nRetVal));
@@ -574,7 +573,16 @@ XnStatus RecorderNode::RemoveNode(const XnChar* strNodeName)
 	//We copy the node name cuz when we'll remove it from the hash it will be freed, but we need it later.
 	XnStatus nRetVal = xnOSStrCopy(strNodeNameCopy, strNodeName, sizeof(strNodeNameCopy));
 	XN_IS_STATUS_OK(nRetVal);
-	nRetVal = m_recordedNodesInfo.Remove(strNodeName, recordedNodeInfo);
+
+	RecordedNodesInfo::ConstIterator it = m_recordedNodesInfo.Find(strNodeName);
+	if (it == m_recordedNodesInfo.End())
+	{
+		return XN_STATUS_NO_MATCH;
+	}
+
+	recordedNodeInfo = it->Value();
+
+	nRetVal = m_recordedNodesInfo.Remove(it);
 	XN_IS_STATUS_OK(nRetVal);
 
 	NodeRemovedRecord record(m_pRecordBuffer, RECORD_MAX_SIZE, FALSE);

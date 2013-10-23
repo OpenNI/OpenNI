@@ -1,0 +1,56 @@
+/**
+	
+@page smpl_niviewer_stat Statistics.cpp file
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- Statistics.cpp
+
+
+	This file contains the code for calculating the statistics for the frames from the OpenNI generator nodes. 
+	
+	@section statistics_cpp_glb_decls Global Type Declarations for Statistics.cpp 	
+	
+		The XnPixelStatistics data structure is defined in Statistics.h of this sample program. 
+		@code
+			XnPixelStatistics* g_PixelStatistics = NULL;
+
+			enum XnCollectionStatus
+			{
+				NOT_COLLECTING,
+				SHOULD_COLLECT,
+				COLLECTING,
+				COLLECTION_ENDED,
+			} g_StatisticsState;
+		@endcode
+
+	
+	@section statistics_cpp_statisticsinit Function: statisticsInit() - Initializes the Statistics Collecting Mechanism
+	
+		This function initializes the statistics collecting mechanism.
+		
+		This function gets a saved @ref glos_frame_object DepthGenerator node's "frame object", assigning them to <code>pDepthMD</code>. The frame object is a snapshot of the generated data, saved as a metadata object, at a certain point in time. The @ref xn::OutputMetaData::Data() method gets a pointer to the data frame of the frame object saved in the metadata. 
+		@code
+			const DepthMetaData* pDepthMD = getDepthMetaData();
+			if (pDepthMD != NULL)
+			{
+				g_PixelStatistics = new XnPixelStatistics[pDepthMD->FullXRes() * pDepthMD->FullYRes()];
+			}
+		@endcode		
+		The above code uses the FullXRes() method to calculate the scaling factor between the depth map and the GL window. FullXRes() gets the full frame resolution, i.e., the entire field-of-view, ignoring cropping of the FOV in the scene.		
+		
+		In the following, the @ref xn::DepthGenerator::GetDeviceMaxDepth() method gets the maximum depth value that the DepthGenerator node can generate. The maximum depth value is a hardware specification of the sensor.
+		@code		
+			XnDepthPixel nMaxDepth = getDepthGenerator()->GetDeviceMaxDepth();
+		@endcode		
+	
+	
+	@section statistics_cpp_statisticsaddframe Function: statisticsAddFrame() - Adds a Further Data Frame to the Statistics Collection
+	
+		This function adds a further data frame to the statistics collection.
+		
+		This function uses OpenNI operation types that have already been described in this program sample.
+	
+	
+		
+		
+*/

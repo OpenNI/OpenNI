@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -81,7 +81,10 @@
   <ItemGroup>
     <Content Include="Includes\OpenNIVariables.wxi" />
     <Content Include="Resources\mainicon.ico" />
+    <Content Include="Resources\Microsoft_VC100_CRT_x64.msm" />
+    <Content Include="Resources\Microsoft_VC100_CRT_x86.msm" />
     <Content Include="Resources\Microsoft_VC90_CRT_x86.msm" />
+    <Content Include="Resources\Microsoft_VC90_CRT_x86_x64.msm" />
     <Content Include="Resources\NIHeader.bmp" />
     <Content Include="Resources\OpenNIHeader.bmp" />
   </ItemGroup>

@@ -1,0 +1,21 @@
+/**
+@page conc_capabilities Capabilities Mechanism
+
+OpenNI defines core functionality which is always supported by all node implementations of a specific node
+type. Additional optional functionality is also defined by OpenNI and exposed as "capabilities".
+The @ref xn::ProductionNode class provides the @ref xn::ProductionNode::IsCapabilitySupported "IsCapabilitySupported()" 
+method to check if this specific implementation supports a certain capability.
+
+In summary, there are two separate functionality sets: 
+- Obligatory functionality that is accessible through the methods provided by the principle OpenNI 
+  production node classes, i.e., the @ref xn::ProductionNode "ProductionNode" class and its derivatives. 
+  Developers wishing to implement their own nodes are obliged to implement these functionalities
+  (events, methods, etc.) 
+- Optional functionality that is accessible through the capabilities mechanism. The developers can 
+  optionally implement these classes and their members. The capability's functionality is then accessible 
+  through the capability's name. OpenNI supports a defined list of optional capabilities. 
+
+An example of a capability is the @ref xn::MirrorCapability "MirrorCapability" class. When this capability is 
+supported by any particular production node, the application can call its 
+@ref xn::MirrorCapability::SetMirror() "SetMirror()" method.
+*/

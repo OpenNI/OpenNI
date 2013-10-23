@@ -1,0 +1,35 @@
+/**
+@page tut_enum Enumerating possible production chains
+
+The following code shows how to fine control the enumeration process. It enumerates Production Chains
+for producing User output, reducing the options using a basic query, and then chooses the first one
+from all possibilities.
+@code
+// Build a query object
+xn::Query query;
+nRetVal = query.SetVendor("MyVendor");
+// TODO: check error code
+
+query.AddSupportedCapability(XN_CAPABILITY_SKELETON);
+// TODO: check error code
+
+// Enumerate
+xn::NodeInfoList possibleChains;
+nRetVal = context.EnumerateProductionTrees(XN_NODE_TYPE_USER, &query, possibleChains, NULL);
+// TODO: check error code
+
+// No errors so far. This means list has at least one item. Take the first one
+xn::NodeInfo selected = *possibleChains.Begin();
+
+// Create it
+nRetVal = context.CreateProductionTree(selected);
+// TODO: check error code
+
+// Take the node
+xn::UserGenerator userGen;
+nRetVal = selected.GetInstance(userGen);
+// TODO: check error code
+
+// Now we can start to use it
+@endcode
+*/

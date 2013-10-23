@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #ifndef __XN_MODULE_LOADER_H__
 #define __XN_MODULE_LOADER_H__
 
@@ -26,8 +25,8 @@
 // Includes
 //---------------------------------------------------------------------------
 #include "XnModuleInterfaceContainers.h"
-#include <XnHash.h>
-#include <XnStringsHash.h>
+#include <XnHashT.h>
+#include <XnStringsHashT.h>
 
 //---------------------------------------------------------------------------
 // Types
@@ -49,7 +48,7 @@ typedef struct XnModuleInstance
 class XnModuleLoader
 {
 public:
-	XnModuleLoader(XnContext* pContext);
+	XnModuleLoader();
 	~XnModuleLoader();
 
 	typedef enum
@@ -64,8 +63,8 @@ public:
 	XnStatus Init();
 	XnStatus AddModule(XnOpenNIModuleInterface* pInterface, const XnChar* strConfigDir, const XnChar* strName);
 	XnStatus AddExportedNode(XnVersion& moduleOpenNIVersion, XnModuleExportedProductionNodeInterface* pInterface, const XnChar* strConfigDir);
-	XnStatus Enumerate(XnProductionNodeType Type, XnNodeInfoList* pList, XnEnumerationErrors* pErrors);
-	XnStatus CreateRootNode(XnNodeInfo* pTree, XnModuleInstance** ppInstance);
+	XnStatus Enumerate(XnContext* pContext, XnProductionNodeType Type, XnNodeInfoList* pList, XnEnumerationErrors* pErrors);
+	XnStatus CreateRootNode(XnContext* pContext, XnNodeInfo* pTree, XnModuleInstance** ppInstance);
 	void DestroyModuleInstance(XnModuleInstance* pInstance);
 
 #if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
@@ -119,14 +118,12 @@ private:
 	class XnDescriptionKeyManager
 	{
 	public:
-		static XnHashValue Hash(XnProductionNodeDescription const& key);
+		static XnHashCode Hash(XnProductionNodeDescription const& key);
 		static XnInt32 Compare(XnProductionNodeDescription const& key1, XnProductionNodeDescription const& key2);
 	};
 
-	XN_DECLARE_DEFAULT_VALUE_TRANSLATOR(XnProductionNodeDescription, XnGeneratorDescriptionTranslator);
-	XN_DECLARE_DEFAULT_VALUE_TRANSLATOR(XnLoadedGenerator, XnLoadedGeneratorTranslator);
-	XN_DECLARE_HASH(XnProductionNodeDescription, XnLoadedGenerator, XnLoadedGeneratorsHash, XnGeneratorDescriptionTranslator, XnLoadedGeneratorTranslator, XnDescriptionKeyManager);
-	XN_DECLARE_STRINGS_HASH(XnProductionNodeType, ExtendedNodeTypesHash);
+	typedef XnHashT<XnProductionNodeDescription, XnLoadedGenerator, XnDescriptionKeyManager> XnLoadedGeneratorsHash;
+	typedef XnStringsHashT<XnProductionNodeType> ExtendedNodeTypesHash;
 
 #if !XN_PLATFORM_SUPPORTS_DYNAMIC_LIBS
 	typedef struct RegisteredModule
@@ -135,13 +132,12 @@ private:
 		const XnChar* strConfigDir;
 		const XnChar* strName;
 	} RegisteredModule;
-	XN_DECLARE_LIST(RegisteredModule, RegisteredModulesList);
+	typedef XnListT<RegisteredModule> RegisteredModulesList;
 	static RegisteredModulesList sm_modulesList;
 #endif
 
 	XnLoadedGeneratorsHash m_AllGenerators;
 	ExtendedNodeTypesHash m_ExtendedNodeTypesHash;
-	XnContext* m_pContext;
 	LoadingMode m_loadingMode;
 };
 

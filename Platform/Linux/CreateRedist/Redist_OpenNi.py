@@ -1,24 +1,23 @@
-#/***************************************************************************
-#*                                                                          *
-#*  OpenNI 1.x Alpha                                                        *
-#*  Copyright (C) 2011 PrimeSense Ltd.                                      *
-#*                                                                          *
-#*  This file is part of OpenNI.                                            *
-#*                                                                          *
-#*  OpenNI is free software: you can redistribute it and/or modify          *
-#*  it under the terms of the GNU Lesser General Public License as published*
-#*  by the Free Software Foundation, either version 3 of the License, or    *
-#*  (at your option) any later version.                                     *
-#*                                                                          *
-#*  OpenNI is distributed in the hope that it will be useful,               *
-#*  but WITHOUT ANY WARRANTY; without even the implied warranty of          *
-#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
-#*  GNU Lesser General Public License for more details.                     *
-#*                                                                          *
-#*  You should have received a copy of the GNU Lesser General Public License*
-#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
-#*                                                                          *
-#***************************************************************************/
+#/****************************************************************************
+#*                                                                           *
+#*  OpenNI 1.x Alpha                                                         *
+#*  Copyright (C) 2012 PrimeSense Ltd.                                       *
+#*                                                                           *
+#*  This file is part of OpenNI.                                             *
+#*                                                                           *
+#*  Licensed under the Apache License, Version 2.0 (the "License");          *
+#*  you may not use this file except in compliance with the License.         *
+#*  You may obtain a copy of the License at                                  *
+#*                                                                           *
+#*      http://www.apache.org/licenses/LICENSE-2.0                           *
+#*                                                                           *
+#*  Unless required by applicable law or agreed to in writing, software      *
+#*  distributed under the License is distributed on an "AS IS" BASIS,        *
+#*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+#*  See the License for the specific language governing permissions and      *
+#*  limitations under the License.                                           *
+#*                                                                           *
+#****************************************************************************/
 #
 
 
@@ -110,7 +109,7 @@ def fix_file(arg,dirname,fname):
         if os.path.isdir(filePath):
             continue
 
-        ext = ['cpp','h','ini','cs','java']
+        ext = ['c','cpp','h','ini','cs','java']
         if filename == "Makefile" or filename.partition(".")[2] in ext:
             #print "Fixing: " + filePath
             tempName=filePath+'~~~'
@@ -123,6 +122,7 @@ def fix_file(arg,dirname,fname):
                 s = re.sub(r"../../../../../Samples/[\w.]+/?",r"./",s)
                 s = re.sub(r"../../../../Data/SamplesConfig.xml",r"../../Config/SamplesConfig.xml",s)
                 s = re.sub(r"../../Res/",r"../Res/",s)
+                s = re.sub(r"include ../../Common/CommonDefs.mak",r"include ../Build/Common/CommonDefs.mak",s)
                 s = re.sub(r"include ../../Common/CommonCppMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonCppMakefile",s)
                 s = re.sub(r"include ../../Common/CommonCSMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonCSMakefile",s)
                 s = re.sub(r"include ../../Common/CommonJavaMakefile",r"LIB_DIRS += ../../Lib\ninclude ../Build/Common/CommonJavaMakefile",s)
@@ -183,7 +183,7 @@ else:
         PLATFORM = "x64"
     elif machinetype == "x86" or machinetype == "i386" or machinetype == "i686":
         PLATFORM = "x86"
-    elif machinetype == "arm":
+    elif machinetype[:3] == "arm":
         PLATFORM = "Arm"
     else:
         print "Unknown platform:", machinetype
@@ -293,8 +293,8 @@ print "* Copying files to redist dir..."
 logger.info("Copying files to redist dir...")
 
 #license
-shutil.copy("../../GPL.txt", REDIST_DIR)
-shutil.copy("../../LGPL.txt", REDIST_DIR)
+shutil.copy("../../LICENSE", REDIST_DIR)
+shutil.copy("../../NOTICE", REDIST_DIR)
 
 #lib
 if ostype == "Darwin":
@@ -320,9 +320,9 @@ if PLATFORM == 'x86' or PLATFORM == 'x64':
         MonoDetected = 1
         
 # java wrapper
-shutil.copy("Bin/" + PLATFORM + "-Release/org.OpenNI.jar", REDIST_DIR + "/Jar")
-shutil.copy("Bin/" + PLATFORM + "-Release/org.OpenNI.jar", REDIST_DIR + "/Samples/Bin/" + PLATFORM + "-Debug")
-shutil.copy("Bin/" + PLATFORM + "-Release/org.OpenNI.jar", REDIST_DIR + "/Samples/Bin/" + PLATFORM + "-Release")
+shutil.copy("Bin/" + PLATFORM + "-Release/org.openni.jar", REDIST_DIR + "/Jar")
+shutil.copy("Bin/" + PLATFORM + "-Release/org.openni.jar", REDIST_DIR + "/Samples/Bin/" + PLATFORM + "-Debug")
+shutil.copy("Bin/" + PLATFORM + "-Release/org.openni.jar", REDIST_DIR + "/Samples/Bin/" + PLATFORM + "-Release")
 
 #docs
 shutil.copytree("../../Source/DoxyGen/html", REDIST_DIR + "/Documentation/html")

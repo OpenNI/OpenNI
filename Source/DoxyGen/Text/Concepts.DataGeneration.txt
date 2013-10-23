@@ -1,0 +1,21 @@
+/**
+@page conc_generation Data Generation
+
+Production nodes that also produce data are called generators. To ease 
+configuration of such generators, they are designed so that they do not 
+actually produce any data until specifically asked to do so. This allows 
+the application to configure any property it needs before actually 
+starting to generate data. Starting generation is done using @ref 
+xnStartGenerating() or @ref xn::Generator::StartGenerating(). The 
+application may sometimes want to stop the generation without actually 
+destroying the node (for example, if it does not need this data in 
+current state, but does not want to loose configuration changes, or 
+wants to have the option to quickly resume generating data (instead of 
+having to initialize it again). To do so, the application may call @ref 
+xnStopGenerating() or @ref xn::Generator::StopGenerating. 
+
+In addition, for easier access, OpenNI supplies two functions that 
+control <i>all</i> generators in the context: @ref 
+xn::Context::StartGeneratingAll() and @ref 
+xn::Context::StopGeneratingAll(). 
+*/

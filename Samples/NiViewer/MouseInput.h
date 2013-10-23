@@ -1,32 +1,31 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 // --------------------------------
 // Types
 // --------------------------------
 typedef struct
 {
-	unsigned int X;
-	unsigned int Y;
-} UIntPair;
+	int X;
+	int Y;
+} IntPair;
 
 typedef struct
 {
@@ -44,11 +43,11 @@ typedef struct
 
 typedef struct  
 {
-	unsigned int uBottom;
-	unsigned int uLeft;
-	unsigned int uTop;
-	unsigned int uRight;
-} UIntRect;
+	int uBottom;
+	int uLeft;
+	int uTop;
+	int uRight;
+} IntRect;
 
 typedef enum SelectionState
 {
@@ -57,8 +56,8 @@ typedef enum SelectionState
 	SELECTION_DONE
 } SelectionState;
 
-typedef void (*SelectionRectangleChangedPtr)(SelectionState state, UIntRect selection);
-typedef void (*CursorMovedPtr)(UIntPair location);
+typedef void (*SelectionRectangleChangedPtr)(SelectionState state, IntRect selection);
+typedef void (*CursorMovedPtr)(IntPair location);
 
 // --------------------------------
 // Functions

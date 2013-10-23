@@ -1,0 +1,59 @@
+/**
+
+@page conc_context Contexts
+
+The @ref xn::Context "Context" object is the entry point to OpenNI. The 
+Context object holds the complete state of applications using OpenNI. 
+This includes each application's entire production graph, which holds 
+the list of all the application's nodes. 
+
+Typically, applications will require just a single context. However, a 
+single application can create and use more than one context. (By 
+analogy, this is in the same way that computer users typically require 
+just a single partition on a computer disk drive, but more advanced 
+users can require more.) 
+
+Contexts cannot share information. For example, a middleware node cannot 
+use a device node from another context. The context must be initialized 
+once, prior to its initial use. At this point, all plugged-in modules 
+are loaded and analyzed. 
+ 
+In order to use any of the OpenNI functionality you must first construct 
+a Context object and initialize it. Prior to this, the application 
+cannot do anything with OpenNI. For this purpose, the Context class 
+provides several initialization functions, e.g., @ref 
+xn::Context::Init() and @ref xn::Context::InitFromXmlFile(). Once you 
+have an initialized Context object you then proceed to create @ref 
+xn::ProductionNode "production nodes". Whenever you create production 
+nodes in OpenNI, you create them as associated with the Context object. 
+
+The Context object provides a number of categories of methods for 
+controlling all the nodes of the context. A selection of initialization 
+methods is provided so that you can use the one that is most 
+appropriate. 
+
+When an application doesn't require the context anymore, it should 
+release it by calling the @ref xn::Context::Release() method. The 
+context object uses a reference count mechanism, and when the final 
+reference to the context is released, the context will be destroyed, 
+freeing all memory. Note that the Context object destructor calls the 
+@ref xn::Context::Release() method. 
+
+There are five major initialization methods: @ref xn::Context::Init, 
+@ref xn::Context::RunXmlScriptFromFile, @ref 
+xn::Context::InitFromXmlFile, @ref xn::Context::CreateAnyProductionTree, 
+and @ref xn::Context::OpenFileRecording. 
+
+<H2>Initializing and Deinitializing an OpenNI Context</H2>
+
+Initialization must be performed before using any OpenNI functionality. 
+Similarly you must not call any OpenNI functions after deinitialization. 
+
+Some initialization methods return the <code>pErrors</code> parameter 
+containing an @ref xn::EnumerationErrors object indicating which node(s) 
+could not be created and the reasons why they could not be created. 
+Also, each OpenNI plug-in module can, when asked to create a node, 
+report why it cannot create it right now; for example, the device is not 
+connected to the system, or because the license has expired. 
+*/
+

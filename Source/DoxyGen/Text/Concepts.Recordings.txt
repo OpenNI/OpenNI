@@ -1,0 +1,71 @@
+/**
+@page conc_recordings Recordings
+
+Recordings are a powerful debug tool. It allows full capturing of the 
+data and then later streaming it back so that application can simulate 
+the exact same state they were in. 
+
+OpenNI supports recordings of the <i>Production Nodes</i> graph - both 
+the entire configuration of each node, and a capturing of all the data 
+that streamed from the node. 
+
+OpenNI has a framework for recording data and for playing it back (using 
+@ref conc_mocks). It also comes with the @e nimRecorder module, which 
+defines a new file format - .ONI - and implements a Recorder node and a 
+Player node for this format. 
+
+@section record_rec Making a Recording
+
+	To record, an application should create a Recorder node, and set its 
+	destination (the file name to write to). Then, it needs to add to it 
+	every node it wants to record. When adding a node to the recorder, the 
+	recorder reads its configuration and records it. It also registers to 
+	every possible event of the node, so that when any configuration change 
+	takes place, it will also be recorded. 
+
+	Once all required nodes were added, the application can then read data 
+	from the nodes and record it. Recording of data can be acheived either 
+	by explicitly calling the @ref xnRecord() function, or by using one of 
+	the <i>UpdateAll</i> functions (see @ref conc_updating_data). 
+
+	Applications that init OpenNI using an XML file can easily record their 
+	session without any change to the code. They simply need to create an 
+	additional node in the XML file for the recorder, add nodes to it, and 
+	when the application calls one of the <i>UpdateAll</i> functions, 
+	recording will take place. 
+
+@section record_play Playing Back a Recording
+
+	To play a file recording, use the @ref xnContextOpenFileRecording() 
+	function (@ref xn::Context::OpenFileRecording()). OpenNI will open the 
+	file, create a mock node for each node in the file, and fill it with the 
+	recorded configuration. 
+
+	Next, an application may take the nodes it needs by calling @ref 
+	xnFindExistingNodeByType(), and use them normally. Note that <b>nodes 
+	created by the player are locked for changes</b>, as the configuration 
+	must remain the recorded configuration. 
+
+	Applications that init OpenNI using an XML file can easily replace 
+	their input so instead of reading from a real-time device they would 
+	read from a recording by simply replacing the nodes in the xml with a 
+	<b>Recording</b> element (see @ref xmlrec). 
+
+@section record_lim Limitations
+
+	In current version some limitations apply to recordings:
+
+	- Not all node types are supported for recording. Supported types are:
+	  - Device
+	  - Depth
+	  - Image
+	  - IR
+	  - Audio
+
+	- Opening more than one recording can cause undetermined behavior and is 
+	  not supported.
+
+	- Opening a recording and a real-time sensor can cause undetermined 
+	  behavior is not supported.
+
+*/

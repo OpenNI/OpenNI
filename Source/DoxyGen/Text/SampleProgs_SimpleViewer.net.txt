@@ -1,0 +1,181 @@
+/**
+@page smpl_simple_view_net SimpleViewer.net - sample program  (C#/.NET)
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- SimpleViewer.net/MainWindow.cs
+
+	This section describes the SimpleViewer.net sample program in the C# language for .NET. 
+	
+	This sample program demonstrates using a @ref xn::DepthGenerator "DepthGenerator" node to build an accumulative histogram from depth values.
+	
+	The documentation describes the sample program's code from the top of the program file(s) to bottom.
+	
+	Every OpenNI feature is described the first time it appears in this sample program. Further appearances of the same feature are not decribed again.	
+
+
+	@section svcs_glb_dcl_blk_ref "Declaration Block" section		
+	
+		The reader may find it convenient to study the global declaration block before continuing to study the code statements. The global declaration block is documented later in this section, corresponding to its position in the program file &ndash; see @ref svcs_glb_dcl_blk .
+		
+			
+	@section svcs_func_main MainWindow()
+		
+		@subsection svcs_scrpt_sets_up_pg Use Script to Set up a Context and Production Graph 
+			
+			The @ref xn::Context::InitFromXmlFile() "CreateFromXmlFile()" method is a shorthand combination of two other initialization methods &mdash; <code>Create()</code> and then @ref xn::Context::RunXmlScriptFromFile() "RunXmlScriptFromFile()" &mdash; which initializes the @ref xn::Context  "Context" object and then creates a production graph from an XML file. The method returns a scriptNode which is the owner of all the nodes created by the script. This node should be kept until those nodes aren't needed anymore.
+			
+			The XML script file describes all the nodes you want to create. For each node description in the XML file, this method creates a node in the production graph.		
+			@code
+				InitializeComponent();
+				this.context = Context.CreateFromXmlFile(SAMPLE_XML_FILE, out scriptNode);
+			@endcode		
+			
+			Assuming that the above call to CreateFromXmlFile succeeded, a production graph is then created. 
+			
+
+		@subsection svcs_get_dg_node_from_pg Get a DepthGenerator Node from the Production Graph		
+			
+			The @ref xn::Context::FindExistingNode() "FindExistingNode()" method in the following code block tries to get a reference to any one of the production nodes. This call specifies <code>NodeType.Depth</code> to get a reference to a @ref xn::DepthGenerator "DepthGenerator" node. A DepthGenerator node generates a depth map as an array of pixels, where each pixel is a depth value representing a distance from the sensor in millimeters. A reference to the node is returned in the depth parameter.   
+			@code
+				this.depth = context.FindExistingNode(NodeType.Depth) as DepthGenerator;
+			@endcode
+			
+			The code block that follows the FindExistingNode() call just checks that OpenNI found a DepthGenerator node in the production graph. 
+			@code
+				if (this.depth == null)
+				{
+					throw new Exception("Viewer must have a depth node!");
+				}
+			@endcode			
+			
+		@subsection svcs_set_ujp_hist_array Using DepthGenerator characterstics to set up Histogram and Image Buffer
+		
+			The following sets up the array for the histogram array that is a key part of this sample program. (This is not OpenNI specific.) xn::DepthGenerator::GetDeviceMaxDepth() "GetDeviceMaxDepth" gets the maximum depth (depth resolution) that the DepthGenerator node can produce.
+		    This is the same as the resolution of the depth axis 
+		    (i.e., @ref xn::DepthGenerator::GetDeviceMaxDepth() "DeviceMaxDepth()" + 1). 
+			@code
+				this.histogram = new int[this.depth.DeviceMaxDepth];
+			@endcode	
+
+			The following statement gets the Map Output mode of the @ref xn::DepthGenerator "DepthGenerator" node.  The <code>xnMapOutputMode</code> value returned by @ref xn::MapGenerator::GetMapOutputMode is the combination of the node's scene resolution and frame rate. 
+			@code	
+				MapOutputMode mapMode = this.depth.MapOutputMode;
+			@endcode
+			
+			The following statement accesses the Map Output mode to get the DepthGenerator's map dimensions. @ref xn::ImageMap::XRes "XRes" and @ref xn::ImageMap::YRes "YRes" get the frame's X and Y resolutions of the most recently generated data. X and Y are the number of columns and rows, respectively, in the frame after any required cropping has been applied. See @ref conc_map_wrapper_classes "Map Wrapper Classes" for more information. A default format, 'Rgb24', is used for pixel color format.
+			@code
+				this.bitmap = new Bitmap((int)mapMode.XRes, (int)mapMode.YRes,
+				                System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			@endcode
+		
+			The following statements start the main reader thread. These statements are not OpenNI specific.
+			@code
+				this.shouldRun = true;
+				this.readerThread = new Thread(ReaderThread);
+				this.readerThread.Start();
+			@endcode			
+			
+			
+		@subsection svcs_onpaint OnPaint() method
+		
+			This method is not OpenNI specific.
+			
+
+		@subsection svcs_onpaintbkgd	OnPaintBackground() method
+		
+			This method is not OpenNI specific.
+			
+			
+		@subsection svcs_onclosing	OnClosing() method
+		
+			This method is not OpenNI specific.			
+
+
+		@subsection svcs_onkeypress	OnKeyPress() method
+		
+			This method is not OpenNI specific.			
+			
+			
+		@subsection svcs_calchist	CalcHist() method
+		
+			This method uses the depth values to build an accumulative histogram of frequency of occurrence of each depth value. The <code>pDepth</code> pointer accesses each value in the depth buffer and then uses it as an index into the <code>histogram</code> array.
+			@code
+				private unsafe void CalcHist(DepthMetaData depthMD)
+				{
+					... 
+					... 
+					for (int y = 0; y < depthMD.YRes; ++y)
+					{
+						for (int x = 0; x < depthMD.XRes; ++x, ++pDepth)
+						{
+							ushort depthVal = *pDepth;
+							if (depthVal != 0)
+							{
+								this.histogram[depthVal]++;
+								points++;
+							}
+						}
+					}	
+					... 
+					... 					
+			@endcode
+
+
+	@section svcs_reader_thread ReaderThread() method
+	
+		The @ref xn::DepthMetaData "DepthMetaData" object provides a @ref glos_frame_object "frame object" for the @ref xn::DepthGenerator "DepthGenerator" node. A @ref dict_gen_node "generator node's" frame object contains the generated data frame) and all its associated properties. This frame object, comprising the data frame and its properties, is accessible through the node's metadata object.
+		@code
+			DepthMetaData depthMD = new DepthMetaData();
+		@endcode
+		
+		@subsection svcs_reader_thread_main_loop Main Loop
+		
+		The following statement updates all generator nodes in the context that have new data available, first waiting for a specified node to have new data available. 		
+		@code
+			try
+			{
+				this.context.WaitOneUpdateAll(this.depth);
+			}
+		@endcode
+	
+		
+		
+	@section svcs_glb_dcl_blk Global Declaration Block
+	
+		The global declaration block is at the bottom of the public MainWindow() block. The declarations are as follows. 		
+		@code
+			private readonly string SAMPLE_XML_FILE = @"../../../../Data/SamplesConfig.xml";
+
+			private Context context;
+			private ScriptNode scriptNode;
+			private DepthGenerator depth;
+			private Thread readerThread;
+			private bool shouldRun;
+			private Bitmap bitmap;
+			private int[] histogram;
+		@endcode
+		
+		Each of these declarations is described separately in the following paragraphs.	
+	
+		The following definition is for the path to an OpenNI XML script file for inputting and building a stored production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object model. The identifies blobs as hands or human users (focusing mainly on OpenNI specific declarations). 
+		@code
+			#define SAMPLE_XML_FILE "../../../../Data/SamplesConfig.xml"
+		@endcode
+			
+		A @ref xn::Context "Context" object is a workspace in which the application builds an OpenNI production graph. 	
+
+		The @ref xn::ScriptNode "ScriptNode" object loads an XML script from a file or string, and then runs the XML script to build a production graph. The ScriptNode object keeps references to all nodes created from the script, so they will not be destroyed. (This is since OpenNI will delete a node that has no remaining references to it.)
+
+		The @ref xn::DepthGenerator "DepthGenerator" node generates a depth map. Each map pixel value represents a distance from the sensor. 	
+			
+		The following declarations are not OpenNI specific. <code>histogram</code> is a key part of this sample program. 
+		@code
+			private Thread readerThread;
+			private bool shouldRun;
+			private Bitmap bitmap;
+			private int[] histogram;
+		@endcode
+			
+				
+*/
+

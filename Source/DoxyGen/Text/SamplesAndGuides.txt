@@ -1,0 +1,14 @@
+/**
+
+@page smpls_n_guides Samples and Guides
+
+This help document presents a number of sample programs showing how to 
+program with the OpenNI API and a guide showing how to build new module 
+OpenNI implementations. 
+
+- @subpage smpls  
+
+- @subpage guides
+
+*/
+

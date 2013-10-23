@@ -1,0 +1,215 @@
+/**
+@page prod_graph The Production Graph
+
+The <i>production graph</i> is a network of <i>production nodes</i>. 
+This is the principal OpenNI object model. The fundamental purpose and 
+functionality of the production graph is to identify and track 
+<i>blobs</i> as human hands or users. 
+
+A production graph is composed of a production node, and optionally a 
+list of other production nodes needed for this production node. Each 
+production node has a type (one of the types defined by the OpenNI 
+specification), a vendor name, and a specific name (unique for this type 
+and vendor), and a version. For example, a @ref xn::UserGenerator 
+"UserGenerator" node may need a @ref xn::DepthGenerator "DepthGenerator" 
+node, which in turn might need a @ref xn::Device "Device " node. 
+
+@section enum_reg_mdls Enumerating the Registered Modules
+
+	When OpenNI is initializing, it loads each registered module, and asks 
+	it for the types of nodes it implements. Then, when an application asks 
+	for a specific generated product, OpenNI enumerates every module that 
+	declared itself as generating that product, for currently possible 
+	production graphs. Each module builds a list of nodes it can create 
+	right now (possible by enumerating for other node types), and returns it 
+	to OpenNI. OpenNI then appends all those lists together, and returns 
+	them to the application. The application can then choose the specific 
+	node it wants to use right now, and asks OpenNI to create it. 
+
+
+@section crt_prd_nds Creating Production Nodes
+
+	There are several ways to create production nodes:
+	
+	- Using the @ref xn::Context::EnumerateProductionTrees() 
+	  "EnumerateProductionTrees()" method &ndash; choosing one result and 
+	  calling CreateProductionTree() with this result 
+	- Using the @ref xn::Context::CreateAnyProductionTree() 
+	  "CreateAnyProductionTree()" method &ndash; shorthand for enumerating and 
+	  choosing any result 
+	- Using XML files		
+	
+@section enum_to_crt_prd_nds Enumerating to Create Production Nodes
+ 
+	The result from an enumeration operation is a pointer to the first node 
+	of a linked list, representing all the matching @ref node_alternative 
+	"node alternatives". Each @ref node_alternative "node alternative" 
+	contains the provider description, an optional instance name (that can 
+	be used by the provider as proprietary information, like a device S/N), 
+	and a list of the node's dependencies (other needed nodes). 
+
+@section enuming_with_constraints Enumerating with Constraints
+
+	When an application wants to create a production node, in most cases it 
+	will prefer (or even demand) certain constraints from those nodes. For 
+	example, an application might need the node to support a specific 
+	capability it needs. For this reason, the enumeration functions can take 
+	a @ref xn::Query "Query" object as a parameter (see @ref queries for C, 
+	or @ref xn::Query for C++). 
+
+	@note OpenNI can also return existing nodes during enumeration, if they 
+	match the requested criterias. 
+
+@section enuming_for_type Enumerating only for a Particular Type
+
+	As a shortcut, in case the application doesn't care about different 
+	nodes, and just needs any node of the requested type, it can do so using 
+	one of the following functions: 
+
+	- @ref xnCreateDepthGenerator()
+	- @ref xnCreateImageGenerator()
+	- @ref xnCreateIRGenerator()
+	- @ref xnCreateAudioGenerator()
+	- @ref xnCreateGestureGenerator()
+	- @ref xnCreateSceneAnalyzer()
+	- @ref xnCreateHandsGenerator()
+	- @ref xnCreateUserGenerator()
+
+	In C++ this can be done using
+	
+	- @ref xn::DepthGenerator::Create()
+	- @ref xn::ImageGenerator::Create()
+	- @ref xn::IRGenerator::Create()
+	- @ref xn::AudioGenerator::Create()
+	- @ref xn::GestureGenerator::Create()
+	- @ref xn::SceneAnalyzer::Create()
+	- @ref xn::HandsGenerator::Create()
+	- @ref xn::UserGenerator::Create()
+
+	Note that just like in the full enumeration process, these functions 
+	also allow the application to specify certain constraints about the 
+	created nodes with a @ref xn::Query "Query" object, such as the vendor 
+	that supplies the generator, a version number, certain capabilities, and 
+	more (see @ref queries for the C functions, or @ref xn::Query for the 
+	C++ functions). 
+
+@section nod_hndls Node Handles
+
+	In the C interface, each production node in the context is accessed 
+	using a @ref XnNodeHandle "node handle". 
+
+	Every function on a specific node takes the node handle as its first 
+	argument. In C++, every class inheriting from @ref xn::NodeWrapper holds 
+	the handle as a member, making it easier for applications to use the 
+	methods. 
+
+@section bld_prod_graph Building the Production Graph
+
+	An application usually needs just one 3D vision product to be generated 
+	by OpenNI (human pose, gestures recognition, etc.). However this 
+	generated product is usually produced using a production graph. This 
+	means the vision product can be generated in a number of ways - either 
+	by different algorithms or the same algorithm using different raw data 
+	for processing. 
+
+	When an application asks OpenNI for a specific generated product, OpenNI 
+	returns a list of all currently possible ways of producing it. This 
+	depends on installed modules, currently attached devices, and available 
+	licenses. 
+
+	A production graph is represented using an object called Node Info (see 
+	@ref prdnodeinfo for C, or @ref xn::NodeInfo for C++). This object 
+	contains information about the current node, such as its vendor, name, 
+	version, and most importantly, its type. The node info object can 
+	represent either an existing node that was already created, or an option 
+	for creating a node. For example, if an application enumerates for a 
+	node in the first time with @ref xnEnumerateProductionTrees, it will 
+	probably get a node info object which is not connected to an existing 
+	node. Once the application chooses to create this node with @ref 
+	xnCreateProductionTree, a node will be created, and the node info object 
+	will also hold the node handle. 
+
+	The application can choose a production graph according to some or all 
+	nodes in the graph. For example, suppose an application asks for a User 
+	Generator. A User Generator requires a Depth Generator to operate, and 
+	suppose there are two types of Depth Generators installed on the 
+	machine. In this case the application would get two production chains 
+	for the User Generator: One for each option of the underlying Depth 
+	Generator. The application can then choose the preferred production 
+	graph according to its considerations, e.g. choosing a specific vendor, 
+	or choosing a depth node that provides certain capabilities. 
+
+	Each Node Info object holds a list of needed nodes, thus creating a 
+	nodes graph. The list of needed nodes is accessed using an object called 
+	Node Info List (see @ref infolist for C, or @ref xn::NodeInfoList for 
+	C++). 
+
+	@subsection create_method Understanding the Create() method		
+	
+		<b>Purpose</b>
+
+		The Create() method creates a production node from available production 
+		node alternatives of the same type. For example, if you call the 
+		Create() method of an ImageGenerator object, on successful execution the 
+		method returns a reference to an ImageGenerator node. 
+		
+		@code
+		XnStatus Create (Context &context, Query *pQuery=NULL, EnumerationErrors *pErrors=NULL)
+		@endcode
+
+		@param [in] 	Context		Context in which to create the production node.
+		@param [in] 	pQuery		Optional. Filters the production node alternatives.
+		@param [in,out]	pErrors		Optional. Returns information about production nodes that could not be created.
+			
+		<b>Remarks</b>
+		
+		In order to create any type of production node (e.g., a UserGenerator 
+		node) the application calls this method of the instantiated production 
+		object (e.g., a UserGenerator object). However, an appropriate OpenNI 
+		module (plug-in) must first be installed on the computer to provide that 
+		required type of production node (e.g., a UserGenerator node). 
+
+		This method enumerates all available production node alternatives, 
+		taking into account any defined query. The method selects any one of the 
+		matching node alternatives it has found, in order to create the required 
+		type of production node. 
+
+		By default, if an existing node matches the filter, the Create() method 
+		will return a reference to the existing node, and so it will not create 
+		a new node. 
+
+		If no query is defined, this method uses any available node alternative 
+		to create the node. Thus in this case, no assumption can be made about 
+		which of the available production node alternatives the method will 
+		select to create the new node. 
+
+		To fine control the selection the application can define an appropriate 
+		query to narrow down the number of production node alternatives for 
+		creating the required production node, so that only matching nodes will 
+		be considered for selection. 
+		
+		The Create() method is equivalent to calling EnumerateProductionTrees() 
+		followed by CreateProductionTree() on the first result. That is, to call 
+		CreateProductionTree() on the first production node alternative that 
+		EnumerateProductionTrees() returns. 
+
+		On successful execution, the production object (e.g., the UserGenerator 
+		object) references the newly created production node (e.g., a 
+		UserGenerator node). The application can then use the other methods of 
+		the node. 
+
+		The production node that is returned is always a complete production 
+		graph. That is to say, the returned node will bring with it all other 
+		dependant nodes it requires for generating its output data. For example, 
+		if the required production node is a UserGenerator node, and its 
+		dependencies include a DepthGenerator node, then the new UserGenerator 
+		node reference will also bring with it a reference to a DepthGenerator 
+		node, creating a new DepthGenerator node if necessary. 
+
+		If the production node returned is the base of a production graph 
+		(e.g., a Device node), then it does not have any dependencies and so the 
+		node will not bring with it any associated nodes at all. In this case 
+		the length and breadth of the returned production graph will be just the 
+		single new node reference. 
+
+*/

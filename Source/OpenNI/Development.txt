@@ -55,7 +55,7 @@ to the module).
 	    - Add the new set of functions as API calls.
     - XnOpenNI.cpp
 	    - Implement the API. If needed, call the module functions.
-	- XnCppInterface.h
+	- XnCppWrapper.h
 	    - If this is a new node, or new capability, define a new class.
 		- If this is a new node, make the class inherit from the base node.
 		- If this is a new capability, make the class inherit from Capability.
@@ -64,7 +64,25 @@ to the module).
 		- If this is a new capability, add a GetXXXCap() method in the 
 		  corresponding node class.
     - OpenNI.Net
-	    - Add it to C# wrappers
+	    - Add C functions DllImport in OpenNIImporter.cs
+		- If this is a new node or new capability, define a new class.
+		- If this is a new node, make the class inherit from the base node.
+		- If this is a new capability, make the class inherit from Capability.
+		- Add functions to the class - one for each new function. Those should call the
+		  imported C API.
+		- If this is a new capability, add it as a member in the containing node, create
+		  the instance in the ctor, and add a property to get it.
+	- OpenNI.Java
+		- Add C functions to OpenNI.java to the NativeMethods.java class.
+		- Go to OpenNI.jni folder and run UpdateHeaders.bat.
+		- New functions will be added to the JNI project. Implement them by calling the C API.
+		- Go back to OpenNI.Java
+		- If this is a new node or new capability, define a new class.
+		- If this is a new node, make the class inherit from the base node.
+		- If this is a new capability, make the class inherit from Capability.
+		- Add functions to the class - one for each new function. Those should call NativeMethods class.
+		- If this is a new capability, add it as a member in the containing node, create
+		  the instance in the ctor, and add a get() method to get it.
 		
 	- To make the data exposed by those function recorded and played-back:
 		- Add the functions to the mock node.

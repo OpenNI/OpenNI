@@ -1,34 +1,34 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #include "MockMapGenerator.h"
 #include <XnPropNames.h>
 #include <XnOS.h>
 #include <XnLog.h>
 
-MockMapGenerator::MockMapGenerator(const XnChar* strName) : 
-	MockGenerator(strName),
+MockMapGenerator::MockMapGenerator(xn::Context& context, const XnChar* strName) : 
+	MockGenerator(context, strName),
 	m_nSupportedMapOutputModesCount(0),
 	m_bSupportedMapOutputModesCountReceived(0),
-	m_pSupportedMapOutputModes(NULL)
+	m_pSupportedMapOutputModes(NULL),
+	m_nBytesPerPixel(0)
 {
 	xnOSMemSet(&m_mapOutputMode, 0, sizeof(m_mapOutputMode));
 	xnOSMemSet(&m_cropping, 0, sizeof(m_cropping));
@@ -114,8 +114,10 @@ XnStatus MockMapGenerator::SetGeneralProperty(const XnChar* strName, XnUInt32 nB
 	}
 	else if (strcmp(strName, XN_PROP_NEWDATA) == 0)
 	{
+		// Check buffer size. Note: the expected size is the minimum one. We allow bigger frames (sometimes generators
+		// place debug information *after* the data)
 		XnUInt32 nExpectedSize = GetExpectedBufferSize();
-		if (nBufferSize != nExpectedSize)
+		if (nBufferSize < nExpectedSize)
 		{
 			xnLogWarning(XN_MASK_OPEN_NI, "%s: Got new data with illegal buffer size (%u) - ignoring.", m_strName, nBufferSize);
 		}
@@ -172,7 +174,7 @@ XnStatus MockMapGenerator::GetMapOutputMode(XnMapOutputMode& mode)
 
 XnStatus MockMapGenerator::RegisterToMapOutputModeChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_outputModeChangeEvent.Register(handler, pCookie, &hCallback);
+	return m_outputModeChangeEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockMapGenerator::UnregisterFromMapOutputModeChange(XnCallbackHandle hCallback)
@@ -210,7 +212,7 @@ XnStatus MockMapGenerator::GetCropping(XnCropping &Cropping)
 
 XnStatus MockMapGenerator::RegisterToCroppingChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_croppingChangeEvent.Register(handler, pCookie, &hCallback);
+	return m_croppingChangeEvent.Register(handler, pCookie, hCallback);
 }
 
 void MockMapGenerator::UnregisterFromCroppingChange(XnCallbackHandle hCallback)

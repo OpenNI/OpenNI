@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -69,7 +68,7 @@ PoseUserSelector::PoseUserSelector(xn::UserGenerator* pUserGenerator,
     nRetVal = m_pUserGenerator->GetPoseDetectionCap().RegisterToPoseInProgress(PoseInProgressCallback,this,m_hPoseInProgressCallback);
     VALIDATE_WITH_ACTION(nRetVal == XN_STATUS_OK,"Failed to register to pose in progress",m_hPoseInProgressCallback = NULL);
     
-    int len=strlen(poseToTrack)+1;
+    int len = (int)strlen(poseToTrack)+1;
     m_strPoseToTrack=XN_NEW_ARR(char, len); // the length is +1 to accommodate the null terminator
     xnOSStrCopy(m_strPoseToTrack,poseToTrack,len);
 }
@@ -81,9 +80,9 @@ PoseUserSelector::~PoseUserSelector()
     {
         if(m_pUserGenerator->IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION))
         {
-            for(UserStateHash::Iterator iter = m_hUsersState.begin(); iter != m_hUsersState.end(); ++iter)
+            for(UserStateHash::Iterator iter = m_hUsersState.Begin(); iter != m_hUsersState.End(); ++iter)
             {
-                m_pUserGenerator->GetPoseDetectionCap().StopPoseDetection(iter.Key());
+                m_pUserGenerator->GetPoseDetectionCap().StopPoseDetection(iter->Key());
             }
             if(m_hPoseDetectCallback != NULL)
             {
@@ -157,7 +156,7 @@ XnStatus PoseUserSelector::DetectPose(XnUserID nUserId)
     return StartTracking(nUserId);
 }
 
-void XN_CALLBACK_TYPE PoseUserSelector::PoseInProgressCallback(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nUserId, XnPoseDetectionStatus ePoseError, void* pCookie)
+void XN_CALLBACK_TYPE PoseUserSelector::PoseInProgressCallback(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nUserId, XnPoseDetectionStatus ePoseError, void* pCookie)
 {
     PoseUserSelector* pPoseUserSelector = (PoseUserSelector *)pCookie;
     if(xnOSStrCmp(strPose,pPoseUserSelector->m_strPoseToTrack)!=0)
@@ -167,7 +166,7 @@ void XN_CALLBACK_TYPE PoseUserSelector::PoseInProgressCallback(xn::PoseDetection
     pPoseUserSelector->UpdatePoseProgress(nUserId,ePoseError);
 }
 
-void XN_CALLBACK_TYPE PoseUserSelector::PoseDetectedCallback(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nUserId, void* pCookie)
+void XN_CALLBACK_TYPE PoseUserSelector::PoseDetectedCallback(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nUserId, void* pCookie)
 {
     PoseUserSelector* pPoseUserSelector = (PoseUserSelector *)pCookie;
     if(xnOSStrCmp(strPose,pPoseUserSelector->m_strPoseToTrack)!=0)

@@ -1,28 +1,35 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
-package org.OpenNI;
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
+package org.openni;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Encapsulates calls to native OpenNI code. <BR><BR>
+ * 
+ * This class encapsulates prototypes for all calls to native OpenNI 
+ * code used in the rest of the SDK.  Application developers will not
+ * generally have a direct need for these functions.
+ *
+ */
 class NativeMethods
 {
 	static 
@@ -74,7 +81,11 @@ class NativeMethods
 	static native int xnGetGlobalErrorState(long pContext);
 	static native int xnRegisterToGlobalErrorStateChange(long pContext, Object obj, String methodName, OutArg<Long> phCallback);
 	static native void xnUnregisterFromGlobalErrorStateChange(long pContext, long hCallback);
-	
+	static native int xnRegisterToNodeCreation(long pContext, Object obj, String methodName, OutArg<Long> phCallback);
+	static native void xnUnregisterFromNodeCreation(long pContext, long hCallback);
+	static native int xnRegisterToNodeDestruction(long pContext, Object obj, String methodName, OutArg<Long> phCallback);
+	static native void xnUnregisterFromNodeDestruction(long pContext, long hCallback);
+
 	// Licenses
 	static native int xnAddLicense(long pContext, String vendor, String key);
 	static native int xnEnumerateLicenses(long pContext, OutArg<License[]> licenses);
@@ -211,6 +222,7 @@ class NativeMethods
 	static native boolean xnIsViewPointAs(long hInstance, long hOther);
 	static native int xnRegisterToViewPointChange(long hInstance, Object obj, String methodName, OutArg<Long> phCallback);
 	static native void xnUnregisterFromViewPointChange(long hInstance, long hCallback);
+	static native int xnGetPixelCoordinatesInViewPoint(long hInstance, long hOther, int x, int y, OutArg<Integer> pAltX, OutArg<Integer> pAltY);
 
 	// Frame Sync
 	static native boolean xnCanFrameSyncWith(long hInstance, long hOther);
@@ -358,7 +370,7 @@ class NativeMethods
 	static native int xnGetSkeletonCalibrationPose(long hInstance, OutArg<String> strPose);
 	static native int xnSetSkeletonSmoothing(long hInstance, float fFactor);
 	static native int xnRegisterToCalibrationStart(long hInstance, Object obj, String calibrationStartCB, OutArg<Long> phCallback);
-	static native void xnUnregisterFromCalibrationStart(long hInstnace, long hCallback);
+	static native void xnUnregisterFromCalibrationStart(long hInstance, long hCallback);
 	static native int xnRegisterToCalibrationInProgress(long hInstance, Object obj, String calibrationInProgressCB, OutArg<Long> phCallback);
 	static native void xnUnregisterFromCalibrationInProgress(long hInstance, long hCallback);
 	static native int xnRegisterToCalibrationComplete(long hInstance, Object obj, String calibrationCompleteCB, OutArg<Long> phCallback);

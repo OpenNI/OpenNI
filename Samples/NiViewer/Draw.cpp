@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 // --------------------------------
 // Includes
 // --------------------------------
@@ -47,8 +46,6 @@
 // --------------------------------
 // Defines
 // --------------------------------
-#define MAX_DEPTH 10000
-
 #define YUV422_U  0
 #define YUV422_Y1 1
 #define YUV422_V  2
@@ -70,8 +67,8 @@ typedef struct
 	bool bShowMessage;
 	bool bHelp;
 	const XnChar* strErrorState;
-	UIntRect DepthLocation;
-	UIntRect ImageLocation;
+	IntRect DepthLocation;
+	IntRect ImageLocation;
 } DrawConfig;
 
 typedef struct
@@ -82,14 +79,14 @@ typedef struct
 
 typedef struct XnTextureMap
 {
-	UIntPair Size;
-	UIntPair OrigSize;
+	IntPair Size;
+	IntPair OrigSize;
 	unsigned char* pMap;
 	unsigned int nBytesPerPixel;
 	GLuint nID;
 	GLenum nFormat;
 	bool bInitialized;
-	UIntPair CurSize;
+	IntPair CurSize;
 } XnTextureMap;
 
 // --------------------------------
@@ -101,8 +98,9 @@ XnUInt8 PalletIntsR [256] = {0};
 XnUInt8 PalletIntsG [256] = {0};
 XnUInt8 PalletIntsB [256] = {0};
 
+unsigned short g_nMaxGrayscale16Value = 0;
 /* Linear Depth Histogram */
-float g_pDepthHist[MAX_DEPTH];
+float* g_pDepthHist;
 
 const char* g_DepthColoring[NUM_OF_DEPTH_TYPES];
 const char* g_ImageColoring[NUM_OF_IMAGE_TYPES];
@@ -110,13 +108,13 @@ const char* g_ImageColoring[NUM_OF_IMAGE_TYPES];
 typedef struct DrawUserInput
 {
 	SelectionState State;
-	UIntRect Rect;
-	UIntPair Cursor;
+	IntRect Rect;
+	IntPair Cursor;
 } DrawUserInput;
 
 DrawUserInput g_DrawUserInput;
 
-float g_fMaxDepth = 0;
+int g_nMaxDepth = 0;
 
 DrawConfigPreset g_Presets[PRESET_COUNT] = 
 {
@@ -125,7 +123,7 @@ DrawConfigPreset g_Presets[PRESET_COUNT] =
 	{ "Depth Histogram",					{ false, { LINEAR_HISTOGRAM,	1 }, { IMAGE_OFF },				OVERLAY } },
 	{ "Psychedelic Depth [Centimeters]",	{ false, { PSYCHEDELIC,			1 }, { IMAGE_OFF },				OVERLAY } },
 	{ "Psychedelic Depth [Millimeters]",	{ false, { PSYCHEDELIC_SHADES,	1 }, { IMAGE_OFF },				OVERLAY } },
-	{ "Rainbow Depth",						{ false, { CYCLIC_RAINBOW,		1 }, { IMAGE_OFF },				OVERLAY } },
+	{ "Rainbow Depth",						{ false, { CYCLIC_RAINBOW_HISTOGRAM,1 },{ IMAGE_OFF },			OVERLAY } },
 	{ "Depth masked Image",					{ false, { DEPTH_OFF,			1 }, { DEPTH_MASKED_IMAGE },	OVERLAY } },
 	{ "Background Removal",					{ true,	 { DEPTH_OFF,			1 }, { DEPTH_MASKED_IMAGE },	OVERLAY } },
 	{ "Side by Side",						{ false, { LINEAR_HISTOGRAM,	1 }, { IMAGE_NORMAL },			SIDE_BY_SIDE } },
@@ -146,7 +144,7 @@ char g_csUserMessage[256];
 
 bool g_bFullScreen = true;
 bool g_bFirstTimeNonFull = true;
-UIntPair g_NonFullWinSize = { WIN_SIZE_X, WIN_SIZE_Y };
+IntPair g_NonFullWinSize = { WIN_SIZE_X, WIN_SIZE_Y };
 
 // --------------------------------
 // Textures
@@ -235,30 +233,30 @@ void TextureMapSetPixel(XnTextureMap* pTex, int x, int y, int red, int green, in
 		pPixel[3] = 255;
 }
 
-void TextureMapDrawCursor(XnTextureMap* pTex, UIntPair cursor)
+void TextureMapDrawCursor(XnTextureMap* pTex, IntPair cursor, int red = 255, int green = 0, int blue = 0)
 {
 	// marked pixel
-	TextureMapSetPixel(pTex, cursor.X, cursor.Y, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X, cursor.Y, red, green, 0);
 
 	// top left marker
-	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y-2, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y-1, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X-1, cursor.Y-2, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y-2, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y-1, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X-1, cursor.Y-2, red, green, blue);
 
 	// top right marker
-	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y-2, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y-1, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X+1, cursor.Y-2, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y-2, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y-1, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X+1, cursor.Y-2, red, green, blue);
 
 	// bottom left marker
-	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y+2, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y+1, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X-1, cursor.Y+2, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y+2, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X-2, cursor.Y+1, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X-1, cursor.Y+2, red, green, blue);
 
 	// bottom right marker
-	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y+2, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y+1, 255, 0, 0);
-	TextureMapSetPixel(pTex, cursor.X+1, cursor.Y+2, 255, 0, 0);
+	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y+2, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X+2, cursor.Y+1, red, green, blue);
+	TextureMapSetPixel(pTex, cursor.X+1, cursor.Y+2, red, green, blue);
 }
 
 void TextureMapUpdate(XnTextureMap* pTex)
@@ -270,7 +268,7 @@ void TextureMapUpdate(XnTextureMap* pTex)
 	glTexImage2D(GL_TEXTURE_2D, 0, pTex->nFormat, pTex->Size.X, pTex->Size.Y, 0, pTex->nFormat, GL_UNSIGNED_BYTE, pTex->pMap);
 }
 
-void TextureMapDraw(XnTextureMap* pTex, UIntRect* pLocation)
+void TextureMapDraw(XnTextureMap* pTex, IntRect* pLocation)
 {
 	// set current texture object
 	glBindTexture(GL_TEXTURE_2D, pTex->nID);
@@ -355,7 +353,7 @@ void CreateRainbowPallet()
 
 void glPrintString(void *font, const char *str)
 {
-	int i,l = strlen(str);
+	int i,l = (int)strlen(str);
 
 	for(i=0; i<l; i++)
 	{
@@ -432,7 +430,7 @@ void setErrorState(const char* strMessage)
 	g_DrawConfig.strErrorState = strMessage;
 }
 
-void drawCropStream(MapGenerator* pGenerator, UIntRect location, UIntRect selection, int dividedBy)
+void drawCropStream(MapGenerator* pGenerator, IntRect location, IntRect selection, int dividedBy)
 {
 	if (!pGenerator->IsCapabilitySupported(XN_CAPABILITY_CROPPING))
 	{
@@ -448,7 +446,7 @@ void drawCropStream(MapGenerator* pGenerator, UIntRect location, UIntRect select
 		selection.uBottom >= location.uBottom &&
 		selection.uTop <= location.uTop)
 	{
-		UIntRect cropRect;
+		IntRect cropRect;
 		cropRect.uBottom = Mode.nYRes * (selection.uBottom - location.uBottom) / (location.uTop - location.uBottom);
 		cropRect.uTop = Mode.nYRes * (selection.uTop - location.uBottom) / (location.uTop - location.uBottom);
 		cropRect.uLeft = Mode.nXRes * (selection.uLeft - location.uLeft) / (location.uRight - location.uLeft);
@@ -470,7 +468,7 @@ void drawCropStream(MapGenerator* pGenerator, UIntRect location, UIntRect select
 	}
 }
 
-void drawSelectionChanged(SelectionState state, UIntRect selection)
+void drawSelectionChanged(SelectionState state, IntRect selection)
 {
 	g_DrawUserInput.State = state;
 	g_DrawUserInput.Rect = selection;
@@ -497,7 +495,7 @@ void drawSelectionChanged(SelectionState state, UIntRect selection)
 	}
 }
 
-void drawCursorMoved(UIntPair location)
+void drawCursorMoved(IntPair location)
 {
 	g_DrawUserInput.Cursor = location;
 }
@@ -510,6 +508,7 @@ void drawInit()
 	g_DepthColoring[PSYCHEDELIC_SHADES] = "Psychedelic (Millimeters)";
 	g_DepthColoring[RAINBOW] = "Rainbow";
 	g_DepthColoring[CYCLIC_RAINBOW] = "Cyclic Rainbow";
+	g_DepthColoring[CYCLIC_RAINBOW_HISTOGRAM] = "Cyclic Rainbow Histogram";
 	g_DepthColoring[STANDARD_DEVIATION] = "Standard Deviation";
 
 	g_ImageColoring[IMAGE_OFF] = "Off";
@@ -548,18 +547,22 @@ void toggleBackground(int)
 
 void calculateHistogram()
 {
-	xnOSMemSet(g_pDepthHist, 0, MAX_DEPTH*sizeof(float));
-	int nNumberOfPoints = 0;
-
-	XnDepthPixel nValue;
-
 	DepthGenerator* pDepthGen = getDepthGenerator();
 
 	if (pDepthGen == NULL)
 		return;
 
-	XnUInt64 nTimeStamp = pDepthGen->GetTimestamp();
-	XnUInt32 nDataSize = pDepthGen->GetDataSize();
+	XnUInt32 nZRes = pDepthGen->GetDeviceMaxDepth() + 1;
+	if (g_pDepthHist == NULL)
+	{
+		g_pDepthHist = new float[nZRes];
+	}
+
+	xnOSMemSet(g_pDepthHist, 0, nZRes*sizeof(float));
+	int nNumberOfPoints = 0;
+
+	XnDepthPixel nValue;
+
 	const XnDepthPixel* pDepth = pDepthGen->GetDepthMap();
 	const XnDepthPixel* pDepthEnd = pDepth + (pDepthGen->GetDataSize() / sizeof(XnDepthPixel));
 
@@ -567,7 +570,7 @@ void calculateHistogram()
 	{
 		nValue = *pDepth;
 
-		XN_ASSERT(nValue <= MAX_DEPTH);
+		XN_ASSERT(nValue <= nZRes);
 
 		if (nValue != 0)
 		{
@@ -579,11 +582,11 @@ void calculateHistogram()
 	}
 
 	XnUInt32 nIndex;
-	for (nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+	for (nIndex = 1; nIndex < nZRes; nIndex++)
 	{
 		g_pDepthHist[nIndex] += g_pDepthHist[nIndex-1];
 	}
-	for (nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+	for (nIndex = 1; nIndex < nZRes; nIndex++)
 	{
 		if (g_pDepthHist[nIndex] != 0)
 		{
@@ -602,7 +605,6 @@ void YUV422ToRGB888(const XnUInt8* pYUVImage, XnUInt8* pRGBAImage, XnUInt32 nYUV
 	const XnUInt8* pYUVLast = pYUVImage + nYUVSize - 8;
 	XnUInt8* pRGBLast = pRGBAImage + nRGBSize - 16;
 
-	const __m128 minus16 = _mm_set_ps1(-16);
 	const __m128 minus128 = _mm_set_ps1(-128);
 	const __m128 plus113983 = _mm_set_ps1(1.13983F);
 	const __m128 minus039466 = _mm_set_ps1(-0.39466F);
@@ -746,7 +748,7 @@ void YUV422ToRGB888(const XnUInt8* pYUVImage, XnUInt8* pRGBImage, XnUInt32 nYUVS
 
 #endif
 
-void drawClosedStream(UIntRect* pLocation, const char* csStreamName)
+void drawClosedStream(IntRect* pLocation, const char* csStreamName)
 {
 	char csMessage[512];
 	sprintf(csMessage, "%s stream is OFF", csStreamName);
@@ -761,7 +763,7 @@ void drawClosedStream(UIntRect* pLocation, const char* csStreamName)
 	glPrintString(pFont, csMessage);
 }
 
-void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
+void drawColorImage(IntRect* pLocation, IntPair* pPointer, int pointerRed, int pointerGreen, int pointerBlue)
 {
 	if (g_DrawConfig.Streams.bBackground)
 		TextureMapDraw(&g_texBackground, pLocation);
@@ -797,6 +799,23 @@ void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
 	}
 
 	const DepthMetaData* pDepthMetaData = getDepthMetaData();
+
+	double grayscale16Factor = 1.0;
+	if (pImageMD->PixelFormat() == XN_PIXEL_FORMAT_GRAYSCALE_16_BIT)
+	{
+		int nPixelsCount = pImageMD->XRes()*pImageMD->YRes();
+		XnUInt16* pPixel = (XnUInt16*)pImage;
+		for (int i = 0; i < nPixelsCount; ++i,++pPixel)
+		{
+			if (*pPixel > g_nMaxGrayscale16Value)
+				g_nMaxGrayscale16Value = *pPixel;
+		}
+
+		if (g_nMaxGrayscale16Value > 0)
+		{
+			grayscale16Factor = 255.0 / g_nMaxGrayscale16Value;
+		}
+	}
 
 	for (XnUInt16 nY = pImageMD->YOffset(); nY < pImageMD->YRes() + pImageMD->YOffset(); nY++)
 	{
@@ -845,7 +864,9 @@ void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
 					break;
 				case XN_PIXEL_FORMAT_GRAYSCALE_16_BIT:
 					XnUInt16* p16 = (XnUInt16*)pImage;
-					pTexture[0] = pTexture[1] = pTexture[2] = (*p16) >> 2;
+					XnUInt8 textureValue = 0;
+					textureValue = (XnUInt8)((*p16) * grayscale16Factor);
+					pTexture[0] = pTexture[1] = pTexture[2] = textureValue;
 					pImage+=2; 
 					break;
 				}
@@ -866,14 +887,14 @@ void drawColorImage(UIntRect* pLocation, UIntPair* pPointer)
 
 	if (pPointer != NULL)
 	{
-		TextureMapDrawCursor(&g_texImage, *pPointer);
+		TextureMapDrawCursor(&g_texImage, *pPointer, pointerRed, pointerGreen, pointerBlue);
 	}
 
 	TextureMapUpdate(&g_texImage);
 	TextureMapDraw(&g_texImage, pLocation);
 }
 
-void drawDepth(UIntRect* pLocation, UIntPair* pPointer)
+void drawDepth(IntRect* pLocation, IntPair* pPointer)
 {
 	if (g_DrawConfig.Streams.Depth.Coloring != DEPTH_OFF)
 	{
@@ -974,7 +995,7 @@ void drawDepth(UIntRect* pLocation, UIntPair* pPointer)
 						}
 						break;
 					case RAINBOW:
-						nColIndex = (XnUInt16)((*pDepth / (g_fMaxDepth / 256)));
+						nColIndex = (XnUInt16)((*pDepth / (g_nMaxDepth / 256.)));
 						nRed = PalletIntsR[nColIndex];
 						nGreen = PalletIntsG[nColIndex];
 						nBlue = PalletIntsB[nColIndex];
@@ -984,6 +1005,13 @@ void drawDepth(UIntRect* pLocation, UIntPair* pPointer)
 						nRed = PalletIntsR[nColIndex];
 						nGreen = PalletIntsG[nColIndex];
 						nBlue = PalletIntsB[nColIndex];
+						break;
+					case CYCLIC_RAINBOW_HISTOGRAM:
+						float fHist = g_pDepthHist[*pDepth];
+						nColIndex = (*pDepth % 256);
+						nRed = PalletIntsR[nColIndex]   * fHist;
+						nGreen = PalletIntsG[nColIndex] * fHist;
+						nBlue = PalletIntsB[nColIndex]  * fHist;
 						break;
 					}
 
@@ -1009,21 +1037,18 @@ void drawDepth(UIntRect* pLocation, UIntPair* pPointer)
 	}
 }
 
-void drawPointerMode(UIntPair* pPointer)
+void drawPointerMode(IntPair* pPointer)
 {
 	char buf[512] = "";
 	int nCharWidth = glutBitmapWidth(GLUT_BITMAP_HELVETICA_18, '0');
 	int nPointerValue = 0;
 
-	XnUInt64 nHighRes = TRUE;
 	XnDouble dTimestampDivider = 1E6;
 
 	const DepthMetaData* pDepthMD = getDepthMetaData();
 
 	if (pDepthMD != NULL)
 	{
-		const XnDepthPixel* pDepth = pDepthMD->Data();
-
 		// Print the scale black background
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1043,7 +1068,7 @@ void drawPointerMode(UIntPair* pPointer)
 
 		// Print the scale data
 		glBegin(GL_POINTS);
-		for (int i=0; i<g_fMaxDepth; i+=1)
+		for (int i = 0; i < pDepthMD->ZRes(); i+=1)
 		{
 			float fNewColor = g_pDepthHist[i];
 			if ((fNewColor > 0.004) && (fNewColor < 0.996))
@@ -1058,11 +1083,11 @@ void drawPointerMode(UIntPair* pPointer)
 		if (pPointer != NULL)
 		{
 			// make sure pointer in on a depth pixel (take in mind cropping might be in place)
-			UIntPair pointerInDepth = *pPointer;
+			IntPair pointerInDepth = *pPointer;
 			pointerInDepth.X -= pDepthMD->XOffset();
 			pointerInDepth.Y -= pDepthMD->YOffset();
 
-			if (pointerInDepth.X < pDepthMD->XRes() && pointerInDepth.Y < pDepthMD->YRes())
+			if (pointerInDepth.X < (int)pDepthMD->XRes() && pointerInDepth.Y < (int)pDepthMD->YRes())
 			{
 				nPointerValue = (*pDepthMD)(pointerInDepth.X, pointerInDepth.Y);
 
@@ -1074,7 +1099,7 @@ void drawPointerMode(UIntPair* pPointer)
 		}
 
 		// Print the scale texts
-		for (int i=0; i<g_fMaxDepth/10; i+=25)
+		for (int i = 0; i < pDepthMD->ZRes()/10; i+=25)
 		{
 			int xPos = i*2 + 10;
 
@@ -1142,10 +1167,10 @@ void drawPointerMode(UIntPair* pPointer)
 	{
 		// Print the pointer text
 		XnUInt64 nCutOffMin = 0;
-		XnUInt64 nCutOffMax = (pDepthMD != NULL) ? g_fMaxDepth : 0;
+		XnUInt64 nCutOffMax = (pDepthMD != NULL) ? g_nMaxDepth : 0;
 
 		XnChar sPointerValue[100];
-		if (nPointerValue != g_fMaxDepth)
+		if (nPointerValue != g_nMaxDepth)
 		{
 			sprintf(sPointerValue, "%.1f", (float)nPointerValue/10);
 		}
@@ -1178,7 +1203,7 @@ void drawCenteredMessage(void* font, int y, const char* message, float fRed, flo
 	
 	// parse message to lines
 	const char* pChar = message;
-	while (TRUE)
+	for (;;)
 	{
 		if (*pChar == '\n' || *pChar == '\0')
 		{
@@ -1390,7 +1415,7 @@ void drawUserInput(bool bCursor)
 	if (bCursor)
 	{
 		// draw cursor
-		UIntPair cursor = g_DrawUserInput.Cursor;
+		IntPair cursor = g_DrawUserInput.Cursor;
 		glPointSize(1);
 		glBegin(GL_POINTS);
 		glColor3f(1,0,0);
@@ -1437,27 +1462,29 @@ void drawUserInput(bool bCursor)
 	}
 }
 
-void fixLocation(UIntRect* pLocation, int xRes, int yRes)
+void fixLocation(IntRect* pLocation, int xRes, int yRes)
 {
 	double resRatio = (double)xRes / yRes;
 
-	double locationRatio = (pLocation->uRight - pLocation->uLeft) / (pLocation->uTop - pLocation->uBottom);
+	double locationRatio = double(pLocation->uRight - pLocation->uLeft) / (pLocation->uTop - pLocation->uBottom);
 
 	if (locationRatio > resRatio) 
 	{
 		// location is wider. use height as reference.
 		double width = (pLocation->uTop - pLocation->uBottom) * resRatio;
+		pLocation->uLeft += (pLocation->uRight - pLocation->uLeft - width) / 2;
 		pLocation->uRight = (pLocation->uLeft + width);
 	}
 	else if (locationRatio < resRatio)
 	{
 		// res is wider. use width as reference.
 		double height = (pLocation->uRight - pLocation->uLeft) / resRatio;
+		pLocation->uBottom += (pLocation->uTop - pLocation->uBottom - height) / 2;
 		pLocation->uTop = (pLocation->uBottom + height);
 	}
 }
 
-bool isPointInRect(UIntPair point, UIntRect* pRect)
+bool isPointInRect(IntPair point, IntRect* pRect)
 {
 	return (point.X >= pRect->uLeft && point.X <= pRect->uRight &&
 		point.Y >= pRect->uBottom && point.Y <= pRect->uTop);
@@ -1505,7 +1532,7 @@ void drawFrame()
 	const DepthMetaData* pDepthMD = getDepthMetaData();
 	if (isDepthOn())
 	{
-		g_fMaxDepth = getDepthGenerator()->GetDeviceMaxDepth();
+		g_nMaxDepth = getDepthGenerator()->GetDeviceMaxDepth();
 		TextureMapInit(&g_texDepth, pDepthMD->FullXRes(), pDepthMD->FullYRes(), 4, pDepthMD->XRes(), pDepthMD->YRes());
 		fixLocation(&g_DrawConfig.DepthLocation, pDepthMD->FullXRes(), pDepthMD->FullYRes());
 	}
@@ -1530,20 +1557,44 @@ void drawFrame()
 	// check if pointer is over a map
 	bool bOverDepth = (pDepthMD != NULL) && isPointInRect(g_DrawUserInput.Cursor, &g_DrawConfig.DepthLocation);
 	bool bOverImage = (pImageMD != NULL) && isPointInRect(g_DrawUserInput.Cursor, &g_DrawConfig.ImageLocation);
+	bool bDrawDepthPointer = false;
+	bool bDrawImagePointer = false;
+	int imagePointerRed = 255;
+	int imagePointerGreen = 0;
+	int imagePointerBlue = 0;
 
-	UIntPair pointerInDepth;
-	UIntPair pointerInImage;
-
-	if (bOverDepth)
-	{
-		pointerInDepth.X = (double)(g_DrawUserInput.Cursor.X - g_DrawConfig.DepthLocation.uLeft) / (g_DrawConfig.DepthLocation.uRight - g_DrawConfig.DepthLocation.uLeft + 1) * pDepthMD->FullXRes();
-		pointerInDepth.Y = (double)(g_DrawUserInput.Cursor.Y - g_DrawConfig.DepthLocation.uBottom) / (g_DrawConfig.DepthLocation.uTop - g_DrawConfig.DepthLocation.uBottom + 1) * pDepthMD->FullYRes();
-	}
+	IntPair pointerInDepth;
+	IntPair pointerInImage;
 
 	if (bOverImage)
 	{
 		pointerInImage.X = (double)(g_DrawUserInput.Cursor.X - g_DrawConfig.ImageLocation.uLeft) / (g_DrawConfig.ImageLocation.uRight - g_DrawConfig.ImageLocation.uLeft + 1) * pImageMD->FullXRes();
 		pointerInImage.Y = (double)(g_DrawUserInput.Cursor.Y - g_DrawConfig.ImageLocation.uBottom) / (g_DrawConfig.ImageLocation.uTop - g_DrawConfig.ImageLocation.uBottom + 1) * pImageMD->FullYRes();
+		bDrawImagePointer = true;
+	}
+
+	if (bOverDepth)
+	{
+		pointerInDepth.X = (double)(g_DrawUserInput.Cursor.X - g_DrawConfig.DepthLocation.uLeft) / (g_DrawConfig.DepthLocation.uRight - g_DrawConfig.DepthLocation.uLeft + 1) * pDepthMD->FullXRes();
+		pointerInDepth.Y = (double)(g_DrawUserInput.Cursor.Y - g_DrawConfig.DepthLocation.uBottom) / (g_DrawConfig.DepthLocation.uTop - g_DrawConfig.DepthLocation.uBottom + 1) * pDepthMD->FullYRes();
+
+		// make sure we're in cropped area
+		if (pointerInDepth.X >= pDepthMD->XOffset() && pointerInDepth.X < (pDepthMD->XOffset() + pDepthMD->XRes()) &&
+			pointerInDepth.Y >= pDepthMD->YOffset() && pointerInDepth.Y < (pDepthMD->YOffset() + pDepthMD->YRes()))
+		{
+			bDrawDepthPointer = true;
+			if (!bOverImage && g_DrawConfig.bShowPointer)
+			{
+				// try to translate depth pixel to image
+				if (getImageCoordinatesForDepthPixel(pointerInDepth.X, pointerInDepth.Y, pointerInImage.X, pointerInImage.Y))
+				{
+					bDrawImagePointer = true;
+					imagePointerRed = 0;
+					imagePointerGreen = 0;
+					imagePointerBlue = 255;
+				}
+			}
+		}
 	}
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -1555,18 +1606,18 @@ void drawFrame()
 	glOrtho(0,WIN_SIZE_X,WIN_SIZE_Y,0,-1.0,1.0);
 	glDisable(GL_DEPTH_TEST); 
 
-	if (g_DrawConfig.Streams.Depth.Coloring == LINEAR_HISTOGRAM || g_DrawConfig.bShowPointer)
+	if (g_DrawConfig.Streams.Depth.Coloring == CYCLIC_RAINBOW_HISTOGRAM || g_DrawConfig.Streams.Depth.Coloring == LINEAR_HISTOGRAM || g_DrawConfig.bShowPointer)
 		calculateHistogram();
 
-	drawColorImage(&g_DrawConfig.ImageLocation, bOverImage ? &pointerInImage : NULL);
+	drawColorImage(&g_DrawConfig.ImageLocation, bDrawImagePointer ? &pointerInImage : NULL, imagePointerRed, imagePointerGreen, imagePointerBlue);
 
-	drawDepth(&g_DrawConfig.DepthLocation, bOverDepth ? &pointerInDepth : NULL);
+	drawDepth(&g_DrawConfig.DepthLocation, bDrawDepthPointer ? &pointerInDepth : NULL);
 
 	printStatisticsInfo();
 	printRecordingInfo();
 
 	if (g_DrawConfig.bShowPointer)
-		drawPointerMode(bOverDepth ? &pointerInDepth : NULL);
+		drawPointerMode(bDrawDepthPointer ? &pointerInDepth : NULL);
 
 	drawUserInput(!bOverDepth && !bOverImage);
 
@@ -1590,4 +1641,9 @@ void setDepthDrawing(int nColoring)
 void setImageDrawing(int nColoring)
 {
 	g_DrawConfig.Streams.Image.Coloring	= (ImageColoringType)nColoring;
+}
+
+void resetIRHistogram(int /*dummy*/)
+{
+	g_nMaxGrayscale16Value = 0;
 }

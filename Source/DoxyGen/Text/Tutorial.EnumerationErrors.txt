@@ -1,0 +1,30 @@
+/**
+@page tut_enumeration_errors Understanding why enumeration failed
+
+Sometimes an application enumerates for a specific node, and gets zero results. Aside for the obvious reason where no module implementing this node type is installed, other reasons may occur - a module might be installed but have no license, or a needed hardware device is currently disconnected.
+
+OpenNI enables the application to get a full list of modules that failed to enumerate, and why each one failed. The list of 'failed' modules is obtained by using the @ref xn::EnumerationErrors object.
+
+For example, the following code tries to create a @ref xn::HandsGenerator node, and if enumeration failed, checks all errors:
+@code
+xn::EnumerationErrors errors;
+xn::HandsGenerator handsGen;
+nRetVal = context.CreateAnyProductionTree(XN_NODE_TYPE_HANDS, NULL, handsGen, &errors);
+if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
+{
+	// Iterate over enumeration errors, and print each one
+	for (xn::EnumerationErrors::Iterator it = errors.Begin(); it != errors.End(); ++it)
+	{
+		XnChar strDesc[512];
+		xnProductionNodeDescriptionToString(&it.Description(), strDesc, 512);
+		printf("%s failed to enumerate: %s\n", xnGetStatusString(it.Error()));
+	}
+	return (nRetVal);
+}
+else if (nRetVal != XN_STATUS_OK)
+{
+	printf("Create failed: %s\n", xnGetStatusString(nRetVal));
+	return (nRetVal);
+}
+@endcode
+*/

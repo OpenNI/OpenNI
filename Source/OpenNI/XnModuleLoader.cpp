@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -93,10 +92,15 @@ static XnUInt32 XN_CALLBACK_TYPE GetSceneBytesPerPixel(XnModuleNodeHandle /*hNod
 	return sizeof(XnLabel);
 }
 
+static XnStatus XN_CALLBACK_TYPE UnimplementedGetPixelCoordinatesInViewPoint(XnModuleNodeHandle /*hGenerator*/, XnNodeHandle /*hOther*/, XnUInt32 /*x*/, XnUInt32 /*y*/, XnUInt32* /*pAltX*/, XnUInt32* /*pAltY*/)
+{
+	return XN_STATUS_NOT_IMPLEMENTED;
+}
+
 //---------------------------------------------------------------------------
 // XnDescriptionKeyManager class
 //---------------------------------------------------------------------------
-XnHashValue XnModuleLoader::XnDescriptionKeyManager::Hash(XnProductionNodeDescription const& key)
+XnHashCode XnModuleLoader::XnDescriptionKeyManager::Hash(XnProductionNodeDescription const& key)
 {
 	XnUInt32 nTotalCRC = 0;
 	nTotalCRC += (key.Type * 19);
@@ -112,7 +116,7 @@ XnHashValue XnModuleLoader::XnDescriptionKeyManager::Hash(XnProductionNodeDescri
 	nTotalCRC += nTempCRC;
 
 	// convert from UINT32 to XnHashValue
-	return nTotalCRC % (1 << (sizeof(XnHashValue)*8)); 
+	return nTotalCRC % (1 << (sizeof(XnHashCode)*8)); 
 }
 
 XnInt32 XnModuleLoader::XnDescriptionKeyManager::Compare(XnProductionNodeDescription const& key1, XnProductionNodeDescription const& key2)
@@ -198,18 +202,17 @@ XnStatus saveModulesFile(TiXmlDocument& doc)
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
-XnModuleLoader::XnModuleLoader(XnContext* pContext) : m_pContext(pContext), m_loadingMode(LOADING_MODE_LOAD)
+XnModuleLoader::XnModuleLoader() : m_loadingMode(LOADING_MODE_LOAD)
 {
 }
-
 
 XnModuleLoader::~XnModuleLoader()
 {
 	// free memory
-	for (XnLoadedGeneratorsHash::Iterator it = m_AllGenerators.begin(); it != m_AllGenerators.end(); ++it)
+	for (XnLoadedGeneratorsHash::Iterator it = m_AllGenerators.Begin(); it != m_AllGenerators.End(); ++it)
 	{
-		xnOSFree(it.Value().strConfigDir);
-		XN_DELETE(it.Value().pInterface);
+		xnOSFree(it->Value().strConfigDir);
+		XN_DELETE(it->Value().pInterface);
 	}
 }
 
@@ -226,7 +229,7 @@ XnStatus XnModuleLoader::Init()
 	nRetVal = LoadAllModules();
 	XN_IS_STATUS_OK(nRetVal);
 #else
-	for (RegisteredModulesList::Iterator it = sm_modulesList.begin(); it != sm_modulesList.end(); ++it)
+	for (RegisteredModulesList::Iterator it = sm_modulesList.Begin(); it != sm_modulesList.End(); ++it)
 	{
 		RegisteredModule& module = *it;
 		nRetVal = AddModule(module.pInterface, module.strConfigDir, module.strName);
@@ -259,7 +262,22 @@ XnStatus XnModuleLoader::LoadAllModules()
 		XN_IS_STATUS_OK(nRetVal);
 
 		const XnChar* strConfigDir = pModule->Attribute("configDir");
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+		// Append full application data path to both module path and config directory
+		XnChar strTemp[1024];
+		XnChar strTemp2[1024];
 
+		xnOSGetApplicationLibDir(strTemp, sizeof(strTemp));
+		strncat(strTemp, strModulePath, sizeof(strTemp));
+		strModulePath = strTemp;
+
+		if (strConfigDir != NULL)
+		{
+			xnOSGetApplicationFilesDir(strTemp2, sizeof(strTemp2));
+			strncat(strTemp2, strConfigDir, sizeof(strTemp2));
+			strConfigDir = strTemp2;
+		}
+#endif
 		nRetVal = LoadModule(strModulePath, strConfigDir);
 		XN_IS_STATUS_OK(nRetVal);
 
@@ -456,8 +474,8 @@ XnStatus XnModuleLoader::AddExportedNode(XnVersion& moduleOpenNIVersion, XnModul
 	}
 
 	// make sure it's not in the list
-	XnLoadedGeneratorsHash::ConstIterator it = m_AllGenerators.end();
-	if (m_AllGenerators.Find(loaded.Description, it) == XN_STATUS_OK)
+	XnLoadedGeneratorsHash::ConstIterator it = m_AllGenerators.Find(loaded.Description);
+	if (it != m_AllGenerators.End())
 	{
 		XN_LOG_WARNING_RETURN(XN_STATUS_INVALID_GENERATOR, XN_MASK_MODULE_LOADER, "A Generator with the same description already exists!");
 	}
@@ -1068,6 +1086,12 @@ XnStatus XnModuleLoader::ValidateGeneratorInterface(XnVersion& moduleOpenNIVersi
 	XN_VALIDATE_FUNC_NOT_NULL(pInterface, GetTimestamp);
 	XN_VALIDATE_FUNC_NOT_NULL(pInterface, GetFrameID);
 
+	// Fix BC issues
+	if (pInterface->pAlternativeViewPointInterface->GetPixelCoordinatesInViewPoint == NULL)
+	{
+		pInterface->pAlternativeViewPointInterface->GetPixelCoordinatesInViewPoint = UnimplementedGetPixelCoordinatesInViewPoint;
+	}
+
 	// validate mirror capability
 	XN_VALIDATE_CAPABILITY(pInterface, Mirror);
 
@@ -1365,16 +1389,16 @@ static XnBool CompareGeneratorsByVersion(const XnLoadedGenerator*& arg1, const X
 	return (nCompareRes < 0);
 }
 
-XnStatus XnModuleLoader::Enumerate(XnProductionNodeType Type, XnNodeInfoList* pList, XnEnumerationErrors* pErrors)
+XnStatus XnModuleLoader::Enumerate(XnContext* pContext, XnProductionNodeType Type, XnNodeInfoList* pList, XnEnumerationErrors* pErrors)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
 	XnArray<const XnLoadedGenerator*> foundGenerators;
 	foundGenerators.Reserve(50);
 
-	for (XnLoadedGeneratorsHash::ConstIterator it = m_AllGenerators.begin(); it != m_AllGenerators.end(); ++it)
+	for (XnLoadedGeneratorsHash::ConstIterator it = m_AllGenerators.Begin(); it != m_AllGenerators.End(); ++it)
 	{
-		const XnLoadedGenerator& LoadedGenerator = it.Value();
+		const XnLoadedGenerator& LoadedGenerator = it->Value();
 		
 		// check if it's of the same type and it's not a mock node
 		if (LoadedGenerator.Description.Type == Type)
@@ -1395,7 +1419,7 @@ XnStatus XnModuleLoader::Enumerate(XnProductionNodeType Type, XnNodeInfoList* pL
 		XN_IS_STATUS_OK(nRetVal);
 
 		const XnLoadedGenerator* pLoadedGenerator = foundGenerators[i];
-		nRetVal = pLoadedGenerator->ExportedInterface.EnumerateProductionTrees(m_pContext, pGeneratorList, pErrors);
+		nRetVal = pLoadedGenerator->ExportedInterface.EnumerateProductionTrees(pContext, pGeneratorList, pErrors);
 		if (nRetVal != XN_STATUS_OK && pErrors != NULL)
 		{
 			nRetVal = xnEnumerationErrorsAdd(pErrors, &pLoadedGenerator->Description, nRetVal);
@@ -1413,7 +1437,7 @@ XnStatus XnModuleLoader::Enumerate(XnProductionNodeType Type, XnNodeInfoList* pL
 	return (XN_STATUS_OK);
 }
 
-XnStatus XnModuleLoader::CreateRootNode(XnNodeInfo* pTree, XnModuleInstance** ppInstance)
+XnStatus XnModuleLoader::CreateRootNode(XnContext* pContext, XnNodeInfo* pTree, XnModuleInstance** ppInstance)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -1435,7 +1459,7 @@ XnStatus XnModuleLoader::CreateRootNode(XnNodeInfo* pTree, XnModuleInstance** pp
 	const XnChar* strInstanceName = xnNodeInfoGetInstanceName(pTree);
 	const XnChar* strCreationInfo = xnNodeInfoGetCreationInfo(pTree);
 	XnNodeInfoList* pNeededNodes = xnNodeInfoGetNeededNodes(pTree);
-	nRetVal = pLoaded->ExportedInterface.Create(m_pContext, strInstanceName, strCreationInfo, pNeededNodes, pLoaded->strConfigDir, &pInstance->hNode);
+	nRetVal = pLoaded->ExportedInterface.Create(pContext, strInstanceName, strCreationInfo, pNeededNodes, pLoaded->strConfigDir, &pInstance->hNode);
 	XN_IS_STATUS_OK(nRetVal);
 
 	*ppInstance = pInstance;
@@ -1587,7 +1611,7 @@ XN_C_API XnStatus xnPrintRegisteredModules()
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
-	XnModuleLoader loader(NULL);
+	XnModuleLoader loader;
 	loader.SetLoadingMode(XnModuleLoader::LOADING_MODE_PRINT);
 
 	XnVersion version;

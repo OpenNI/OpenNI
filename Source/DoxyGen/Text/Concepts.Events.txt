@@ -1,0 +1,67 @@
+/**
+@page conc_events Events and Handlers
+
+@section event_cmn_params Common Parameters for Events: Registration Methods and Handlers
+
+@subsection	reg_to_events Registering to Events
+
+@param [in]		pCookie 	A pointer to application-specific data, that will be 
+							retured to the application when the callback is called. 
+
+@param [out]	hCallback	A callback handle to be used for unregistering this 
+							callback.
+
+The @c pCookie parameter can point to any information ("cookie"). The 
+application will receive that information through the event handler when 
+the event is raised. 
+
+One possible use for this ability is that this allows the application to 
+register to the same event from different points in the program, where 
+each requires different things to happen when the callback is invoked; 
+so additional information is passed here through this parameter. For 
+example, the application could call a 'Register Callback' method to 
+register the same callback more than once and each time pass a different 
+value for @c pCookie. 
+
+When registration is successful, a callback handle is returned in the 
+@c hCallback parameter. This is the identification ID of the event 
+registration and is a confirmation that the registration succeeded. 
+
+For each separate call to registration callbacks, the application gets a 
+different handle. 
+
+You use this callback handle to unregister from the event when you don't 
+want your callback called anymore. 
+
+In the 'Register Callback' method the hCallback handle is an output 
+parameter, whereas in the 'Unregister Callback' method the hCallback 
+handle is an input parameter. 
+
+@subsection	unreg_from_events Unregistering from Events
+
+Parameters to Unregister method
+ 
+@param [in]		hCallback  Handle received from registration.
+
+@section event_cmn_conf Configuration Change Events
+
+Most of the configuration options in OpenNI have events related to them 
+which are raised whenever this configuration has changed. For example, 
+setting the mirror state of a generator (by calling @ref 
+xn::MirrorCapability::SetMirror()) will cause the 'Mirror Changed' event 
+to be raised. 
+
+Note that the configuration change does not neccessarily takes place as 
+a result of your application. Some node implementations support multiple 
+processes simultanously, and a configuration change in one application 
+may sometime result in a configuration change in another - see @ref 
+conc_locks. 
+
+Some common uses of the configuration change events are:
+#- Several components in an application that can change configuration, 
+   and all needs to be synchronized. 
+#- Handling configuration changes resulting from a change made by 
+   another application. 
+#- Cache management of certain configuration in the application. 
+
+*/

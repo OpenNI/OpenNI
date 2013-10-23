@@ -1,0 +1,165 @@
+
+/**
+@page smpl_cnvx_to_oni  NiConvertXToONI.cpp - sample program
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- NiConvertXToONI.cpp
+		
+	The program opens any recording, takes every node in this recording, and records it to a new ONI recording. It receives both input file and output file from the command line.
+		
+	The documentation describes the sample program's code from the top of the program file(s) to bottom.
+	
+	Every OpenNI feature is described the first time it appears in this sample program. Further appearances of the same feature are not decribed again.
+		
+				
+	@section cnvx2o_mainprg main() &ndash; Main Program
+	
+		@subsection cnvx2o_mainprg_dcl_blk Main Program Declaration Block		
+			
+			
+			The following code block sets the limits for the main program loop later in the program. 
+			
+			Setting seekNodeType to xn::XN_NODE_TYPE_INVALID "XN_NODE_TYPE_INVALID" is an initialization for <code>seekNodeType</code> gets from the users run arguments  an indication whether the user wants to play back all nodes or just one specified node. The XN_NODE_TYPE_INVALID value for <code>seekNodeType</code> initialization makes the program play back all nodes. 
+			@code			
+				XnUInt32 nStartFrame = 1;
+				XnUInt32 nEndFrame = XN_MAX_UINT32;
+				XnProductionNodeType seekNodeType = XN_NODE_TYPE_INVALID;
+			@endcode			
+	
+		@subsection cnvx2o_get_prod_node Get a Production Node From a String		
+			If the node type parameter (the third command line parameter) is specified, we translate the node type from a string to an XnProductionNodeType value using @ref xn::xnProductionNodeTypeFromString "xnProductionNodeTypeFromString()".			
+			@code	
+				if (argc >= 4)
+				{
+					strNodeType = argv[3];
+					nRetVal = xnProductionNodeTypeFromString(strNodeType, &seekNodeType);
+					if (nRetVal != XN_STATUS_OK)
+					{
+						...
+					}
+					...
+				}		
+			@endcode
+			
+			The following initializes the @ref xn::Context object. This is where the application builds an OpenNI production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object structure.  
+			@code		
+				Context context;
+				nRetVal = context.Init();
+			@endcode	
+
+			The following code uses the @ref xn::Player node to replay a recorded file of a session of OpenNI data generation exactly as it was recorded. <code>strInputFile</code> contains the input file name, as above. 			
+			
+			The @ref xn::Context::OpenFileRecording() "OpenFileRecording()" method replays a recorded file of a session of OpenNI data generation exactly as it was recorded. This includes recreating the whole @ref prod_graph "production graph", with all its nodes, that was built to run the original data generation session. 
+			@code
+				Player player;
+				nRetVal = context.OpenFileRecording(strInputFile, player);
+			@endcode	
+			
+			In the following statement, the @ref xn::Player::SetPlaybackSpeed() "SetPlaybackSpeed()" method sets the player's playback speed, as a ratio of the rate that the recording was made at. The value @ref xn::XN_PLAYBACK_SPEED_FASTEST (0.0) means that there will be no delay, and that frames will be returned immediately on demand.
+			@code
+				nRetVal = player.SetPlaybackSpeed(XN_PLAYBACK_SPEED_FASTEST);
+			@endcode
+			
+		    In the following statement, the @ref xn::Player::EnumerateNodes() "EnumerateNodes()" method places in <code>nodes</code> the list of all nodes created by the earlier call to @ref xn::Context::OpenFileRecording() "OpenFileRecording()". 
+			@code
+				NodeInfoList nodes;
+				nRetVal = player.EnumerateNodes(nodes);
+			@endcode
+			
+			In the following, the call to @ref xn::Recorder::Create() "Create()" initializes a Recorder object. This object records to a specified destination medium the frames of data from each node that was added to the Recorder node.   	
+			@code	
+				Recorder recorder;
+				nRetVal = recorder.Create(context);
+			@endcode
+			
+			In the following statement, the call to @ref xn::Recorder::SetDestination() "SetDestination()" specifies to where the recorder must send its recording. This is a disk file of ONI type.
+			@code		
+				nRetVal = recorder.SetDestination(XN_RECORD_MEDIUM_FILE, strOutputFile);
+			@endcode		
+						
+			
+		@subsection cnvx2o_for_add_all_nodes_to_the_recorder for() - Add all Nodes to the Recorder
+		
+			The following 'for' loop adds to the recorder all the nodes in the @ref xn::NodeInfoList "NodeInfoList" that were obtained from the earlier call to the @ref xn::Player::EnumerateNodes() "EnumerateNodes()" method. A NodeInfoList object contains a list of @ref xn::NodeInfo "NodeInfo" objects. The NodeInfo class contains information about a @ref node_alternative "node", whether it is an existing node, or not-yet instantiated. In this case it is instantiated.
+			@code
+				for (NodeInfoList::Iterator it = nodes.Begin(); it != nodes.End(); ++it)
+				{
+				 ...
+				}
+			@endcode
+			
+				The body of the above for-loop is described in the following paragraphs.
+				
+				NodeInfo nodeInfo = *it;
+				
+				Ignore AudioGenerator nodes.
+				@code
+					if (nodeInfo.GetDescription().Type == XN_NODE_TYPE_AUDIO)
+					{
+						continue;
+					}
+				@endcode
+				
+				The following statements use the @ref xn::NodeInfo object to get a reference to the actual @ref xn::ProductionNode "ProductionNode" object. The ProductionNode class is a base class for all production nodes, including all @ref xn::Generator "Generator" nodes. Thus, the OpenNI Production Graph is comprised entirely of production nodes of one type or another.
+				@code
+					ProductionNode node;
+					nRetVal = nodeInfo.GetInstance(node);
+				@endcode
+				
+				The following '<code>if</code>' determines whether the user wants to play back all nodes or just one specific node. The XN_NODE_TYPE_INVALID value for <code>seekNodeType</code> indicates that the user wants to play back all nodes. This value was set in earlier code above. 
+				@code
+					if (seekNodeType == XN_NODE_TYPE_INVALID)
+				@endcode
+				
+				If the user wants all nodes to be played back and recorded then each and every node iterated by <code>nodeInfo</code> is added to the recorder. @ref xn::Recorder::AddNodeToRecording() "AddNodeToRecording()" adds a node to the recording, and starts recording data that the node generates.
+				@code
+					if (seekNodeType == XN_NODE_TYPE_INVALID)
+					{
+						nRetVal = recorder.AddNodeToRecording(node);
+					}
+				@endcode
+				
+				If the user specifies a certain node type, the program selects and records only nodes of that type, <code>seekNodeType</code>, in the run parameter (explained earlier).  
+				
+				The @ref xn::Player::SeekToFrame() "SeekToFrame()" moves the player to a specific frame of a specific node, e.g., a DepthGenerator node, so it sets up the player so that it will play that node and from that frame onwards.
+				<code>XN_PLAYER_SEEK_SET</code> specifies that the player must start from the frame number, <code>nStartFrame</code>.
+				@code
+					else if (seekNodeType == nodeInfo.GetDescription().Type)
+					{
+						nRetVal = player.SeekToFrame(node.GetName(), nStartFrame, XN_PLAYER_SEEK_SET);
+						nRetVal = recorder.AddNodeToRecording(node);
+					}				
+				@endcode
+				
+				In the following, @ref xn::Player::SetRepeat() "SetRepeat()" specifies that the player will not automatically rewind to the beginning of the recording after reaching the end of the recording (the default behavior is to rewind). 
+				@code
+					nRetVal = player.SetRepeat(FALSE);
+				@endcode
+				
+		
+			
+		@subsection cnvx2o_main_prog_loop - Main Program Loop
+		
+			Following is the main program loop. It waits for available data from any generator node and records it. The call to the @ref xn::Context::WaitAnyUpdateAll()  "context.WaitAnyUpdateAll()" method updates all generator nodes in the context to the latest available data, first waiting for any of the nodes to have new data available. Since this method is being fed from a recording, the end of the recording is indicated by returning the XN_STATUS_EOF value. 
+			
+			Note that the @ref xn::Context::WaitAnyUpdateAll() "WaitAnyUpdateAll()" method has to be called for each and every loop to refresh the node's data.			 
+			@code
+				while ((nRetVal = depth.WaitAnyUpdateAll ()) != XN_STATUS_EOF)
+				{
+					...
+				}
+			@endcode			
+			
+			Inside the body of the main program loop <code>nFrame</code> is incremented. An 'if' statement tests whether the user has specified a single node type and if so, and if the requested number of frames has been played back, then the execution of the main program loop is terminated. 
+			@code			
+				printf("Recording: %u\r", nFrame++);
+				if ((seekNodeType != XN_NODE_TYPE_INVALID) && (nFrame == nEndFrame))
+				{
+					break;			
+				}
+			@endcode			
+			
+
+*/
+
+

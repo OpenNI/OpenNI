@@ -1,49 +1,45 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #ifndef __XN_INTERNAL_TYPES_H__
 #define __XN_INTERNAL_TYPES_H__
 
 #include <XnPlatform.h>
-#include <XnHash.h>
-#include <XnEvent.h>
+#include <XnHashT.h>
+#include <XnEventT.h>
 #include <XnTypes.h>
-#include <XnStringsHash.h>
+#include <XnStringsHashT.h>
 #include <XnFPSCalculator.h>
+#include "XnModuleLoader.h"
 #include <XnBitSet.h>
 #include <XnDump.h>
+#include <XnListT.h>
 
 #define XN_OPEN_NI_XML_ROOT_NAME	"OpenNI"
-
-struct XnModuleInstance;
-typedef struct XnModuleInstance ModuleInstance;
-struct XnNodeInfo;
-typedef struct XnNodeInfo XnNodeInfo;
 
 typedef struct XnNeededNodeData
 {
 	XnUInt64 nLastReadTimestamp;
 } XnNeededNodeData;
 
-XN_DECLARE_DEFAULT_HASH(XnNodeHandle, XnNeededNodeData*, XnNeededNodesDataHash)
+typedef XnHashT<XnNodeHandle, XnNeededNodeData*> XnNeededNodesDataHash;
 
 typedef struct XnLockData
 {
@@ -124,7 +120,7 @@ namespace xn
             }
         };
         /// @brief Hash to hold the pose data for users for a single pose
-        XN_DECLARE_DEFAULT_HASH(XnUserID,PoseData,UsersPoseDataHash);
+		typedef XnHashT<XnUserID, PoseData> UsersPoseDataHash;
         /// @brief Structure to hold the data of a single pose
         struct UsersPoseData
         {
@@ -155,7 +151,7 @@ namespace xn
 }
 
 struct XnModuleStateCookie; // Forward Declaration
-XN_DECLARE_DEFAULT_HASH(XnModuleStateCookie*, XnModuleStateCookie*, XnModuleStateCookieHash);
+typedef XnHashT<XnModuleStateCookie*, XnModuleStateCookie*> XnModuleStateCookieHash;
 
 struct XnInternalNodeData
 {
@@ -188,6 +184,7 @@ struct XnInternalNodeData
 	XnBool bWasDataRead; // Changes to TRUE on the first UpdateData() called.
 	XN_CRITICAL_SECTION_HANDLE hLock;
 	XnBool bIsOwnedByContext;
+	XnBool bWasVisited; // Used for graph visiting methods
 };
 
 struct XnGestureRecognizedParams
@@ -217,36 +214,54 @@ struct XnGestureProgressParams
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /** Declared licenses list. */
-XN_DECLARE_LIST(XnLicense, XnLicenseList)
+typedef XnListT<XnLicense> XnLicenseList;
 
-XN_DECLARE_STRINGS_HASH(XnInternalNodeData*, XnNodesMap)
+typedef XnStringsHashT<XnInternalNodeData*> XnNodesMap;
 
-XN_DECLARE_DEFAULT_HASH(const XnNodeInfo*, XnValue, XnProductionNodesSet)
-
-XN_DECLARE_EVENT_1ARG(XnErrorStateChangedEvent, IXnErrorStateChangedEvent, XnStatus, errorState)
-XN_DECLARE_EVENT_1ARG(XnContextShuttingDownEvent, IXnContextShuttingDownEvent, XnContext*, pContext);
+typedef XnEvent1Arg<XnStatus> XnErrorStateChangedEvent;
+typedef XnEvent1Arg<XnContext*> XnContextShuttingDownEvent;
+typedef XnEvent2Args<XnContext*, XnNodeHandle> XnNodeCreationEvent;
+typedef XnEvent2Args<XnContext*, const XnChar*> XnNodeDestructionEvent;
 
 class XnModuleLoader;
 
 /** NI Context. */
 struct XnContext
 {
-	XnLicenseList* pLicenses;
-	XnModuleLoader* pModuleLoader;
-	XnNodesMap* pNodesMap;
+	XnContext() : 
+		bGlobalMirrorSet(FALSE),
+		bGlobalMirror(FALSE),
+		globalErrorState(XN_STATUS_OK),
+		hNewDataEvent(NULL),
+		nLastLockID(0),
+		readFPS(NULL),
+		nRefCount(1),
+		hLock(NULL),
+		pOwnedNodes(NULL),
+		pDumpRefCount(NULL),
+		pDumpDataFlow(NULL),
+		hPlayerNode(NULL)
+	{}
+
+	XnLicenseList licenses;
+	XnModuleLoader moduleLoader;
+	XnNodesMap nodesMap;
 	XnBool bGlobalMirrorSet;
 	XnBool bGlobalMirror;
 	XnStatus globalErrorState;
-	XnErrorStateChangedEvent* pGlobalErrorChangeEvent;
+	XnErrorStateChangedEvent globalErrorChangeEvent;
+	XnNodeCreationEvent nodeCreationEvent;
+	XnNodeDestructionEvent nodeDestructionEvent;
 	XN_EVENT_HANDLE hNewDataEvent;
 	XnUInt32 nLastLockID;
 	XnFPSData readFPS;
 	XnUInt32 nRefCount;
 	XN_CRITICAL_SECTION_HANDLE hLock;
-	XnNodeInfoList* pOwnedNodes;
+	XnNodeInfoList* pOwnedNodes; // nodes that are owned by the context and not by users, for example, nodes that were created from XML script.
 	XnDumpFile* pDumpRefCount;
 	XnDumpFile* pDumpDataFlow;
-	XnContextShuttingDownEvent* pShutdownEvent;
+	XnContextShuttingDownEvent shutdownEvent;
+	XnNodeHandle hPlayerNode; // For now, we only support one player at a time
 };
 
 struct XnNodeInfo

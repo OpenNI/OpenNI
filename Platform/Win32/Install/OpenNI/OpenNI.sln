@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "OpenNI", "OpenNI.wixproj", "{176C8226-7BFB-433B-931C-7B6C539CDB37}"
 EndProject
 Global

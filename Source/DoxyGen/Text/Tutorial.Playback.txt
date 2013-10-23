@@ -1,0 +1,26 @@
+/**
+@page tut_playing Playing a file recording
+
+The following code opens a file recording and reads data from it:
+@code
+// Initialize OpenNI
+xn::Context context;
+nRetVal = context.Init();
+// TODO: check error code
+
+// Open file recording
+nRetVal = context.OpenFileRecording(".\\MyRecording.oni");
+// TODO: check error code
+
+// Look for the depth node
+xn::DepthGenerator depth;
+nRetVal = context.FindExistingNode(XN_NODE_TYPE_DEPTH, depth);
+if (nRetVal != XN_STATUS_OK)
+{
+	printf("Can't run - no depth generator is present in recording!\n");
+	exit(-1);
+}
+
+// TODO: mainloop - process data
+@endcode
+*/

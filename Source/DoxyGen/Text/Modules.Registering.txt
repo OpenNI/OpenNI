@@ -1,0 +1,8 @@
+/**
+@page modules_registration Registering the new Module
+
+Your module is now complete. All you need to do now is to register your 
+shared library with OpenNI. This can be done using OpenNI's niReg 
+utility. See @ref nireg for usage. 
+
+*/

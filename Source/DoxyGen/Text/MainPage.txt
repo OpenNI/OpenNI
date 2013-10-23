@@ -1,0 +1,16 @@
+/**
+@mainpage OpenNI Overview
+
+This ovverview comprises the following major sections:
+
+- @subpage introduction
+- @subpage concepts
+- @subpage xmlscripts
+- @subpage cmdutils
+- @subpage additional
+- @subpage tutorials
+- @subpage smpls_n_guides
+- @subpage glossary   
+- @subpage legal
+*/
+

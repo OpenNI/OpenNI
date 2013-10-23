@@ -1,0 +1,193 @@
+/**
+@page smpls Sample Programs for the OpenNI API
+
+
+	This OpenNI installation comes with a number of sample programs. All samples are placed under the 'Samples' folder, and their binaries
+	can be found under:
+	@code
+		Samples\\Bin\\Debug
+		
+		 - or -
+		 
+		Samples\\Bin\\Release
+	@endcode
+	
+	Most samples use an XML file to configure OpenNI. This file can be found at:
+	@code
+		%OPEN_NI_INSTALL_DIR\%\\Data\\SamplesConfig.xml</code>
+	@endcode
+	
+	There are samples for the C++, C#/.NET and Java interfaces.
+
+	This help document describes the sample programs showing how to program with the OpenNI API. Follow the links below for a detailed description of each sample programs.
+	
+	- @subpage smpl_audio	
+	- @subpage smpl_back_recrdr	
+	- @subpage smpl_cnvx_to_oni	
+	- @subpage smpl_record_raw	
+	- @subpage smpl_record_syn	
+	- @subpage smpl_simple_create
+	- @subpage smpl_simple_read
+	- @subpage smpl_simple_view
+	- @subpage smpl_user_tracker
+	- @subpage smpl_niviewer  
+	- @subpage smpl_simple_read_java
+	- @subpage smpl_simple_read_net
+	- @subpage smpl_simple_view_java
+	- @subpage smpl_simple_view_net	
+	- @subpage smpl_user_tracker_java
+	- @subpage smpl_user_tracker_net
+	- @subpage smpl_handtracker_java	
+
+
+
+@section smpls_overview  Summary of Sample Programs
+	
+
+	Following are brief descriptions of the basic purpose of some of the main sample programs above. 
+
+	@subsection nisimpleread NiSimpleRead for C++
+
+		NiSimpleRead is very basic. It configures OpenNI using the SamplesConfig XML file, and then takes the depth
+		generator node (it assumes there is one. If not, the sample will exit with an error).
+		It then loops, reading new frames from the depth generator, and prints out the depth value of the middle pixel.
+		The sample exists when the user presses 'ESC'.
+		
+
+	@subsection nisimplecreate NiSimpleCreate for C++
+
+		NiSimpleCreate is an example of creating a production node programmatically in code, rather than using the 
+		SamplesConfig XML file. After creating a depth node, it reads from it like NiSimpleRead does.
+
+	@subsection nisimpleviewer NiSimpleViewer for C++
+
+		NiSimpleViewer is a small OpenGL application which draws the depth maps and the image maps to the screen.
+		It configures OpenNI using the SamplesConfig XML, but requires both a DepthGenerator node and an ImageGenerator node to be present, both with
+		the same resolution, and the ImageGenerator node at RGB24 format.
+		The application creates a histogram of the depth map and draws the frame using it to allow better visibility
+		of the depth map.
+
+		The following keys can be used to control the application:
+		<table>
+				<tr>
+					<th>Key</th>	<th>Description</th>
+				</tr>
+				<tr>
+					<td>1</td>
+					<td>
+						Converts to OVERLAY mode, drawing a depth map on top of the image map. It also sets the depth viewpoint
+						to the image viewpoint (using the AlternativeViewPoint capability).
+					</td>
+				</tr>
+				<tr>
+					<td>2</td>
+					<td>Draws only the depth map. It also turns off AlternativeViewPoint operation.</td>
+				</tr>
+				<tr>
+					<td>3</td>
+					<td>Draws only the image map. It also turns off AlternativeViewPoint operation.</td>
+				</tr>
+				<tr>
+					<td>Esc</td>
+					<td>Closes the application</td>
+				</tr>
+		</table>
+
+
+	@subsection niconvertxtooni NiConvertXToONI for C++
+
+		NiConvertXToONI opens any recording, takes every node in the recording, and records it to a new ONI recording.
+		It takes both the input file name and the output file name from the command line.
+		
+
+	@subsection nirecordsynthetic NiRecordSynthetic for C++
+
+		NiRecordSynthetic shows how to open a recording, perform some transformation on the data in it,
+		and then re-record this data.
+
+
+	@subsection nibackrecorder NiBackRecorder for C++
+
+		niBackRecorder is a command line tool, which stores frames in memory in a cyclic buffer,
+		and when requested (clicking 'd') dumps that cyclic buffer to an ONI file.
+		In effect, it saves the most recent x seconds (configurable).
+
+		@subsection nibackrecorder_usage Usage
+
+			@code
+				niBackRecorder time <seconds> [depth [qvga|vga]] [image [qvga|vga]] [verbose] [mirror <on|off>] [registration] [framesync] [outdir <directory>]
+			@endcode
+
+			The following options are mandatory:
+			- @b time	Number of seconds to dump each time. 
+
+			The following options can be used:
+			- @b depth	Sets the resolution of the depth, to either QVGA or VGA. If not mentioned, depth is off. If no resolution is mentioned, QVGA is used.
+			- @b image	Sets the resolution of the image, to either QVGA or VGA. If not mentioned, image is off. If no resolution is mentioned, QVGA is used.
+			- @b verbose	Turns on the log.
+			- @b mirror	Set the mirror mode. If not mentioned, uses whatever was configured. 
+			- @b registration	Change depth to match image.
+			- @b framesync	Syncronize between depth and image.
+			- @b outdir	Where to create the oni files. Default is the execution directory.
+
+			Note: When designing your application it is important to consider the amount of memory used to store the frames.
+			<table>
+			 <tr>
+			  <th>Configuration</th>
+			  <th>Size</th>
+			 </tr>
+			 <tr>
+			  <td>1 second, QVGA depth</td>
+			  <td>30*320*240*2B = 4500KB</td>
+			 </tr>
+			 <tr>
+			  <td>1 second, QVGA image</td>
+			  <td>30*320*240*3B = 6750KB</td>
+			 </tr>
+			 <tr>
+			  <td>1 second, VGA depth</td>
+			  <td>30*640*480*2B = 18000KB</td>
+			 </tr>
+			 <tr>
+			  <td>1 second, VGA image</td>
+			  <td>30*640*480*3B = 27000KB</td>
+			 </tr>
+			</table>
+			
+	
+	@subsection nirecordraw NiRecordRaw for C++
+	
+		NiRecordRaw is an OpenNI sample program for recording raw data, and then playing it back. Recording raw data may be useful for middleware developers who produce a custom type of data that isn't defined by OpenNI. In addition, recording raw data may also be useful for middleware developers who save additional debugging information in the ONI file. This additional data may be used in conjunction with the standard OpenNI data types such as depth output data stored in the file. In this case, each frame of debugging information will match a depth frame. 
+	
+		In this sample, the raw data is artificial data that the application itself synthesizes.
+	
+	
+	@subsection niaudiosample NiAudioSample for C++
+	
+		NiAudioSample is an OpenNI sample program for using the Audio interface. 
+		
+		It demonstrates an OpenNI production graph using an AudioGenerator node to play audio, reading the audio data from an audio input device. This sample also demonstrates recording the audio data to a PCM file.
+
+
+	@subsection nisimplereadjava SimpleRead for Java
+
+		See NiSimpleRead for C++.
+		
+
+	@subsection nisimplereadjava SimpleRead for C#/.NET
+
+		See NiSimpleRead for C++.
+		
+
+	@subsection nisimpleviewer SimpleViewer for Java
+
+		See NiSimpleViewer for C++.
+		
+		
+	@subsection nisimpleviewer SimpleViewer for C#/.NET
+
+		See NiSimpleViewer for C++.
+
+ 	
+*/
+

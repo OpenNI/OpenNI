@@ -1,0 +1,62 @@
+/**
+@page cmdutils Command-Line Utilities
+
+OpenNI arrives with the following command-line utilities:
+- @subpage nireg
+- @subpage nilicense
+*/
+
+
+
+
+
+
+
+/**
+@page nireg niReg
+
+niReg allows registration and deregistration of modules from OpenNI. Registered modules participate in
+the enumeration process.
+This utility is commonly used by modules installations.
+
+@section nireg_usage Usage
+
+@code
+niReg [options] <module_path> [config_dir]
+@endcode
+
+The following options can be used:
+- @b -r	Registers a module to OpenNI.
+- @b -u	Unregisters a module from OpenNI.
+
+If no option is supplied, @c -r is assumed.
+
+When registering a module, an optional configuration directory can be passed. This directory will be passed
+to the module when loaded from OpenNI, allowing it to have custom configuration files.
+*/
+
+
+
+
+
+
+
+
+/**
+@page nilicense niLicense
+
+niLicense allows adding or removing licenses from the global license registry.
+This utility is commonly used by modules installations.
+
+@section nireg_usage Usage
+
+@code
+niLicense [options] <vendor> <key>
+@endcode
+
+The following options can be used:
+- @b -r	Registers a license to the global registry.
+- @b -u	Unregisters a module from the global registry.
+
+If no option is supplied, @c -r is assumed.
+*/

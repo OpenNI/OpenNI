@@ -1,0 +1,446 @@
+/**
+	
+@page smpl_niviewer_capture_cpp Capture.cpp file
+
+	<b>Source files:</b> Click the following link to view the source code file:
+		- Capture.cpp
+
+		
+	This file contains the code for capturing frames from the OpenNI generator nodes. 
+	
+	@section capture_cpp_glb_decls Global Type Declarations for Capture.cpp 
+	
+		The Capture.cpp file's global type declarations comprise four type definitions,  which are directly connected. The relationship between these four types is presented by by the following summary, with the key components only shown.
+		@code
+			typedef enum { NOT_CAPTURING, ...	} CapturingState;
+			typedef enum { CAPTURE_DEPTH_NODE,..., CAPTURE_NODE_COUNT } CaptureNodeType;
+			typedef struct NodeCapturingData {	... } NodeCapturingData;			
+			typedef struct CapturingData
+			{
+				NodeCapturingData nodes[CAPTURE_NODE_COUNT];
+				...
+				...
+				CapturingState State;
+				...
+			} CapturingData;
+			
+			// --------------------------------
+			// Global Variables
+			// --------------------------------
+			CapturingData g_Capture;	
+		@endcode
+		
+		In summary, the major data type is the <code>CapturingData</code> structure, for which a single run-time data instance, <code>g_Capture</code>, is defined, as above, and is used extensively throughout the Capture.cpp module. 
+		
+		As shown above, <code>g_Capture</code> includes the <code>nodes</code> array, containing an entry of type <code>NodeCapturingData</code> for one each of the (four - CAPTURE_NODE_COUNT) types of generator nodes, @ref xn::DepthGenerator "Depth", @ref xn::ImageGenerator "Image", @ref xn::IRGenerator "IR", and @ref xn::AudioGenerator "Audio"  generators. A key data field of <code>NodeCapturingData</code> is <code>pGenerator</code>, for pointing to one of the above generators.
+		
+		These structures are described separately and in some detail in the subsections further below. 
+	
+		@subsection capture_cpp_glb_decls_CapturingState Type definition:  CapturingState enum 
+		
+			The <code>CapturingState</code> type is defined as below. It defines a field in the <code>CapturingData</code> structure. It is used as the state controller in the getCaptureMessage() state machine.
+			@code
+				typedef enum
+				{
+					NOT_CAPTURING,
+					SHOULD_CAPTURE,
+					CAPTURING,
+				} CapturingState;
+			@endcode
+
+		@subsection capture_cpp_glb_decls_CaptureNodeType Type definition:   CaptureNodeType enum
+		
+			This type contains enum items for specifying esch of the generator nodes.
+			@code
+				typedef enum
+				{
+					CAPTURE_DEPTH_NODE,
+					CAPTURE_IMAGE_NODE,
+					CAPTURE_IR_NODE,
+					CAPTURE_AUDIO_NODE,
+					CAPTURE_NODE_COUNT
+				} CaptureNodeType;
+			@endcode
+			The <code>CaptureNodeType</code> type itself is not currently directly used.
+			
+		
+		@subsection capture_cpp_glb_decls_NodeCapturingData Type definition:   NodeCapturingData structure
+		
+			The <code>NodeCapturingData</code> type is defined as below. It defines a field in the <code>CapturingData</code> structure. It is used as the state controller in the getCaptureMessage() state machine.
+			@code
+				typedef struct NodeCapturingData
+				{
+					XnCodecID captureFormat;
+					XnUInt32 nCapturedFrames;
+					bool bRecording;
+					xn::Generator* pGenerator;
+				} NodeCapturingData;
+			@endcode	
+			
+			<code>captureFormat</code>:  For containing the current codec enum ID of a  generator node. Note that later in this file (in @ref capture_cpp_captureinit) <i>all</i> of the codec text names and enum IDs for each node type area stored (in <code>g_DepthFormat.pValues[]</code> and <code>g_DepthFormat.pIndexToName[nIndex]</code>).
+
+			
+		@subsection capture_cpp_glb_decls_CapturingData Type definition:  CapturingData struct
+			@code	
+				typedef struct CapturingData
+				{
+					NodeCapturingData nodes[CAPTURE_NODE_COUNT];
+					Recorder* pRecorder;
+					char csFileName[XN_FILE_MAX_PATH];
+					XnUInt32 nStartOn; // time to start, in seconds
+					bool bSkipFirstFrame;
+					CapturingState State;
+					XnUInt32 nCapturedFrameUniqueID;
+					char csDisplayMessage[500];
+				} CapturingData;			
+			@endcode
+			
+			
+	@section capture_cpp_glb_vars Global Variable Declarations for Capture.cpp 			
+	
+		The Capture.cpp file's global variable declarations includes the central <code>g_Capture</code> variable and a format variable of <code>NodeCodec</code> type for each of the four generator nodes - see the declaration block below. <code>NodeCodec</code> is defined in <code>Device.h</code>. It contains codec definitions for all the codecs of each generator node.
+	
+		@code
+			// --------------------------------
+			// Global Variables
+			// --------------------------------
+			CapturingData g_Capture;
+
+			NodeCodec g_DepthFormat;
+			NodeCodec g_ImageFormat;
+			NodeCodec g_IRFormat;
+			NodeCodec g_AudioFormat;
+		@endcode
+		
+		
+	@section capture_cpp_captureinit Function: captureInit() - Initializes the Primary Stream and the Resolutions	
+
+		This function initializes the main <code>g_Capture</code> variable and the  <code>NodeCodec</code> structures, for example, <code>g_DepthFormat</code>.
+		
+		Following are examples of <code>NodeCodec</code> structures. Note that for each Generator node there can be a number of codes defined. For example, in the code sample below, for the DepthGenerator node there are defined the codecs XN_CODEC_16Z_EMB_TABLES and XN_CODEC_UNCOMPRESSED.
+		@code
+			void captureInit()
+			{
+				// Depth Formats
+				int nIndex = 0;
+
+				g_DepthFormat.pValues[nIndex] = XN_CODEC_16Z_EMB_TABLES;
+				g_DepthFormat.pIndexToName[nIndex] = "PS Compression (16z ET)";
+				nIndex++;
+
+				g_DepthFormat.pValues[nIndex] = XN_CODEC_UNCOMPRESSED;
+				g_DepthFormat.pIndexToName[nIndex] = "Uncompressed";
+				nIndex++;
+				...
+				...
+		@endcode
+		
+		Each entry in the g_DepthFormat.pValues[] array specifies a codec ID, e.g., @ref xn::XN_CODEC_16Z_EMB_TABLES. Each entry in the <code>g_DepthFormat.pIndexToName[]</code> array specifies a human readable text name for the codec, e.g., "<code>PS Compression (16z ET)</code>". 
+
+		The <code>g_Capture</code> data structure variable is initialized as follows.
+		@code
+			g_Capture.csFileName[0] = 0;
+			g_Capture.State = NOT_CAPTURING;
+			g_Capture.nCapturedFrameUniqueID = 0;
+			g_Capture.csDisplayMessage[0] = '\0';
+			g_Capture.bSkipFirstFrame = false;
+
+			g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat = XN_CODEC_16Z_EMB_TABLES;
+			g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat = XN_CODEC_JPEG;
+			g_Capture.nodes[CAPTURE_IR_NODE].captureFormat = XN_CODEC_UNCOMPRESSED;
+			g_Capture.nodes[CAPTURE_AUDIO_NODE].captureFormat = XN_CODEC_UNCOMPRESSED;
+		@endcode
+		
+		Note in the above initializations: 
+		
+		- Capture State -- in <code>g_Capture.State</code> -- is initialized to <code>NOT_CAPTURING</code>.
+		
+		- g_Capture.nodes[] is a list of <code>captureFormat</code> structures and it is initialized to contain the current codecs to be used for each Generator node. Note that earlier in this function <i>all</i> of the codecs for each node type have been stored  in <code>g_DepthFormat.pValues[]</code> and <code>g_DepthFormat.pIndexToName[nIndex]</code>.
+		
+
+	@section capture_cpp_isCapturing Function: isCapturing() - Are the Generator nodes in  Capturing State
+	
+		Returns whther the generator nodes are currently attempting to capture frames.
+		@code
+			bool isCapturing()
+			{
+				return (g_Capture.State != NOT_CAPTURING);
+			}
+		@endcode
+		
+
+	@section capture_cpp_OpenWriteDevice Function: captureOpenWriteDevice() -  Open a Write Device
+	
+		The following code block calls @ref xn::Context::EnumerateProductionTrees "EnumerateProductionTrees" to list all available @ref xn::Recorder "Recorder" production nodes
+		and returns a full list of the matching production nodes. The chosen pointer picks the first in 
+		the list, and to select the @ref xn::NodeInfo "NodeInfo" information of a @ref xn::Recorder 
+		"Recorder" node for recording a data generation session.
+		@code
+			NodeInfoList recordersList;
+			nRetVal = g_Context.EnumerateProductionTrees(XN_NODE_TYPE_RECORDER, NULL, recordersList);
+			NodeInfo chosen = *recordersList.Begin();
+		@endcode
+		
+		The following code block creates a @ref prod_graph "production graph" for the selected @ref 		xn::Recorder "Recorder" node. A pointer to the Recorder is held to the <code>g_Capture</code> variable.
+		@code
+			g_Capture.pRecorder = new Recorder;
+			nRetVal = g_Context.CreateProductionTree(chosen, *g_Capture.pRecorder);
+			START_CAPTURE_CHECK_RC(nRetVal, "Create recorder");
+		@endcode
+		
+		Finally, the destnation file or the recording is set, as follows.
+		@code
+			nRetVal = g_Capture.pRecorder->SetDestination(XN_RECORD_MEDIUM_FILE, g_Capture.csFileName);			
+		@endcode
+		
+
+	@section capture_cpp_Browse Function: captureBrowse() -  Opens a Write Device		
+	
+		This function opens the write device.
+		
+		// as we waited for user input, it's probably better to discard first frame (especially if an accumulating 
+		// stream is on, like audio).
+	
+		
+	@section capture_cpp_Start Function: captureStart() -  Starts the Capturing Process
+	
+		This function starts  capturing process. The important features are that it sets the tiem for starting capturing by assigning the current time to <code>g_Capture</code> weit an added delay; and then it sets the Capture state to SHOULD_CAPTURE, indicating taht a future time has been set for starting capturing. This is shown below.
+		@code		
+			XnUInt64 nNow;
+			xnOSGetTimeStamp(&nNow);
+			nNow /= 1000;
+		
+			g_Capture.nStartOn = (XnUInt32)nNow + nDelay;
+			g_Capture.State = SHOULD_CAPTURE;
+		@endcode
+	
+	
+	@section capture_cpp_CloseWriteDevice Function: captureCloseWriteDevice() -  Closes a Write Device
+	
+		This function closes a write device. Among the 'close' operations, it calls @ref xn::NodeWrapper::Release() "Release()" to Unreference a production node. This decreases its reference count by 1. If the reference count reaches zero, the node will be destroyed. 
+		@code
+			if (g_Capture.pRecorder != NULL)
+			{
+				g_Capture.pRecorder->Release();
+				delete g_Capture.pRecorder;
+				g_Capture.pRecorder = NULL;
+			}
+		@endcode
+		
+			
+	@section capture_cpp_captureRestart Function: captureRestart() -  Restarts the Recording Process
+	
+		This function restarts the recording  module. It simply uses the <code>captureCloseWriteDevice()</code> defined just above to close the recording device. This function then reopens the recording  module by using the <code>captureOpenWriteDevice()</code> defined further above. <code>g_Capture.State</code> remains at it current state.
+		
+		
+	@section capture_cpp_captureStop Function: captureStop() -  Stops the Recording Process		
+	
+		This function stops the recording module, i.e., it puts it into NOT_CAPTURING state. Thus, for this purpose CAPTURING state and SHOULD_CAPTURE state are both defined as 'capturing state'. This function simply uses the <code>captureCloseWriteDevice()</code> defined just above to close the recording device. 
+		
+		
+	@section capture_cpp_captureFrame Function: captureFrame() -  Main State Machine for Capturing Frames from Generator Nodes
+	
+		This function is the main state machine for capturing frames from generator nodes. This function processes two states: CAPTURING state and SHOULD_CAPTURE state.
+		
+		@subsection capture_cpp_captureframe_should_capture_st  SHOULD_CAPTURE state
+		
+			In this state, this function add nodes to the recording.
+		
+			This function first checks if the capture time has been reached. (This time delay was set in the @ref capture_cpp_Start "captureStart() function".)
+			@code
+				if (g_Capture.State == SHOULD_CAPTURE)
+				{
+					XnUInt64 nNow;
+					xnOSGetTimeStamp(&nNow);
+					nNow /= 1000;
+
+					// check if time has arrived
+					if (nNow >= g_Capture.nStartOn)			
+			@endcode
+			
+			Once the capture time and started and this function starts to capture, it performs some initialization and sets the Capturing state to CAPTURING state.
+			@code
+				g_Capture.State = CAPTURING;
+			@endcode
+			
+			The following 'if' statement adds a valid device node to the recorder. This is for recording raw input data from the device.
+			@code
+				if (getDevice() != NULL)
+				{
+					nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getDevice(), XN_CODEC_UNCOMPRESSED);
+					START_CAPTURE_CHECK_RC(nRetVal, "add device node");
+				}
+			@endcode
+			
+			The @ref xn::Recorder::AddNodeToRecording() adds a node to the recording setup, and starts recording data that the node generates. This method must be called for each node to be recorded with this recorder. The call passes as parameters a pointer to the node and the enum ID of the codec to be used.
+			
+			The following sequence of 'if' statements adds nodes to the recorder. A node is   added to the recorder only if:
+			- the node is 'On' (e.g., <code>g_bIsDepthOn=true</code> for a DepthGenerator node), and 
+			- the node's <code>captureFormat</code> is defined (i.e., <code>captureFormat!= CODEC_DONT_CAPTURE</code>
+			As an example, the following code block shows the code for the DepthGenerator node. 
+			@code
+				if (isDepthOn() && (g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat != CODEC_DONT_CAPTURE))
+				{
+					nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getDepthGenerator(), g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat);
+					START_CAPTURE_CHECK_RC(nRetVal, "add depth node");
+					g_Capture.nodes[CAPTURE_DEPTH_NODE].bRecording = TRUE;
+					g_Capture.nodes[CAPTURE_DEPTH_NODE].pGenerator = getDepthGenerator();
+				}
+			@endcode
+			
+			In the above, the code saves in <code>g_Capture</code> a pointer to the DepthGenerator node by assigning the return result of <code>getDepthGenerator()</code>. 
+	
+		
+		
+		@subsection capture_cpp_captureframe_capturing_st CAPTURING state
+		
+			In this state, this function starts recording data generated from the nodes.
+		
+			Once all required nodes are added, the application can read data from the nodes and record it. Recording of data can be achieved either by explicitly calling the @ref xn::Recorder::Record() method, or by using one of the @ref conc_updating_data "'Update All'" functions. This function demonstrates using the Record() method.
+			@code
+				if (g_Capture.State == CAPTURING)
+				{
+					nRetVal = g_Capture.pRecorder->Record();
+					...
+			@endcode
+			
+			There isn't a real need to call Record() here, as the WaitXUpdateAll() call from <code>IdleCallback()</code> in the <code>NiView.cpp</code> file already makes sure that recording is performed.
+			
+			The following loop counts recorded frames. It uses the @ref xn::Generator::IsDataNew() method to test of a generate nodfe has actually generated new data. the IsDataNew() method returns whether the node's frame data was updated by the most recent call to any 'WaitXUpdateAll' function (e.g., @ref xn::Context::WaitAndUpdateAll()).
+			@code
+				for (int i = 0; i < CAPTURE_NODE_COUNT; ++i)
+				{
+					if (g_Capture.nodes[i].bRecording && g_Capture.nodes[i].pGenerator->IsDataNew())
+						g_Capture.nodes[i].nCapturedFrames++;
+				}
+			@endcode
+		
+	@section capture_cpp_setformat Function: captureSetFormat() -  Selects a New Codec for Recording
+	
+		This function is used by a number of individual 'Set Format' functions (e.g., captureSetDepthFormat() - described further below) to select a new codec for recording. 
+		
+		<b>Parameters:</b>
+		
+		<code>pMember</code>: the old format <br>
+		<code>newFormat</code>: the new format<br>
+		<code>node</code>: ProductionNode specifier 
+		
+		If a state change is being requested, i.e., from 'not capture' to 'capture', or the reverse, then the node is @ref xn::Recorder::AddNodeToRecording "added to" or @ref xn::Recorder::AddNodeToRecording "removed from" the Recorder, accordingly.
+		
+		If a codec change is being requested, then the node removed from the Recorder and then  added again, this time with the new codec.
+		
+	
+	@section capture_cpp_setformat_grp Function group: 'Set Format' for each Production Node
+		
+		All functions in this group call the captureSetFormat() described above. For example:
+		@code
+			void captureSetDepthFormat(int format)
+			{
+				captureSetFormat(&g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat, format, *getDepthGenerator());
+			}
+			...
+			...
+		@endcode
+		
+		
+	@section capture_cpp_getCodecName Function: getCodecName() -  Gets Text Name of Node's  Current Codec 
+	
+		This function gets the text name of the current codec being used for a specific node. 
+
+		This function is used by a number of individual 'GetDepthFormatName' functions (e.g., captureGetImageFormatName() - described further below) to get the text name of a specified codec from the list of all possible codecs for a specific node. 
+		
+		<b>Parameters:</b>
+		
+		<code>pNodeCodec</code>: a specific generator node's list of all codec ID info (text name and ID enum), e.g., this function is called with g_DepthFormat passed as this parameter
+		
+		<code>codecID</code>: the enum ID of the codec currently being used for the specific  generator node		
+		@code
+			for (int i = 0; i < pNodeCodec->nValuesCount; i++)
+			{
+				if (pNodeCodec->pValues[i] == codecID)
+				{
+					return pNodeCodec->pIndexToName[i];
+				}
+			}
+		@endcode	
+		
+		
+	@section capture_cpp_getCodecName_grp Function group: 'getCodecName' for each Generator node 
+	
+		All functions in this group call the getCodecName() described above. For example:		
+		@code	
+			const char* captureGetDepthFormatName()
+			{
+				return getCodecName(&g_DepthFormat, g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat);
+			}
+		@endcode
+
+
+	@section capture_cpp_getCaptureMessage Function: 'getCaptureMessage()'
+	
+		This function builds a capture message according to the current Capture State.
+		
+		In this function, there is one OpenNI method of note - the @ref xn::NodeWrapper::GetName() method - see the 'case' block below.	
+		@code
+			case CAPTURING:
+			{
+				int nChars = sprintf(pMessage, "* Recording! Press any key or use menu to stop *\nRecorded Frames: ");
+				for (int i = 0; i < CAPTURE_NODE_COUNT; ++i)
+				{
+					if (g_Capture.nodes[i].bRecording)
+					{
+						nChars += sprintf(pMessage + nChars, "%s-%d ", g_Capture.nodes[i].pGenerator->GetName(), g_Capture.nodes[i].nCapturedFrames);
+					}
+				}
+			}
+		@endcode
+		
+		The GetName() method gets the instance name of a node. Unless the application made a specific request for a specific name, the name will be of the form: "Depth1", "Image2", etc.
+		 
+		GetName() is a member of the @ref xn::NodeWrapper "NodeWrapper" class. The NodeWrapper class is the base class for all OpenNI node classes in C++, for example, the @ref xn::ProductionNode class and the @ref xn::Generator class.
+		
+		
+	@section capture_cpp_getFileName_grp Function group: 'Get File Name' - Build a file name for each Generator node 
+	
+		All functions in this group build a file name (from a path and ID number) for saving a captured data frame.
+		For example:		
+		@code	
+			const char* captureGetDepthFormatName()
+			{
+				return getCodecName(&g_DepthFormat, g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat);
+			}
+		@endcode
+		This unique file name is later to save a captured data frame to a file for storage.
+		
+		All the functions in this group are called from the findUniqueFileName() function (described immediately below)
+		
+	
+	@section capture_cpp_findUniqueFileName Function: findUniqueFileName() -  Builds a Unique File Name for Saving a Captured Data Frame
+	
+		This function builds a unique file name for saving a captured data frame.
+		
+		The purpose of this function is straightforward and there are no OpenNI specific operations in this function. 
+		
+		
+	@section capture_cpp_captureSingleFrame Function: captureSingleFrame() -  Captures a Single Frame	
+	
+		 This function captures a single data frame	from each generator node.
+		 
+		 The function first builds for each generator node a unique file name for saving the data frame.
+		 
+		Then the function gets a @ref glos_frame_object "frame object" for each generator node. A "frame object" is a data frame and associated configuration information saved from a generator node. For example,
+		@code
+			const ImageMetaData* pImageMD = getImageMetaData();
+			if (pImageMD != NULL)
+			{
+				xnOSSaveFile(csImageFileName, pImageMD->Data(), pImageMD->DataSize());
+			}
+		@endcode
+		 
+		In this sample program, the frame objects are stored as metadata objects in the <code>readFrame() </code>function in the <code>Device.cpp</code> file of this program sample. getImageMetaData() is also a function in this sample program for simply getting the frame object that was already saved.
+		
+		
+		
+*/
+
+

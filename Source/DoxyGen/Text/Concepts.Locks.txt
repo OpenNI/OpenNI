@@ -1,0 +1,42 @@
+/**
+@page conc_locks Sharing Devices Between Applications and Locking Nodes
+
+In most cases, the data provided by OpenNI nodes comes from some sort of 
+hardware device. A hardware device usually has only one configuration, 
+and so if several applications are running at the same time, all using 
+the same hardware device, they must agree on the configuration they'll 
+use. 
+
+However, most of the time, when writing an application, one cannot know 
+which other applications might be executed simultaneously with it, and 
+so can not agree on such a configuration. Sometimes it is crucial for an 
+application to use a specific configuration, and it cannot handle other 
+configurations. 
+
+OpenNI has two modes allowing multiple applications to share a hardware device:
+
+- <b>Full Sharing</b> (default) - In this mode, an application declares 
+  that it can handle any configuration of this node. OpenNI interface 
+  allows registrating callback functions to any configuration change, so 
+  the application can be notified whenever a configuration was changed (by 
+  the same application or by another application using the same hardware 
+  device). 
+  
+- <b>Locking Configuration</b> - In this mode, an application explicitly 
+  declares it wants to lock the specific node in its current 
+  configuration. OpenNI then, does not allow calling any @a set functions 
+  to this node. If the node represents a hardware device (or anything else 
+  that might be shared between processes), it should implement the <b>Lock 
+  Aware</b> capability (@ref XN_CAPABILITY_LOCK_AWARE), which allows 
+  locking across process boundary. 
+
+Note that when a node is locked for changed, the locking application 
+receives a lock handle. Aside from using this handle for unlocking the 
+node, the handle can be used to change the node configuration without 
+releasing that lock (so that it won't be "stolen" by another 
+application). OpenNI provides a mechanism for allowing configuration 
+changes only from a specific call-context (meaning from a specific 
+thread in a specific process). see @ref xnLockedNodeStartChanges() for 
+additional details. 
+
+*/

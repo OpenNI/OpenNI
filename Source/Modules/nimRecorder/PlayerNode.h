@@ -1,32 +1,31 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #ifndef __PLAYER_NODE_H__
 #define __PLAYER_NODE_H__
 
 #include <XnModuleCppInterface.h>
 #include <XnCppWrapper.h>
 #include <XnTypes.h>
-#include <XnEvent.h>
-#include <XnStringsHash.h>
+#include <XnEventT.h>
+#include <XnStringsHashT.h>
 #include "DataRecords.h"
 #include <XnCodecIDs.h>
 
@@ -66,7 +65,7 @@ private:
 		XnUInt64 nUndoRecordPos;
 	};
 
-	XN_DECLARE_STRINGS_HASH(RecordUndoInfo, RecordUndoInfoMap);
+	typedef XnStringsHashT<RecordUndoInfo> RecordUndoInfoMap;
 
 	struct PlayerNodeInfo
 	{
@@ -130,7 +129,7 @@ private:
 	XnStatus GetRecordUndoInfo(PlayerNodeInfo* pPlayerNodeInfo, const XnChar* strPropName, XnUInt64& nRecordPos, XnUInt64& nUndoRecordPos);
 	XnStatus SkipRecordPayload(Record record);
 	XnStatus SeekToRecordByType(XnUInt32 nNodeID, RecordType type);
-	DataIndexEntry* FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 nTimestamp);
+	DataIndexEntry* FindFrameForSeekPosition(XnUInt32 nNodeID, XnUInt64 nTimestamp);
 	DataIndexEntry** GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnUInt32 nDestFrame);
 	XnNodeHandle GetSelfNodeHandle();
 
@@ -160,8 +159,7 @@ private:
 	XnUInt64 m_nTimeStamp;
 	XnUInt64 m_nGlobalMaxTimeStamp;
 
-	XN_DECLARE_EVENT_0ARG(EndOfFileReachedEvent, IEndOfFileReachedEvent);
-	EndOfFileReachedEvent m_eofReachedEvent;
+	XnEventNoArgs m_eofReachedEvent;
 
 	PlayerNodeInfo* m_pNodeInfoMap;
 	XnUInt32 m_nMaxNodes;

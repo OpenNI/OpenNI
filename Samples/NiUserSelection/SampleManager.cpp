@@ -1,25 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
-
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -132,18 +130,18 @@ XnStatus DefaultInitializerWithCalibPose::SetSelectors()
 
     // pick the user selector.
 
-    // make sure we have a pose detection capability (which is what this selector is all about).
-    if(pUserGenerator->IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION)==FALSE)
-    {
-        RETURN_WITH_CLEANUP(XN_STATUS_ERROR, "User tracker invalid"); 
-    }
-
 
     // figure out which type of user selection to use.
     // Option 1: if we need calibration pose - that is the type to use (and exit if we can't support it)
     // Option 2: if do not need calibration pose we choose the overridden selector
     if(pUserGenerator->GetSkeletonCap().NeedPoseForCalibration()==TRUE)
     {
+		// make sure we have a pose detection capability (which is what this selector is all about).
+		if(pUserGenerator->IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION)==FALSE)
+		{
+			RETURN_WITH_CLEANUP(XN_STATUS_ERROR, "User tracker invalid"); 
+		
+		}
         // first we get the pose from the skeleton capability
         char poseString[50];
         pUserGenerator->GetSkeletonCap().GetCalibrationPose(poseString);

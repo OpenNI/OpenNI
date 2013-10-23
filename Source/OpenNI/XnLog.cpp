@@ -1,37 +1,40 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
 #include <XnLog.h>
-#include <XnStringsHash.h>
+#include <XnStringsHashT.h>
 #include <XnVersion.h>
 #include <stdarg.h>
 #include "XnXml.h"
-#include <XnList.h>
+#include <XnListT.h>
 #include <XnArray.h>
+#include <XnOSCpp.h>
 
 #include "XnLogConsoleWriter.h"
 #include "XnLogFileWriter.h"
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+#include "XnLogAndroidWriter.h"
+#endif
 
 //---------------------------------------------------------------------------
 // Defines
@@ -42,15 +45,16 @@
 //---------------------------------------------------------------------------
 // Types
 //---------------------------------------------------------------------------
-XN_DECLARE_LIST(const XnLogWriter*, XnLogWritersList);
+typedef XnListT<XnLogWriter*> XnLogWritersList;
 
-XN_DECLARE_STRINGS_HASH(XnLogger, XnLogMasksHash);
+typedef XnStringsHashT<XnLogger> XnLogMasksHash;
 
 class XnBufferedLogEntry : public XnLogEntry
 {
 public:
 	XnBufferedLogEntry()
 	{
+		m_strBuffer[0] = '\0';
 		this->strMessage = m_strBuffer;
 	}
 
@@ -89,9 +93,9 @@ public:
 	void SetMinSeverityGlobally(XnLogSeverity severity)
 	{
 		this->defaultMinSeverity = severity;
-		for (XnLogMasksHash::Iterator it = this->pMasksHash->begin(); it != this->pMasksHash->end(); ++it)
+		for (XnLogMasksHash::Iterator it = this->pMasksHash->Begin(); it != this->pMasksHash->End(); ++it)
 		{
-			it.Value().nMinSeverity = severity;
+			it->Value().nMinSeverity = severity;
 		}
 	}
 
@@ -99,11 +103,16 @@ public:
 	XnLogMasksHash* pMasksHash;
 	XnLogSeverity defaultMinSeverity;
 	XnLogWritersList writers;
+	XnBool anyWriters;
 	XnChar strSessionTimestamp[25];
+	XN_CRITICAL_SECTION_HANDLE hLock;
 
 	// Writers
 	XnLogConsoleWriter consoleWriter;
 	XnLogFileWriter fileWriter;
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+	XnLogAndroidWriter AndroidWriter;
+#endif
 
 private:
 	LogData()
@@ -114,6 +123,16 @@ private:
 		// As in any case, this is a static object which will only be destroyed when the process goes 
 		// down - we can allow this.
 		this->pMasksHash = XN_NEW(XnLogMasksHash);
+		XN_ASSERT(this->pMasksHash != NULL);
+
+		// We need a critical section to guard the writers list - it is accessed with every log entry written
+		// and also by the application (mainly, when calling xnStartNewLogFile()).
+		XnStatus nRetVal = xnOSCreateCriticalSection(&this->hLock);
+		XN_ASSERT(nRetVal == XN_STATUS_OK);
+		XN_REFERENCE_VARIABLE(nRetVal);
+
+		this->anyWriters = FALSE;
+
 		Reset();
 	}
 };
@@ -177,7 +196,8 @@ static void xnLogCreateEntry(XnBufferedLogEntry* pEntry, const XnChar* csLogMask
 static void xnLogWriteEntry(XnLogEntry* pEntry)
 {
 	LogData& logData = LogData::GetInstance();
-	for (XnLogWritersList::ConstIterator it = logData.writers.begin(); it != logData.writers.end(); ++it)
+	XnAutoCSLocker locker(logData.hLock);
+	for (XnLogWritersList::ConstIterator it = logData.writers.Begin(); it != logData.writers.End(); ++it)
 	{
 		const XnLogWriter* pWriter = *it;
 		pWriter->WriteEntry(pEntry, pWriter->pCookie);
@@ -188,7 +208,9 @@ static void xnLogWriteImplV(const XnChar* csLogMask, XnLogSeverity nSeverity, co
 {
 	// check if there are any writers registered
 	LogData& logData = LogData::GetInstance();
-	if (logData.writers.IsEmpty())
+
+	// optimization: check if any writer is registered *before* locking.
+	if (!logData.anyWriters)
 	{
 		// don't waste time formatting anything.
 		return;
@@ -209,7 +231,7 @@ static void xnLogWriteImpl(const XnChar* csLogMask, XnLogSeverity nSeverity, con
 	va_end(args);
 }
 
-XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* csFileName, XnBool bSessionBased, XN_FILE_HANDLE* phFile)
+XN_C_API XnStatus XN_C_DECL xnLogCreateNewFile(const XnChar* strName, XnBool bSessionBased, XnChar* csFullPath, XnUInt32 nPathBufferSize, XN_FILE_HANDLE* phFile)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 
@@ -233,39 +255,34 @@ XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* csFileName, XnBool b
 	xnOSGetCurrentProcessID(&nProcID);
 
 	// create full path file name - add process start time and process ID
-	XnChar strFilePath[XN_FILE_MAX_PATH];
 	XnUInt32 nPathSize = 0;
 	XnUInt32 nCharsWritten = 0;
-	nRetVal = xnOSStrFormat(strFilePath, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s", logData.strLogDir);
+	nRetVal = xnOSStrFormat(csFullPath, nPathBufferSize - nPathSize, &nCharsWritten, "%s", logData.strLogDir);
 	XN_IS_STATUS_OK(nRetVal);
 	nPathSize += nCharsWritten;
 
 	if (bSessionBased)
 	{
-		nRetVal = xnOSStrFormat(strFilePath + nPathSize, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s_%u.", logData.strSessionTimestamp, nProcID);
+		nRetVal = xnOSStrFormat(csFullPath + nPathSize, nPathBufferSize - nPathSize, &nCharsWritten, "%s_%u.", logData.strSessionTimestamp, nProcID);
 		XN_IS_STATUS_OK(nRetVal);
 		nPathSize += nCharsWritten;
 	}
 
-	nRetVal = xnOSStrFormat(strFilePath + nPathSize, XN_FILE_MAX_PATH - nPathSize, &nCharsWritten, "%s", csFileName);
+	nRetVal = xnOSStrFormat(csFullPath + nPathSize, nPathBufferSize - nPathSize, &nCharsWritten, "%s", strName);
 	XN_IS_STATUS_OK(nRetVal);
 	nPathSize += nCharsWritten;
 
 	// and open the file
-	nRetVal = xnOSOpenFile(strFilePath, XN_OS_FILE_WRITE | XN_OS_FILE_TRUNCATE, phFile);
+	nRetVal = xnOSOpenFile(csFullPath, XN_OS_FILE_WRITE | XN_OS_FILE_TRUNCATE, phFile);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFile)
-{
-	return xnLogCreateFileEx(csFileName, TRUE, phFile);
-}
-
 static void xnLogCreateFilterChangedMessage(XnBufferedLogEntry* pEntry)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
+	XN_REFERENCE_VARIABLE(nRetVal);
 	
 	LogData& logData = LogData::GetInstance();
 
@@ -279,9 +296,9 @@ static void xnLogCreateFilterChangedMessage(XnBufferedLogEntry* pEntry)
 	XnBool bOverrides = FALSE;
 
 	// go over masks, and see if there are any overrides
-	for (XnLogMasksHash::ConstIterator it = logData.pMasksHash->begin(); it != logData.pMasksHash->end(); ++it)
+	for (XnLogMasksHash::ConstIterator it = logData.pMasksHash->Begin(); it != logData.pMasksHash->End(); ++it)
 	{
-		XnLogSeverity maskSeverity = it.Value().nMinSeverity;
+		XnLogSeverity maskSeverity = it->Value().nMinSeverity;
 		if (maskSeverity != logData.defaultMinSeverity)
 		{
 			if (!bOverrides)
@@ -298,7 +315,7 @@ static void xnLogCreateFilterChangedMessage(XnBufferedLogEntry* pEntry)
 				nMessageLength += nCharsWritten;
 			}
 
-			nRetVal = xnOSStrFormat(strConfigMessage + nMessageLength, sizeof(strConfigMessage) - nMessageLength, &nCharsWritten, "'%s': %s", it.Key(), xnLogGetSeverityString(maskSeverity));
+			nRetVal = xnOSStrFormat(strConfigMessage + nMessageLength, sizeof(strConfigMessage) - nMessageLength, &nCharsWritten, "'%s': %s", it->Key(), xnLogGetSeverityString(maskSeverity));
 			XN_ASSERT(nRetVal == XN_STATUS_OK);
 			nMessageLength += nCharsWritten;
 		}
@@ -314,7 +331,8 @@ static void xnLogFilterChanged()
 	xnLogWriteEntry(&entry);
 
 	LogData& logData = LogData::GetInstance();
-	for (XnLogWritersList::ConstIterator it = logData.writers.begin(); it != logData.writers.end(); ++it)
+	XnAutoCSLocker locker(logData.hLock);
+	for (XnLogWritersList::ConstIterator it = logData.writers.Begin(); it != logData.writers.End(); ++it)
 	{
 		const XnLogWriter* pWriter = *it;
 		pWriter->OnConfigurationChanged(pWriter->pCookie);
@@ -427,6 +445,15 @@ XN_C_API XnStatus xnLogInitFromINIFile(const XnChar* cpINIFileName, const XnChar
 		XN_IS_STATUS_OK(nRetVal);
 	}
 
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+	nRetVal = xnOSReadIntFromINI(cpINIFileName, cpSectionName, "LogWriteToAndroidLog", &nTemp);
+	if (nRetVal == XN_STATUS_OK)
+	{
+		nRetVal = xnLogSetAndroidOutput(nTemp);
+		XN_IS_STATUS_OK(nRetVal);
+	}
+#endif
+
 	nRetVal = xnOSReadIntFromINI(cpINIFileName, cpSectionName, "LogWriteLineInfo", &nTemp);
 	if (nRetVal == XN_STATUS_OK)
 	{
@@ -507,6 +534,17 @@ XN_C_API XnStatus xnLogInitFromXmlFile(const XnChar* strFileName)
 				XN_IS_STATUS_OK(nRetVal);
 			}
 
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+			if (pLog->Attribute("writeToAndroidLog"))
+			{
+				nRetVal = xnXmlReadBoolAttribute(pLog, "writeToAndroidLog", &bOn);
+				XN_IS_STATUS_OK(nRetVal);
+
+				nRetVal = xnLogSetAndroidOutput(bOn);
+				XN_IS_STATUS_OK(nRetVal);
+			}
+#endif
+
 			if (pLog->Attribute("writeLineInfo"))
 			{
 				nRetVal = xnXmlReadBoolAttribute(pLog, "writeLineInfo", &bOn);
@@ -542,26 +580,37 @@ XN_C_API XnStatus xnLogInitFromXmlFile(const XnChar* strFileName)
 	return (XN_STATUS_OK);
 }
 
-XN_C_API XnStatus xnLogRegisterLogWriter(const XnLogWriter* pWriter)
+XN_C_API XnStatus xnLogRegisterLogWriter(XnLogWriter* pWriter)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
 	
 	LogData& logData = LogData::GetInstance();
-	nRetVal = logData.writers.AddLast(pWriter);
+
+	{
+		XnAutoCSLocker locker(logData.hLock);
+		nRetVal = logData.writers.AddLast(pWriter);
+	}
 	XN_IS_STATUS_OK(nRetVal);
+
+	logData.anyWriters = TRUE;
 
 	xnLogWriteBanner(pWriter);
 	
 	return (XN_STATUS_OK);
 }
 
-XN_C_API void xnLogUnregisterLogWriter(const XnLogWriter* pWriter)
+XN_C_API void xnLogUnregisterLogWriter(XnLogWriter* pWriter)
 {
 	XnStatus nRetVal = XN_STATUS_OK;
+	XN_REFERENCE_VARIABLE(nRetVal);
 	
 	LogData& logData = LogData::GetInstance();
+
+	XnAutoCSLocker locker(logData.hLock);
 	nRetVal = logData.writers.Remove(pWriter);
 	XN_ASSERT(nRetVal == XN_STATUS_OK);
+
+	logData.anyWriters = !logData.writers.IsEmpty();
 }
 
 XN_C_API XnStatus xnLogStartNewFile()
@@ -573,6 +622,10 @@ XN_C_API XnStatus xnLogStartNewFile()
 	}
 
 	logData.fileWriter.Unregister();
+
+	// reset our session timestamp, a new one will be created
+	logData.strSessionTimestamp[0] = '\0';
+
 	return logData.fileWriter.Register();
 }
 
@@ -580,8 +633,10 @@ XN_C_API XnStatus xnLogClose()
 {
 	// notify all writers (while allowing them to unregister themselves)
 	LogData& logData = LogData::GetInstance();
-	XnLogWritersList::ConstIterator it = logData.writers.begin();
-	while (it != logData.writers.end())
+
+	XnAutoCSLocker locker(logData.hLock);
+	XnLogWritersList::ConstIterator it = logData.writers.Begin();
+	while (it != logData.writers.End())
 	{
 		XnLogWritersList::ConstIterator curr = it;
 		++it;
@@ -592,8 +647,7 @@ XN_C_API XnStatus xnLogClose()
 
 	logData.strLogDir[0] = '\0';
 	logData.strSessionTimestamp[0] = '\0';
-	logData.pMasksHash->Clear();
-	logData.defaultMinSeverity = XN_LOG_SEVERITY_NONE;
+	logData.SetMinSeverityGlobally(XN_LOG_SEVERITY_NONE);
 
 	// turn off all dumps
 	xnDumpSetMaskState(XN_LOG_MASK_ALL, FALSE);
@@ -637,6 +691,26 @@ XN_C_API XnStatus xnLogSetFileOutput(XnBool bFileOutput)
 	return XN_STATUS_OK;
 }
 
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+XN_C_API XnStatus xnLogSetAndroidOutput(XnBool bAndroidOutput)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	LogData& logData = LogData::GetInstance();
+	if (bAndroidOutput)
+	{
+		nRetVal = logData.AndroidWriter.Register();
+		XN_IS_STATUS_OK(nRetVal);
+	}
+	else
+	{
+		logData.AndroidWriter.Unregister();
+	}
+
+	return XN_STATUS_OK;
+}
+#endif
+
 XN_C_API XnStatus xnLogSetLineInfo(XnBool bLineInfo)
 {
 	LogData& logData = LogData::GetInstance();
@@ -678,6 +752,17 @@ XN_C_API XnStatus xnLogSetOutputFolder(const XnChar* strOutputFolder)
 	return (XN_STATUS_OK);
 }
 
+XN_C_API XnStatus XN_C_DECL xnLogGetFileName(XnChar* strFileName, XnUInt32 nBufferSize)
+{
+	LogData& logData = LogData::GetInstance();
+	if (!logData.fileWriter.IsRegistered())
+	{
+		return XN_STATUS_INVALID_OPERATION;
+	}
+
+	return xnOSStrCopy(strFileName, logData.fileWriter.GetFileName(), nBufferSize);
+}
+
 XnLogger* xnLogGetLoggerForMask(const XnChar* csLogMask, XnBool bCreate)
 {
 	XnLogger* pLogger = NULL;
@@ -700,16 +785,16 @@ XnLogger* xnLogGetLoggerForMask(const XnChar* csLogMask, XnBool bCreate)
 		}
 
 		// now find it in the map
-		XnLogMasksHash::Iterator it = logData.pMasksHash->end();
-		if (XN_STATUS_OK != logData.pMasksHash->Find(csLogMask, it))
+		XnLogMasksHash::Iterator it = logData.pMasksHash->Find(csLogMask);
+		if (it == logData.pMasksHash->End())
 		{
 			XN_ASSERT(FALSE);
 			return NULL;
 		}
 
-		it.Value().pInternal = (void*)it.Key();
+		it->Value().pInternal = (void*)it->Key();
 
-		return &it.Value();
+		return &it->Value();
 	}
 	else
 	{
@@ -725,7 +810,8 @@ void xnLogWriteNoEntryImplV(const XnChar* csFormat, va_list args)
 	xnOSStrFormatV(csMessage, nMaxMessageSize, &nChars, csFormat, args);
 
 	LogData& logData = LogData::GetInstance();
-	for (XnLogWritersList::ConstIterator it = logData.writers.begin(); it != logData.writers.end(); ++it)
+	XnAutoCSLocker locker(logData.hLock);
+	for (XnLogWritersList::ConstIterator it = logData.writers.Begin(); it != logData.writers.End(); ++it)
 	{
 		const XnLogWriter* pWriter = *it;
 		pWriter->WriteUnformatted(csMessage, pWriter->pCookie);
@@ -964,7 +1050,8 @@ XN_C_API void xnLogWriteNoEntry(const XnChar* csLogMask, XnLogSeverity nSeverity
 	va_end(args);
 
 	LogData& logData = LogData::GetInstance();
-	for (XnLogWritersList::ConstIterator it = logData.writers.begin(); it != logData.writers.end(); ++it)
+	XnAutoCSLocker locker(logData.hLock);
+	for (XnLogWritersList::ConstIterator it = logData.writers.Begin(); it != logData.writers.End(); ++it)
 	{
 		const XnLogWriter* pWriter = *it;
 		pWriter->WriteUnformatted(csMessage, pWriter->pCookie);
@@ -1011,6 +1098,18 @@ XN_C_API XnStatus xnLogSetMaskState(const XnChar* csMask, XnBool bEnabled)
 XN_C_API XnStatus xnLogSetSeverityFilter(XnLogSeverity nMinSeverity)
 {
 	return xnLogBCSetSeverityFilter(nMinSeverity);
+}
+
+XN_C_API XnStatus xnLogCreateFile(const XnChar* csFileName, XN_FILE_HANDLE* phFile)
+{
+	XnChar strFullPath[XN_FILE_MAX_PATH];
+	return xnLogCreateNewFile(csFileName, TRUE, strFullPath, XN_FILE_MAX_PATH, phFile);
+}
+
+XN_C_API XnStatus xnLogCreateFileEx(const XnChar* strFileName, XnBool bSessionBased, XN_FILE_HANDLE* phFile)
+{
+	XnChar strFullPath[XN_FILE_MAX_PATH];
+	return xnLogCreateNewFile(strFileName, bSessionBased, strFullPath, XN_FILE_MAX_PATH, phFile);
 }
 
 #endif // #ifndef __XN_NO_BC__

@@ -1,24 +1,23 @@
-#/***************************************************************************
-#*                                                                          *
-#*  OpenNI 1.x Alpha                                                        *
-#*  Copyright (C) 2011 PrimeSense Ltd.                                      *
-#*                                                                          *
-#*  This file is part of OpenNI.                                            *
-#*                                                                          *
-#*  OpenNI is free software: you can redistribute it and/or modify          *
-#*  it under the terms of the GNU Lesser General Public License as published*
-#*  by the Free Software Foundation, either version 3 of the License, or    *
-#*  (at your option) any later version.                                     *
-#*                                                                          *
-#*  OpenNI is distributed in the hope that it will be useful,               *
-#*  but WITHOUT ANY WARRANTY; without even the implied warranty of          *
-#*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            *
-#*  GNU Lesser General Public License for more details.                     *
-#*                                                                          *
-#*  You should have received a copy of the GNU Lesser General Public License*
-#*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.          *
-#*                                                                          *
-#***************************************************************************/
+#/****************************************************************************
+#*                                                                           *
+#*  OpenNI 1.x Alpha                                                         *
+#*  Copyright (C) 2012 PrimeSense Ltd.                                       *
+#*                                                                           *
+#*  This file is part of OpenNI.                                             *
+#*                                                                           *
+#*  Licensed under the Apache License, Version 2.0 (the "License");          *
+#*  you may not use this file except in compliance with the License.         *
+#*  You may obtain a copy of the License at                                  *
+#*                                                                           *
+#*      http://www.apache.org/licenses/LICENSE-2.0                           *
+#*                                                                           *
+#*  Unless required by applicable law or agreed to in writing, software      *
+#*  distributed under the License is distributed on an "AS IS" BASIS,        *
+#*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+#*  See the License for the specific language governing permissions and      *
+#*  limitations under the License.                                           *
+#*                                                                           *
+#****************************************************************************/
 #-------------Imports----------------------------------------------------------#
 from xml.dom.minidom import parse, parseString
 import win32con,pywintypes,win32api
@@ -32,7 +31,7 @@ import subprocess
 import shutil
 import stat
 import uuid
-path_to_base = os.path.dirname(os.path.abspath('common/redist_base.py'))
+path_to_base = os.path.dirname(os.path.abspath('../../../Externals/PSCommon/Windows/CreateRedist/redist_base.py'))
 if path_to_base not in sys.path:
     sys.path.insert(0, path_to_base)
 import redist_base
@@ -41,7 +40,8 @@ class RedistOpenNI(redist_base.RedistBase):
     def __init__(self):
         #RedistBase.__init__(self)
         super(RedistOpenNI,self).__init__()
-        self.VC_version = 9
+        self.VC_version = 10
+        self.project_is_2010 = True
         self.vc_build_bits = "32"
         self.config_xml_filename = "OpenNi_Config.xml"
         self.redist_name = "OpenNI"
@@ -130,8 +130,8 @@ class RedistOpenNI(redist_base.RedistBase):
         os.chdir(self.WORK_DIR + "\\Platform\\Win32")
 
         #license
-        os.system ("copy \"..\\..\\GPL.txt\" Redist")
-        os.system ("copy \"..\\..\\LGPL.txt\" Redist")
+        os.system ("copy \"..\\..\\LICENSE\" Redist")
+        os.system ("copy \"..\\..\\NOTICE\" Redist")
 
         #bin
         os.system ("copy " + self.bin_dir + "\\Release\\OpenNI*.dll Redist\\" + self.bin_dir)
@@ -144,7 +144,7 @@ class RedistOpenNI(redist_base.RedistBase):
         os.system ("copy " + self.bin_dir + "\\Release\\niReg*.exe Redist\\" + self.bin_dir)
         os.system ("copy " + self.bin_dir + "\\Release\\niLicense*.exe Redist\\" + self.bin_dir)
         os.system ("copy " + self.bin_dir + "\\Release\\OpenNI.jni.dll Redist\\" + self.bin_dir)
-        os.system ("copy " + self.bin_dir + "\\Release\\org.OpenNI.jar Redist\\" + self.bin_dir)
+        os.system ("copy " + self.bin_dir + "\\Release\\org.openni.jar Redist\\" + self.bin_dir)
 
         for minor in range(1, int(self.version_minor)+1):
             policy_congfig_name = 'PublisherPolicy1.' + str(minor) + '.config'
@@ -178,8 +178,8 @@ class RedistOpenNI(redist_base.RedistBase):
         # Copy the wrappers to the samples
         shutil.copy(os.path.join(self.bin_dir, "Release", "OpenNI.net.dll"), os.path.join("Redist", "Samples", self.bin_dir, "Release"))
         shutil.copy(os.path.join(self.bin_dir, "Release", "OpenNI.net.dll"), os.path.join("Redist", "Samples", self.bin_dir, "Debug"))
-        shutil.copy(os.path.join(self.bin_dir, "Release", "org.OpenNI.jar"), os.path.join("Redist", "Samples", self.bin_dir, "Release"))
-        shutil.copy(os.path.join(self.bin_dir, "Release", "org.OpenNI.jar"), os.path.join("Redist", "Samples", self.bin_dir, "Debug"))
+        shutil.copy(os.path.join(self.bin_dir, "Release", "org.openni.jar"), os.path.join("Redist", "Samples", self.bin_dir, "Release"))
+        shutil.copy(os.path.join(self.bin_dir, "Release", "org.openni.jar"), os.path.join("Redist", "Samples", self.bin_dir, "Debug"))
 
         # Copy the release notes
         os.system ("copy .\\ReleaseNotes.txt Redist\\Documentation\\")
@@ -193,7 +193,7 @@ class RedistOpenNI(redist_base.RedistBase):
             if os.path.isdir(filePath):
                 continue
 
-            ext = ['icproj','vcproj','csproj','cpp','h','c','ini','cs','py','bat','java']
+            ext = ['icproj','vcproj','vcxproj','csproj','cpp','h','c','ini','cs','py','bat','java']
             file_ext = os.path.splitext(filename)[1][1:]
             if file_ext in ext:
                 file = open(filePath, "r+")
@@ -223,14 +223,14 @@ class RedistOpenNI(redist_base.RedistBase):
                 # fix bin and lib path for 32 bit configuration
                 s = re.sub(r"../../../Bin/",r"../Bin/",s)
                 s = re.sub(r"..\\..\\..\\Bin\\",r"../Bin/",s)
-                s = re.sub(r"../../../Lib/\$\(ConfigurationName\)",r"$(OPEN_NI_LIB)",s)
-                s = re.sub(r"..\\..\\..\\Lib\\\$\(ConfigurationName\)",r"$(OPEN_NI_LIB)",s)
+                s = re.sub(r"../../../Lib/\$\(Configuration\)",r"$(OPEN_NI_LIB)",s)
+                s = re.sub(r"..\\..\\..\\Lib\\\$\(Configuration\)",r"$(OPEN_NI_LIB)",s)
                 
                 # fix bin and lib path for 64 bit configuration
                 s = re.sub(r"../../../Bin64/",r"../Bin64/",s)
                 s = re.sub(r"..\\..\\..\\Bin64\\",r"../Bin64/",s)
-                s = re.sub(r"../../../Lib64/\$\(ConfigurationName\)",r"$(OPEN_NI_LIB64)",s)
-                s = re.sub(r"..\\..\\..\\Lib64\\\$\(ConfigurationName\)",r"$(OPEN_NI_LIB64)",s)
+                s = re.sub(r"../../../Lib64/\$\(Configuration\)",r"$(OPEN_NI_LIB64)",s)
+                s = re.sub(r"..\\..\\..\\Lib64\\\$\(Configuration\)",r"$(OPEN_NI_LIB64)",s)
 
                 # fix general path problems
                 s = re.sub(r"..\\..\\..\\..\\..\\",r"..\\..\\",s)
@@ -248,7 +248,20 @@ class RedistOpenNI(redist_base.RedistBase):
                     link_re += r"\s*<Link>(?P=file)</Link>"
                     compiled_re = re.compile(link_re, re.MULTILINE)
                     s = compiled_re.sub("<Compile Include=\"\g<file>\">", s)
-
+                    
+                # remove dependencies from samples vcxproj to non-sample projects
+                if file_ext == "vcxproj":
+                    # dependency to another sample will be to ..\<sample>
+                    compiled_start = re.compile(r"<ProjectReference Include=\"\.\.\\\.\.\\")
+                    compiled_end = re.compile(r"</ProjectReference>")
+                    while True:
+                        match_start = compiled_start.search(s)
+                        if match_start is None:
+                            break
+                        # look for end
+                        match_end = compiled_end.search(s, match_start.end())
+                        s = s[:match_start.start()] + s[match_end.end():]
+                    
                 file.truncate()
                 file.write(s)
                 file.close()

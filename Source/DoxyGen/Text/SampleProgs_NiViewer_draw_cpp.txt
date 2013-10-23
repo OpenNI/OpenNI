@@ -1,0 +1,176 @@
+/**
+	
+@page smpl_niviewer_draw_cpp Draw.cpp file
+
+		<b>Source files:</b> Click the following link to view the source code file:
+			- Draw.cpp
+
+	This file contains the code for displaying the frames from the OpenNI generator nodes. 
+	
+	@section draw_cpp_glb_decls Global Type Declarations for Capture.cpp 
+	
+		There are no OpenNI specific golbal declarations. 
+		
+		
+	@section draw_cpp_fns_getpoweroftwo_to_setErrorState Functions GetPowerOfTwo() to setErrorState()
+	
+		There are no OpenNI specific operations in these functions. 
+		
+	
+	@section draw_cpp_drawcropstream Function: drawCropStream() - Draws a Cropped Map from the Generator nodes
+	
+		This function draws a cropped map from each of the generator nodes.
+		
+		<b>Parameters:</b>
+		
+			<code>pGenerator</code>: Specifies one of the three map generator nodes: DepthGenerator, ImageGenerator node, or ImageGenerator node.
+		
+		
+		First of all this function calls @ref xn::Generator::IsCapabilitySupported() to check whether this OpenNI installation supports a cropping capability.
+		@code
+			if (!pGenerator->IsCapabilitySupported(XN_CAPABILITY_CROPPING))
+			{
+				return;
+			}
+		@endcode
+		
+		This function calls @ref xn::MapGenerator::GetMapOutputMode() to get the Generator node's map output mode, which contains the node's current frame dimensions. the map output mode is obtaiend as an @ref xn::XnMapOutputMode "XnMapOutputMode" structure. The frame dimensions are needed for drawing the map on the graphic display.
+		@code		
+			XnMapOutputMode Mode;
+			pGenerator->GetMapOutputMode(Mode);		
+		@endcode	
+
+		An OpenNI @ref xn::XnCropping structure is used for containing the cropping location. Its fields are shown in the code block below.
+		@code	
+			XnCropping cropping;
+			cropping.bEnabled = TRUE;
+			cropping.nXOffset = cropRect.uLeft;
+			cropping.nYOffset = cropRect.uBottom;
+			cropping.nXSize = cropRect.uRight - cropRect.uLeft;
+			cropping.nYSize = cropRect.uTop	- cropRect.uBottom;
+
+			if ((cropping.nXOffset % dividedBy) != 0)
+				cropping.nXOffset -= (cropping.nXOffset % dividedBy);
+			if ((cropping.nXSize % dividedBy) != 0)
+				cropping.nXSize += dividedBy - (cropping.nXSize
+		@endcode	
+		
+		Finally, the function assigns the cropping setting to the Generator node. To do this it calls 
+		@ref device_cpp_setStreamCropping "<code>setStreamCropping()</code>", which si defined in the <code>Device.cpp</code> file of this sample program.
+		
+		
+	@section draw_cpp_drawSelectionChanged Function: drawSelectionChanged() - Callback invoked when Draw Selection has Changed
+	
+		This callback is invoked when the draw selection has been changed.
+		
+		This callback calls the @ref draw_cpp_drawcropstream function defined above for each valid Generator node. For example:
+		@code		
+			if (getDepthGenerator() != NULL && g_DrawConfig.Streams.Depth.Coloring != DEPTH_OFF)
+			{
+				drawCropStream(getDepthGenerator(), g_DrawConfig.DepthLocation, selection, 2);
+			}
+		@endcode
+		
+		
+	@section draw_cpp_calculateHistogram Function: calculateHistogram() - Calculates Depth Histogram
+	
+		This function uses the depth values to build an accumulative histogram of frequency of occurrence of each depth value. The *pDepth pointer accesses each value in the depth buffer. It then uses the value as an index into the g_pDepthHist histogram array.
+		
+	
+	@section draw_cpp_YUV422ToRGB888 Function: YUV422ToRGB888() - Converts Formats
+	
+		There are no OpenNI operations in this function.
+		@code
+			// --------------------------------
+			// Drawing
+			// --------------------------------
+			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+
+			void YUV422ToRGB888(const XnUInt8* pYUVImage, XnUInt8* pRGBAImage, XnUInt32 nYUVSize, XnUInt32 nRGBSize)
+			{		
+				...
+				...
+				
+		@endcode
+		
+	
+	@section draw_cpp_drawClosedStream Function: drawClosedStream() - Converts Formats
+	
+		There are no OpenNI operations in this function.
+		
+		
+	@section draw_cpp_drawColorImage Function: drawColorImage() - Draws the Color Image Map
+	
+		This function draws the color image map for either the ImageGenerator map or the IRGenerator node.
+		
+		This function gets saved @ref glos_frame_object "frame objects", assigning them to <code>pImageMD</code> and draws them to the graphic display. The frame object is a snapshot of the generated data, saved as a metadata object, at a certain point in time. The @ref xn::OutputMetaData::Data() method gets a pointer to the data frame of the frame object saved in the metadata. 
+		@code
+			if (isImageOn())
+			{
+				pImageMD = getImageMetaData();
+				pImage = getImageMetaData()->Data();
+			}
+			else if (isIROn())
+			{
+				pImageMD = getIRMetaData();
+				pImage = (const XnUInt8*)getIRMetaData()->Data();
+			}
+			else
+				return;		
+		@endcode
+		
+		The code block above gets a pointer to the data frame of the frame object saved in the metadata. The frame object is a snapshot of the generated data at a certain point in time.
+		
+		The main draw operations are controlled by the following for-loop.
+		@code
+			for (XnUInt16 nY = pImageMD->YOffset(); nY < pImageMD->YRes() + pImageMD->YOffset(); nY++)
+			{
+				XnUInt8* pTexture = TextureMapGetLine(&g_texImage, nY) + pImageMD->XOffset()*4;
+				...
+				...
+		@endcode
+		
+		
+		The above loop provides the y indexes to access each pixel in the <code>DepthMap</code>. The @ref xn::DepthMap::YRes "YRes()" method returns the Y dimension -- height -- of the data frame. 
+		
+		The following code uses the FullXRes() to calculate the scaling factor between the depth map and the GL window. FullXRes() gets the full frame resolution, i.e., the entire field-of-view, ignoring cropping of the FOV in the scene.
+		@code
+			if (pDepthMetaData != NULL)
+			{
+				XnDouble dRealX = (nX + pImageMD->XOffset()) / (XnDouble)pImageMD->FullXRes();
+				XnDouble dRealY = nY / (XnDouble)pImageMD->FullYRes();
+
+				XnUInt32 nDepthX = dRealX * pDepthMetaData->FullXRes() - pDepthMetaData->XOffset();
+				XnUInt32 nDepthY = dRealY * pDepthMetaData->FullYRes() - pDepthMetaData->YOffset();
+
+				if (nDepthX >= pDepthMetaData->XRes() || nDepthY >= pDepthMetaData->YRes())
+				{
+					nDepthIndex = -1;
+				}
+				else
+				{
+					nDepthIndex = nDepthY*pDepthMetaData->XRes() + nDepthX;
+				}
+			}		
+		@endcode
+		
+		
+	@section draw_cpp_drawDepth Function: drawDepth() - Draws the Depth Map
+	
+		This function is implemented in a way similar to that of the draw_cpp_drawColorImage function above.
+		
+		Of note is the <><code>++pDepth</code> term in the code block below.
+		@code
+			for (XnUInt16 nY = pDepthMD->YOffset(); nY < pDepthMD->YRes() + pDepthMD->YOffset(); nY++)
+			{
+				XnUInt8* pTexture = TextureMapGetLine(&g_texDepth, nY) + pDepthMD->XOffset()*4;
+				for (XnUInt16 nX = 0; nX < pDepthMD->XRes(); nX++, pDepth++, pTexture+=4)
+		@endcode
+		
+		<b><code>++pDepth</code>:</b>  This pointer is incremented by 1 for each inner loop. So it steps through all the pixels in the Depth map. Thus the program can get each pixel's depth value.
+		
+		
+		
+*/
+
+

@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 // --------------------------------
 // Includes
 // --------------------------------
@@ -87,7 +86,7 @@ NodeCodec g_ImageFormat;
 NodeCodec g_IRFormat;
 NodeCodec g_AudioFormat;
 
-static const XnCodecID CODEC_DONT_CAPTURE = XN_CODEC_NULL;
+static const XnCodecID CODEC_DONT_CAPTURE = XN_CODEC_ID(0xFF, 0xFF, 0xFF, 0xFF);
 
 // --------------------------------
 // Code
@@ -96,6 +95,10 @@ void captureInit()
 {
 	// Depth Formats
 	int nIndex = 0;
+
+	g_DepthFormat.pValues[nIndex] = XN_CODEC_NULL;
+	g_DepthFormat.pIndexToName[nIndex] = "Auto-Choose";
+	nIndex++;
 
 	g_DepthFormat.pValues[nIndex] = XN_CODEC_16Z_EMB_TABLES;
 	g_DepthFormat.pIndexToName[nIndex] = "PS Compression (16z ET)";
@@ -114,6 +117,10 @@ void captureInit()
 	// Image Formats
 	nIndex = 0;
 
+	g_ImageFormat.pValues[nIndex] = XN_CODEC_NULL;
+	g_ImageFormat.pIndexToName[nIndex] = "Auto-Choose";
+	nIndex++;
+
 	g_ImageFormat.pValues[nIndex] = XN_CODEC_JPEG;
 	g_ImageFormat.pIndexToName[nIndex] = "JPEG";
 	nIndex++;
@@ -131,6 +138,10 @@ void captureInit()
 	// IR Formats
 	nIndex = 0;
 
+	g_IRFormat.pValues[nIndex] = XN_CODEC_NULL;
+	g_IRFormat.pIndexToName[nIndex] = "Auto-Choose";
+	nIndex++;
+
 	g_IRFormat.pValues[nIndex] = XN_CODEC_UNCOMPRESSED;
 	g_IRFormat.pIndexToName[nIndex] = "Uncompressed";
 	nIndex++;
@@ -143,6 +154,10 @@ void captureInit()
 
 	// Audio Formats
 	nIndex = 0;
+
+	g_AudioFormat.pValues[nIndex] = XN_CODEC_NULL;
+	g_AudioFormat.pIndexToName[nIndex] = "Auto-Choose";
+	nIndex++;
 
 	g_AudioFormat.pValues[nIndex] = XN_CODEC_UNCOMPRESSED;
 	g_AudioFormat.pIndexToName[nIndex] = "Uncompressed";
@@ -161,10 +176,10 @@ void captureInit()
 	g_Capture.csDisplayMessage[0] = '\0';
 	g_Capture.bSkipFirstFrame = false;
 
-	g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat = XN_CODEC_16Z_EMB_TABLES;
-	g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat = XN_CODEC_JPEG;
-	g_Capture.nodes[CAPTURE_IR_NODE].captureFormat = XN_CODEC_UNCOMPRESSED;
-	g_Capture.nodes[CAPTURE_AUDIO_NODE].captureFormat = XN_CODEC_UNCOMPRESSED;
+	g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat = XN_CODEC_NULL;
+	g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat = XN_CODEC_NULL;
+	g_Capture.nodes[CAPTURE_IR_NODE].captureFormat = XN_CODEC_NULL;
+	g_Capture.nodes[CAPTURE_AUDIO_NODE].captureFormat = XN_CODEC_NULL;
 }
 
 bool isCapturing()
@@ -511,7 +526,7 @@ int findUniqueFileName()
 	XnChar csDepthFileName[XN_FILE_MAX_PATH];
 	XnChar csIRFileName[XN_FILE_MAX_PATH];
 
-	while (true)
+	for (;;)
 	{
 		// check image
 		getImageFileName(num, csImageFileName);

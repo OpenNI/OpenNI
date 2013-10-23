@@ -1,0 +1,11 @@
+/**
+@defgroup cref C Reference
+This section contains a full API reference of OpenNI for C.
+*/
+
+/**
+@defgroup cppref C++ Reference to Application Programmer Interface (API)
+This section contains a full API reference of OpenNI for C++.
+*/
+
+*/

@@ -1,46 +1,75 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
-package org.OpenNI;
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
+package org.openni;
 
+/**
+ * Stores a sensor's Field of View angles in radians. <BR><BR>
+ * 
+ * These values are used to properly calculate Real World to Projective coordinate conversions <BR><BR>
+ * 
+ * Note that this class is intended to store the FOV for a given hardware type.  Setting the FoV 
+ * via the members of this class does change the actual FoV settings of any associated hardware.
+ *
+ */
 public class FieldOfView 
 {
+	/**
+	 * Constructor.  Creates a new FieldOfView object with specified FOV values
+	 * @param hFOV Horizontal field of view of the sensor, measured in radians
+	 * @param vFOV Vertical field of view of the sensor, measured in radians
+	 */
 	public FieldOfView(double hFOV, double vFOV) {
 		super();
 		this.hFOV = hFOV;
 		this.vFOV = vFOV;
 	}
 	
+	/**
+	 * Getter function for the horizontal field of view value
+	 * @return Horizontal field of view value in Radians
+	 */
 	public double getHFOV() {
 		return hFOV;
 	}
 	
+	/**
+	 * Setter function for the horizontal field of view value
+	 * @param hFOV Horizontal field of view value in Radians
+	 */
 	public void setHFOV(double hFOV) {
 		this.hFOV = hFOV;
 	}
 	
+	/**
+	 * Getter function for the vertical field of view value
+	 * @return Vertical field of view in Radians
+	 */
 	public double getVFOV() {
 		return vFOV;
 	}
 	
+	/**
+	 * Setter function for the vertical field of view value
+	 * @param vFOV Vertical field of view in Radians
+	 */
 	public void setVFOV(double vFOV) {
 		this.vFOV = vFOV;
 	}

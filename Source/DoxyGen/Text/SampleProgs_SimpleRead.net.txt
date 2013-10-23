@@ -1,0 +1,92 @@
+
+/**
+@page smpl_simple_read_net SimpleRead.net - sample program (C#/.NET)
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- SimpleRead.net\\Program.cs
+
+
+	This part describes the SimpleRead sample program in the C# language for .NET.
+	
+	The documentation describes the sample program's code from the top of the program file(s) to bottom.
+	
+	Every OpenNI feature is described the first time it appears in this sample program. Further appearances of the same feature are not described again.			
+
+	@section srj_path_decl  Declaration for Script File Path
+	
+		The following declaration sets the full path to an OpenNI XML script file of a OpenNI @ref prod_graph "production graph". The production graph is the main object model in OpenNI. It is a network of objects &mdash; called @ref prod_graph production nodes &mdash that implement Natural Interaction operations.
+		
+		@code			
+			string SAMPLE_XML_FILE = @"../../../../Data/SamplesConfig.xml";
+		@endcode			
+
+	
+	@section srj_node_inits  Node Declarations and Initializations
+	
+		The following statement declares a @ref xn::ScriptNode "ScriptNode" object. The script node object loads and contains the OpenNI script and is the base node {WRT inheritance} for the production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object model.
+		@code
+			ScriptNode scriptNode;
+		@endcode			
+		
+		The following statement declares a @ref xn::Context "Context" object and creates the production graph from an OpenNI XML script file. The context is the workspace where the application builds an OpenNI production graph. 
+		@code
+			Context context = Context.CreateFromXmlFile(SAMPLE_XML_FILE, out scriptNode);
+		@endcode						
+		
+		The @ref xn::Context::FindExistingNode() "FindExistingNode()" method in the following code block tries to get a reference to any production nodes in the production graph. This call specifies the <code>NodeType.Depth</code> parameter to get a reference to a @ref xn::DepthGenerator "DepthGenerator" node. A DepthGenerator node generates a depth map as an array of pixels, where each pixel is a depth value representing a distance from the sensor in millimeters. A reference to the node is returned in the depth parameter.   
+		@code
+			DepthGenerator depth = context.FindExistingNode(NodeType.Depth) as DepthGenerator;
+			if (depth == null)
+			{
+				Console.WriteLine("Sample must have a depth generator!");
+				return;
+			}
+		@endcode	
+		
+		The following statement gets the map output mode of the @ref xn::DepthGenerator "DepthGenerator" node.  The map output mode is the combination of the node's scene resolution and frame rate. 
+		@code	
+			MapOutputMode mapMode = depth.MapOutputMode;
+		@endcode	
+		
+		
+		The following is the declaration of the @ref glos_frame_object "<i>frame object</i>" for quick and easy access to data from the @ref xn::DepthGenerator "DepthGenerator" data.
+		@code
+			DepthMetaData depthMD;
+		@endcode		
+		
+		@section smpl_simple_read_mainloop Main Program Loop
+		
+			The main program loop repeatedly updates the data available in the node for output, and then gets the frame object (via the metadata object). The program then calculates the mid-point of the scene's 2D (two-dimensional) area.
+
+			@code
+				while (!Console.KeyAvailable)
+				{
+				 ...
+				}
+			@endcode
+			The following sections describe the statements in the main program loop above.
+		
+		@subsection srj_main_upd_data Updating the Data Available for Output 
+
+			the @ref xn::Context::WaitAnyUpdateAll() "WaitAnyUpdateAll()" method in the following statement waits for a specific node to have generated a new data frame. The method then makes the data frames of all nodes in the entire production graph available for getting. The application can then get the data (for example, using a metadata GetData() method). This method has a timeout.			
+			@code
+				context.WaitOneUpdateAll(depth);
+			@endcode
+				
+		@subsection srj_main_get_fo Get the DepthGenerator's Frame Object
+		
+			In the following statement, the @ref glos_frame_object "<i>frame object</i>" that is generated is copied to a metadata object for quick and easy access by the application. (To be exact, only a reference to the frame data itself is passed; whereas the configuration properties are actually copied.) The node's <code>getMetaData() </code>method gets this frame object and copies it to a <code>depthMD</code> metadata object. (It passes a reference to the frame data and actually copies the frame configuration information. The metadata includes all configuration information associated with the data itself. )
+			For more explanation on this, see @ref conc_meta_data, @ref glos_frame_object and @ref frame_data.
+			@code				
+				depth.GetMetaData(depthMD);
+			@endcode					
+			
+			The following print statement accesses the frame data, its ID, and the frame data's associated configuration, The frame ID is the ID of the frame object. Frame IDs are a sequential unique number with a wrap around. This method is inherited from the OutputMetaData class.
+			@code						
+				Console.WriteLine("Frame {0} Middle point is: {1}.", depthMD.FrameID, depthMD[(int)mapMode.XRes/2, (int)mapMode.YRes/2]);
+			@endcode
+			
+			In the above, xn::MapMetaData::XRes() "XRes()" and xn::MapMetaData::YRes() "YRes()" are the dimensions of the FOV in the scene. The call to <code>depthMD()</code> accesses a depth pixel through an X,Y coordinate. By calculating XRes()/2 and YRes()/2, this accesses the middle pixel.					
+				
+*/
+

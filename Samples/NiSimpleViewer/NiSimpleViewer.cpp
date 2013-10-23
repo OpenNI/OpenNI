@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -46,15 +45,14 @@ using namespace xn;
 #define DISPLAY_MODE_IMAGE		3
 #define DEFAULT_DISPLAY_MODE	DISPLAY_MODE_DEPTH
 
-#define MAX_DEPTH 10000
-
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
-float g_pDepthHist[MAX_DEPTH];
+float* g_pDepthHist;
 XnRGB24Pixel* g_pTexMap = NULL;
 unsigned int g_nTexMapX = 0;
 unsigned int g_nTexMapY = 0;
+XnDepthPixel g_nZRes;
 
 unsigned int g_nViewState = DEFAULT_DISPLAY_MODE;
 
@@ -91,9 +89,6 @@ void glutDisplay (void)
 	g_image.GetMetaData(g_imageMD);
 
 	const XnDepthPixel* pDepth = g_depthMD.Data();
-	const XnUInt8* pImage = g_imageMD.Data();
-
-	unsigned int nImageScale = GL_WIN_SIZE_X / g_depthMD.FullXRes();
 
 	// Copied from SimpleViewer
 	// Clear the OpenGL buffers
@@ -106,7 +101,7 @@ void glutDisplay (void)
 	glOrtho(0, GL_WIN_SIZE_X, GL_WIN_SIZE_Y, 0, -1.0, 1.0);
 
 	// Calculate the accumulative histogram (the yellow display...)
-	xnOSMemSet(g_pDepthHist, 0, MAX_DEPTH*sizeof(float));
+	xnOSMemSet(g_pDepthHist, 0, g_nZRes*sizeof(float));
 
 	unsigned int nNumberOfPoints = 0;
 	for (XnUInt y = 0; y < g_depthMD.YRes(); ++y)
@@ -120,13 +115,13 @@ void glutDisplay (void)
 			}
 		}
 	}
-	for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+	for (int nIndex=1; nIndex<g_nZRes; nIndex++)
 	{
 		g_pDepthHist[nIndex] += g_pDepthHist[nIndex-1];
 	}
 	if (nNumberOfPoints)
 	{
-		for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+		for (int nIndex=1; nIndex<g_nZRes; nIndex++)
 		{
 			g_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
 		}
@@ -217,7 +212,7 @@ void glutDisplay (void)
 	glutSwapBuffers();
 }
 
-void glutKeyboard (unsigned char key, int x, int y)
+void glutKeyboard (unsigned char key, int /*x*/, int /*y*/)
 {
 	switch (key)
 	{
@@ -295,6 +290,9 @@ int main(int argc, char* argv[])
 	g_nTexMapX = (((unsigned short)(g_depthMD.FullXRes()-1) / 512) + 1) * 512;
 	g_nTexMapY = (((unsigned short)(g_depthMD.FullYRes()-1) / 512) + 1) * 512;
 	g_pTexMap = (XnRGB24Pixel*)malloc(g_nTexMapX * g_nTexMapY * sizeof(XnRGB24Pixel));
+
+	g_nZRes = g_depthMD.ZRes();
+	g_pDepthHist = (float*)malloc(g_nZRes * sizeof(float));
 
 	// OpenGL init
 	glutInit(&argc, argv);

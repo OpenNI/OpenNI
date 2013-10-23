@@ -1,0 +1,346 @@
+/**
+@page xmlscripts Xml Scripts
+
+OpenNI supports using XML as a configuration script. One can use such a script for creating nodes
+and configuring them, and for configuring the context itself (adding license keys, etc.).
+an XML script can be executed by calling @ref xnContextRunXmlScript() (@ref xn::Context::RunXmlScript()) and 
+passing it a string representation of the XML script, or by calling @ref xnContextRunXmlScriptFromFile() 
+(@ref xn::Context::RunXmlScriptFromFile()) and passing it an XML file to load.
+
+@section xmlstruct Structure
+
+The XML must have one (and only) root node named OpenNI. Under this node there can be 3 optional sections:
+@ref xmllics, @ref xmllog and @ref xmlnodes. 
+
+@section xmllics Licenses
+
+This section can provide additional license keys to be registered. The element name should be "Licenses",
+and it should contain a list of elements, each named "License" with two string attributes: "vendor" and "key".
+Each such element actually calls @ref xnAddLicense() (@ref xn::Context::AddLicense()).
+For example:
+@code
+<Licenses>
+	<License vendor="vendor1" key="key1"/>
+	<License vendor="vendor2" key="key2"/>
+</Licenses>
+@endcode
+
+@section xmllog Log
+
+This section can configure OpenNI log system. The element name should be "Log". It can contain the following
+optional attributes:
+- writeToConsole - "true" or "false" (default). Determines if log is written to the application console.
+- writeToFile - "true" or "false" (default). Determines if log is written to a file. This file is located under 
+		a Log folder that is created under working directory.
+- writeLineInfo - "true" (default) or "false". Determines if every log entry also contains the file name
+		and line info from which it was written.
+
+In addition, it can contain the following elements:
+- LogLevel with the attribute value set to 0 (verbose), 1 (info), 2 (warnings) or 3 (errors, default). This
+		determines the minimum log severity that is written.
+- Masks with a list of Mask elements, each determines if a specific mask is on or off.
+- Dumps with a list of Dump elements, each determines if a specific dump is on or off.
+
+For example:
+@code
+<Log writeToConsole="false" writeToFile="false" writeLineInfo="true">
+	<LogLevel value="3"/>
+	<Masks>
+		<Mask name="ALL" on="true" />
+	</Masks>
+	<Dumps>
+		<Dump name="SensorTimestamps" on="false" />
+	</Dumps>
+</Log>
+@endcode
+
+@section xmlnodes Production Nodes
+
+This section allows creation and configuration of nodes. The element name should be "ProductionNodes",
+and it can have several children performing various tasks:
+
+@subsection xmlglobmirror Global Mirror
+
+The "ProductionNodes" element may contain an element called "GlobalMirror" which sets the global mirror (@ref xnSetGlobalMirror(), 
+@ref xn::Context::SetGlobalMirror()), according to the "on" attribute ("true" or "false").
+For example:
+@code
+<ProductionNodes>
+	<GlobalMirror on="true" />
+</ProductionNodes>
+@endcode
+
+@subsection xmlrec Recordings
+
+The "ProductionNodes" element may contain an element called "Recording" telling it to open a recording.
+For now, OpenNI supports file recordings using the "file" attribute:
+@code
+<Recording file="c:\myfile.oni" />
+@endcode
+
+You can also set the playback speed using the "playbackSpeed" attribute if you wish to fast forward, or to slow
+down the playback. Note that the special value 0.0 can be used to cause playing to be as fast as possible (no delay
+between frames).
+For example, to open a file and play it as twice as fast:
+@code
+<Recording file="c:\myfile.oni" playbackSpeed="2.0"/>
+@endcode
+
+@subsection xmlnode Nodes
+
+The "ProductionNodes" element may contain one or more elements named "Node". Each such element asks OpenNI
+to enumerate and create a node (similar to @ref xnCreateAnyProductionTree()). 
+The "Node" element should have a string attribute named "type" which will have the type of the node to enumerate. 
+The type can be one of the following:
+- Device (@ref XN_NODE_TYPE_DEVICE)
+- Depth (@ref XN_NODE_TYPE_DEPTH)
+- Image (@ref XN_NODE_TYPE_IMAGE)
+- IR (@ref XN_NODE_TYPE_IR)
+- Audio (@ref XN_NODE_TYPE_AUDIO)
+- Gesture (@ref XN_NODE_TYPE_GESTURE)
+- User (@ref XN_NODE_TYPE_USER)
+- Scene (@ref XN_NODE_TYPE_SCENE)
+- Hands (@ref XN_NODE_TYPE_HANDS)
+- Recorder (@ref XN_NODE_TYPE_RECORDER)
+
+In addition the "Node" element can optionally have a "name" string attribute which will hold the requested
+name of the created node.
+
+@subsection xmlrecorder Recorder
+
+The "ProductionNodes" element may contain an element called "Recorder" telling it to record data from other
+nodes that were created in the xml script. Note that these nodes must be named explicitly.
+
+For example, if two nodes were defined, named Image1 and Depth1, and we'd like to record their data into a 
+file called MyFile.oni:
+
+@code
+    <Node type="Recorder">
+      <Configuration>
+        <RecorderDestination name="MyFile.oni"/>
+        <AddNodeToRecording name="Image1" codec="JPEG"/>
+        <AddNodeToRecording name="Depth1" codec="16zT"/>
+      </Configuration>
+    </Node>
+@endcode
+
+@subsubsection xmlquery Queries
+
+The "Node" element can also declare a query that will be used when enumerating for this node. It is done
+by adding a "Query" element to the "Node" element, which can have the following children:
+- @b "Vendor", specifying the requested node vendor.
+- @b "Name", specifying the requested node name.
+- @b "MinVersion", specifying the requested node minimum version.
+- @b "MaxVersion", specifying the requested node maximum version.
+- @b "Capabilities", specifying a list of capabilities the node must support, each under a "Capability" sub-element.
+- @b "MapOutputModes", specifying a list of map output mode that should be supported by the map generator, each
+		under a "MapOutputMode" object, containing three attributes: "xRes", "yRes" and "fps".
+- @b "MinUserPositions", specifying the minimum number of user positions supported by a depth generator that
+		has the "UserPosition" capability.
+- @b "ExistingNodeOnly", specifying that only existing nodes (e.g. nodes that were already created) will enumerate.
+- @b "NonExistingNodeOnly", specifying that only non-existing nodes (e.g. nodes that were not created yet) will enumerate.
+- @b "NeededNodes", specifying only production trees that contains specific nodes are valid. Those nodes are declared
+		using a sub-element named "Node".
+
+If more than one such element is present, all conditions are checked using the "AND" operator.
+
+For example, the following will try to create a depth node, supplied by vendor1, named name1, from version
+1.0.0.0 to 3.1.0.5, supporting the "UserPosition" and "Mirror" capabilities, supporting a VGA, 30 FPS output
+mode, supporting at least 2 user positions, and one that uses the "MyDevice" node.
+@code
+<Node type="Depth" name="MyDepth">
+	<Query>
+		<Vendor>vendor1</Vendor>
+		<Name>name1</Name>
+		<MinVersion>1.0.0.0</MinVersion>
+		<MaxVersion>3.1.0.5</MaxVersion>
+		<Capabilities>
+			<Capability>UserPosition</Capability>
+			<Capability>Mirror</Capability>
+		</Capabilities>
+		<MapOutputModes>
+			<MapOutputMode xRes="640" yRes="480" FPS="30"/>
+		</MapOutputModes>
+		<MinUserPositions>2</MinUserPositions>
+		<NeededNodes>
+			<Node>MyDevice</Node>
+		</NeededNodes>
+	</Query>
+</Node>
+@endcode
+
+@subsubsection xmlconfig Configuration
+
+Each "Node" element can also contain a list of configuration changes to be performed. This list
+should be placed under a "Configuration" element. The sub-elements of the "Configuration" element
+will be executed serially. Those commands can be:
+<table>
+		<tr>
+			<th>Node Type</th>	
+			<th>Configuration</th>
+			<th>Syntax</th>
+			<th>Values</th>
+			<th>Matching API</th>
+		</tr>
+		<tr>
+			<td>Generators which support the Mirror capability</td>
+			<td>Mirror</td>
+			<td>@verbatim <Mirror on="" /> @endverbatim</td>
+			<td>'on' can be "true" or "false"</td>
+			<td>@ref xn::MirrorCapability::SetMirror "SetMirror()"</td>
+		</tr>
+		<tr>
+			<td>All Map Generators</td>
+			<td>MapOutputMode</td>
+			<td>@verbatim <MapOutputMode xRes="" yRes="" FPS="" /> @endverbatim</td>
+			<td></td>
+			<td>@ref xn::MapGenerator::SetMapOutputMode "SetMapOutputMode()"</td>
+		</tr>
+		<tr>
+			<td>Map Generators which supports Cropping capability</td>
+			<td>Cropping</td>
+			<td>@verbatim <Cropping enabled="" xOffset="" yOffset="" xSize="" ySize="" /> @endverbatim</td>
+			<td></td>
+			<td>@ref xn::CroppingCapability::SetCropping "SetCropping()"</td>
+		</tr>
+		<tr>
+			<td>Image Generators</td>
+			<td>PixelFormat</td>
+			<td>@verbatim <PixelFormat>X</PixelFormat> @endverbatim</td>
+			<td>X can be "RGB24", "YUV422", "Grayscale8", "Grayscale16" or "MJPEG"</td>
+			<td>@ref xn::ImageGenerator::SetPixelFormat "SetPixelFormat()"</td>
+		</tr>
+		<tr>
+			<td>Audio Generators</td>
+			<td>WaveOutputMode</td>
+			<td>@verbatim <WaveOutputMode sampleRate="" bitsPerSample="" channels="" /> @endverbatim</td>
+			<td></td>
+			<td>@ref xn::AudioGenerator::SetWaveOutputMode "SetWaveOutputMode()"</td>
+		</tr>
+		<tr>
+			<td>Generators which supports the FrameSync capability</td>
+			<td>FrameSync</td>
+			<td>@verbatim <FrameSync>X</FrameSync> @endverbatim</td>
+			<td>X should be the name of an already existing node (or one that is declared previous in this script)</td>
+			<td>@ref xn::FrameSyncCapability::FrameSyncWith "FrameSyncWith()"</td>
+		</tr>
+		<tr>
+			<td>Generators which supports the AlternativeViewPoint capability</td>
+			<td>AlternativeViewPoint</td>
+			<td>@verbatim <AlternativeViewPoint>X</AlternativeViewPoint> @endverbatim</td>
+			<td>X should be the name of an already existing node (or one that is declared previous in this script)</td>
+			<td>@ref xn::AlternativeViewPointCapability::SetViewPoint "SetViewPoint()"</td>
+		</tr>
+		<tr>
+			<td>Recorder</td>
+			<td>RecorderDestination</td>
+			<td>@verbatim <RecorderDestination medium="" name="" /> @endverbatim</td>
+			<td>'medium' should be "file" and 'name' should be the path to the file</td>
+			<td>@ref xn::Recorder::SetDestination "SetDestination()"</td>
+		</tr>
+		<tr>
+			<td>Recorder</td>
+			<td>AddNodeToRecording</td>
+			<td>@verbatim <AddNodeToRecording name="" codec="" /> @endverbatim</td>
+			<td>'name' should be the name of an existing node and 'codec' is optional for setting another codec for this node.</td>
+			<td>@ref xn::Recorder::AddNodeToRecording "AddNodeToRecording()"</td>
+		</tr>
+		<tr>
+			<td>Depth Generators which supports the UserPosition capability</td>
+			<td>UserPosition</td>
+			<td>
+@verbatim 
+<UserPosition index="">
+	<Min x="" y="" z="" />
+	<Max x="" y="" z="" />
+</UserPosition>
+@endverbatim
+			</td>
+			<td></td>
+			<td>@ref xn::UserPositionCapability::SetUserPosition "SetUserPosition()"</td>
+		</tr>
+		<tr>
+			<td>All Nodes</td>
+			<td>Property</td>
+			<td>@verbatim <Property name="" type="" value="" /> @endverbatim</td>
+			<td>'name' is the name of the property, 'type' can be "int", "real" or "string"</td>
+			<td>
+				@ref xn::ProductionNode::SetIntProperty "SetIntProperty()"
+				@ref xn::ProductionNode::SetRealProperty "SetRealProperty()"
+				@ref xn::ProductionNode::SetStringProperty "SetStringProperty()"
+			</td>
+		</tr>
+</table>
+
+In addition, the application can request to lock this node for changes (preventing any configuration
+change to this node once configuration is done) by using the "lock" attribute, and setting it to "true"
+or "false" (default). This calls @ref xnLockNodeForChanges() (@ref xn::ProductionNode::LockForChanges()).
+
+The following example create 3 nodes of types image, depth and audio. The image node to
+use QVGA output on 60 FPS with RGB24 pixel format. It also sets a cropping area, and turning on mirror.
+The Depth node is configured to VGA output on 30 FPS. It also sets the position of the user to a bounding
+box located between (128, 128, 500) and (600, 400, 2000). The depth node also configures a special property,
+proprietary to vendor "VendorX".
+The audio is configured to be sampled at 44100 Hz, in stereo mode and 16-bit per sample.
+Enumeration takes place only for nodes that support those configurations.
+@code
+<ProductionNodes>
+	<Node type="Image">
+		<Query>
+			<MapOutputModes>
+				<MapOutputMode xRes="320" yRes="240" FPS="60"/>
+			</MapOutputModes>
+			<Capabilities>
+				<Capability>Cropping</Capability>
+				<Capability>Mirror</Capability>
+			</Capabilities>
+		</Query>
+		<Configuration>
+			<MapOutputMode xRes="320" yRes="240" FPS="60"/>
+			<PixelFormat>RGB24</PixelFormat>
+			<Cropping enabled="true" xOffset="28" yOffset="28" xSize="200" ySize="160" />
+			<Mirror on="true" />
+		</Configuration>
+	</Node>
+	<Node type="Depth">
+		<Query>
+			<Vendor>VendorX</Vendor>
+			<MapOutputModes>
+				<MapOutputMode xRes="640" yRes="480" FPS="30"/>
+			</MapOutputModes>
+			<Capabilities>
+				<Capability>UserPosition</Capability>
+			</Capabilities>
+		</Query>
+		<Configuration>
+			<MapOutputMode xRes="640" yRes="480" FPS="30"/>
+			<UserPosition index="0">
+				<Min x="128" y="128" z="500"/>
+				<Max x="600" y="400" z="2000"/>
+			</UserPosition>
+			<Property type="int" name="VendorXDummyProp" value="3" />
+		</Configuration>
+	</Node>
+	<Node type="Audio">
+		<Configuration>
+			<WaveOutputMode sampleRate="44100" bitsPerSample="16" channels="2" />
+		</Configuration>
+	</Node>
+</ProductionNodes>
+@endcode
+
+@subsubsection xmlstartgen Start Generating
+
+By default, when all nodes under the "ProductionNodes" element are created and configured, a call is
+made to @ref xnStartGeneratingAll() (@ref xn::Context::StartGeneratingAll()). If the application
+wants another behavior, it can place the "startGenerating" attribute containing "true" or "false",
+on any node, and also on the "ProductionNodes" element (which defines whether or not to start generate all).
+For example, the following will create two nodes: image and depth, but only start generate the depth one:
+@code
+<ProductionNodes startGenerating="false">
+	<Node type="Image" />
+	<Node type="Depth" startGenerating="true" />
+</ProductionNodes>
+@endcode
+
+*/

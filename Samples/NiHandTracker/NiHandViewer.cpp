@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -77,7 +76,6 @@ void HandViewer::DisplayPostDraw()
 {
 	typedef TrailHistory			History;
 	typedef History::ConstIterator	HistoryIterator;
-	typedef History::Trail			Trail;
 	typedef Trail::ConstIterator	TrailIterator;
 
 	static const float colours[][3] =
@@ -94,16 +92,16 @@ void HandViewer::DisplayPostDraw()
 	// History points coordinates buffer
 	XnFloat	coordinates[3 * MAX_HAND_TRAIL_LENGTH];
 
-	const HistoryIterator	hend = history.end();
-	for(HistoryIterator		hit = history.begin(); hit != hend; ++hit)
+	const HistoryIterator	hend = history.End();
+	for(HistoryIterator		hit = history.Begin(); hit != hend; ++hit)
 	{
 
 		// Dump the history to local buffer
 		int				numpoints = 0;
-		const Trail&	trail = hit.GetTrail();
+		const Trail&	trail = hit->Value();
 
-		const TrailIterator	tend = trail.end();
-		for(TrailIterator	tit = trail.begin(); tit != tend; ++tit)
+		const TrailIterator	tend = trail.End();
+		for(TrailIterator	tit = trail.Begin(); tit != tend; ++tit)
 		{
 			XnPoint3D	point = *tit;
 			m_depth.ConvertRealWorldToProjective(1, &point, &point);
@@ -117,7 +115,7 @@ void HandViewer::DisplayPostDraw()
 		assert(numpoints <= MAX_HAND_TRAIL_LENGTH);
 
 		// Draw the hand trail history
-		XnUInt32 nColor = hit.GetKey() % LENGTHOF(colours);
+		XnUInt32 nColor = hit->Key() % LENGTHOF(colours);
 		glColor4f(colours[nColor][0],
 			colours[nColor][1],
 			colours[nColor][2],

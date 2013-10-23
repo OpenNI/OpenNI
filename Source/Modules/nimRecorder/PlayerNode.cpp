@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #include "PlayerNode.h"
 #include "DataRecords.h"
 #include <XnPropNames.h>
@@ -41,7 +40,7 @@
 	#ifdef __WIN32
 		#define DEBUG_LOG_RECORD __noop
 	#else
-		#define DEBUG_LOG_RECORD
+		#define DEBUG_LOG_RECORD(x,y)
 	#endif
 #endif
 
@@ -86,8 +85,11 @@ PlayerNode::PlayerNode(xn::Context &context, const XnChar* strName) :
 	m_nMaxNodes(0),
 	m_bEOF(FALSE),
 	m_aSeekTempArray(NULL),
-	m_hSelf(NULL)
+	m_hSelf(NULL),
+	m_bIs32bitFileFormat(FALSE),
+	m_pUncompressedData(NULL)
 {
+	xnOSMemSet(&m_fileVersion, 0, sizeof(m_fileVersion));
 	xnOSStrCopy(m_strName, strName, sizeof(m_strName));
 }
 
@@ -253,7 +255,7 @@ XnStatus PlayerNode::UndoRecord(PlayerNode::RecordUndoInfo& undoInfo, XnUInt64 n
 	return XN_STATUS_OK;
 }
 
-DataIndexEntry* PlayerNode::FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 nTimestamp)
+DataIndexEntry* PlayerNode::FindFrameForSeekPosition(XnUInt32 nNodeID, XnUInt64 nSeekPos)
 {
 	XN_ASSERT((nNodeID != INVALID_NODE_ID) && (nNodeID < m_nMaxNodes));
 	PlayerNodeInfo* pPlayerNodeInfo = &m_pNodeInfoMap[nNodeID];
@@ -262,18 +264,18 @@ DataIndexEntry* PlayerNode::FindTimestampInDataIndex(XnUInt32 nNodeID, XnUInt64 
 	int first = 1;
 	int last = pPlayerNodeInfo->nFrames;
 	int mid;
-	XnUInt64 nMidTimestamp;
+	XnUInt64 nMidPos;
 
 	while (first <= last)
 	{
 		mid = (first + last) / 2;
-		nMidTimestamp = pPlayerNodeInfo->pDataIndex[mid].nTimestamp;
+		nMidPos = pPlayerNodeInfo->pDataIndex[mid].nSeekPos;
 
-		if (nMidTimestamp > nTimestamp)
+		if (nMidPos > nSeekPos)
 		{
 			last = mid - 1;
 		}
-		else if (nMidTimestamp < nTimestamp)
+		else if (nMidPos < nSeekPos)
 		{
 			first = mid + 1;
 		}
@@ -291,6 +293,7 @@ DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnU
 	PlayerNodeInfo* pPlayerNodeInfo = &m_pNodeInfoMap[nNodeID];
 	if (pPlayerNodeInfo->pDataIndex == NULL)
 	{
+		xnLogVerbose(XN_MASK_OPEN_NI, "Slow seek being used (recording doesn't have seek tables)");
 		return NULL;
 	}
 
@@ -300,6 +303,7 @@ DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnU
 	if (pCurrentFrame->nConfigurationID != pDestFrame->nConfigurationID)
 	{
 		// can't use fast seek. We'll have to do it the old fashion way
+		xnLogVerbose(XN_MASK_OPEN_NI, "Seeking from %u to %u: Slow seek being used (configuration was changed between source and destination frames)", pPlayerNodeInfo->nCurFrame, nDestFrame);
 		return NULL;
 	}
 
@@ -310,9 +314,10 @@ DataIndexEntry** PlayerNode::GetSeekLocationsFromDataIndex(XnUInt32 nNodeID, XnU
 	{
 		if (m_pNodeInfoMap[i].bIsGenerator && i != nNodeID)
 		{
-			m_aSeekTempArray[i] = FindTimestampInDataIndex(i, pDestFrame->nTimestamp);
+			m_aSeekTempArray[i] = FindFrameForSeekPosition(i, pDestFrame->nSeekPos);
 			if (m_aSeekTempArray[i] != NULL && m_aSeekTempArray[i]->nConfigurationID != pCurrentFrame->nConfigurationID)
 			{
+				xnLogVerbose(XN_MASK_OPEN_NI, "Seeking from %u to %u: Slow seek being used (configuration was changed between source and destination frames or other nodes)", pPlayerNodeInfo->nCurFrame, nDestFrame);
 				return NULL;
 			}
 		}
@@ -425,17 +430,17 @@ XnStatus PlayerNode::SeekToFrameAbsolute(XnUInt32 nNodeID, XnUInt32 nDestFrame)
 			nRetVal = HandleNewDataRecord(record, FALSE);
 			XnBool bUndone = FALSE;
 
-			for (XnUInt32 i = 0; i < m_nMaxNodes; i++)
+			for (XnUInt32 i = 0; i < m_nMaxNodes; ++i)
 			{
 				//Rollback all properties to match the state the stream was in at position nDestRecordPos
 				PlayerNodeInfo &pni = m_pNodeInfoMap[i];
-				for (RecordUndoInfoMap::Iterator it = pni.recordUndoInfoMap.begin(); 
-					 it != pni.recordUndoInfoMap.end(); it++)
+				for (RecordUndoInfoMap::Iterator it = pni.recordUndoInfoMap.Begin(); 
+					 it != pni.recordUndoInfoMap.End(); ++it)
 				{
-					if ((it.Value().nRecordPos > nDestRecordPos) && (it.Value().nRecordPos < nStartPos))
+					if ((it->Value().nRecordPos > nDestRecordPos) && (it->Value().nRecordPos < nStartPos))
 					{
 						//This property was set between nDestRecordPos and our start position, so we need to undo it.
-						nRetVal = UndoRecord(it.Value(), nDestRecordPos, bUndone);
+						nRetVal = UndoRecord(it->Value(), nDestRecordPos, bUndone);
 						XN_IS_STATUS_OK(nRetVal);
 					}
 				}
@@ -587,7 +592,7 @@ XnBool PlayerNode::IsEOF()
 
 XnStatus PlayerNode::RegisterToEndOfFileReached(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback)
 {
-	return m_eofReachedEvent.Register(handler, pCookie, &hCallback);
+	return m_eofReachedEvent.Register(handler, pCookie, hCallback);
 }
 
 void PlayerNode::UnregisterFromEndOfFileReached(XnCallbackHandle hCallback)
@@ -1695,6 +1700,7 @@ XnNodeHandle PlayerNode::GetSelfNodeHandle()
 		xn::Player thisPlayer;
 		XnStatus nRetVal = m_context.GetProductionNodeByName(m_strName, thisPlayer);
 		XN_ASSERT(nRetVal == XN_STATUS_OK);
+		XN_REFERENCE_VARIABLE(nRetVal);
 
 		// we keep just the handle, without a reference (otherwise, we keep a reference to ourselves, 
 		// and we will never be destroyed)

@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -38,8 +37,6 @@ static EGLContext context = EGL_NO_CONTEXT;
 #define GL_WIN_SIZE_X 720
 #define GL_WIN_SIZE_Y 480
 
-// Maximum allowed depth (in mm from sensor).
-#define MAX_DEPTH 10000
 // Maximum number of limbs (lines) we will draw as a skeleton.
 #define MAX_LIMBS 16
 
@@ -213,7 +210,7 @@ void SceneDrawer::DrawLabels(XnUserID nUserId)
     glColor4f(1-color[0], 1-color[1], 1-color[2], 1);
 
     glRasterPos2i(com.X, com.Y);
-    int len = strlen(strOutputLabel);
+    int len = (int)strlen(strOutputLabel);
 
     for(int c=0; c<len; c++)
     {
@@ -389,7 +386,7 @@ void SceneDrawer::glutIdle (void)
 
 
 
-void SceneDrawer::glutKeyboard (unsigned char key, int x, int y)
+void SceneDrawer::glutKeyboard (unsigned char key, int /*x*/, int /*y*/)
 {
     SceneDrawer *singleton=GetInstance();
     switch (key)

@@ -1,0 +1,101 @@
+
+/**
+@page smpl_simple_read NiSimpleRead.cpp - sample program 
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- NiSimpleRead.cpp
+		
+	This section describes the SimpleRead sample program.
+
+	@section sr_glb_dcl_blk Global Declaration Block
+		The declaration block at the top of the program declares a Context object, a ScriptNode object, and an EnumerationErrors object. The context is workspace where the application builds an OpenNI production graph. The script node object loads and contains the OpenNI script and is the base node for the production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object model. The EnumerationErrors and XnStatus object types are for collecting errors from any of the OpenNI functions. Also declared is an OpenNI status flag for collecting return values from method calls.	
+		@code
+			XnStatus nRetVal = XN_STATUS_OK;
+			Context context;
+			ScriptNode scriptNode;
+			EnumerationErrors errors;
+		@endcode	
+				
+			
+	@section sr_func_main Main Program 
+	
+		@subsection sr_scrpt_sets_up_pg Use Script to Set up a Context and Production Graph 
+			
+			The @ref xn::Context::InitFromXmlFile() "InitFromXmlFile()" method is a shorthand combination of two other initialization methods &mdash; @ref xn::Context::Init() "Init()" and then @ref xn::Context::RunXmlScriptFromFile() "RunXmlScriptFromFile()" &mdash; which initializes the context object and then creates a production graph from an XML file. The XML script file describes all the nodes you want to create. For each node description in the XML file, this method creates a node in the production graph.		
+			@code
+				nRetVal = context.InitFromXmlFile(fn, scriptNode, &errors);
+			@endcode			
+			
+		@subsection sr_ver_nodes_in_script Verify Existence of Nodes in the Sample Script File 
+		
+			Summary: This code is some more verification code. This time it checks that OpenNI found at least one node definition in the script file. The program continues execution only if at least one node definition if found. 
+			@code
+			if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
+				{
+					XnChar strError[1024];
+					...
+				}
+				else if (nRetVal != XN_STATUS_OK)
+				{
+					printf("Open failed: %s\n", xnGetStatusString(nRetVal));
+					return (nRetVal);
+				}
+			}
+			@endcode
+			
+		@subsection sr_get_node_from_pg Get a Node from the Production Graph
+		
+			Assuming that the above call to @ref xn::Context::InitFromXmlFile() "InitFromXmlFile()" succeeded, a production graph is then created. 
+			
+			The @ref xn::Context::FindExistingNode() "FindExistingNode()" method in the following code block tries to get a reference to any one of the production nodes. This call specifies XN_NODE_TYPE_DEPTH to get a reference to a @ref xn::DepthGenerator "DepthGenerator" node. A DepthGenerator node generates a depth map as an array of pixels, where each pixel is a depth value representing a distance from the sensor in millimeters. A reference to the node is returned in the depth parameter.   
+			@code
+				DepthGenerator depth = (DepthGenerator)context.findExistingNode(NodeType.DEPTH);
+			@endcode
+			
+		@subsection sr_init_fps_calc Initialize the FPS Calculator 
+			
+			The following declaration block initializes the FPS Calculator.
+			@code
+				XnFPSData xnFPS;
+				nRetVal = xnFPSInit(&xnFPS, 180);
+			@endcode
+			
+		@subsection sr_decl_dg_fo Declare the DepthGenerator's Frame Object  
+		
+			The following statement declares a metadata object to provide a @ref glos_frame_object "frame object" for the @ref xn::DepthGenerator node. A @ref dict_gen_node "generator node's" @ref glos_frame_object "frame object" contains a generated data frame and all its associated properties. This frame object, comprising the data frame and its properties, is accessible through the node's metadata object.
+			@code
+				DepthMetaData depthMD;
+			@endcode
+
+		@subsection sr_main_prg_loop Main Program Loop
+						
+			The main program loop repeatedly updates the data available in the node for output, and then gets the frame object (via the metadata object). The program then calculates the mid-point of the scene's 2D (two-dimensional) area.
+			
+			@subsubsection sr_main_upd_data Updating the Data Available for Output 
+			
+				the @ref xn::Context::WaitOneUpdateAll() "WaitOneUpdateAll()" method in the following statement updates all generator nodes in the context that have new data available, first waiting for a specified node to have new data available. The application can then get the data (for example, using a metadata GetData() method). This method has a timeout.		
+				@code				
+					nRetVal = context.WaitOneUpdateAll(depth);
+				@endcode	
+
+			@subsubsection sr_main_mark_the_frame  Mark the Frame 
+				@code				
+					xnFPSMarkFrame(&xnFPS);
+				@endcode	 			
+			
+			@subsubsection sr_main_get_data Get the DepthGenerator's Data
+			
+				The following statement gets the latest generated depth @ref glos_frame_object "frame object", saving it as a metadata object. 
+				@code				
+					depth.GetMetaData(depthMD);
+				@endcode					
+
+				The following print statement accesses the frame data, its ID, and the frame data's associated configuration, The frame ID is the ID of the frame object. Frame IDs are a sequential unique number with a wrap around. This method is inherited from the OutputMetaData class.
+				@code						
+					printf("Frame %d Middle point is: %u. FPS: %f\n", depthMD.FrameID(), depthMD(depthMD.XRes() / 2, depthMD.YRes() / 2), xnFPSCalc(&xnFPS));
+				@endcode
+				
+				In the above, @ref xn::MapMetaData::XRes() "XRes()" and @ref xn::MapMetaData::YRes() "YRes()" are the dimensions of the FOV in the scene. The call to <b>depthMD()</b> accesses a depth pixel through an X,Y coordinate. By calculating <b>XRes()/2</b> and <b>YRes()/2</b>, this accesses the middle pixel.	
+				
+*/
+

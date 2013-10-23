@@ -1,0 +1,24 @@
+/**
+@page error_codes Error codes
+
+OpenNI errors mechanism is error codes. Every function that might fail has a return value of type @ref XnStatus.
+A value of XN_STATUS_OK means the function has succeeded. Any other value means some kind of failure
+has occurred.
+
+For additional error information, one may use the function @ref xnGetStatusString(), which returns a human
+readable description of the error, in English.
+
+Some basic error codes can be found in file XnStatusCodes.h.
+
+A normal usage of the error mechanism is checking if an error has occurred, and if so, print a message
+and close the application:
+@code
+xn::Context context;
+XnStatus nRetVal = context.Init();
+if (nRetVal != XN_STATUS_OK)
+{
+	printf("Failed to initialize OpenNI: %s\n", xnGetStatusString(nRetVal));
+	exit(-1);
+}
+@endcode
+*/

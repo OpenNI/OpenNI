@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -99,7 +98,7 @@ void SampleDepth::StopGenerating()
 
 XnStatus SampleDepth::RegisterToGenerationRunningChange( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
 {
-	return m_generatingEvent.Register(handler, pCookie, &hCallback);
+	return m_generatingEvent.Register(handler, pCookie, hCallback);
 }
 
 void SampleDepth::UnregisterFromGenerationRunningChange( XnCallbackHandle hCallback )
@@ -109,7 +108,7 @@ void SampleDepth::UnregisterFromGenerationRunningChange( XnCallbackHandle hCallb
 
 XnStatus SampleDepth::RegisterToNewDataAvailable( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
 {
-	return m_dataAvailableEvent.Register(handler, pCookie, &hCallback);
+	return m_dataAvailableEvent.Register(handler, pCookie, hCallback);
 }
 
 void SampleDepth::UnregisterFromNewDataAvailable( XnCallbackHandle hCallback )
@@ -119,13 +118,13 @@ void SampleDepth::UnregisterFromNewDataAvailable( XnCallbackHandle hCallback )
 
 XnBool SampleDepth::IsNewDataAvailable( XnUInt64& nTimestamp )
 {
+	// return next timestamp
+	nTimestamp = 1000000 / SUPPORTED_FPS;
 	return m_bDataAvailable;
 }
 
 XnStatus SampleDepth::UpdateData()
 {
-	XnStatus nRetVal = XN_STATUS_OK;
-	
 	XnDepthPixel* pPixel = m_pDepthMap;
 
 	// change our internal data, so that pixels go from frameID incrementally in both axes.
@@ -205,7 +204,7 @@ XnBool SampleDepth::IsMirrored()
 
 XnStatus SampleDepth::RegisterToMirrorChange( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
 {
-	return m_mirrorEvent.Register(handler, pCookie, &hCallback);
+	return m_mirrorEvent.Register(handler, pCookie, hCallback);
 }
 
 void SampleDepth::UnregisterFromMirrorChange( XnCallbackHandle hCallback )
@@ -255,14 +254,14 @@ XnStatus SampleDepth::GetMapOutputMode( XnMapOutputMode& Mode )
 	return (XN_STATUS_OK);
 }
 
-XnStatus SampleDepth::RegisterToMapOutputModeChange( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
+XnStatus SampleDepth::RegisterToMapOutputModeChange( XnModuleStateChangedHandler /*handler*/, void* /*pCookie*/, XnCallbackHandle& hCallback )
 {
 	// no need. we only allow one mode
 	hCallback = this;
 	return XN_STATUS_OK;
 }
 
-void SampleDepth::UnregisterFromMapOutputModeChange( XnCallbackHandle hCallback )
+void SampleDepth::UnregisterFromMapOutputModeChange( XnCallbackHandle /*hCallback*/ )
 {
 	// do nothing (we didn't really register)	
 }
@@ -284,14 +283,14 @@ void SampleDepth::GetFieldOfView( XnFieldOfView& FOV )
 	FOV.fVFOV = 1.35;
 }
 
-XnStatus SampleDepth::RegisterToFieldOfViewChange( XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback )
+XnStatus SampleDepth::RegisterToFieldOfViewChange( XnModuleStateChangedHandler /*handler*/, void* /*pCookie*/, XnCallbackHandle& hCallback )
 {
 	// no need. it never changes
 	hCallback = this;
 	return XN_STATUS_OK;
 }
 
-void SampleDepth::UnregisterFromFieldOfViewChange( XnCallbackHandle hCallback )
+void SampleDepth::UnregisterFromFieldOfViewChange( XnCallbackHandle /*hCallback*/ )
 {
 	// do nothing (we didn't really register)	
 }

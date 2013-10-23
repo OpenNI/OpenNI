@@ -1,0 +1,296 @@
+/**
+@page smpl_handtracker_java HandTracker.java - sample program (java)
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		-  HandTracker.java\\HandTracker.java  
+
+	This section describes an OpenNI sample program for tracking a hand. This sample is encapsulated in the org.openni.Samples.HandTracker.jar (java archive).
+		
+	The documentation describes the sample program's code from the top of the program file(s) to bottom.
+	
+	Every OpenNI feature is described the first time it appears in this sample program. Further appearances of the same feature are not described again.	
+	
+	@section hnd_trk_class_title HandTracker Class Title
+	
+		The whole program is defined inside the <code>HandTracker</code> Class. 
+		
+		
+	@section htj_evhndlr_gestrec  Handler for 'Gesture Recognized' Event
+	
+		The @ref xn::GestureGenerator::GestureRecognized "'Gesture Recognized'" event signals that the @ref xn::GestureGenerator "GestureGenerator" node has recognized the named gesture in the scene. 
+		
+		The following code block defines the event handler for the 'Gesture Recognized' event.
+		@code	
+			class MyGestureRecognized implements IObserver<GestureRecognizedEventArgs>
+			{
+				...
+			}
+		@endcode	
+		
+		The following is the main code in the body of the event handler.
+		
+			The event handler calls the @ref xn::HandsGenerator::StartTracking()  "StartTracking()" method of the @ref xn::HandsGenerator "HandsGenerator" node. This method causes the HandsGenerator node to start tracking at the specific position where the application expects a hand, which the application supplies as a parameter of the org.openni.Point3D type. The parameter is @ref xn::XnGestureRecognized "getEndPosition()", which is the position of the hand at the end of the gesture.
+			@code	
+				handsGen.StartTracking(args.getEndPosition());
+				gestureGen.removeGesture("Click");
+			@endcode	
+
+			The getEndPosition() method gets the <code>pEndPosition</code> parameter from, the event handler, which is the position of the hand at the end of the gesture.
+			
+			Now that the HandsGenerator is tracking a hand, the GestureGenerator does not have to look for the gesture anymore. So it does this by calling the @ref  xn::GestureGenerator::RemoveGesture "RemoveGesture()" method to disable the GestureGenerator from looking for the named gesture in the FOV.
+			@code	
+				gestureGen.removeGesture("Click");
+			@endcode			
+			
+			
+	@section htj_evhndlr_handcrt Handler for 'Hand Create' Event
+	
+		Some implementations may want to use the @ref xn::HandsGenerator::HandCreate "'Hand Create'" event to signal that the @ref xn::HandsGenerator "HandsGenerator" node has recognized and started tracking a new hand in response to the application calling the xn::() method. This event returns the ID of the new hand, the time of its recognition, and its position on recognition in the current frame.	
+		
+		The following code block defines the event handler for the 'Hand Create' event.
+		@code	
+			class MyHandCreateEvent implements IObserver<ActiveHandEventArgs>
+			{
+				...
+			}
+		@endcode	
+		
+		The following is the main code in the body of the event handler.
+		
+			The event handler calls a new list of @ref XnPoint3D "org.openni.Point3D" type structs. The <code>getPosition()</code> method returns the position at which the hand was created.
+			@code	
+				ArrayList<Point3D> newList = new ArrayList<Point3D>();
+				newList.add(args.getPosition());
+			@endcode	
+			
+			Now that the HandsGenerator is tracking the hand, it adds it to a history list created by this application. The history list is described later in @ref rec_raw_mainprg_dcl_blk_hist "declaration block".
+			@code	
+				history.put(new Integer(args.getId()), newList);
+			@endcode						
+			
+			
+	@section htj_evhndlr_handupd Handler for 'Hand Update' Event
+	
+		The @ref xn::HandsGenerator::HandUpdate "'Hand Update'" event signals that the @ref xn::HandsGenerator "HandsGenerator" node signals that a currently tracked hand was recognized at a specific position in the new frame. OpenNI continues to send this event at each further frame that the hand is still present. This event returns the ID of the hand, which is the same ID returned by the HandCreate event, the hand's new position, and the time of the update.
+		
+		The following code block defines the event handler for the 'Hand Update' event.
+		@code	
+			class MyHandUpdateEvent implements IObserver<ActiveHandEventArgs>
+			{
+				...
+			}
+		@endcode	
+		
+		The following is the main code in the body of the event handler.
+		The assignment in the first statement adds the new position of the hand to its own history buffer. The 'history' is a hash from an integer (the hand's unique, persistent ID) and a list of its last locations.
+		
+		When adding a new location of the hand, we want to add them to the correct list.
+		@code	
+			ArrayList<Point3D> historyList = history.get(args.getId());
+			
+			historyList.add(args.getPosition());
+			
+			while (historyList.size() > historySize)
+			{
+				historyList.remove(0);
+			}
+		@endcode	
+
+		The above while loop provides a maximum history size,  giving a 'moving tail' effect. This means that if there are too many points in the buffer, the oldest one is removed.
+		
+		
+@section htj_evhndlr_handdestr Handler for 'Hand Destroy' Event
+	
+		The @ref xn::HandsGenerator::HandUpdate "'Hand Destroy'" event signals that an existing hand has disappeared from the frame for any reason. This event returns the user ID &ndash; still the same user ID as before &ndash; and the time that it disappeared.
+		
+		The following code block defines the event handler for the 'Hand Destroy' event.
+		@code	
+			MyHandDestroyEvent implements IObserver<InactiveHandEventArgs>
+			{
+				...
+			}
+		@endcode	
+		
+		The following code is the main code in the body of the event handler.
+		
+		Now that the hand has been destroyed, in this example, the application wants to remove the user's ID from the history list. So the program gets the user's ID from the handler argument <code>args.getId</code>.
+
+
+		The code block below first removes the specific user's history buffer by calling <code>history.remove()</code>, and then we check if the general history is left empty, which means all hands were removed. The code then calls <code>history.isEmpty()</code> to check if the <code>history</code> listof hands has now become empty as a result of this hand having been destroyed. If it is empty, the program will then want to again start looking for the "Click" gesture. Thus, it then calls the @ref xn::GestureGenerator::AddGesture() "AddGesture()" method.
+		@code	
+			history.remove(args.getId());
+			if (history.isEmpty())
+			{
+				try
+				{
+					gestureGen.addGesture("Click");
+				} catch (StatusException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		@endcode			
+
+
+	@section htj_mainprg_dcl_blk Main Program Declaration Block: OpenNI Nodes
+	
+		The declaration block immediately above the main program (try) declares the OpenNI objects required for building the OpenNI production graph. The production graph is the main object model in OpenNI. 
+		@code	
+			private static final long serialVersionUID = 1L;
+			private OutArg<ScriptNode> scriptNode;
+			private Context context;
+			private DepthGenerator depthGen;
+			private GestureGenerator gestureGen;
+			private HandsGenerator handsGen;
+		@endcode
+		
+		Each of these concepts is described separately in the following paragraphs.	
+	
+		The @ref prod_graph "production graph" is a network of software objects - called production 	nodes - that can identify blobs as hands or human users. In this sample program the production graph identifies blobs as human users, and tracks them as they move. 
+		
+		the @ref xn::ScriptNode "ScriptNode" object loads an XML script from a file or string, and then runs the XML script to build a production graph.		
+
+		a @ref xn::Context "Context" object is a workspace in which the application builds an OpenNI production graph. 	
+
+		a @ref xn::DepthGenerator "DepthGenerator" node generates a depth map. Each map pixel value represents a distance from the sensor. 				
+
+		A @ref xn::GestureGenerator "GestureGenerator" node recognizes certain hand gestures and raise corresponding events accordingly. A gesture is a specific hand movement. The GestureGenerator node scans the FOV to detect gestures and generates the gesture data. 			
+		
+		A @ref xn::HandsGenerator "HandsGenerator" node generates tracking data about a single hand or multiple hands with persistent IDs. 	
+		
+		
+		@section rec_raw_mainprg_dcl_blk_hist Main Program Declaration Block: Application Histogram
+		
+		The following declaration block defines data structures for the application histogram. These are not OpenNI-specific declarations.
+		@code
+			private HashMap<Integer, ArrayList<Point3D>> history;
+			private byte[] imgbytes;
+			private float histogram[];
+
+			private BufferedImage bimg;
+			int width, height;
+		@endcode
+		<code>history</code> is a history list of @ref XnPoint3D " org.openni.Point3D " objects, which are the 3D (x,y,z) co-ordinates of each depth pixel in the depth map generated by a DepthGenerator node. 
+		
+		<code>histogram</code> is an array of floats to build a histogram of distribution of depth values. It will be used to represent different depth values with different colors..
+		
+		The following declaration for <code>SAMPLE_XML_FILE</code> is the path to an OpenNI XML script file for inputting and building a stored production graph.
+			private final String SAMPLE_XML_FILE = "../../../../Data/SamplesConfig.xml";		
+		
+		
+	@section setup_pg HandTracker() method: Setting up the Production Graph
+	
+		The public HandTracker() routine sets up the Production Graph.
+		
+		The following code initialization initializes the production graph from an OpenNI XML script file The call to @ref xn::Context::InitFromXmlFile "Context.createFromXmlFile()" combines the effects of two other initialization methods &ndash; @ref xn::Context::Init() and then @ref xn::Context::RunXmlScriptFromFile() &ndash; to initialize the context object and then create a production graph.		@code			
+			scriptNode = new OutArg<ScriptNode>();
+            context = Context.createFromXmlFile(SAMPLE_XML_FILE, scriptNode);
+		@endcode	
+		
+		The following statements create and set up a GestureGenerator node. The addGesture() method activates the GestureGenerator node to start looking for the named gesture ("Click") in the FOV by adding the gesture's name to the node's list of gestures it actively scans for in the FOV.
+		@code
+			gestureGen = GestureGenerator.create(context);
+            gestureGen.addGesture("Click"); {Not exactly the same as in the API}
+		@endcode	
+		
+		The following statement sets up an event handler for the 'Gesture Recognized' event. The handler is the MyGestureRecognized() function declared elsewhere in the program sample.
+		@code
+            gestureGen.getGestureRecognizedEvent().addObserver(new MyGestureRecognized() ); 
+		@endcode	
+		
+		The following code block sets up event handlers for a number of hand recognition events. For details about these events, see 
+		<a href="#xncpp_wrpr_handgen_events">Hand Event Sequence Diagram</a>, and 
+		<a href="#xncpp_wrpr_handcreate_ev">'Hand Create'</a>,
+		<a href="#xncpp_wrpr_handupdate_ev">'Hand Update'</a>, and 
+		<a href="#xncpp_wrpr_handdestroy_ev">'Hand Destroy'</a>.		
+		@code
+			handsGen = HandsGenerator.create(context);
+			handsGen.getHandCreateEvent().addObserver(new MyHandCreateEvent());
+			handsGen.getHandUpdateEvent().addObserver(new MyHandUpdateEvent());
+			handsGen.getHandDestroyEvent().addObserver(new MyHandDestroyEvent());
+		@endcode
+		
+		The following statement creates a @ref xn::DepthGenerator "DepthGenerator".
+		@code
+			depthGen = DepthGenerator.create(context);
+		@endcode	
+		
+		In the following statement, the latest data generated is copied to an easy-to-access @ref glos_frame_object "<i>frame object</i>". In OpenNI terminology: the node has data that is designated as 'metadata to be placed in the node's metadata object'. The node's getMetaData() method gets this data and copies it to a metadata object, <code>depthMD</code>. The data includes all configuration information associated with the data itself. This metadata object is then termed the @ref glos_frame_object "<i>frame object</i>". <br>
+		For more explanation on this, see @ref conc_meta_data, @ref glos_frame_object, and @ref frame_data.		
+		@code
+			DepthMetaData depthMD = depthGen.getMetaData();
+		@endcode	
+		
+		The following statement ensures all created @ref dict_gen_node "generator nodes" are generating data.
+		@code
+			context.startGeneratingAll();
+		@endcode	
+
+		The following sets up the histogram (see @ref rec_raw_mainprg_dcl_blk_hist). See 
+		<code>getFullXRes</code> and <code>getFullYRes</code> get the number of rows and columns in the full frame (that is, the entire field-of-view), ignoring cropping. This enables the program set up the right size buffer.
+		@code
+			history = new HashMap<Integer, ArrayList<Point3D>>(); 
+
+			histogram = new float[10000];
+			width = depthMD.getFullXRes();
+			height = depthMD.getFullYRes();
+
+			imgbytes = new byte[width*height];
+
+			DataBufferByte dataBuffer = new DataBufferByte(imgbytes, width*height);
+			Raster raster = Raster.createPackedRaster(dataBuffer, width, height, 8, null);
+			bimg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+			bimg.setData(raster);
+		@endcode	
+		
+		
+	@section htj_calcHist CalcHist() - Using the Depth Values to Build an Accumulative Histogram		
+	
+		There are no OpenNI-specific declarations in this routine.
+		
+		
+	@section htj_update_depth_fn updateDepth() method: Updating the Depth Map
+	
+		The following statement sets up the frame object. It is described in the <a href="#getMetaData">HandTracker() method above</a>. For more explanation on this, see @ref conc_meta_data, @ref glos_frame_object, and @ref frame_data.
+		@code
+			DepthMetaData depthMD = depthGen.getMetaData();
+		@endcode	
+		
+		The following method call waits for any node to have generated new data. This method then 'updates' each and every node in the entire production graph. For an overview to reading data and the <b>WaitXUpdateAll</b> methods, see <i>@ref conc_updating_data__summary_of_wait_fns</i>.	
+
+		The @ref xn::Context::WaitAnyUpdateAll() "waitAnyUpdateAll()" method in the following statement waits for any node to have generated a new data frame. The method then makes the data frames of all nodes in the entire production graph available for getting. The application can then get the data (for example, using a metadata GetData() method). This method has a timeout.		
+		@code
+			context.waitAnyUpdateAll();
+		@endcode
+		
+		The following code block creates a convenient buffer for the depth map and then calls the calcHist() method to calculate the histogram. There are no OpenNI-specific operations in this code block.
+		@code
+			ShortBuffer depth = depthMD.getData().createShortBuffer();
+			calcHist(depth);
+			depth.rewind();		
+		@endcode
+		
+		
+		This code block copies the depth into a local buffer, so that it can be drawn on the screen.
+		@code        
+			while(depth.remaining() > 0)
+			{
+				int pos = depth.position();
+				short pixel = depth.get();
+				imgbytes[pos] = (byte)histogram[pixel];
+			}		
+		@endcode
+		
+		
+	@section htj_getPreferredSize getPreferredSize() method
+
+		There are no OpenNI-specific operations in this routine.		
+	
+	
+	@section htj_paint paint() method
+	
+		
+		This function draws the current location of each known hand, with a tail consisting of its previous points. It uses the history list populated in the HandGenerator callbacks.
+
+*/
+

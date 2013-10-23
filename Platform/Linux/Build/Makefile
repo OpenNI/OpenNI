@@ -51,6 +51,7 @@ CORE_SAMPLES = \
 	Samples/NiCRead \
 	Samples/NiAudioSample \
 	Samples/NiSimpleSkeleton \
+	Samples/NiSkeletonBenchmark
 	
 ifeq "$(GLUT_SUPPORTED)" "1"
 	CORE_SAMPLES += \
@@ -169,6 +170,7 @@ Samples/NiSimpleCreate:		OpenNI
 Samples/NiCRead:		OpenNI
 Samples/NiAudioSample:		OpenNI
 Samples/NiSimpleSkeleton:	OpenNI
+Samples/NiSkeletonBenchmark: OpenNI
 Samples/NiUserTracker:		OpenNI
 Samples/NiUserSelection:	OpenNI
 Samples/NiHandTracker:		OpenNI

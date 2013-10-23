@@ -1,0 +1,30 @@
+/**
+@page conc_licenses Licenses
+
+OpenNI provides a simple licensing mechanism that can be used by modules 
+and applications. An OpenNI context object holds a list of currently 
+loaded licenses. At any point this list can be accessed to search for a 
+specific license. 
+
+A license is composed of a vendor name and a license key. Each vendor 
+has its own proprietary format for the key. 
+
+Common usage of the license mechanism is by modules requiring licenses. 
+The module can check the licenses list whenever an enumeration request 
+arrives, and, if the requested license isn't present, the module may 
+hide itself, by returning zero results. 
+
+OpenNI also provides a global registry for license keys. Those keys are 
+loaded whenever a context is initialized. Most modules might ask the 
+user for a license key when installing themselves to a machine. The 
+license provided by the user can then be added to the global license 
+registry. Adding or removing licenses from the global registry can be 
+done using the @ref nilicense command-line tool. 
+
+In addition, sometimes an application has a private license to a module. 
+Meaning, this module can only be activated via this application 
+(preventing other applications from using it). Applications may add 
+additional licenses in run-time to the context using the @ref 
+xnAddLicense() function (@ref xn::Context::AddLicense()). 
+
+*/

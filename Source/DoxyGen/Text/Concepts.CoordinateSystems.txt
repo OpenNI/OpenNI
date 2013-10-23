@@ -1,0 +1,31 @@
+/**
+@page conc_coord Coordinate Systems
+
+OpenNI defines two types of coordinate systems:
+- Projective Coordinates - a two-dimentional map of depth values
+- Real World Coordinates - A collection of three-dimentional points.
+
+Those two coordinate systems are defined as below:
+
+<table>
+<tr><th>Feature</th>        <th>Projective Coordinates</th>        <th>Real World Coordinates</th></tr>
+<tr><th>X-Y Units</th>      <td>pixels</td>                        <td>millimeters</td></tr>
+<tr><th>Z Units</th>        <td>millimeters</td>                   <td>millimeters</td></tr>
+<tr><th>X-Y Origin</th>     <td>upper-left corner of the FOV</td>  <td>center of FOV</td></tr>
+<tr><th>Z Origin</th>       <td>sensor's plane</td>                <td>sensor's plane</td></tr>
+<tr><th>X Direction</th>    <td>left to right</td>                 <td>left to right</td></tr>
+<tr><th>Y Direction</th>    <td>top to bottom</td>                 <td>bottom to top</td></tr>
+<tr><th>Z Direction</th>    <td>away from sensor</td>              <td>away from sensor</td></tr>
+</table>
+
+A main difference between the two is that in projective coordinates, a real-world object (person, chair) gets bigger 
+(in pixels) as it gets closer to the sensor, whereas its real-world size remains the same.
+
+@note Some data in OpenNI is returned in projective coordinates (for example, depth maps), and some is returned
+in real-world coordinates (for example, skeleton joints). Pay attention when comparing the two.
+
+A depth generator creates the depth value of each pixel. By knowing the distance of the object and some geometrical
+information about the sensor (like its FOV), translation can be made between the two systems. see 
+@ref xn::DepthGenerator::ConvertProjectiveToRealWorld() and @ref xn::DepthGenerator::ConvertRealWorldToProjective().
+
+*/

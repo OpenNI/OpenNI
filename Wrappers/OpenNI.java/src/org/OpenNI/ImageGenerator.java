@@ -1,28 +1,42 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
-package org.OpenNI;
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
+package org.openni;
 
+/**
+ * Generates RGB Images. <BR><BR>
+ *
+ * This generator is used to obtain the data from an RGB camera.  
+ * 
+ * This class defines the following events:
+ * pixelFormatChanged: Triggered when the pixel format of this generator changes
+ */
 public class ImageGenerator extends MapGenerator
 {
+	/**
+	 * Constructor, creates a new ImageGenerator in the given context
+	 * @param context OpenNI context
+	 * @param nodeHandle Native pointer to this object
+	 * @param addRef Whether to register this object
+	 * @throws GeneralException If underlying native code returns errors, a General Exception will be generated
+	 */
 	ImageGenerator(Context context, long nodeHandle, boolean addRef) throws GeneralException
 	{
 		super(context, nodeHandle, addRef);
@@ -43,6 +57,13 @@ public class ImageGenerator extends MapGenerator
 		};
 	}
 
+	/** Creates an ImageGenerator in the given context, filtered by a given query, storing any errors in the given object
+	 * @param context OpenNI context for the generator
+	 * @param query Query object to filter the results
+	 * @param errors Place to store any errors generated
+	 * @return Resulting ImageGenerator object
+	 * @throws GeneralException If underlying native code returns errors, a General Exception will be generated
+	 */
 	public static ImageGenerator create(Context context, Query query, EnumerationErrors errors) throws GeneralException
 	{
 		OutArg<Long> handle = new OutArg<Long>();
@@ -55,32 +76,63 @@ public class ImageGenerator extends MapGenerator
 		return result;
 	}
 
+	/** Creates an ImageGenerator in the given context, filtered by the given query, discarding any errors generated
+	 * @param context OpenNI context for the generator
+	 * @param query Query object to filter the results
+	 * @return Resulting ImageGenerator object
+	 * @throws GeneralException If underlying native code returns errors, a General Exception will be generated
+	 */
 	public static ImageGenerator create(Context context, Query query) throws GeneralException
 	{
 		return create(context, query, null);
 	}
 
+	/**
+	 * Creates an ImageGenerator in the given context
+	 * @param context OpenNI context for the generator
+	 * @return Resulting ImageGenerator object
+	 * @throws GeneralException If underlying native code returns errors, a General Exception will be generated
+	 */
 	public static ImageGenerator create(Context context) throws GeneralException
 	{
 		return create(context, null, null);
 	}
 	
+	/**
+	 * Queries whether a given pixel format is supported by this generator
+	 * @param format Format to query
+	 * @return TRUE if the format is supported, FALSE if it is not
+	 */
 	public boolean isPixelFormatSupported(PixelFormat format)
 	{
 		return NativeMethods.xnIsPixelFormatSupported(toNative(), format.toNative());
 	}
 	
+	/**
+	 * Sets the pixel format for this generator
+	 * @param format Desired new format for this generator
+	 * @throws StatusException If underlying native code returns errors, a Status Exception will be generated
+	 */
 	public void setPixelFormat(PixelFormat format) throws StatusException
 	{
 		int status = NativeMethods.xnSetPixelFormat(toNative(), format.toNative());
 		WrapperUtils.throwOnError(status);
 	}
 
+	/**
+	 * Provides access to the current pixel format of this generator
+	 * @return Current pixel format setting for this generator
+	 */
 	public PixelFormat getPixelFormat()
 	{
 		return PixelFormat.fromNative(NativeMethods.xnGetPixelFormat(toNative()));
 	}
 	
+	/**
+	 * Provides access to the current ImageMap produced by this generator
+	 * @return Current image map
+	 * @throws GeneralException If underlying native code returns errors, a General Exception will be generated
+	 */
 	public ImageMap getImageMap() throws GeneralException
 	{
 		int frameID = getFrameID();
@@ -96,13 +148,26 @@ public class ImageGenerator extends MapGenerator
 		return this.currImageMap;
 	}
 	
+	/**
+	 * Provides access to the Pixel Format Changed event.
+	 * @return
+	 */
 	public IStateChangedObservable getPixelFormatChangedEvent() { return this.pixelFormatChanged; }
 	
+	/**
+	 * Provides the current map data for this generator, wrapped in a Meta Data, and 
+	 * copies this into a given ImageMetaData object
+	 * @param ImageMD Place to copy the data
+	 */
 	public void getMetaData(ImageMetaData ImageMD)
 	{
 		NativeMethods.xnGetImageMetaData(this.toNative(), ImageMD);
 	}
 
+	/**
+	 * Provides access to this generators most current ImageMetaData object
+	 * @return Most current ImageMetaData object for this generator
+	 */
 	public ImageMetaData getMetaData()
 	{
 		ImageMetaData ImageMD = new ImageMetaData();

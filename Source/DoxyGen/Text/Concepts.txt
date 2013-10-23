@@ -1,0 +1,21 @@
+/**
+@page concepts Concepts
+
+This page explains some of the concepts of OpenNI interface and framework:
+- @subpage conc_context
+- @subpage prod_graph
+- @subpage conc_refcount
+- @subpage conc_generation
+- @subpage conc_updating_data
+- @subpage conc_capabilities
+- @subpage conc_coord
+- @subpage conc_map_wrapper_classes
+- @subpage conc_meta_data
+- @subpage conc_locks
+- @subpage conc_global_mirror
+- @subpage conc_error_state 
+- @subpage conc_events
+- @subpage conc_licenses
+- @subpage conc_recordings
+- @subpage conc_mocks
+*/

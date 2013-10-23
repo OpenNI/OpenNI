@@ -7,8 +7,9 @@
 // Copyright (c) 1992-2001 Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
-
+#ifndef _WINDLL
 #define _WINDLL
+#endif
 
 #include <streams.h>
 #include <stdarg.h>

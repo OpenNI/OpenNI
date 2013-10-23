@@ -1,0 +1,13 @@
+/**
+@page modules_node Creating a Node Implementation
+
+Now we need to create the node implementations we want. For each such 
+implementation, we'll create a new class. 
+
+The class should:
+- @subpage modules_node_interface
+- @subpage modules_node_inputs
+- @subpage modules_node_capabilities
+- @subpage modules_gen
+
+*/

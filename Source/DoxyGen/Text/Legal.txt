@@ -1,0 +1,7 @@
+/**
+@page legal Legal Stuff & Acknowledgments
+
+This software is based in part on the work of the Independent JPEG Group.
+
+OpenNI uses TinyXML for its implementation (www.sourceforge.net/projects/tinyxml).
+*/

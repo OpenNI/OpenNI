@@ -1,0 +1,16 @@
+/**
+@page conc_mocks Mock Nodes
+
+OpenNI provides a "mock" implementation for nodes. A "mock" 
+implementation does not have any logic of its own. Instead, it lets an 
+outside component to feed configuration changes and data into it. For 
+example, mock nodes are used by Player nodes to simulate actual nodes 
+when reading data from a recording. 
+
+Mock nodes can also be used when wanting to record something other than 
+actual nodes. An application may create a mock node, copy into it the 
+state of another node (initial configuration), and then read data from 
+the original node and write it to the mock node. Then, the mock node can 
+be recorded. See @ref nirecordsynthetic for such a sample. 
+
+*/

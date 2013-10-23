@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -35,6 +34,21 @@
 #include <XnOS.h>
 #include <XnLog.h>
 #include <XnOSCpp.h>
+#include "XnListT.h"
+
+
+//---------------------------------------------------------------------------
+// Types
+//---------------------------------------------------------------------------
+typedef struct XnUSBEventCallback
+{
+	XnUSBDeviceCallbackFunctionPtr pFunc;
+	void* pCookie;
+} XnUSBEventCallback;
+
+typedef XnListT<XnUSBEventCallback*> XnUSBEventCallbackList;
+
+XnUSBEventCallbackList g_connectivityEvent;
 
 //---------------------------------------------------------------------------
 // Defines
@@ -62,7 +76,7 @@ struct xnUSBInitData
 	libusb_context* pContext;
 	XN_THREAD_HANDLE hThread;
 	XnBool bShouldThreadRun;
-	XnUInt32 nThreads;
+	XnUInt32 nOpenDevices;
 	XN_CRITICAL_SECTION_HANDLE hLock;
 } g_InitData = {NULL, NULL, FALSE, 0, NULL};
 
@@ -113,7 +127,7 @@ XnStatus xnUSBAsynchThreadAddRef()
 
 	XnAutoCSLocker locker(g_InitData.hLock);
 
-	++g_InitData.nThreads;
+	++g_InitData.nOpenDevices;
 	
 	if (g_InitData.hThread == NULL)
 	{
@@ -151,6 +165,7 @@ void xnUSBAsynchThreadStop()
 		g_InitData.bShouldThreadRun = FALSE;
 		
 		// wait for it to exit
+		xnLogWarning(XN_MASK_USB, "Shutting down USB events thread...");
 		XnStatus nRetVal = xnOSWaitForThreadExit(g_InitData.hThread, XN_USB_HANDLE_EVENTS_TIMEOUT);
 		if (nRetVal != XN_STATUS_OK)
 		{
@@ -169,9 +184,9 @@ void xnUSBAsynchThreadRelease()
 {
 	XnAutoCSLocker locker(g_InitData.hLock);
 
-	--g_InitData.nThreads;
+	--g_InitData.nOpenDevices;
 
-	if (g_InitData.nThreads == 0)
+	if (g_InitData.nOpenDevices == 0)
 	{
 		xnUSBAsynchThreadStop();
 	}
@@ -409,6 +424,13 @@ XN_C_API XnStatus xnUSBOpenDeviceImpl(libusb_device* pDevice, XN_USB_DEV_HANDLE*
 	// mark the device is of high-speed
 	pDevHandle->nDevSpeed = XN_USB_DEVICE_HIGH_SPEED;
 	
+	nRetVal = xnUSBAsynchThreadAddRef();
+	if (nRetVal != XN_STATUS_OK)
+	{
+		xnOSFree(*pDevHandlePtr);
+		return (nRetVal);
+	}
+	
 	return (XN_STATUS_OK);
 }
 
@@ -500,6 +522,8 @@ XN_C_API XnStatus xnUSBCloseDevice(XN_USB_DEV_HANDLE pDevHandle)
 	libusb_close(pDevHandle->hDevice);
 
 	XN_FREE_AND_NULL(pDevHandle);
+	
+	xnUSBAsynchThreadRelease();
 
 	return (XN_STATUS_OK);
 }
@@ -983,8 +1007,6 @@ void xnCleanupThreadData(XnUSBReadThreadData* pThreadData)
 	}
 	
 	XN_ALIGNED_FREE_AND_NULL(pThreadData->pBuffersInfo);
-
-	xnUSBAsynchThreadRelease();
 }
 
 /** Checks if any transfer of the thread is queued. */
@@ -1128,6 +1150,18 @@ XN_THREAD_PROC xnUSBReadThreadMain(XN_THREAD_PARAM pThreadParam)
 					if (rc != 0)
 					{
 						xnLogError(XN_MASK_USB, "Endpoint 0x%x, Buffer %d: Failed to re-submit asynch I/O transfer (err=%d)!", pTransfer->endpoint, pBufferInfo->nBufferID, rc);
+						if (rc == LIBUSB_ERROR_NO_DEVICE)
+						{
+							for (XnUSBEventCallbackList::Iterator it = g_connectivityEvent.Begin(); it != g_connectivityEvent.End(); ++it)
+							{
+								XnUSBEventCallback* pCallback = *it;
+								XnUSBEventArgs args;
+								args.strDevicePath = NULL;
+								args.eventType = XN_USB_EVENT_DEVICE_DISCONNECT;
+								pCallback->pFunc(&args, pCallback->pCookie);
+							}
+						}
+
 					}
 				}
 			}
@@ -1166,16 +1200,12 @@ XN_C_API XnStatus xnUSBInitReadThread(XN_USB_EP_HANDLE pEPHandle, XnUInt32 nBuff
 	XN_VALIDATE_EP_HANDLE(pEPHandle);
 	XN_VALIDATE_INPUT_PTR(pCallbackFunction);
 	
-	nRetVal = xnUSBAsynchThreadAddRef();
-	XN_IS_STATUS_OK(nRetVal);
-	
 	xnLogVerbose(XN_MASK_USB, "Starting a USB read thread...");
 
 	XnUSBReadThreadData* pThreadData = &pEPHandle->ThreadData;
 
 	if (pThreadData->bIsRunning == TRUE)
 	{
-		xnUSBAsynchThreadRelease();
 		return (XN_STATUS_USB_READTHREAD_ALREADY_INIT);
 	}
 
@@ -1291,22 +1321,17 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 
 		// PATCH: we don't cancel the requests, because there is a bug causing segmentation fault.
 		// instead, we will just wait for all of them to return.
-
-/*		// cancel all pending requests
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+		// cancel all pending requests
 		for (XnUInt32 i = 0; i < pThreadData->nNumBuffers; ++i)
 		{
 			if (pThreadData->pBuffersInfo[i].bIsQueued)
 			{
-				printf("cancelling %d\n", i);
-				int rc = libusb_cancel_transfer(pThreadData->pBuffersInfo[i].transfer);
-				if (rc != 0)
-				{
-					xnLogWarning(XN_MASK_USB, "Failed to cancel asynchronous I/O operation (err = %d)! Will wait for it to complete...", rc);
-				}
+				libusb_cancel_transfer(pThreadData->pBuffersInfo[i].transfer);
 			}
 		}
-*/
-
+#endif
+		
 		// now wait for thread to exit (we wait the timeout of all buffers + an extra second)
 		XnStatus nRetVal = xnOSWaitForThreadExit(pThreadData->hReadThread, pThreadData->nTimeOut * pThreadData->nNumBuffers + 1000);
 		if (nRetVal != XN_STATUS_OK)
@@ -1329,4 +1354,39 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 XN_C_API XnStatus xnUSBSetCallbackHandler(XnUInt16 nVendorID, XnUInt16 /*nProductID*/, void* pExtraParam, XnUSBEventCallbackFunctionPtr pCallbackFunction, void* pCallbackData)
 {
 	return (XN_STATUS_OS_UNSUPPORTED_FUNCTION);
+}
+
+XN_C_API XnStatus XN_C_DECL xnUSBRegisterToConnectivityEvents(XnUInt16 nVendorID, XnUInt16 nProductID, XnUSBDeviceCallbackFunctionPtr pFunc, void* pCookie, XnRegistrationHandle* phRegistration)
+{
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	XN_VALIDATE_INPUT_PTR(pFunc);
+	XN_VALIDATE_OUTPUT_PTR(phRegistration);
+
+	XnUSBEventCallback* pCallback;
+	XN_VALIDATE_NEW(pCallback, XnUSBEventCallback);
+	pCallback->pFunc = pFunc;
+	pCallback->pCookie = pCookie;
+
+	nRetVal = g_connectivityEvent.AddLast(pCallback);
+	if (nRetVal != XN_STATUS_OK)
+	{
+		XN_DELETE(pCallback);
+		return (nRetVal);
+	}
+
+	*phRegistration = (XnRegistrationHandle)pCallback;
+
+	return XN_STATUS_OK;
+}
+
+XN_C_API void XN_C_DECL xnUSBUnregisterFromConnectivityEvents(XnRegistrationHandle hRegistration)
+{
+	XnUSBEventCallback* pCallback = reinterpret_cast<XnUSBEventCallback*>(hRegistration);
+	XnUSBEventCallbackList::Iterator it = g_connectivityEvent.Find(pCallback);
+	if (it != g_connectivityEvent.End())
+	{
+		g_connectivityEvent.Remove(it);
+		XN_DELETE(pCallback);
+	}
 }

@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #ifndef _XN_LOG_H_
 #define _XN_LOG_H_
 
@@ -103,14 +102,14 @@ XN_C_API XnLogSeverity XN_C_DECL xnLogGetMaskMinSeverity(const XnChar* strMask);
  *
  * @param	pWriter			[in]	The writer to register
  */
-XN_C_API XnStatus XN_C_DECL xnLogRegisterLogWriter(const XnLogWriter* pWriter);
+XN_C_API XnStatus XN_C_DECL xnLogRegisterLogWriter(XnLogWriter* pWriter);
 
 /**
  * Unregisters a Log Writer from receiving log entries.
  *
  * @param	pWriter			[in]	The writer to unregister
  */
-XN_C_API void XN_C_DECL xnLogUnregisterLogWriter(const XnLogWriter* pWriter);
+XN_C_API void XN_C_DECL xnLogUnregisterLogWriter(XnLogWriter* pWriter);
 
 /**
 * Configures if log entries will be printed to console.
@@ -125,6 +124,14 @@ XN_C_API XnStatus XN_C_DECL xnLogSetConsoleOutput(XnBool bConsoleOutput);
 * @param	bFileOutput	[in]	TRUE to print log entries to the file, FALSE otherwise.
 */
 XN_C_API XnStatus XN_C_DECL xnLogSetFileOutput(XnBool bFileOutput);
+
+#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+/** Configures if log entries will be printed to the Android log.
+*
+* @param	bAndroidOutput	[in]	TRUE to print log entries to the Android log, FALSE otherwise.
+*/
+XN_C_API XnStatus XN_C_DECL xnLogSetAndroidOutput(XnBool bAndroidOutput);
+#endif
 
 // @}
 
@@ -152,6 +159,14 @@ XN_C_API XnStatus XN_C_DECL xnLogSetLineInfo(XnBool bLineInfo);
  * @param	strOutputFolder	[in]	Folder to write to
  */ 
 XN_C_API XnStatus XN_C_DECL xnLogSetOutputFolder(const XnChar* strOutputFolder);
+
+/**
+ * Gets current log file name
+ * 
+ * @param	strFileName		[in]	A buffer to be filled
+ * @param	nBufferSize		[in]	The size of the buffer
+ */ 
+XN_C_API XnStatus XN_C_DECL xnLogGetFileName(XnChar* strFileName, XnUInt32 nBufferSize);
 
 // @}
 
@@ -385,23 +400,17 @@ XN_C_API void XN_C_DECL _xnLoggerClose(XnLogger* pLogger);
  */
 
 /**
- * Creates a file under the logs directory. The file is session based (see @ref xnLogCreateFileEx() for explanation).
+ * Creates a new file under the logs directory.
  *
- * @param	strFileName	[in]	Name of the file to create
- * @param	phFile		[out]	The file handle.
+ * @param	strName			[in]		Name of the file to create
+ * @param	bSessionBased	[in]		TRUE for a session-based file, FALSE otherwise. A session based
+ *										file also includes the timestamp and process ID of the running
+ *										process as a prefix to its name.
+ * @param	csFullPath		[in/out]	A buffer to be filled with full path of the created file
+ * @param	nPathBufferSize	[in]		The size of the <c>csFullPath</c> buffer
+ * @param	phFile			[out]		The file handle
  */
-XN_C_API XnStatus XN_C_DECL xnLogCreateFile(const XnChar* strFileName, XN_FILE_HANDLE* phFile);
-
-/**
- * Creates a file under the logs directory.
- *
- * @param	strFileName		[in]	Name of the file to create
- * @param	bSessionBased	[in]	TRUE for a session-based file, FALSE otherwise. A session based
-									file also includes the timestamp and process ID of the running
-									process as a prefix to its name.
- * @param	phFile			[out]	The file handle.
- */
-XN_C_API XnStatus XN_C_DECL xnLogCreateFileEx(const XnChar* strFileName, XnBool bSessionBased, XN_FILE_HANDLE* phFile);
+XN_C_API XnStatus XN_C_DECL xnLogCreateNewFile(const XnChar* strName, XnBool bSessionBased, XnChar* csFullPath, XnUInt32 nPathBufferSize, XN_FILE_HANDLE* phFile);
 
 // @}
 
@@ -431,6 +440,8 @@ XN_C_API XnBool XN_C_DECL xnLogIsEnabled(const XnChar* csLogMask, XnLogSeverity 
 XN_C_API void XN_C_DECL xnLogWrite(const XnChar* csLogMask, XnLogSeverity nSeverity, const XnChar* csFile, XnUInt32 nLine, const XnChar* csFormat, ...);
 XN_C_API void XN_C_DECL xnLogWriteNoEntry(const XnChar* csLogMask, XnLogSeverity nSeverity, const XnChar* csFormat, ...);
 XN_C_API void XN_C_DECL xnLogWriteBinaryData(const XnChar* csLogMask, XnLogSeverity nSeverity, const XnChar* csFile, XnUInt32 nLine, XnUChar* pBinData, XnUInt32 nDataSize, const XnChar* csFormat, ...);
+XN_C_API XnStatus XN_API_DEPRECATED("Use xnLogCreateNewFile() instead") XN_C_DECL xnLogCreateFile(const XnChar* strFileName, XN_FILE_HANDLE* phFile);
+XN_C_API XnStatus XN_API_DEPRECATED("Use xnLogCreateNewFile() instead") XN_C_DECL xnLogCreateFileEx(const XnChar* strFileName, XnBool bSessionBased, XN_FILE_HANDLE* phFile);
 
 #if XN_PLATFORM_VAARGS_TYPE == XN_PLATFORM_USE_WIN32_VAARGS_STYLE
 	#define xnLogVerbose(csLogMask, csFormat, ...)	xnLogWrite(csLogMask, XN_LOG_VERBOSE, __FILE__, __LINE__, csFormat, __VA_ARGS__)

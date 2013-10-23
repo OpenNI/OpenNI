@@ -1,0 +1,149 @@
+/**
+@page conc_updating_data  Making Data Available using the WaitXUpdateAll() Methods
+
+Generator nodes can be generating new data all the time. Meanwhile, 
+however, an application typically needs to be using one consistent data 
+set (data frame and associated data) all received at any one time, until 
+it has completed processing the frame. For this reason, an OpenNI 
+generator holds its new data internally only, until the application 
+explicitly asks the generator to update its data to the new data. This 
+request is done by an 'Update Data' command. OpenNI API provides the 
+@ref xn::Generator::WaitAndUpdateData() method to let the application 
+wait for the generator to have generated new data. This method causes it 
+to be 'updated', which means that it copies it to the node's application 
+buffer. 
+
+In some cases, the production graph comprises of more than one node, and 
+the application will usually want all the nodes to be updated at once. 
+OpenNI supplies a family of methods &ndash; called the 
+<code>WaitXUpdateAll()</code> methods &ndash; to update the nodes all at 
+once, depending on which approach the application wants to use to update 
+the nodes. For a summary of the <b>WaitXUpdateAll</b> methods, see @ref 
+conc_updating_data__summary_of_wait_fns below. 
+
+Unless needing to update only a specific node, it is highly advised to 
+use one of the '<code>Update All</code>' functions. In addition, for 
+updating all the nodes these '<code>Update All</code>' functions have 
+some further benefits: 
+
+- If nodes are dependent on each other, it promises that the needed node 
+  will be updated before the needing node. 
+
+- If playing a recording, it reads data from the recording until the 
+  condition is met. 
+
+- If a recorder exists, it records the data from all nodes added to it 
+  (without the need to call @ref xn::Recorder::Record()). 
+
+@section conc_updating_data__summary_of_wait_fns 'Wait and Update' Methods
+
+	The 'WaitXandUpdateAll' methods are a family of methods of the @ref 
+	xn::Context "Context" class that act on the entire production graph, 
+	i.e., they act on each and every one of the generator nodes in the 
+	context. Calling a 'WaitXandUpdateAll' method 'updates' the nodes, that 
+	is, the method ensures that the accessible data from each and every node 
+	is the node's most recently generated data. 
+
+	Each of the 'WaitXandUpdateAll' methods performs a different type of 
+	'wait' prior to performing the 'update' &ndash; see below for separate 
+	descriptions of each of these methods. 
+
+	- @ref xnWaitAndUpdateAll() (@ref xn::Context::WaitAndUpdateAll()) - 
+	  Updates all generator nodes in the context, first waiting for each node 
+	  to have new data available. 
+
+	- @ref xnWaitAnyUpdateAll() (@ref xn::Context::WaitAnyUpdateAll()) - 
+	  Waits for any node to have new data. Once new data is available from any 
+	  node, all nodes are updated. 
+
+	- @ref xnWaitOneUpdateAll() (@ref xn::Context::WaitOneUpdateAll()) - 
+	  Waits for a specific node to have new data. Once new data is available 
+	  from this node, all nodes are updated. This is especially useful when 
+	  having several nodes producing data, but only one determines the 
+	  progress of the application. 
+
+	- @ref xnWaitNoneUpdateAll() (@ref xn::Context::WaitNoneUpdateAll()) - 
+	  Does not wait for anything. All nodes are updated. 
+
+	There is also a WaitAndUpdateData() method that is a member of a 
+	specific node. This is a member of the @ref xn::Generator class. The 
+	difference between them is that the 'WaitXAndUpdateData' methods update 
+	the application buffers of all the nodes in the entire context all at 
+	once, specifying which type of wait to perform first. In contrast, the 
+	@ref xn::Generator::WaitAndUpdateData() method waits only on the 
+	specified node and then updates its application buffer. 
+
+@section conc_updating_data__in_depth In Depth
+
+	It is understood from the above that even when nodes are generating 
+	data, the application cannot get any of their new data until it calls 
+	one of these 'wait and update' methods. Typically, a call to one of 
+	these methods will be placed in the main program loop. 
+
+	Note that these methods are not one-off calls for setting a mode for 
+	all future updates. As already mentioned, one of these methods must be 
+	called each time the application wishes to cause new generated data to 
+	be output. 
+
+	These methods exit after a timeout of two seconds. 
+
+	The nodes output their next new generated data items in their order of 
+	dependencies, i.e., these methods guarantee that the 'server' node (the 
+	lower-level node generating the data for another node) is updated before 
+	the 'client' node. 
+
+	When @ref xn::Player "Player" playing data from a recording, depending 
+	on the mode, these methods read data from the recreated nodes exactly as 
+	for live nodes. 
+
+	If a recorder exists, these methods automatically record the data from 
+	all nodes added to this recorder. 
+
+@section conc_updating_data__sample_code_cmn Sample Code
+
+	Here is an example of updating data and getting data. This particular 
+	example uses a node with an associated @ref glos_frame_object "frame 
+	object". The frame object is contained in a @ref conc_meta_data 
+	"metadata" object. 
+
+	After calling an 'Update Data' method (in this example, the node's @ref 
+	xn::Generator::WaitAndUpdateData() "WaitAndUpdateData()" method), the 
+	application must call the node's <code>GetMetaData()</code> method to 
+	get the node's latest generated frame object and save it as metadata. 
+
+	The node's <code>GetMetaData()</code> method gets the node's frame 
+	object that is. An example of a metadata object is @ref 
+	xn::DepthMetaData, which is the metadata object for a @ref 
+	xn::DepthGenerator "DepthGenerator" node. 
+
+	<b>Code example: </b>
+
+	@code
+	DepthGenerator depth;
+	depth.StartGenerating();
+
+	DepthMetaData depthMD;
+	while forever
+	{ 
+		depth.WaitAndUpdateData();	
+		depth.GetMetaData(depthMD);	
+		
+		XnUInt32 xRes = depthMD.XRes();
+		const XnDepthPixel* pDepthMap = depthMD.Data();
+	}
+	@endcode
+
+	Note that for each 'Update Data' call (e.g., @ref 
+	xn::Generator::WaitAndUpdateData() above) the application must then 
+	again get the new data (using the node's <code>GetMetaData()</code> 
+	method). This is true also when accessing the data through metadata. 
+	That is, the metadata is not permanently attached to the node's new 
+	output. 
+
+	In some cases, the production graph comprises of more than one node, and 
+	the application will usually want all the nodes to be updated at once. 
+	OpenNI supplies a family of methods &nbsp called the 
+	<code>WaitXUpdateAll()</code> methods &nbsp to update the nodes all at 
+	once. For more information on the <code>WaitXUpdateAll()</code> methods 
+	see @ref conc_updating_data. 
+*/

@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
@@ -35,7 +34,6 @@
 //---------------------------------------------------------------------------
 xn::Context g_Context;
 xn::ScriptNode g_scriptNode;
-xn::DepthGenerator g_DepthGenerator;
 xn::UserGenerator g_UserGenerator;
 
 XnBool g_bNeedPose = FALSE;
@@ -54,7 +52,7 @@ XnBool fileExists(const char *fn)
 }
 
 // Callback: New user was detected
-void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& /*generator*/, XnUserID nId, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
@@ -70,14 +68,14 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
     }
 }
 // Callback: An existing user was lost
-void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& /*generator*/, XnUserID nId, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
     printf("%d Lost user %d\n", epochTime, nId);	
 }
 // Callback: Detected a pose
-void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& /*capability*/, const XnChar* strPose, XnUserID nId, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
@@ -86,14 +84,14 @@ void XN_CALLBACK_TYPE UserPose_PoseDetected(xn::PoseDetectionCapability& capabil
     g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, TRUE);
 }
 // Callback: Started calibration
-void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& capability, XnUserID nId, void* pCookie)
+void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(xn::SkeletonCapability& /*capability*/, XnUserID nId, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
     printf("%d Calibration started for user %d\n", epochTime, nId);
 }
 
-void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& capability, XnUserID nId, XnCalibrationStatus eStatus, void* pCookie)
+void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability& /*capability*/, XnUserID nId, XnCalibrationStatus eStatus, void* /*pCookie*/)
 {
     XnUInt32 epochTime = 0;
     xnOSGetEpochTime(&epochTime);
@@ -131,7 +129,7 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationComplete(xn::SkeletonCapability
     return nRetVal;						    \
 }
 
-int main(int argc, char **argv)
+int main()
 {
     XnStatus nRetVal = XN_STATUS_OK;
     xn::EnumerationErrors errors;
@@ -158,9 +156,6 @@ int main(int argc, char **argv)
         printf("Open failed: %s\n", xnGetStatusString(nRetVal));
         return (nRetVal);
     }
-
-    nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator);
-    CHECK_RC(nRetVal,"No depth");
 
     nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_USER, g_UserGenerator);
     if (nRetVal != XN_STATUS_OK)
@@ -209,15 +204,13 @@ int main(int argc, char **argv)
     {
         printf("Assume calibration pose\n");
     }
-    XnUInt32 epochTime = 0;
-    while (!xnOSWasKeyboardHit())
+
+	while (!xnOSWasKeyboardHit())
     {
         g_Context.WaitOneUpdateAll(g_UserGenerator);
         // print the torso information for the first user already tracking
         nUsers=MAX_NUM_USERS;
         g_UserGenerator.GetUsers(aUsers, nUsers);
-        int numTracked=0;
-        int userToPrint=-1;
         for(XnUInt16 i=0; i<nUsers; i++)
         {
             if(g_UserGenerator.GetSkeletonCap().IsTracking(aUsers[i])==FALSE)
@@ -232,7 +225,6 @@ int main(int argc, char **argv)
         
     }
     g_scriptNode.Release();
-    g_DepthGenerator.Release();
     g_UserGenerator.Release();
     g_Context.Release();
 

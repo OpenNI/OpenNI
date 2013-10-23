@@ -1,0 +1,357 @@
+
+/**
+@page smpl_simple_view NiSimpleViewer.cpp - sample program 
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- NiSimpleViewer.cpp
+
+	This section describes the SimpleViewer sample program. This sample program uses a DepthGenerator node and ImageGenerator node to build an accumulative histogram from depth values.
+
+	@section sv_glb_dcl_blk Global Declaration Block
+	
+		The following definition is for the path to an OpenNI XML script file for inputting and building a stored production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object model. The identifies blobs as hands or human users. 
+		@code
+			#define SAMPLE_XML_PATH "../../../../Data/SamplesConfig.xml"
+		@endcode
+	
+		The following declares the array for the histogram array that is a key part of this sample program. (This is not OpenNI specific.)
+		@code
+			float g_pDepthHist[MAX_DEPTH];
+		@endcode
+		
+		The following declaration block declares the OpenNI objects required for building the OpenNI production graph. 
+		@code
+			Context g_context;
+			ScriptNode g_scriptNode;
+			DepthGenerator g_depth;
+			ImageGenerator g_image;
+			DepthMetaData g_depthMD;
+			ImageMetaData g_imageMD;
+		@endcode
+		
+		Each of these declarations is described separately in the following paragraphs.	
+	
+		A @ref xn::Context "Context" object is a workspace in which the application builds an OpenNI production graph. 	
+
+		The @ref xn::ScriptNode "ScriptNode" object loads an XML script from a file or string, and then runs the XML script to build a production graph.
+
+		The @ref xn::DepthGenerator "DepthGenerator" node generates a depth map. Each map pixel value represents a distance from the sensor. 				
+		
+		The @ref xn::ImageGenerator "ImageGenerator" node generates color image maps of various formats, such as the RGB24 image format. Call its @ref xn::ImageGenerator::SetPixelFormat() "SetPixelFormat()" method to set the image format to be generated.		
+			
+		The @ref xn::DepthMetaData "DepthMetaData" object provides a @ref glos_frame_object "frame object" for the @ref xn::DepthGenerator node. A @ref dict_gen_node "generator node's" @ref glos_frame_object "frame object" contains a generated data frame and all its associated properties. This frame object, comprising the data frame and its properties, is accessible through the node's metadata object.
+		
+		The @ref xn::ImageMetaData "ImageMetaData" object provides a @ref glos_frame_object "frame object" for the @ref xn::ImageGenerator node. This metadata object is associated with an  ImageGenerator node in the same way as the DepthMetaData object is associated with a DepthGenerator node.
+
+			
+
+
+				
+			
+	@section sv_func_main Main Program 
+	
+		The declarations at the top of the main program collect and report status and errors from any of the OpenNI functions.		
+		@code
+			XnStatus rc;
+			EnumerationErrors errors;
+		@endcode
+
+		
+		@subsection sv_scrpt_sets_up_pg Use Script to Set up a Context and Production Graph 
+			
+			The @ref xn::Context::InitFromXmlFile() "InitFromXmlFile()" method is a shorthand combination of two other initialization methods &mdash; @ref xn::Context::Init() "Init()" and then @ref xn::Context::RunXmlScriptFromFile() "RunXmlScriptFromFile()" &mdash; which initializes the context object and then creates a production graph from an XML file. The XML script file describes all the nodes you want to create. For each node description in the XML file, this method creates a node in the production graph.		
+			@code
+				rc = g_context.InitFromXmlFile(SAMPLE_XML_PATH, g_scriptNode, &errors);
+			@endcode			
+			
+		@subsection sv_ver_nodes_in_script Verify Existence of Nodes in the Sample Script File 
+		
+			This is verification code to check that OpenNI found at least one node definition in the script file. The program continues execution only if at least one node definition if found. 
+			@code
+				if (rc == XN_STATUS_NO_NODE_PRESENT)
+				{
+					XnChar strError[1024];
+					errors.ToString(strError, 1024);
+					printf("%s\n", strError);
+					return (rc);
+				}
+				else if (rc != XN_STATUS_OK)
+				{
+					printf("Open failed: %s\n", xnGetStatusString(rc));
+					return (rc);
+				}
+			@endcode
+			
+		@subsection sv_get_dg_node_from_pg Get a DepthGenerator Node from the Production Graph
+		
+			Assuming that the above call to @ref xn::Context::InitFromXmlFile() "InitFromXmlFile()" succeeded, a production graph is then created. 
+			
+			The @ref xn::Context::FindExistingNode() "FindExistingNode()" method in the following code block tries to get a reference to any one of the production nodes. This call specifies XN_NODE_TYPE_DEPTH to get a reference to a @ref xn::DepthGenerator "DepthGenerator" node. A DepthGenerator node generates a depth map as an array of pixels, where each pixel is a depth value representing a distance from the sensor in millimeters. A reference to the node is returned in the depth parameter.   
+			@code
+				rc = g_context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_depth);
+			@endcode
+			
+			The code block that follows the FindExistingNode() call just checks that OpenNI found a DepthGenerator node in the production graph. 
+			@code
+				if (rc != XN_STATUS_OK)
+				{
+					printf("No depth node exists! Check your XML.");
+					return 1;
+				}
+			@endcode
+			
+		@subsection sv_get_dg_node_from_pg Get a ImageGenerator Node from the Production Graph	
+
+			The following code is similar to the previous code block, but this time the FindExistingNode() method call gets a reference to an @ref xn::ImageGenerator "ImageGenerator" node. Assuming that an ImageGenerator node was found, a reference to it is returned in the g_image parameter.			
+			@code
+				rc = g_context.FindExistingNode(XN_NODE_TYPE_IMAGE, g_image);
+				if (rc != XN_STATUS_OK)
+				{
+					printf("No image node exists! Check your XML.");
+					return 1;
+				}
+			@endcode
+
+		@subsection sv_get_dg_data Get the DepthGenerator's Data
+			
+			The following statement gets the latest generated depth @ref glos_frame_object "frame object", saving it as a metadata object. 
+			@code				
+				g_depth.GetMetaData(g_depthMD);
+			@endcode	
+
+		@subsection sv_get_dg_latest Get the ImageGenerator's Latest Data
+		
+			This works the asme as for the  DepthGenerator as above.
+			@code				
+				g_image.GetMetaData(g_imageMD);
+			@endcode	
+			
+			
+		@subsection sv_chk_unsprted_mode Checking for Unsupported Mode or Format 	
+		
+			The following code block checks for Hybrid mode requirement. Hybrid mode isn't supported in this sample. This check accesses some attributes of the frame data's associated configuration properties: FullXRes() and FullYRes() are the full frame resolution, i.e., the entire field-of-view, ignoring cropping of the FOV in the scene.
+			@code	
+				if (g_imageMD.FullXRes() != g_depthMD.FullXRes() || g_imageMD.FullYRes() != g_depthMD.FullYRes())
+				{
+					printf ("The device depth and image resolution must be equal!\n");
+					return 1;
+				}
+			@endcode
+
+			The following code block checks that the selected pixel format is RGB24. Other formats are not supported.
+			if (g_imageMD.PixelFormat() != XN_PIXEL_FORMAT_RGB24)
+			@code
+				if (g_imageMD.PixelFormat() != XN_PIXEL_FORMAT_RGB24)
+				{
+					printf("The device image format must be RGB24\n");
+					return 1;
+				}
+			@endcode
+			
+		@subsection sv_init_texture_map Initializing the Texture Map
+		
+			The dimensions of the Texture Map buffer are calculated by rounding the full frame resolution of the DepthGenerator data frame. full frame resolution is accessed through xn::MapMetaData::FullXRes() "FullXRes()" and xn::MapMetaData::FullYRes() "FullYRes()"  (again, both accessed through the metadata frame object). 
+			@code
+				g_nTexMapX = (((unsigned short)(g_depthMD.FullXRes()-1) / 512) + 1) * 512;
+				g_nTexMapY = (((unsigned short)(g_depthMD.FullYRes()-1) / 512) + 1) * 512;
+				g_pTexMap = (XnRGB24Pixel*)malloc(g_nTexMapX * g_nTexMapY * sizeof(XnRGB24Pixel));
+			@endcode
+			
+			
+	@section sv_func_glut_disp	glutDisplay()  - Display Control
+	
+		Significant OpenNI programming is performed inside the glutDisplay() callback.
+		
+		@subsection sv_read_fos	Read the Frame Objects
+		
+			The following code blocks read the frame objects from the DepthGenerator and ImageGenerator nodes.
+			
+			the @ref xn::Context::WaitAnyUpdateAll() "WaitAnyUpdateAll()" method in the following statement updates all generator nodes in the context that have new data available, first waiting for a specified node to have new data available. The application can then get the data (for example, using a metadata GetData() method). This method has a timeout.		
+			@code				
+				nRetVal = context.WaitOneUpdateAll(depth);
+			@endcode	
+			
+			The following code block calls the GetMetaData() methods of each of the two generator nodes to get the nodes' frame data from the frame objects &ndash; depthMD and g_imageMD, as already explained earlier.
+			
+			The code then calls the Data() methods of each of the frame objects to get pointers &ndash; pDepth and pImage &ndash; into their respective map buffers. All further access to the data from the DepthGenerator and ImageGenerator nodes are through these frame objects.			
+			@code	
+				g_depth.GetMetaData(g_depthMD);
+				g_image.GetMetaData(g_imageMD);
+				const XnDepthPixel* pDepth = g_depthMD.Data();
+				const XnUInt8* pImage = g_imageMD.Data();
+			@endcode	
+			
+		@subsection sv_scale_images Scale the Images
+		
+			The following code uses the FullXRes() to calculate the scaling factor between the depth map and the GL window. FullXRes() gets the full frame resolution, i.e., the entire field-of-view, ignoring cropping of the FOV in the scene.
+			@code
+				unsigned int nImageScale = GL_WIN_SIZE_X / g_depthMD.FullXRes();
+			@endcode
+			
+			
+		@subsection sv_build_histo Using the Depth Values to Build an Accumulative Histogram
+					
+			The program builds an <i>accumulative histogram</i> in order to process the maps for increasing the contrast of areas of different depths so that areas closer to the sensor are brighter than areas further away from the sensor. The accumulative histogram achieves this by separating out areas of different depth values. 
+		
+		<b>Building the Initial Histogram: </b> 
+		
+		The following code block builds a histogram of the depth map. It uses the depth values to build a histogram of frequency of occurrence of each depth value. 
+
+		The <code>*pDepth</code> pointer accesses each value in the depth map's frame object. 
+		It then uses the value as an index into the <code>g_pDepthHist</code> histogram array. 
+		@code 
+			xnOSMemSet(g_pDepthHist, 0, MAX_DEPTH*sizeof(float));
+
+			unsigned int nNumberOfPoints = 0;
+			for (XnUInt y = 0; y < g_depthMD.YRes(); ++y)
+			{
+				for (XnUInt x = 0; x < g_depthMD.XRes(); ++x, ++pDepth) // pDepth 'walks' through the depth map, pixel by pixel
+				{
+					if (*pDepth != 0)	// *pDepth accesses the depth value of the current depth pixel in the depth map
+					{					// A depth value of zero means no valid depth was obtained
+						g_pDepthHist[*pDepth]++; // Increments the counter of the current depth value 
+						nNumberOfPoints++;
+					}
+				}
+			}
+		@endcode 
+	
+		<b>Converting the histogram into a cumulative histogram: </b> 
+	
+		The following processing loop converts the histogram into a cumulative histogram of frequency of 
+		occurrence of each depth value. The cumulative histogram is a histogram in which the vertical axis 
+		shows not just the counts for a single depth value, but instead -- for each depth value -- shows 
+		the counts for that depth value plus all counts for smaller depth values. The processing loop 
+		achieves this by making a running total of the counters of the depth values. Depth values 
+		whose counters reach relatively large numbers indicate blobs at 
+		those depths. The cumulative total always increases for all depth values each, 
+		faster when the depth values are encountered that represent the sides of a blob, 
+		and more slowly at a blob's peak. Thus, blobs at significantly different depths are 
+		separated out by the histogram to be at significantly different frequency levels.   
+		@code 
+			for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+			{
+				g_pDepthHist[nIndex] += g_pDepthHist[nIndex-1];
+			}
+		@endcode 	
+		
+		Note that at this stage a larger depth value means a greater distance of a human user from the sensor;
+		accordingly, the higher cumulative frequency levels also mean a greater distance. Since we want 
+		a greater distance to be presented by a lower brightness (darker color), and a smaller distance to be 
+		represented by a greater brightness, then later in the code this direction must be reversed. 
+
+		The following processing loop normalizes the cumulative histogram by dividing each counter by 
+		<code>nNumberOfPoints</code>, i.e., it converts every counter to a fraction of 1. 
+		
+		This loop also reverses the direction of the histogram - as explained above. This is the term:
+		@code 
+			(1.0f - )
+		@endcode 
+		
+		So now we have got the brightness factor we need: a smaller distance (depth) 
+		is represented by a greater cumulative count for a greater brightness,
+		and larger distance (depth) is represented by a smaller cumulative count for a lower brightness. 
+
+		The <code>(256 * )</code> multiplier and <code>(unsigned int)</code> cast then convert the brightness from a 
+		fraction of 1 to an integer between 0 and 255, which is exactly what is needed to directly create 
+		an RGB color later in this routine. 
+		@code 
+			if (nNumberOfPoints)
+			{
+				for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+				{
+					g_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
+				}
+			}
+		@endcode 
+
+		The histogram calculation has now been completed. We now have a <code>g_pDepthHist</code> 
+		array that when indexing it with a depth value returns you a brightness value that is (usually) 
+		significantly larger than the brightness value returned by indexing with 
+		a smaller depth value. 
+
+		<code>xnOSMemSet</code> is an OpenNI function that allocates and zeros. This OpenNI function calls the 
+		C++ <code>memset()</code> function. <code>g_pTexMap</code> is an area of memory used by the following code as a texture buffer for preparing a map to pass to GL for display on the monitor. 
+		@code 
+			xnOSMemSet(g_pTexMap, 0, g_nTexMapX*g_nTexMapY*sizeof(XnRGB24Pixel));
+		@endcode 
+
+		<b>Preparing the Image Map and Depth Map for Output to GL: </b> 
+		
+		The following two code blocks copy pixels from the OpenNI image map and depth map to the 
+		texture, <code>g_pTexMap</code>, in that order. These two code blocks declare a number of 
+		pointers that point into the <code>g_pTexMap</code> buffer.
+
+		<i>See the diagram <a href="#NiSimpleViewer_Preparing_Maps_for_GL">"Preparing 
+		the Image Map and Depth Map for Output to GL"</a></i>. 
+		This diagram clearly explains the following code blocks and the use of the pointers. 
+
+		In the loops in the following two code blocks, <code>pTex</code> walks through the texture, 
+		<code>pImage</code> walks through the image map, and <code>pDepth</code> walks through the depth map. 
+		
+		Check if we need to draw an image frame to the texture.  
+		@code 		
+			if (g_nViewState == DISPLAY_MODE_OVERLAY ||
+				g_nViewState == DISPLAY_MODE_IMAGE)
+			{
+				const XnRGB24Pixel* pImageRow = g_imageMD.RGB24Data();
+				XnRGB24Pixel* pTexRow = g_pTexMap + g_imageMD.YOffset() * g_nTexMapX;
+
+				for (XnUInt y = 0; y < g_imageMD.YRes(); ++y)
+				{
+					const XnRGB24Pixel* pImage = pImageRow;
+					XnRGB24Pixel* pTex = pTexRow + g_imageMD.XOffset();
+
+					for (XnUInt x = 0; x < g_imageMD.XRes(); ++x, ++pImage, ++pTex)
+					{
+						*pTex = *pImage;
+					}
+
+					pImageRow += g_imageMD.XRes();
+					pTexRow += g_nTexMapX;
+				}
+			}
+		@endcode 
+
+		Check if we need to draw a depth frame to the texture. The depth value of each pixel, as converted by the accumulative histogram above, is  displayed in a yellow shade. The accumulative histogram controls the  brightness of the yellow color. Brighter colors represent areas closer to the hardware sensor. 
+	
+		In 'Overlay' mode (<code>g_nViewState == DISPLAY_MODE_OVERLAY)</code>, the depth pixels overwrite the image pixels inb the texture. The following code overwrites only pixels with a valid depth value <code>(*pDepth == 0)</code>. Program pixels with no valid depth value <code>(*pDepth != 0)</code> are left in their original color from the previous code block that writes out the image frame.	
+		@code 
+			if (g_nViewState == DISPLAY_MODE_OVERLAY ||
+				g_nViewState == DISPLAY_MODE_DEPTH)
+			{
+				const XnDepthPixel* pDepthRow = g_depthMD.Data();
+				XnRGB24Pixel* pTexRow = g_pTexMap + g_depthMD.YOffset() * g_nTexMapX;
+
+				for (XnUInt y = 0; y < g_depthMD.YRes(); ++y)
+				{
+					const XnDepthPixel* pDepth = pDepthRow;
+					XnRGB24Pixel* pTex = pTexRow + g_depthMD.XOffset();
+
+					for (XnUInt x = 0; x < g_depthMD.XRes(); ++x, ++pDepth, ++pTex)
+					{
+						if (*pDepth != 0)
+						{
+							int nHistValue = g_pDepthHist[*pDepth];
+							pTex->nRed = nHistValue;
+							pTex->nGreen = nHistValue;
+							pTex->nBlue = 0;
+						}
+					}
+
+					pDepthRow += g_depthMD.XRes();
+					pTexRow += g_nTexMapX;
+				}
+			}
+		@endcode 		
+		
+		
+	@section NiSimpleViewer_Preparing_Maps_for_GL_sect	Preparing the Image Map and Depth Map for Output to GL
+		
+
+  <a name="NiSimpleViewer_Preparing_Maps_for_GL">"Preparing the Image Map and Depth Map for Output to GL"</a>.	
+
+  @image html NiSimpleViewer_Prep_Image_and_Depth_Maps_for_Output_to_GL.png 
+				
+*/
+

@@ -1,0 +1,142 @@
+
+/**
+@page smpl_simple_create NiSimpleCreate.cpp - sample program  
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- NiSimpleCreate.cpp 
+		
+	This section describes the NiSimpleCreate sample program. This sample program is similar to NiSimpleRead, but sets up a production graph using function calls instead of an XML file.		
+	
+	This sample program is similar to NiSimpleRead, but sets up a production graph using function calls instead of an XML file.
+
+	@section sc_ftrs Key Features of the Sample Program
+	
+		This sample program demonstrates how to set up an OpenNI production graph 
+		These are the features and concepts demonstrated by the sample program:
+		-	The OpenNI production graph
+		-	Setting up a production graph by using function calls
+		-	Node types: DepthGenerator node 
+		-	Metadata ("frame objects") 
+		-	Context
+		-	Method status returns and errors - At every stage of the program, error checking is performed 
+
+	@section sc_glb_dcl_blk Global Declaration Block
+	
+		The context initialization block of code at the top of the program declares and initializes a Context object. A
+		context is a work space where you build your OpenNI production graph
+		@code
+			XnStatus nRetVal = XN_STATUS_OK;
+			Context context;
+
+			nRetVal = context.Init();
+			CHECK_RC(nRetVal, "Initialize context");
+		@endcode
+	
+	@section sc_cntxt_init Initializing a Context 
+
+		The context initialization block of code at the top of the program declares and initializes a Context object. A context is a work space where you build your OpenNI production graph
+		@code	
+			XnStatus nRetVal = XN_STATUS_OK;
+			Context context;
+
+			nRetVal = context.Init();
+			CHECK_RC(nRetVal, "Initialize context");
+		@endcode
+
+	
+	@section sc_crt_pg Creating a Production Graph
+	
+	A production graph is created by creating at least one node. Ibn this acse it is a DepthGenerator node. A DepthGenerator node generates depth maps. Depth maps are data frames of pixels, where each pixel value is its distance from the sensor in millimeters.
+	@code	
+		DepthGenerator depth;
+		nRetVal = depth.Create(context);
+	@endcode
+	The following code block is a call to a macro. It simply checks that the return code reports a successful execution, and if not prints an error message and stops the application execution, returning control to the operating system.
+	
+	@section sc_entr_node_to_gen_state Entering the Node into 'Generating state'
+		
+	The following function call enters the production graph into 'Generating state'.
+	This causes the nodes in the production graph to start generating data (by default, when a generator node is created, it's not generating any new data. This allows an application to configure it before actually starting it.
+	@code
+		nRetVal = context.StartGeneratingAll();
+	@endcode
+	
+		
+	@section sc_decl_dg_fo Declaring the DepthGenerator Frame Object
+	
+	The application accesses the DepthGenerator node's data and associated configuration through the node's frame object (provided by the metadata object). This frame object provides fast access to a stored @ref glos_frame_object "frame object" data and its associated configuration. 
+	@code
+		DepthMetaData depthMD;
+	@endcode
+	
+	3.6	Main Program Loop 
+	
+	@section sc_main_loop Main Program Loop 
+	
+	The main program loop keeps going forever, or until somebody presses a keyboard key. The main body of the program is all within this loop.
+	
+	The program repeatedly updates the data available in the node for output, and then gets the frame object (via the metadata object). The program then calculates the mid-point of the scene's 2D (two-dimensional) area.	
+	@code
+		while (!xnOSWasKeyboardHit())
+		{
+		 < main program body > 
+		}
+	@endcode
+	
+		@subsection sc_main_loop_update_data Updating the Data Available for Output 		
+
+			The following call to a 'Wait X Update All' method updates the data available for output. The WaitOneUpdateAll() method updates all generator nodes in the context that have new data available, first waiting for a  specified node to have new data available. The application then reads this data through the frame object.
+			@code
+				nRetVal = context.WaitOneUpdateAll(depth);
+			@endcode
+		
+			
+		@subsection sc_main_loop_get_dg_fo Getting the DepthGenerator's Frame Object
+		
+			The DepthGenerator node's frame object contains the depth map as an array of pixels. The data is accessed though the Data() method (see later). This method returns a pointer to the first depth pixel in the map.
+
+			The following call to the @ref xn::DepthGenerator::GetMetaData() "GetMetaData()" method gets the node's latest frame object, saving it as a metadata object. The frame object contains the depth map, which is an array of pixels. This call is central in the use of the DepthGenerator node &ndash; and in all generator nodes that make use of a metadata object.
+			@code
+				depth.GetMetaData(depthMD);
+			@endcode
+		
+		@subsection sc_main_loop_get_dg_data_a_cfg Getting the Depth Data and Configuration  
+		
+			The following print statement accesses the frame data, its ID, and some attributes of the frame data's associated configuration. The frame ID is the ID of the frame object. XRes() and YRes() are from the frame configuration; they are the resolution of the FOV in the scene.
+			
+			The call to depthMD() accesses a depth pixel through an (X,Y) coordinate. By calculating XRes()/2 and YRes()/2, this accesses the middle pixel.
+			@code
+				printf("Frame %d Middle point is: %u. FPS: %f\n", depthMD.FrameID(), 
+					depthMD(depthMD.XRes() / 2, depthMD.YRes() / 2), 
+					xnFPSCalc(&xnFPS));
+			@endcode	
+
+	
+	@section sc_rel_objs Releasing the Objects
+	
+		At the conclusion of the program, the following code block unreferences the context and the production node, decreasing its reference count by 1. If the reference count reaches zero, the node or context will be destroyed.
+		@code	
+			depth.Release();
+			context.Release();
+		@endcode	
+
+			
+
+
+	
+
+
+
+	
+
+
+
+
+	
+
+	
+
+			
+				
+*/
+

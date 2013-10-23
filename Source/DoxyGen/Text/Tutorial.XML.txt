@@ -1,0 +1,22 @@
+/**
+@page tut_xml Configuring OpenNI using an XML file
+
+The following code configures OpenNI using an XML file, and then makes sure the nodes it needs exist:
+@code
+// Initialize OpenNI context using an XML file
+xn::Context context;
+nRetVal = context.InitFromXmlFile(".\\Config.xml", NULL);
+// TODO: check error code
+
+// Look for the depth node
+xn::DepthGenerator depth;
+nRetVal = context.FindExistingNode(XN_NODE_TYPE_DEPTH, depth);
+if (nRetVal != XN_STATUS_OK)
+{
+	printf("Can't run - no depth generator is present!\n");
+	exit(-1);
+}
+
+// TODO: mainloop - process data
+@endcode
+*/

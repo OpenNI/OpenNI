@@ -1,44 +1,46 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #ifndef __MOCKGENERATOR_H__
 #define __MOCKGENERATOR_H__
 
 #include <XnModuleCppInterface.h>
 #include <XnTypes.h>
-#include <XnEvent.h>
 #include "MockProductionNode.h"
+
+XN_PRAGMA_START_DISABLED_WARNING_SECTION(XN_INHERITS_VIA_DOMINANCE_WARNING_ID)
 
 class MockGenerator : 
 	public MockProductionNode,
 	virtual public xn::ModuleGenerator,
-	virtual public xn::ModuleMirrorInterface
+	virtual public xn::ModuleMirrorInterface,
+	virtual public xn::ModuleFrameSyncInterface
 {
 public:
-	MockGenerator(const XnChar* strName, XnBool bAggregateData = FALSE);
+	MockGenerator(xn::Context& context, const XnChar* strName, XnBool bAggregateData = FALSE);
 	virtual ~MockGenerator();
 
 	/*ModuleProductionNode*/
 	virtual XnBool IsCapabilitySupported(const XnChar* strCapabilityName);
 	virtual XnStatus SetIntProperty(const XnChar* strName, XnUInt64 nValue);
+	virtual XnStatus SetStringProperty(const XnChar* strName, const XnChar* strValue);
 	virtual XnStatus SetGeneralProperty(const XnChar* strName, XnUInt32 nBufferSize, const void* pBuffer);
 
 	/*ModuleGenerator*/
@@ -65,6 +67,14 @@ public:
 	virtual XnStatus RegisterToMirrorChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback);
 	virtual void UnregisterFromMirrorChange(XnCallbackHandle hCallback);
 
+	/*ModuleFrameSyncInterface*/
+	virtual XnBool CanFrameSyncWith(xn::ProductionNode& other);
+	virtual XnStatus FrameSyncWith(xn::ProductionNode& other);
+	virtual XnStatus StopFrameSyncWith(xn::ProductionNode& other);
+	virtual XnBool IsFrameSyncedWith(xn::ProductionNode& other);
+	virtual XnStatus RegisterToFrameSyncChange(XnModuleStateChangedHandler handler, void* pCookie, XnCallbackHandle& hCallback);
+	virtual void UnregisterFromFrameSyncChange(XnCallbackHandle hCallback);
+
 protected:
 	XnStatus OnStateReady();
 	XnStatus ResizeBuffer(XnUInt32 nIndex, XnUInt32 nNeededSize);
@@ -76,11 +86,19 @@ private:
 	XnStatus SetNextData(const void *pData, XnUInt32 nSize);
 	XnStatus AppendToNextData(const void *pData, XnUInt32 nSize);
 	void SetGenerating(XnBool bGenerating);
+	XnStatus SetFrameSyncNode(const XnChar* strOther);
+	void OnNodeCreation(xn::ProductionNode& createdNode);
+	void OnNodeDestruction(const XnChar* strDestroyedNodeName);
+	void FrameSyncChanged();
+
+	static void XN_CALLBACK_TYPE OnNodeCreationCallback(xn::Context& context, xn::ProductionNode& createdNode, void* pCookie);
+	static void XN_CALLBACK_TYPE OnNodeDestructionCallback(xn::Context& context, const XnChar* strDestroyedNodeName, void* pCookie);
 
 	XnBool m_bAggregateData;
 	PropChangeEvent m_generatingChangedEvent;
 	PropChangeEvent m_newDataAvailableEvent;
 	PropChangeEvent m_mirrorChangeEvent;
+	PropChangeEvent m_frameSyncChangeEvent;
 
 	enum {NUM_BUFFERS = 2};
 	struct DataInfo
@@ -104,6 +122,13 @@ private:
 	XnBool m_bMirror;
 	XnBool m_bNewDataAvailable;
 	XnBool m_bMirrorCap;
+	XnBool m_bFrameSyncCap;
+	XnChar m_strFrameSyncWith[XN_MAX_NAME_LENGTH]; // We store frame sync by name, as it might not be part of recording
+	XnBool m_bFrameSyncWithExists;
+	XnCallbackHandle m_hNodeCreationCallback;
+	XnCallbackHandle m_hNodeDestructionCallback;
 };
+
+XN_PRAGMA_STOP_DISABLED_WARNING_SECTION
 
 #endif // __MOCKGENERATOR_H__

@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #ifndef _XN_HASH_H
 #define _XN_HASH_H
 
@@ -339,33 +338,6 @@ public:
 	XnHash()
 	{
 		m_nInitStatus = Init();
-	}
-
-	/**
-	* Copy constructor
-	*/
-	XnHash(const XnHash& other)
-	{
-		m_nInitStatus = Init();
-		if (m_nInitStatus == XN_STATUS_OK)
-		{
-			m_nMinBin = other.m_nMinBin;
-			m_CompareFunction = other.m_CompareFunction;
-			m_HashFunction = other.m_HashFunction;
-			for (int i = 0; i < XN_HASH_NUM_BINS; i++)
-			{
-				if (other.m_Bins[i] != NULL)
-				{
-					m_Bins[i] = XN_NEW(XnList);
-					if (m_Bins[i] == NULL)
-					{
-						m_nInitStatus = XN_STATUS_ALLOC_FAILED;
-						return;
-					}
-					*(m_Bins[i]) = *(other.m_Bins[i]);
-				}
-			}
-		}
 	}
 
 	/**
@@ -755,6 +727,8 @@ protected:
 	XnCompareFunction m_CompareFunction;
 
 private:
+	XN_DISABLE_COPY_AND_ASSIGN(XnHash);
+
 	XnStatus ConstFind(const XnKey& key, ConstIterator& hiter) const
 	{
 		XnHashValue HashValue = (*m_HashFunction)(key);
@@ -882,29 +856,10 @@ private:
 			SetHashFunction(Hash);																	\
 			SetCompareFunction(Compare);															\
 		}																							\
-		ClassName(const ClassName& other)															\
-		{																							\
-			SetHashFunction(Hash);																	\
-			SetCompareFunction(Compare);															\
-			*this = other;																			\
-		}																							\
 		virtual ~ClassName()																		\
 		{																							\
 			while (!IsEmpty())																		\
 				Remove(begin());																	\
-		}																							\
-		ClassName& operator=(const ClassName& other)												\
-		{																							\
-			Clear();																				\
-			for (ConstIterator it = other.begin(); it != other.end(); it++)							\
-			{																						\
-				m_nInitStatus = Set(it.Key(), it.Value());											\
-				if (m_nInitStatus != XN_STATUS_OK)													\
-				{																					\
-					return *this;																	\
-				}																					\
-			}																						\
-			return *this;																			\
 		}																							\
 		XnStatus Set(KeyType const& key, ValueType const& value)									\
 		{																							\
@@ -1000,12 +955,14 @@ private:
 			KeyType const& _key = KeyTranslator::GetFromValue(key);									\
 			return KeyManager::Hash(_key);															\
 		}																							\
-		inline static XnInt32 Compare(const XnKey& key1, const XnKey& key2)						\
+		inline static XnInt32 Compare(const XnKey& key1, const XnKey& key2)							\
 		{																							\
 			KeyType const _key1 = KeyTranslator::GetFromValue(key1);								\
 			KeyType const _key2 = KeyTranslator::GetFromValue(key2);								\
 			return KeyManager::Compare(_key1, _key2);												\
 		}																							\
+	private:																						\
+		XN_DISABLE_COPY_AND_ASSIGN(ClassName);														\
 	};
 
 /**

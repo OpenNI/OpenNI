@@ -1,0 +1,56 @@
+/**	
+@page conc_meta_data Frame Objects and Metadata Objects
+
+The metadata classes provide @ref glos_frame_object "frame objects" to 
+corresponding generator nodes to provide fast data access. For example, 
+a @ref xn::DepthMetaData "DepthMetaData" object provides a frame object 
+for a @ref xn::DepthGenerator "DepthGenerator" node. Many types of 
+generator nodes are provided with frame objects (e.g., DepthGenerator 
+and @ref xn::ImageGenerator "ImageGenerator"), but not all types of 
+generator nodes (e.g., xn::HandsGenerator). 
+
+In addition, the frame objects are used to freeze the configuration of a 
+node at the time this data arrived. Sometimes an application changes the 
+configuration of a node while reading data from it. In such a case, and 
+until new data arrives, the data received from this node was produced 
+using a different configuration. For example, lets say a @ref 
+xn::DepthGenerator "DepthGenerator" node was configured to produce QVGA 
+depth maps, and the application constantly reads data from it. At some 
+point, the application changes the node output mode to VGA. Until the 
+moment a new frame arrives, calling @ref 
+xn::DepthGenerator::GetDepthMap() would return a QVGA map, but calling 
+@ref xn::DepthGenerator::GetMapOutputMode() would return VGA resolution. 
+This might cause errors (or even an access violation) in the 
+application. 
+
+To solve this, each node has a frame object, keeping the properties of 
+the data when it was read. So, in the above case, by calling @ref 
+xn::DepthGenerator::GetMetaData() you would get a @ref xn::DepthMetaData 
+object. This object @ref xn::DepthMetaData::Data "Data()" method would 
+return a pointer to the QVGA depth map, and the @ref 
+xn::DepthMetaData::XRes "XRes()" and @ref xn::DepthMetaData::YRes 
+"YRes()" functions would return QVGA resolution. 
+
+Metadata objects hold <code>const</code> pointers to the data (since 
+this is what is returned from the generators). C++ <i>metadata</i> 
+objects (all objects inheriting from @ref xn::OutputMetaData) also 
+provide a way to replace the data buffer with a self-allocated buffer, 
+which can also be written to. Use the @ref 
+xn::OutputMetaData::AllocateData() "AllocateData()" function for 
+allocating a clean buffer, or the @ref 
+xn::OutputMetaData::MakeDataWritable() "MakeDataWritable()" function for 
+also copying data from the buffer into the newly allocated writable 
+buffer. 
+
+Also, the metadata objects support several types of copying: 
+- All <i>InitFrom</i> functions actually perform the shallow copy made 
+  by C functions (@ref xnCopyDepthMetaData() for example). 
+- All <i>CopyFrom</i> functions allocates a new buffer and copies data 
+  to it (so that destination object now points to a private copy of the 
+  data of the source object). 
+
+Currently this creates a situation in which the functionality supplied 
+by C and C++ interfaces is not the same. This is planned to be fixed in 
+future versions. 
+
+*/

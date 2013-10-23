@@ -1,0 +1,24 @@
+/**
+@page modules_node_inputs Obtain Inputs
+
+If the new node implementation requires any inputs - and it normally 
+<i>would</i> need inputs - you can pass them to this class in its 
+constructor or in an initialization method. Later on, you will pass 
+these inputs to instances of this class. This will be done from the node 
+exporter (see @ref modules_exporter_create). 
+
+Note that if the inputs required are other nodes (for example, if your 
+hand generator node requires an image generator), then those nodes must 
+be received as API objects, and not as module objects (i.e., you must 
+use @ref xn::ImageGenerator and not @ref xn::ModuleImageGenerator). 
+
+In our example:
+@code
+class MyHandGenerator: public virtual xn::ModuleHandsGenerator
+{
+public:
+	MyHandsGenerator(xn::ImageGenerator imageGen);
+	...
+};
+@endcode
+*/

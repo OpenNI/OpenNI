@@ -1,0 +1,157 @@
+/**
+@page smpl_simple_view_java SimpleViewer.java - sample program (Java)
+
+	<b>Source file:</b> Click the following link to view the source code file:
+		- SimpleViewer.java
+
+
+	This section describes the SimpleViewer sample program in the Java language. This sample program uses a DepthGenerator node to build an accumulative histogram from depth values.
+	
+	The documentation describes the sample program's code from the top of the program file(s) to bottom.
+	
+	Every OpenNI feature is described the first time it appears in this sample program. Further appearances of the same feature are not decribed again.
+
+
+	@section svj_glb_dcl_blk Global Declaration Block	
+	
+		The following declaration block declares the OpenNI objects required for building the OpenNI production graph. 
+		@code
+			private OutArg<ScriptNode> scriptNode;
+			private Context context;
+			private DepthGenerator depthGen;
+			private byte[] imgbytes;
+		@endcode
+		
+		Each of these declarations is described separately in the following paragraphs.	
+
+		The @ref xn::ScriptNode "ScriptNode" object loads an XML script from a file or string, and then runs the XML script to build a production graph . . The ScriptNode object keeps references to all nodes created from the script, so they will not be destroyed. (This is since OpenNI will delete a node that has no remaining references to it.)
+	
+		
+		A @ref xn::Context "Context" object is a workspace in which the application builds an OpenNI production graph. 	
+
+		The @ref xn::DepthGenerator "DepthGenerator" node generates a depth map. Each map pixel value represents a distance from the sensor. 						
+			
+		The @ref xn::DepthMetaData "DepthMetaData" object provides a @ref glos_frame_object "frame object" for the @ref xn::DepthGenerator "DepthGenerator" node. A @ref dict_gen_node "generator node's" frame object contains the generated data frame and all its associated properties. This frame object, comprising the data frame and its properties, is accessible through the node's metadata object.	
+
+		The following definition is for the path to an OpenNI XML script file for inputting and building a stored production graph. The <i>production graph</i> is a network of <i>production nodes</i> and is the principal OpenNI object model. The identifies blobs as hands or human users. 
+		@code
+			#define SAMPLE_XML_PATH "../../../../Data/SamplesConfig.xml"
+		@endcode		
+				
+			
+	@section svj_func_main Main Program 	
+		
+		@subsection svj_scrpt_sets_up_pg Uses a Script to Set up a Context and Production Graph 			
+			
+			The following code block uses a script to set up a context and a production graph. The <b>Context.createFromXmlFile()</b> method is a shorthand combination of two other initialization methods, which initializes the context object and then creates a production graph from an XML file. The XML script file describes all the nodes you want to create. For each node description in the XML file, this method creates a node in the production graph.		
+			@code
+				scriptNode = new OutArg<ScriptNode>();
+				context = Context.createFromXmlFile(SAMPLE_XML_FILE, scriptNode);				
+			@endcode			
+						
+		@subsection svj_get_dg_node_from_pg Get a DepthGenerator Node from the Production Graph
+		
+			The following statement creates and returns a reference to a @ref xn::DepthGenerator "DepthGenerator" node. The create() method can return a reference to an existing DepthGenerator node if one already exists in the production graph created from the XML. If no DepthGenerator node already exists, this method creates a new DepthGenerator node and returns a reference to the new node.      
+			@code
+				depthGen = DepthGenerator.create(context);
+			@endcode
+			
+			The following statement gets the latest generated depth @ref glos_frame_object "frame object", saving it as a metadata object. 
+			@code
+				DepthMetaData depthMD = depthGen.getMetaData();
+			@endcode		
+			
+			The following sets up the array for the histogram array that is a key part of this sample program. (This is not OpenNI specific.)
+			@code
+				histogram = new float[10000];
+			@endcode				
+
+			The following code accesses some attributes of the frame data's associated configuration properties: getFullXRes() and getFullYRes() are the full frame resolution, i.e., the entire field-of-view, ignoring cropping of the FOV in the scene.
+			@code	
+				width = depthMD.getFullXRes();
+				height = depthMD.getFullYRes();
+			@endcode		
+			
+			The remaining statements in this method are not OpenNI specific. 			
+			@code	
+				imgbytes = new byte[width*height];
+				
+				DataBufferByte dataBuffer = new DataBufferByte(imgbytes, width*height);
+				Raster raster = Raster.createPackedRaster(dataBuffer, width, height, 8, null);
+				bimg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+				bimg.setData(raster);
+			@endcode	
+			
+
+	@section svj_calcHist CalcHist() - Using the Depth Values to Build an Accumulative Histogram
+	
+		The following code block uses the depth values to build an accumulative histogram of frequency of occurrence of each depth value. The <code>depthMD.DepthMapPtrgetData().createShortBuffer()</code>method returns a buffer that can be easily processed. The depth value is then used as an index into the histogram[] array.
+		@code
+			private void calcHist(DepthMetaData depthMD)
+			{
+				...			
+				ShortBuffer depth = depthMD.getData().createShortBuffer();
+				depth.rewind();
+				
+				int points = 0;
+				while(depth.remaining() > 0)
+				{
+					short depthVal = depth.get();
+					if (depthVal != 0)
+					{
+						histogram[depthVal]++;
+						points++;
+					}
+				}	
+				...
+				...
+			} 
+		@endcode
+		
+		
+
+	@section svj_update_depth_fn updateDepth() method - Updating the Depth Map
+
+		The following statement sets up the frame object. It is described in the <a href="#getMetaData">HandTracker() method above</a>.  For more explanation on this, see @ref conc_meta_data, @ref glos_frame_object, and @ref frame_data.
+		@code
+			DepthMetaData depthMD = depthGen.getMetaData();
+		@endcode	
+		
+		The following method call waits for any node to have generated new data. This method then 'updates' each and every node in the entire production graph. For an overview to reading data and the <b>WaitXUpdateAll</b> methods, see <i>@ref conc_updating_data__summary_of_wait_fns</i>.	
+
+		the @ref xn::Context::WaitAnyUpdateAll() "waitAnyUpdateAll()" method in the following statement updates all generator nodes in the context that have new data available, first waiting for any of the nodes to have new data available. The application can then get the data (for example, using a metadata GetData() method). This method has a timeout.		
+		@code
+			context.waitAnyUpdateAll();
+		@endcode
+		
+		The following code block creates a convenient buffer for the depth map and then calls the calcHist() method to calculate the histogram.
+		@code
+			calcHist(depthMD);
+			ShortBuffer depth = depthMD.getData().createShortBuffer();				
+			depth.rewind();		
+		@endcode
+		
+		The following code block builds an image buffer according to the frequency of each depth value in the histogram. 
+		@code        
+		while(depth.remaining() > 0)
+			{
+				int pos = depth.position();
+				short pixel = depth.get();
+				imgbytes[pos] = (byte)histogram[pixel];
+			}		
+		@endcode
+		
+		
+	@section svj_Dimension Dimension() method
+
+		There are no OpenNI-specific declarations in this routine.
+
+
+	@section svj_paint paint() method
+
+		There are no OpenNI-specific declarations in this routine.
+		
+			
+				
+*/
+

@@ -1,24 +1,23 @@
-/****************************************************************************
-*                                                                           *
-*  OpenNI 1.x Alpha                                                         *
-*  Copyright (C) 2011 PrimeSense Ltd.                                       *
-*                                                                           *
-*  This file is part of OpenNI.                                             *
-*                                                                           *
-*  OpenNI is free software: you can redistribute it and/or modify           *
-*  it under the terms of the GNU Lesser General Public License as published *
-*  by the Free Software Foundation, either version 3 of the License, or     *
-*  (at your option) any later version.                                      *
-*                                                                           *
-*  OpenNI is distributed in the hope that it will be useful,                *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             *
-*  GNU Lesser General Public License for more details.                      *
-*                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.           *
-*                                                                           *
-****************************************************************************/
+/*****************************************************************************
+*                                                                            *
+*  OpenNI 1.x Alpha                                                          *
+*  Copyright (C) 2012 PrimeSense Ltd.                                        *
+*                                                                            *
+*  This file is part of OpenNI.                                              *
+*                                                                            *
+*  Licensed under the Apache License, Version 2.0 (the "License");           *
+*  you may not use this file except in compliance with the License.          *
+*  You may obtain a copy of the License at                                   *
+*                                                                            *
+*      http://www.apache.org/licenses/LICENSE-2.0                            *
+*                                                                            *
+*  Unless required by applicable law or agreed to in writing, software       *
+*  distributed under the License is distributed on an "AS IS" BASIS,         *
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+*  See the License for the specific language governing permissions and       *
+*  limitations under the License.                                            *
+*                                                                            *
+*****************************************************************************/
 #ifndef __EXPORTED_MOCK_NODES_H__
 #define __EXPORTED_MOCK_NODES_H__
 
@@ -37,7 +36,7 @@ public:
 	virtual void Destroy(xn::ModuleProductionNode* pInstance);
 
 protected:
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName) = 0;
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName) = 0;
 
 private:
 	XnProductionNodeType m_type;
@@ -48,7 +47,7 @@ class ExportedMockDevice : public ExportedMockNodeBase
 public:
 	ExportedMockDevice();
 	virtual ~ExportedMockDevice() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockDepth : public ExportedMockNodeBase
@@ -56,7 +55,7 @@ class ExportedMockDepth : public ExportedMockNodeBase
 public:
 	ExportedMockDepth();
 	virtual ~ExportedMockDepth() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockImage : public ExportedMockNodeBase
@@ -64,7 +63,7 @@ class ExportedMockImage : public ExportedMockNodeBase
 public:
 	ExportedMockImage();
 	virtual ~ExportedMockImage() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockIR : public ExportedMockNodeBase
@@ -72,7 +71,7 @@ class ExportedMockIR : public ExportedMockNodeBase
 public:
 	ExportedMockIR();
 	virtual ~ExportedMockIR() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockAudio : public ExportedMockNodeBase
@@ -80,7 +79,7 @@ class ExportedMockAudio : public ExportedMockNodeBase
 public:
 	ExportedMockAudio();
 	virtual ~ExportedMockAudio() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockProductionNode : public ExportedMockNodeBase
@@ -88,7 +87,7 @@ class ExportedMockProductionNode : public ExportedMockNodeBase
 public:
 	ExportedMockProductionNode();
 	virtual ~ExportedMockProductionNode() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockGenerator : public ExportedMockNodeBase
@@ -96,7 +95,7 @@ class ExportedMockGenerator : public ExportedMockNodeBase
 public:
 	ExportedMockGenerator();
 	virtual ~ExportedMockGenerator() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 class ExportedMockMapGenerator : public ExportedMockNodeBase
@@ -104,7 +103,7 @@ class ExportedMockMapGenerator : public ExportedMockNodeBase
 public:
 	ExportedMockMapGenerator();
 	virtual ~ExportedMockMapGenerator() {}
-	virtual xn::ModuleProductionNode* CreateImpl(const XnChar* strName);
+	virtual xn::ModuleProductionNode* CreateImpl(xn::Context& context, const XnChar* strName);
 };
 
 #endif //__EXPORTED_MOCK_NODES_H__

@@ -1,0 +1,24 @@
+/**
+@page conc_error_state Global Error State
+
+The <b>Error State</b> capability allows a node implementation to notify 
+OpenNI that it is in an error state, meaning it cannot function 
+properly. An application can check each node's error state separately, 
+but most of the times the application only needs to know if any one of 
+the nodes is in an error state, and does not really care which one or 
+how many (except for user notification purposes). 
+
+
+OpenNI aggregates the error state of all the nodes together into a 
+single error state, the Global Error State, making it easier for the 
+application to find out about current state. When the Global Error State 
+is XN_STATUS_OK this means <i>all</i> the nodes are OK. If only one node 
+is in an error state, that error state will also become the global error 
+state (for example, if one sensor is disconnected, the OpenNI global 
+error state will be XN_STATUS_DEVICE_NOT_CONNECTED). If more than one 
+node is in an error state, the global error state will be 
+XN_STATUS_MULTIPLE_NODES_ERROR. In such a case, if needed, the 
+application can search all the nodes in the production graph and check 
+which of them are in an error state and why. 
+
+*/
