@@ -21,7 +21,7 @@
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
-#include "org_openni_NativeMethods.h"
+#include "org_OpenNI_NativeMethods.h"
 #include <XnOpenNI.h>
 #include <XnCppWrapper.h>
 
