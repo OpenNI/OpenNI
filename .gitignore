@@ -1,0 +1,7 @@
+x64-Release
+Manifest.txt
+Platform/Linux/CreateRedist/Final
+Platform/Linux/CreateRedist/Output
+Platform/Linux/Redist
+Source/DoxyGen/html
+
