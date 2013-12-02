@@ -3788,6 +3788,7 @@ XN_C_API XnStatus xnRecord(XnNodeHandle hInstance)
 {
 	XN_VALIDATE_INPUT_PTR(hInstance);
 	XN_VALIDATE_INTERFACE_TYPE(hInstance, XN_NODE_TYPE_RECORDER);
+
 	XN_VALIDATE_CHANGES_ALLOWED(hInstance);
 	//Get recorder object
 	xn::RecorderImpl *pRecorderImpl = dynamic_cast<xn::RecorderImpl*>(hInstance->pPrivateData);
@@ -7073,8 +7074,8 @@ XN_C_API XnStatus xnScriptNodeRun(XnNodeHandle hScript, XnEnumerationErrors* pEr
 	#define XN_OPEN_NI_FILES_LOCATION "/usr/etc/ni/"
 #elif (XN_PLATFORM == XN_PLATFORM_LINUX_X86 || XN_PLATFORM == XN_PLATFORM_LINUX_ARM || XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#define XN_OPEN_NI_FILES_LOCATION "/var/lib/ni/"
-#elif (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM)
-	/* Resolved dynamically in Android */
+#elif (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM || XN_PLATFORM == XN_PLATFORM_ANDROID_X86)
+	#define XN_OPEN_NI_FILES_LOCATION "/data/ni/"
 #else
 	#error "Unsupported platform!"
 #endif
