@@ -23,7 +23,7 @@
 //---------------------------------------------------------------------------
 #include <XnOS.h>
 #include <errno.h>
-#if (XN_PLATFORM == XN_PLATFORM_MACOSX || XN_PLATFORM == XN_PLATFORM_ANDROID_ARM)
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX || XN_PLATFORM == XN_PLATFORM_ANDROID_ARM || XN_PLATFORM == XN_PLATFORM_ANDROID_X86)
 	#include <sys/wait.h>
 #else
 	#include <wait.h>
@@ -120,7 +120,7 @@ XN_C_API XnStatus xnOSCreateProcess(const XnChar* strExecutable, XnUInt32 nArgs,
 	return (XN_STATUS_OK);
 }
 
-#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+#if (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM || XN_PLATFORM == XN_PLATFORM_ANDROID_X86)
 static void getApplicationName(XnChar* strAppName, const XnUInt32 nBufferSize)
 {
 	FILE *pFile;

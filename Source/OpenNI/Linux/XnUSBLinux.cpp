@@ -23,7 +23,7 @@
 //---------------------------------------------------------------------------
 #include <XnUSB.h>
 
-#if (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM)
+#if (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM || XN_PLATFORM == XN_PLATFORM_ANDROID_X86)
 #include <libusb.h>
 #else
 #include <libusb-1.0/libusb.h>
@@ -36,6 +36,11 @@
 #include <XnOSCpp.h>
 #include "XnListT.h"
 
+/* FOR DEBUGGING PURPOSES */
+#include <android/log.h>
+#  define  LOGD(x...)  __android_log_print(ANDROID_LOG_INFO,"OpenNIJNI",x)
+#  define  LOGE(x...)  __android_log_print(ANDROID_LOG_ERROR,"OpenNIJNI",x)
+/*------------------------*/
 
 //---------------------------------------------------------------------------
 // Types
@@ -386,6 +391,7 @@ XN_C_API XnStatus xnUSBOpenDeviceImpl(libusb_device* pDevice, XN_USB_DEV_HANDLE*
 	// now check if open failed
 	if (rc != 0)
 	{
+		LOGE("LIBUSB Error code: '%d'", rc);
 		return (XN_STATUS_USB_DEVICE_OPEN_FAILED);
 	}
 	
@@ -416,6 +422,7 @@ XN_C_API XnStatus xnUSBOpenDeviceImpl(libusb_device* pDevice, XN_USB_DEV_HANDLE*
 	}
 */	
 	XN_VALIDATE_ALLOC(*pDevHandlePtr, XnUSBDeviceHandle);
+
 	XN_USB_DEV_HANDLE pDevHandle = *pDevHandlePtr;
 	pDevHandle->hDevice = handle;
 	pDevHandle->nInterface = 0;
@@ -1138,6 +1145,7 @@ XN_THREAD_PROC xnUSBReadThreadMain(XN_THREAD_PARAM pThreadParam)
 					// no need to do anything.
 				}
 				else
+
 				{
 					xnLogWarning(XN_MASK_USB, "Endpoint 0x%x, Buffer %d: Asynch transfer failed (status: %d)", pTransfer->endpoint, pBufferInfo->nBufferID, pTransfer->status);
 				}
@@ -1321,7 +1329,7 @@ XN_C_API XnStatus xnUSBShutdownReadThread(XN_USB_EP_HANDLE pEPHandle)
 
 		// PATCH: we don't cancel the requests, because there is a bug causing segmentation fault.
 		// instead, we will just wait for all of them to return.
-#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+#if (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM || XN_PLATFORM == XN_PLATFORM_ANDROID_X86)
 		// cancel all pending requests
 		for (XnUInt32 i = 0; i < pThreadData->nNumBuffers; ++i)
 		{

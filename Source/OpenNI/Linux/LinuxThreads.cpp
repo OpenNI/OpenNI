@@ -160,7 +160,7 @@ XN_C_API XnStatus xnOSSetThreadPriority(XN_THREAD_HANDLE ThreadHandle, XnThreadP
 #endif
 		nPolicy = SCHED_RR;
 		
-#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+#if (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM || XN_PLATFORM == XN_PLATFORM_ANDROID_X86)
 		//Note: It's only going to work if it runs as root! (but if not it fails anyway...)		
 		param.sched_priority = sched_get_priority_max(nPolicy) - 1;
 #endif
@@ -173,7 +173,7 @@ XN_C_API XnStatus xnOSSetThreadPriority(XN_THREAD_HANDLE ThreadHandle, XnThreadP
 	rc = pthread_setschedparam(*ThreadHandle, nPolicy, &param);
 	if (rc != 0)
 	{
-#if XN_PLATFORM == XN_PLATFORM_ANDROID_ARM
+#if (XN_PLATFORM == XN_PLATFORM_ANDROID_ARM || XN_PLATFORM == XN_PLATFORM_ANDROID_X86)
 		//This should also work as a non-root user...
 		xnLogWarning(XN_MASK_OS, "Failed to use pthread_setschedparam (%d). Trying setpriority instead...", errno);
 
