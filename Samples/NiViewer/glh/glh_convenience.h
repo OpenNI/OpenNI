@@ -47,12 +47,6 @@
 // with opengl...
 
 
-
-// debugging hack...
-#include <iostream>
-
-using namespace std;
-
 #ifdef MACOS
 #include <OpenGL/gl.h>
 #else
