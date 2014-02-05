@@ -189,12 +189,10 @@ MacOSX:
 			  * You will also need to install LibTool:
 			      sudo port install libtool			  
 			  * And finally, LibUSB itself:
-			      sudo port install libusb-devel +universal
-		      Note: Do not forget the +universal, it's very important!!
-		            If you're previously already installed libusb-devel then use "sudo port uninstall libusb-devel" and reinstall it again with the +universal flag.
+			      sudo port install libusb +universal
 					
 		   B) Compile the source & install LibUSB yourself:
-			  * Change the working directory to the prerequisites directory: "cd Platform\Linux-x86\Build\Prerequisites"
+			  * Change the working directory to the prerequisites directory: "cd Platform\Linux\Build\Prerequisites"
 			  * Extract the tar file by running: "tar -xvjf libusb-1.0.8-osx.tar.bz2"
 			  * Change the working directory to the libusb directory: "cd libusb"
 			  * Run the following commands to build and install libusb:
@@ -219,11 +217,11 @@ MacOSX:
 		   sudo port install mono
 		   
 	Building OpenNI:
-		1) Go into the directory: "Platform/Linux-x86/CreateRedist".
+		1) Go into the directory: "Platform/Linux/CreateRedist".
 		   Run the script: "./RedistMaker".
-		   This will compile everything and create a redist package in the "Platform/Linux-x86/Redist" directory.
-		   It will also create a distribution in the "Platform/Linux-x86/CreateRedist/Final" directory.
-		2) Go into the directory: "Platform/Linux-x86/Redist".
+		   This will compile everything and create a redist package in the "Platform/Linux/Redist" directory.
+		   It will also create a distribution in the "Platform/Linux/CreateRedist/Final" directory.
+		2) Go into the directory: "Platform/Linux/Redist".
 		   Run the script: "sudo ./install.sh" (needs to run as root)
 
   		   The install script copies key files to the following location:
@@ -232,5 +230,5 @@ MacOSX:
 		       Includes into: /usr/include/ni
 		       Config files into: /var/lib/ni
 			
-		To build the package manually, you can run "make" in the "Platform\Linux-x86\Build" directory.
+		To build the package manually, you can run "make" in the "Platform\Linux\Build" directory.
 		If you wish to build the Mono wrappers, also run "make mono_wrapper" and "make mono_samples".
