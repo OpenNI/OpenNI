@@ -19,7 +19,7 @@
 *                                                                            *
 *****************************************************************************/
 #include <jni.h>
-#include "org_openni_NativeMethods.h"
+#include "org_OpenNI_NativeMethods.h"
 
 #ifdef ANDROID
 #include <android/log.h>
