@@ -61,9 +61,9 @@
 	#include "Win32/XnPlatformWin32.h"
 #elif defined(ANDROID) && defined(__arm__)
 	#include "Android-Arm/XnPlatformAndroid-Arm.h"
-#elif (linux && (i386 || __x86_64__))
+#elif (__linux__ && (__i386__ || __x86_64__))
 	#include "Linux-x86/XnPlatformLinux-x86.h"
-#elif (linux && __arm__)
+#elif (__linux__ && __arm__)
 	#include "Linux-Arm/XnPlatformLinux-Arm.h"
 #elif _ARC
 	#include "ARC/XnPlatformARC.h"
