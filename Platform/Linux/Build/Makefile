@@ -29,7 +29,7 @@ ALL_UTILS = \
 ALL_MONO_PROJS = \
 	Wrappers/OpenNI.net
 
-ALL_JAVA_PROJS = \
+ALL_JAVA_PROJS ?= \
 	Wrappers/OpenNI.jni \
 	Wrappers/OpenNI.java
 	
@@ -75,7 +75,7 @@ MONO_FORMS_SAMPLES = \
 	Samples/SimpleViewer.net \
 	Samples/UserTracker.net
 	
-JAVA_SAMPLES = \
+JAVA_SAMPLES ?= \
 	Samples/SimpleRead.java \
 	Samples/SimpleViewer.java \
 	Samples/UserTracker.java \
