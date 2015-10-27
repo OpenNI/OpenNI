@@ -344,7 +344,23 @@ XnStatus captureFrame()
 					nRetVal = g_Capture.pRecorder->AddNodeToRecording(*getDepthGenerator(), g_Capture.nodes[CAPTURE_DEPTH_NODE].captureFormat);
 					START_CAPTURE_CHECK_RC(nRetVal, "add depth node");
 					g_Capture.nodes[CAPTURE_DEPTH_NODE].bRecording = TRUE;
-					g_Capture.nodes[CAPTURE_DEPTH_NODE].pGenerator = getDepthGenerator();
+					/*
+					 * Fix RGB and Depth alignment in recoded oni files
+					 * See: https://computervisionblog.wordpress.com/2012/07/15/recording-3d-videooni-files-that-align-rgb-image-with-depth-image/
+					 */
+					DepthGenerator* depth = getDepthGenerator();
+					depth->SetIntProperty ("RegistrationType", 1);
+					nRetVal = depth->GetAlternativeViewPointCap().SetViewPoint(*getImageGenerator());
+					if(XN_STATUS_OK != nRetVal)
+					{
+						depth->SetIntProperty ("RegistrationType", 2);
+						nRetVal = depth->GetAlternativeViewPointCap().SetViewPoint(*getImageGenerator());
+						if(XN_STATUS_OK != nRetVal)
+						{
+							displayMessage("Getting and setting AlternativeViewPoint failed");
+						}
+					}
+					g_Capture.nodes[CAPTURE_DEPTH_NODE].pGenerator = depth;
 				}
 
 				if (isImageOn() && (g_Capture.nodes[CAPTURE_IMAGE_NODE].captureFormat != CODEC_DONT_CAPTURE))
